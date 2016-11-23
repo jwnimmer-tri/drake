@@ -106,8 +106,11 @@ def _symlink_directories(repo_ctx, basename, pathnames):
   rootlen = len(str(base)) - len(basename)  # Include separator length.
   for srcpath in [unwrap(repo_ctx).path(p) for p in pathnames]:
     destpath = base.get_child(srcpath.basename)
-    unwrap(repo_ctx).symlink(srcpath, destpath)
-    result += [str(destpath)[rootlen:]]
+    if destpath.exists:
+      print("Cannot make a symbolic link {} => {} because {} already exists.".format(srcpath, destpath, destpath))
+    else:
+      unwrap(repo_ctx).symlink(srcpath, destpath)
+      result += [str(destpath)[rootlen:]]
   return result
 
 def _parse_cflags(repo_ctx, cflags):
