@@ -11,6 +11,12 @@ Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
 
+AllowAllParametersOfDeclarationOnNextLine: true
+
+AllowShortFunctionsOnASingleLine: Inline
+
+BinPackParameters: false
+
 # Specify the #include statement order.  This implements the order mandated by
 # the Google C++ Style Guide: related header, C headers, C++ headers, library
 # headers, and finally the project headers.
