@@ -5,7 +5,8 @@ set(drakeSensors_SRC_FILES
     depth_sensor.cc
     depth_sensor_output.cc
     depth_sensor_specification.cc
-    rotary_encoders.cc)
+    rotary_encoders.cc
+    vtk_util.cc)
 
 set(drakeSensors_HEADERS
     accelerometer.h
@@ -31,7 +32,7 @@ target_link_libraries(drakeSensors
     drakeSystemFramework)
 
 if(VTK_FOUND)
-  target_link_libraries(drakeSensors vtkRendering)
+  target_link_libraries(drakeSensors vtkRendering vtkIO)
   target_include_directories(drakeSensors PRIVATE ${VTK_INCLUDE_DIRS})
 endif()
 
