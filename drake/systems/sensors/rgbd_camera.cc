@@ -35,9 +35,10 @@ const double kRadToDeg = 57.29577951308232;
 
 const int kPortIndex = 0;
 
-const uint32_t kImageWidth = 640;  // in pixels
-const uint32_t kImageHeight = 480;  // in pixels
-const uint32_t kNumPixels = kImageWidth * kImageHeight;
+const int kImageWidth = 640;  // in pixels
+const int kImageHeight = 480;  // in pixels
+const int kImageChannel = 4;
+const int kNumPixels = kImageWidth * kImageHeight;
 const double kClippingPlaneNear = 0.5;  // in meters
 const double kClippingPlaneFar = 5.0;  // in meters
 const double kVerticalFovDeg = 45.;  // in degrees
@@ -287,9 +288,9 @@ void RGBDCamera::Impl::DoCalcOutput(
 
   // TODO Do the same thing for depth.
   systems::AbstractValue* mutable_data = output->GetMutableData(0);
-  drake::systems::sensors::Image<uint8_t, 4>& image =
+  drake::systems::sensors::Image<uint8_t>& image =
       mutable_data->GetMutableValue<
-        drake::systems::sensors::Image<uint8_t, 4>>();
+        drake::systems::sensors::Image<uint8_t>>();
 
   for (uint32_t r = 0; r < kImageHeight; ++r) {
     // const uint32_t offset = r * kImageWidth;
@@ -366,9 +367,9 @@ RGBDCamera::get_sensor_state_output_port() const {
 std::unique_ptr<SystemOutput<double>> RGBDCamera::AllocateOutput(
     const Context<double>& context) const {
   auto output = std::make_unique<systems::LeafSystemOutput<double>>();
-  sensors::Image<uint8_t, 4> image(kImageWidth, kImageHeight);
+  sensors::Image<uint8_t> image(kImageWidth, kImageHeight, kImageChannel);
   output->add_port(
-      std::make_unique<systems::Value<sensors::Image<uint8_t, 4>>>(image));
+      std::make_unique<systems::Value<sensors::Image<uint8_t>>>(image));
 
   return std::unique_ptr<SystemOutput<double>>(output.release());
 }
