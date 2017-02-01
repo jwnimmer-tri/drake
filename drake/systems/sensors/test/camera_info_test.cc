@@ -1,6 +1,7 @@
 #include "drake/systems/sensors/camera_info.h"
 
 #include <Eigen/Dense>
+
 #include "gtest/gtest.h"
 
 #include "drake/common/eigen_matrix_compare.h"
@@ -9,6 +10,7 @@ namespace drake {
 namespace systems {
 namespace sensors {
 namespace {
+
 // This is because there is a precision difference between Ubuntu and Mac.
 const double kTolerance = 1e-12;
 
