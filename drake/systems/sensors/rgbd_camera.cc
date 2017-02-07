@@ -4,6 +4,8 @@
 
 #include <vtkActor.h>
 #include <vtkCamera.h>
+#include <vtkCellArray.h>
+#include <vtkCellData.h>
 #include <vtkCubeSource.h>
 #include <vtkCylinderSource.h>
 #include <vtkImageShiftScale.h>
@@ -18,14 +20,17 @@
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkTransform.h>
+#include <vtkUnsignedCharArray.h>
 #include <vtkWindowToImageFilter.h>
+
+#include "drake/math/roll_pitch_yaw_using_quaternion.h"
 
 #include "drake/systems/sensors/camera_info.h"
 #include "drake/systems/sensors/image.h"
 #include "drake/systems/sensors/vtk_util.h"
 
-// TODO(kunimatsu.hashimoto) Refactor RenderingWorld out from RGBDCamera,
-// so that other vtk powered sensor simulators can share the RenderingWorld
+// TODO(kunimatsu-tri) Refactor RenderingWorld out from RGBDCamera,
+// so that other vtk dependent sensor simulators can share the RenderingWorld
 // without duplicating it.
 
 namespace drake {
@@ -33,20 +38,18 @@ namespace systems {
 namespace sensors {
 namespace {
 const double kRadToDeg = 57.29577951308232;
-const double kDegToRad = 1. / kRadToDeg;
 
-const int kImageWidth = 640;  // in pixels
-const int kImageHeight = 480;  // in pixels
+const int kImageWidth = 640;  // In pixels
+const int kImageHeight = 480;  // In pixels
 const int kImageChannel = 4;
-const double kClippingPlaneNear = 0.5;  // in meters
-const double kClippingPlaneFar = 5.0;  // in meters
-const double kVerticalFovDeg = 45.;
-const double kFrameRateHz = 30.;
+const double kClippingPlaneNear = 0.5;  // In meters
+const double kClippingPlaneFar = 5.0;  // In meters
 
-// TODO(kunimatsu.hashimoto) Calculates this in vertex shader.
-// For Zbuffer value conversion
+// For Zbuffer value conversion.
 const double kA = kClippingPlaneFar / (kClippingPlaneFar - kClippingPlaneNear);
 const double kB = -kA * kClippingPlaneNear;
+
+// TODO(kunimatsu-tri) Calculates this in vertex shader.
 double ConvertZbufferToMeters(float z_buffer_value) {
   return kB / (z_buffer_value - kA);
 }
@@ -64,10 +67,10 @@ std::string RemoveFileExtention(const std::string& filepath) {
 class RGBDCamera::Impl {
  public:
   Impl(const RigidBodyTree<double>& tree,const RigidBodyFrame<double>& frame,
-       bool show_window);
+       double fov_y, bool show_window);
 
   Impl(const RigidBodyTree<double>& tree, const Eigen::Vector3d& position,
-       const Eigen::Vector3d& orientation, bool show_window);
+       const Eigen::Vector3d& orientation, double fov_y, bool show_window);
 
   ~Impl() {}
 
@@ -94,6 +97,9 @@ class RGBDCamera::Impl {
   void SetCameraPoseAtWorld(const Eigen::Vector3d& position,
                             const Eigen::Vector4d& axis_angle) const;
 
+  void SetCameraPoseAtWorld(const Eigen::Vector3d& position,
+                            const Eigen::Vector3d& orientation) const;
+
   const RigidBodyTree<double>& tree_;
   std::array<CameraInfo, 2> camera_info_array_;
   std::map<int, vtkSmartPointer<vtkActor>> id_object_pairs_;
@@ -107,41 +113,47 @@ class RGBDCamera::Impl {
 RGBDCamera::Impl::Impl(const RigidBodyTree<double>& tree,
                        const Eigen::Vector3d& position,
                        const Eigen::Vector3d& orientation,
+                       double fov_y,
                        bool show_window)
     : tree_(tree), camera_info_array_{
-          CameraInfo(static_cast<uint32_t>(kImageWidth),
-                     static_cast<uint32_t>(kImageHeight),
-                     kVerticalFovDeg * kDegToRad),
-          CameraInfo(static_cast<uint32_t>(kImageWidth),
-                     static_cast<uint32_t>(kImageHeight),
-                     kVerticalFovDeg * kDegToRad)} {
+          // TODO(kunimatsu-tri) Add support for the arbitrary image size.
+          CameraInfo(kImageWidth, kImageHeight, fov_y),
+          CameraInfo(kImageWidth, kImageHeight, fov_y)} {
   if (!show_window) {
     render_window_->SetOffScreenRendering(1);
   }
 
   CreateRenderingWorld();
 
-  // Setting camera
   vtkNew<vtkCamera> camera;
-  // TODO(kunimatsu.hashimoto) Add support for the arbitrary view angle.
-  camera->SetViewAngle(kVerticalFovDeg);
+  camera->SetViewAngle(fov_y * kRadToDeg);
 
-  // TODO(kunimatsu.hashimoto) Lets rgb and depth cameras have independent
+  // TODO(kunimatsu-tri) Lets rgb and depth cameras have independent
   // clipping planes.
-  // TODO(kunimatsu.hashimoto) Add support for the arbitrary clipping planes.
+  // TODO(kunimatsu-tri) Add support for the arbitrary clipping planes.
   camera->SetClippingRange(kClippingPlaneNear, kClippingPlaneFar);
   renderer_->SetActiveCamera(camera.GetPointer());
 
+  // hoge
   // Set camera pose
-  renderer_->GetActiveCamera()->Yaw(orientation[2]);
-  renderer_->GetActiveCamera()->Pitch(orientation[1]);
-  renderer_->GetActiveCamera()->Roll(orientation[0]);
-  renderer_->GetActiveCamera()->SetPosition(position[0],
-                                            position[1],
-                                            position[2]);
+  // SetCameraPoseAtWorld(position, orientation);
+  SetCameraPoseAtWorld(position, drake::math::rpy2axis(orientation));
 
-  // TODO(kunimatsu.hashimoto) Add support for image of arbitrary size.
-  render_window_->SetSize(kImageWidth, kImageHeight);
+  double pos[3];
+  renderer_->GetActiveCamera()->GetPosition(pos);
+  double view[3];
+  renderer_->GetActiveCamera()->GetViewUp(view);
+
+  std::cout << "position" << std::endl;
+  std::cout << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl;
+  std::cout << "view up vector" << std::endl;
+  std::cout << view[0] << ", " << view[1] << ", " << view[2] << std::endl;
+
+
+  renderer_->SetBackground(0., 0., 0.);  // Black
+
+  render_window_->SetSize(camera_info_array_[CameraType::kColor].width(),
+                          camera_info_array_[CameraType::kColor].height());
   render_window_->AddRenderer(renderer_.GetPointer());
 
   color_buffer_->SetInput(render_window_.GetPointer());
@@ -157,13 +169,11 @@ RGBDCamera::Impl::Impl(const RigidBodyTree<double>& tree,
 
 RGBDCamera::Impl::Impl(const RigidBodyTree<double>& tree,
                        const RigidBodyFrame<double>& frame,
+                       double fov_y,
                        bool show_window) : tree_(tree), camera_info_array_{
-          CameraInfo(static_cast<uint32_t>(kImageWidth),
-                     static_cast<uint32_t>(kImageHeight),
-                     kVerticalFovDeg * kDegToRad),
-          CameraInfo(static_cast<uint32_t>(kImageWidth),
-                     static_cast<uint32_t>(kImageHeight),
-                     kVerticalFovDeg * kDegToRad)} {
+          // TODO(kunimatsu-tri) Add support for image of arbitrary size.
+          CameraInfo(kImageWidth, kImageHeight, fov_y),
+          CameraInfo(kImageWidth, kImageHeight, fov_y)} {
   // TODO(kunimatsu) Implement this
   std::runtime_error("Not implemented");
 }
@@ -179,7 +189,7 @@ void RGBDCamera::Impl::CreateRenderingWorld() {
           visual.getWorldTransform().linear());
 
       vtkNew<vtkTransform> vtk_transform;
-      // The order should be Translate first, and then RotateWXYZ.
+      // The order must be Translate first, and then RotateWXYZ.
       vtk_transform->Translate(t[0], t[1], t[2]);
       vtk_transform->RotateWXYZ(axis_angle[3] * kRadToDeg ,
                                 axis_angle[0], axis_angle[1], axis_angle[2]);
@@ -222,12 +232,12 @@ void RGBDCamera::Impl::CreateRenderingWorld() {
         case DrakeShapes::MESH: {
           auto m = dynamic_cast<const DrakeShapes::Mesh&>(geometry);
 
-          // TODO(kunimatsu.hashimoto) Add support for other file formats.
+          // TODO(kunimatsu-tri) Add support for other file formats.
           vtkNew<vtkOBJReader> mesh_reader;
           mesh_reader->SetFileName(m.resolved_filename_.c_str());
           mesh_reader->Update();
 
-          // TODO(kunimatsu.hashimoto) Add support for other file formats.
+          // TODO(kunimatsu-tri) Add support for other file formats.
           vtkNew<vtkPNGReader> texture_reader;
           texture_reader->SetFileName(std::string(RemoveFileExtention(
               m.resolved_filename_.c_str()) + ".png").c_str());
@@ -242,7 +252,7 @@ void RGBDCamera::Impl::CreateRenderingWorld() {
           break;
         }
         case DrakeShapes::CAPSULE: {
-          // TODO(kunimatsu.hashimoto) Implement this when needed.
+          // TODO(kunimatsu-tri) Implement this as needed.
           shape_matched = false;
           break;
         }
@@ -264,16 +274,12 @@ void RGBDCamera::Impl::CreateRenderingWorld() {
   }
 
   // Adds a flat terrain.
-  unsigned char plane_color[3] = {255, 229, 204};
-  vtkSmartPointer<vtkPolyData> plane = CreateFlatTerrain(100., plane_color);
-
+  const double plane_half_width = 50.;
+  const unsigned char plane_color[3] = {255, 229, 204};
+  vtkSmartPointer<vtkPlaneSource> plane = VtkUtil::CreateSquarePlane(
+      plane_half_width, plane_color);
   vtkNew<vtkPolyDataMapper> mapper;
-#if VTK_MAJOR_VERSION <= 5
-  mapper->SetInputConnection(plane->GetProducerPort());
-#else
-  mapper->SetInputData(plane);
-#endif
-
+  mapper->SetInput(plane->GetOutput());
   vtkNew<vtkActor> actor;
   actor->SetMapper(mapper.GetPointer());
   renderer_->AddActor(actor.GetPointer());
@@ -288,14 +294,13 @@ void RGBDCamera::Impl::UpdateModelFrames(
   KinematicsCache<double> cache = tree_.doKinematics(q);
 
   // TODO(kunimatsu-tri) Update camera frame by calling SetCameraPoseAtWorld
-
   for (const auto& body : tree_.bodies) {
     auto transform = tree_.relativeTransform(cache, 0, body->get_body_index());
     auto translation = transform.translation();
     auto axis_angle = drake::math::rotmat2axis(transform.linear());
 
     vtkNew<vtkTransform> vtk_transform;
-    // The order should be Translate first, and then RotateWXYZ.
+    // The order must be Translate first, and then RotateWXYZ.
     vtk_transform->Translate(translation(0), translation(1), translation(2));
     vtk_transform->RotateWXYZ(axis_angle[3] * kRadToDeg ,
                               axis_angle[0], axis_angle[1], axis_angle[2]);
@@ -331,31 +336,42 @@ void RGBDCamera::Impl::DoCalcOutput(
       mutable_data_d->GetMutableValue<
         drake::systems::sensors::Image<float>>();
 
-  for (uint32_t r = 0; r < kImageHeight; ++r) {
-    for (uint32_t c = 0; c < kImageWidth; ++c) {
-      // Makes image upside down
-      const uint32_t kHeight = kImageHeight - r - 1;
+  const auto height = camera_info_array_[CameraType::kColor].height();
+  const auto width = camera_info_array_[CameraType::kColor].width();
+  for (int v = 0; v < height; ++v) {
+    for (int u = 0; u < width; ++u) {
+      const int kHeight = height - v - 1;  // Makes image upside down.
 
       // Color image
-      void* color_ptr = color_buffer_->GetOutput()->GetScalarPointer(c,r,0);
-      // Convert RGBA to BGRA
-      image.at(c, kHeight)[0] = *(static_cast<uint8_t*>(color_ptr) + 2);  // B
-      image.at(c, kHeight)[1] = *(static_cast<uint8_t*>(color_ptr) + 1);  // G
-      image.at(c, kHeight)[2] = *(static_cast<uint8_t*>(color_ptr) + 0);  // R
-      image.at(c, kHeight)[3] = *(static_cast<uint8_t*>(color_ptr) + 3);  // A
+      void* color_ptr = color_buffer_->GetOutput()->GetScalarPointer(u,v,0);
+      // Converts RGBA to BGRA.
+      image.at(u, kHeight)[0] = *(static_cast<uint8_t*>(color_ptr) + 2);  // B
+      image.at(u, kHeight)[1] = *(static_cast<uint8_t*>(color_ptr) + 1);  // G
+      image.at(u, kHeight)[2] = *(static_cast<uint8_t*>(color_ptr) + 0);  // R
+      image.at(u, kHeight)[3] = *(static_cast<uint8_t*>(color_ptr) + 3);  // A
 
       // Depth image
       float depth_value = *static_cast<float*>(
-          depth_buffer_->GetOutput()->GetScalarPointer(c,r,0));
+          depth_buffer_->GetOutput()->GetScalarPointer(u,v,0));
       if (depth_value == 1.0) {
-        depth_image.at(c, kHeight)[0] = 0.;
+        depth_image.at(u, kHeight)[0] = 0.;
       } else {
-        depth_image.at(c, kHeight)[0] = ConvertZbufferToMeters(depth_value);
+        depth_image.at(u, kHeight)[0] = ConvertZbufferToMeters(depth_value);
       }
     }
   }
 }
 
+void RGBDCamera::Impl::SetCameraPoseAtWorld(
+    const Eigen::Vector3d& position, const Eigen::Vector3d& orientation) const {
+  renderer_->GetActiveCamera()->Yaw(orientation[2]);
+  renderer_->GetActiveCamera()->Pitch(orientation[1]);
+  renderer_->GetActiveCamera()->Roll(orientation[0]);
+  renderer_->GetActiveCamera()->SetPosition(position[0],
+                                            position[1],
+                                            position[2]);
+}
+// hoge
 void RGBDCamera::Impl::SetCameraPoseAtWorld(
     const Eigen::Vector3d& position, const Eigen::Vector4d& axis_angle) const {
   // First, reset camera pose.
@@ -366,7 +382,7 @@ void RGBDCamera::Impl::SetCameraPoseAtWorld(
 
   // Next, set camera pose with respect to the world frame.
   vtkNew<vtkTransform> new_pose;
-  // Note: The order should be RotateWXYZ first, then Translate.
+  // Note: The order must be RotateWXYZ first, then Translate.
   new_pose->RotateWXYZ(axis_angle[3] * kRadToDeg ,
                        axis_angle[0], axis_angle[1], axis_angle[2]);
   new_pose->Translate(position[0], position[1], position[2]);
@@ -378,8 +394,12 @@ RGBDCamera::RGBDCamera(const std::string& name,
                        const RigidBodyTree<double>& tree,
                        const Eigen::Vector3d& position,
                        const Eigen::Vector3d& orientation,
+                       double frame_rate,
+                       double fov_y,
                        bool show_window)
-    : impl_(new RGBDCamera::Impl(tree, position, orientation, show_window)) {
+    : impl_(new RGBDCamera::Impl(tree, position, orientation, fov_y,
+                                 show_window)),
+      frame_interval_(1. / frame_rate) {
   set_name(name);
   const int vec_num =  tree.get_num_positions() + tree.get_num_velocities();
   input_port_index_ = this->DeclareInputPort(
@@ -392,8 +412,11 @@ RGBDCamera::RGBDCamera(const std::string& name,
 RGBDCamera::RGBDCamera(const std::string& name,
                        const RigidBodyTree<double>& tree,
                        const RigidBodyFrame<double>& frame,
+                       double frame_rate,
+                       double fov_y,
                        bool show_window)
-    : impl_(new RGBDCamera::Impl(tree, frame, show_window)) {
+    : impl_(new RGBDCamera::Impl(tree, frame, fov_y, show_window)),
+      frame_interval_(1. / frame_rate) {
   set_name(name);
   const int vec_num =  tree.get_num_positions() + tree.get_num_velocities();
   input_port_index_ = this->DeclareInputPort(
@@ -406,17 +429,6 @@ RGBDCamera::RGBDCamera(const std::string& name,
 
 RGBDCamera::~RGBDCamera() {}
 
-/*
-const InputPortDescriptor<double>&
-RGBDCamera::get_rigid_body_tree_state_input_port() const {
-  return this->get_input_port(input_port_index_);
-}
-
-const OutputPortDescriptor<double>&
-RGBDCamera::get_sensor_state_output_port() const {
-  return System<double>::get_output_port(output_port_index_);
-}
-*/
 std::unique_ptr<SystemOutput<double>> RGBDCamera::AllocateOutput(
     const Context<double>& context) const {
   auto output = std::make_unique<systems::LeafSystemOutput<double>>();
@@ -437,9 +449,8 @@ void RGBDCamera::DoCalcOutput(const systems::Context<double>& context,
   DRAKE_ASSERT_VOID(System<double>::CheckValidContext(context));
   DRAKE_ASSERT_VOID(System<double>::CheckValidOutput(output));
   const double kCurrentTime = context.get_time();
-  // TODO(kunimatsu-tri) Add support for the arbitrary frame rate
   if (kCurrentTime == 0. ||
-      (kCurrentTime - previous_output_time_ < 1. / kFrameRateHz)) {
+      (kCurrentTime - previous_output_time_ < frame_interval_)) {
     return;
   }
   previous_output_time_ = kCurrentTime;

@@ -1,48 +1,31 @@
 #include "drake/systems/sensors/vtk_util.h"
 
-#include <vtkCellArray.h>
-#include <vtkNew.h>
-#include <vtkPoints.h>
-#include <vtkPointData.h>
-#include <vtkPolygon.h>
+#include <vtkCellData.h>
+#include <vtkPlaneSource.h>
+#include <vtkSmartPointer.h>
 #include <vtkUnsignedCharArray.h>
 
 namespace drake {
 namespace systems {
 namespace sensors {
 
-vtkSmartPointer<vtkPolyData> CreateFlatTerrain(
+vtkSmartPointer<vtkPlaneSource> VtkUtil::CreateSquarePlane(
     double size, const unsigned char color[3]) {
-  vtkNew<vtkPoints> points;
-  points->InsertNextPoint(-size, -size, 0.);
-  points->InsertNextPoint(-size,  size, 0.);
-  points->InsertNextPoint( size,  size, 0.);
-  points->InsertNextPoint( size, -size, 0.);
+  vtkSmartPointer<vtkPlaneSource> plane =
+      vtkSmartPointer<vtkPlaneSource>::New();
+  const double half_size = size * 0.5;
+  plane->SetOrigin(-half_size, -half_size, 0.);
+  plane->SetPoint1(-half_size, half_size, 0.);
+  plane->SetPoint2(half_size, -half_size, 0.);
+  plane->Update();
 
-  vtkNew<vtkPolygon> polygon;
-  polygon->GetPointIds()->SetNumberOfIds(4);  // Makes a quad
-  polygon->GetPointIds()->SetId(0, 0);
-  polygon->GetPointIds()->SetId(1, 1);
-  polygon->GetPointIds()->SetId(2, 2);
-  polygon->GetPointIds()->SetId(3, 3);
-
-  vtkNew<vtkCellArray> polygons;
-  polygons->InsertNextCell(polygon.GetPointer());
-
-  vtkNew<vtkUnsignedCharArray> colors;
+  vtkSmartPointer<vtkUnsignedCharArray> colors =
+      vtkSmartPointer<vtkUnsignedCharArray>::New();
   colors->SetNumberOfComponents(3);
-  colors->SetName("Color");
   colors->InsertNextTupleValue(color);
-  colors->InsertNextTupleValue(color);
-  colors->InsertNextTupleValue(color);
-  colors->InsertNextTupleValue(color);
+  plane->GetOutput()->GetCellData()->SetScalars(colors);
 
-  vtkNew<vtkPolyData> poly_data;
-  poly_data->SetPoints(points.GetPointer());
-  poly_data->SetPolys(polygons.GetPointer());
-  poly_data->GetPointData()->SetScalars(colors.GetPointer());
-
-  return vtkSmartPointer<vtkPolyData>(poly_data.GetPointer());
+  return plane;
 }
 
 }  // namespace sensors

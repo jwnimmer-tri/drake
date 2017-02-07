@@ -21,7 +21,7 @@ namespace sensors {
 /// x-right, y-down, and z-forward.
 /// The depth range for rendering is from 0.5m to 5.0m and is shared between rgb
 /// and depth images for now.
-// TODO(kunimatsu.hashimoto) Change the camera base frame's orientation to be
+// TODO(kunimatsu-tri) Change the camera base frame's orientation to be
 // x-forward, y-left, z-up.
 class RGBDCamera : public LeafSystem<double> {
  public:
@@ -31,72 +31,71 @@ class RGBDCamera : public LeafSystem<double> {
   };
   /// A constructor for %RGBDCamera
   ///
-  /// @param[in] name The name of the rgbd camera. This can be any value, but
+  /// @param name The name of the rgbd camera. This can be any value, but
   /// should typically be unique among all sensors attached to a particular
   /// model instance.
   ///
-  /// @param[in] tree The RigidBodyTree containing the geometric configuration
+  /// @param tree The RigidBodyTree containing the geometric configuration
   /// of the world. This parameter is aliased by a class member variable. Thus,
   /// its life span must exceed that of this class's instance.
   ///
-  /// @param[in] position 3D position for RGBDCamera
-  ///
-  /// @param[in] orientation 3D orientation (roll, pitch, yaw) for RGBDCamera
-  ///
-  /// @param[in] show_window The flag to show visible window. If this is false,
-  /// offscreen rendering is executed.
+  /// @param position 3D position for RGBDCamera
+  /// @param orientation 3D orientation (roll, pitch, yaw) for RGBDCamera
+  /// @param frame_rate Updates output at this frame rate in Hz.
+  /// @param show_window To show visible window.  If this is false, offscreen
+  /// rendering is executed.
   RGBDCamera(const std::string& name,
              const RigidBodyTree<double>& tree,
              const Eigen::Vector3d& position,
              const Eigen::Vector3d& orientation,
+             double frame_rate,
+             double fov_y,
              bool show_window);
 
   /// A constructor for %RGBDCamera
   ///
-  /// @param[in] name The name of the rgbd camera. This can be any value, but
+  /// @param name The name of the rgbd camera. This can be any value, but
   /// should typically be unique among all sensors attached to a particular
   /// model instance.
   ///
-  /// @param[in] tree The RigidBodyTree containing the geometric configuration
+  /// @param tree The RigidBodyTree containing the geometric configuration
   /// of the world. This parameter is aliased by a class member variable. Thus,
   /// its life span must exceed that of this class's instance.
   ///
-  /// @param[in] frame The frame to which this camera is attached.
+  /// @param frame The frame to which this camera is attached.
   ///
-  /// @param[in] show_window The flag to show visible window. If this is false,
+  /// @param show_window The flag to show visible window. If this is false,
   /// offscreen rendering is executed.
   RGBDCamera(const std::string& name,
              const RigidBodyTree<double>& tree,
              const RigidBodyFrame<double>& frame,
+             double frame_rate,
+             double fov_y,
              bool show_window);
 
   ~RGBDCamera();
   // Non-copyable.
   /// @name Deleted Copy/Move Operations
-  /// DepthSensor is neither copyable nor moveable.
+  /// RGBDCamera is neither copyable nor moveable.
   ///@{
   explicit RGBDCamera(const RGBDCamera&) = delete;
   RGBDCamera& operator=(const RGBDCamera&) = delete;
+  explicit RGBDCamera(RGBDCamera&&) = delete;
+  RGBDCamera& operator=(RGBDCamera&&) = delete;
   ///@}
 
   /// Returns the RigidBodyTree that this sensor is sensing.
   const RigidBodyTree<double>& get_tree() const;
-  /*
-  /// Returns a descriptor of the input port containing the generalized state of
-  /// the RigidBodyTree.
-  const InputPortDescriptor<double>& get_rigid_body_tree_state_input_port()
-      const;
 
-  /// Returns a descriptor of the state output port, which contains the sensor's
-  /// sensed values.
-  const OutputPortDescriptor<double>& get_sensor_state_output_port() const;
-  */
   /// Allocates the output vector. See this class' description for details of
   /// this output vector.
   std::unique_ptr<SystemOutput<double>> AllocateOutput(
     const Context<double>& context) const override;
 
+  // TODO(kunimatsu-tri) Write comment
   const CameraInfo& get_camera_info(const CameraType type) const;
+
+  // TODO(kunimatsu-tri) Add API to provide transformation from base to sensor
 
  protected:
   /// Update all the model frames for renderer and outputs the rendered images.
@@ -108,7 +107,7 @@ class RGBDCamera : public LeafSystem<double> {
   std::unique_ptr<Impl> impl_;
 
   int input_port_index_{};
-  int output_port_index_{};  // TODO need this?
+  const double frame_interval_{};
   // For the time step calculation in const member function
   mutable double previous_output_time_{0.};
 };
