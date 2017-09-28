@@ -2,7 +2,7 @@
 #include <thread>
 
 #include "drake/common/proto/call_matlab.h"
-#include "drake/systems/controllers/test/zmp_test_util.h"
+#include "drake/systems/controllers/test_utilities/zmp_test_util.h"
 
 namespace drake {
 namespace examples {

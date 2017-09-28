@@ -1,0 +1,32 @@
+# -*- python -*-
+
+load(
+    "@drake//tools/skylark:drake_cc.bzl",
+    "drake_cc_library",
+    "drake_cc_package_library",
+)
+load("//tools/lint:lint.bzl", "add_lint_tests")
+
+package(default_visibility = ["//visibility:private"])
+
+# Because there are no meaninfully distinct components in this package, the
+# only public target we will offer is our drake_cc_package_library.
+drake_cc_package_library(
+    name = "test_utilities",
+    testonly = 1,
+    deps = [
+        ":zmp_test_util",
+    ],
+)
+
+drake_cc_library(
+    name = "zmp_test_util",
+    testonly = 1,
+    srcs = ["zmp_test_util.cc"],
+    hdrs = ["zmp_test_util.h"],
+    deps = [
+        "//drake/systems/controllers:zmp_planner",
+    ],
+)
+
+add_lint_tests()

@@ -15,7 +15,7 @@ drake_cc_binary(
     srcs = ["zmp_example.cc"],
     deps = [
         "//common/proto:call_matlab",
-        "//systems/controllers:zmp_test_util",
+        "//systems/controllers/test_utilities",
     ],
 )
 
