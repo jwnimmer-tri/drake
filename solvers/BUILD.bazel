@@ -343,6 +343,7 @@ drake_cc_library(
     hdrs = [
         "test/rotation_constraint_visualization.h",
     ],
+    visibility = ["//visibility:private"],
     deps = [
         ":mixed_integer_rotation_constraint",
         ":rotation_constraint",
@@ -355,6 +356,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/add_solver_util.cc"],
     hdrs = ["test/add_solver_util.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":mathematical_program",
     ],
@@ -365,6 +367,7 @@ drake_cc_library(
     testonly = 1,
     srcs = [],
     hdrs = ["test/generic_trivial_costs.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":constraint",
         ":cost",
@@ -376,6 +379,7 @@ drake_cc_library(
     testonly = 1,
     srcs = [],
     hdrs = ["test/generic_trivial_constraints.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":constraint",
     ],
@@ -394,6 +398,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/mathematical_program_test_util.cc"],
     hdrs = ["test/mathematical_program_test_util.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":mathematical_program",
         "@gtest//:without_main",
@@ -405,6 +410,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/optimization_examples.cc"],
     hdrs = ["test/optimization_examples.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":mathematical_program",
         ":mathematical_program_test_util",
@@ -419,6 +425,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/linear_program_examples.cc"],
     hdrs = ["test/linear_program_examples.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":optimization_examples",
     ],
@@ -429,6 +436,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/quadratic_program_examples.cc"],
     hdrs = ["test/quadratic_program_examples.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":optimization_examples",
     ],
@@ -439,6 +447,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/second_order_cone_program_examples.cc"],
     hdrs = ["test/second_order_cone_program_examples.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":mathematical_program_test_util",
         "//common/test_utilities:eigen_matrix_compare",
@@ -450,6 +459,7 @@ drake_cc_library(
     testonly = 1,
     srcs = ["test/semidefinite_program_examples.cc"],
     hdrs = ["test/semidefinite_program_examples.h"],
+    visibility = ["//visibility:private"],
     deps = [
         ":mathematical_program_test_util",
         "//common/test_utilities:eigen_matrix_compare",
@@ -1179,6 +1189,7 @@ drake_cc_binary(
     name = "plot_feasible_rotation_matrices",
     testonly = 1,
     srcs = ["test/plot_feasible_rotation_matrices.cc"],
+    visibility = ["//visibility:private"],
     deps = [
         ":mathematical_program",
         ":mixed_integer_rotation_constraint",
@@ -1276,6 +1287,7 @@ drake_cc_binary(
     name = "plot_rotation_mccormick_envelope",
     testonly = 1,
     srcs = ["test/plot_rotation_mccormick_envelope.cc"],
+    visibility = ["//visibility:private"],
     deps = [
         ":rotation_constraint_visualization",
     ],
