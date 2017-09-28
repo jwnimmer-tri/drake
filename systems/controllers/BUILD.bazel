@@ -273,7 +273,7 @@ drake_cc_googletest(
     deps = [
         ":polynomial_encode_decode",
         "//common/test_utilities",
-        "//common/trajectories:random_piecewise_polynomial",
+        "//drake/common/trajectories/test_utilities",
     ],
 )
 

@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/test_utilities/random_polynomial_matrix.h"
-#include "drake/common/trajectories/test/random_piecewise_polynomial.h"
+#include "drake/common/trajectories/test_utilities/random_piecewise_polynomial.h"
 #include "drake/math/random_rotation.h"
 
 using Eigen::Dynamic;

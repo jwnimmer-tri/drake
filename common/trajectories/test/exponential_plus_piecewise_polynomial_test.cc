@@ -6,7 +6,7 @@
 #include <Eigen/Core>
 #include <gtest/gtest.h>
 
-#include "drake/common/trajectories/test/random_piecewise_polynomial.h"
+#include "drake/common/trajectories/test_utilities/random_piecewise_polynomial.h"
 
 using std::default_random_engine;
 using std::uniform_real_distribution;

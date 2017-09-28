@@ -70,15 +70,6 @@ drake_cc_library(
 
 # === test/ ===
 
-drake_cc_library(
-    name = "random_piecewise_polynomial",
-    testonly = 1,
-    hdrs = ["test/random_piecewise_polynomial.h"],
-    deps = [
-        "//common/test_utilities:random_polynomial_matrix",
-    ],
-)
-
 drake_cc_googletest(
     name = "piecewise_trajectory_test",
     deps = [
@@ -101,8 +92,8 @@ drake_cc_googletest(
     name = "piecewise_polynomial_test",
     deps = [
         ":piecewise_polynomial",
-        ":random_piecewise_polynomial",
         "//common/test_utilities:eigen_matrix_compare",
+        "//common/trajectories/test_utilities",
     ],
 )
 
@@ -110,8 +101,8 @@ drake_cc_googletest(
     name = "exponential_plus_piecewise_polynomial_test",
     deps = [
         ":piecewise_polynomial",
-        ":random_piecewise_polynomial",
         "//common/test_utilities:eigen_matrix_compare",
+        "//common/trajectories/test_utilities",
     ],
 )
 
