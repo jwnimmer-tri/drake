@@ -657,6 +657,7 @@ drake_cc_googletest(
     name = "drake_throw_test",
     deps = [
         ":essential",
+        "//common/test_utilities:expect_throws_message",
     ],
 )
 
