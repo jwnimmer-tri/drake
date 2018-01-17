@@ -1,4 +1,11 @@
 #pragma once
+// Copyright YYYY-ZZZZ Toyota Research Institute.  All rights reserved.
+// Copyright YYYY-ZZZZ Massachusetts Institute of Technology.  All rights reserved.
+// Copyright YYYY-ZZZZ individual contributors at http://drake.mit.edu/credits.html.
+// SPDX-License-Identifier: BSD-3-Clause-Drake
+//
+// Use of this source code is governed by the top-level LICENSE.TXT file.
+
 /// @file This header provides a single inclusion point for autodiff-related
 /// header files in the `drake/common` directory. Users should include this
 /// file. Including other individual headers such as `drake/common/autodiffxd.h`

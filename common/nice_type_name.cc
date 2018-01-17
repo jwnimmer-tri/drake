@@ -1,9 +1,12 @@
-/* Portions copyright (c) 2014 Stanford University and the Authors.
-   Authors: Chris Dembia, Michael Sherman
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may
-not use this file except in compliance with the License. You may obtain a
-copy of the License at http://www.apache.org/licenses/LICENSE-2.0. */
+// Copyright (c) 2014 Stanford University and the Authors.  Authors: Chris Dembia, Michael Sherman.
+// Copyright YYYY-ZZZZ Toyota Research Institute.  All rights reserved.
+// Copyright YYYY-ZZZZ Massachusetts Institute of Technology.  All rights reserved.
+// Copyright YYYY-ZZZZ individual contributors at http://drake.mit.edu/credits.html.
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License.  You may obtain a copy
+// of the License at http://www.apache.org/licenses/LICENSE-2.0.
 
 #include "drake/common/nice_type_name.h"
 
