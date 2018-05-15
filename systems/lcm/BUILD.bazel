@@ -134,8 +134,8 @@ drake_cc_googletest(
     deps = [
         ":lcm_pubsub_system",
         ":lcmt_drake_signal_translator",
-        "//lcm:lcmt_drake_signal_utils",
         "//lcm:mock",
+        "//lcm/test_utilities",
         "//systems/analysis",
     ],
 )
@@ -154,8 +154,8 @@ drake_cc_googletest(
     deps = [
         ":lcm_pubsub_system",
         ":lcmt_drake_signal_translator",
-        "//lcm:lcmt_drake_signal_utils",
         "//lcm:mock",
+        "//lcm/test_utilities",
         "//systems/framework/test_utilities:my_vector",
     ],
 )
@@ -165,8 +165,8 @@ drake_cc_googletest(
     deps = [
         ":lcmt_drake_signal_translator",
         ":translator",
-        "//lcm:lcmt_drake_signal_utils",
         "//lcm:mock",
+        "//lcm/test_utilities",
     ],
 )
 
@@ -175,8 +175,8 @@ drake_cc_googletest(
     deps = [
         ":lcm_pubsub_system",
         ":lcmt_drake_signal_translator",
-        "//lcm:lcmt_drake_signal_utils",
         "//lcm:mock",
+        "//lcm/test_utilities",
     ],
 )
 
@@ -184,7 +184,7 @@ drake_cc_googletest(
     name = "translator_test",
     deps = [
         ":translator_system",
-        "//lcm:lcmt_drake_signal_utils",
+        "//lcm/test_utilities",
     ],
 )
 

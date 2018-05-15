@@ -75,17 +75,6 @@ drake_cc_library(
 )
 
 drake_cc_library(
-    name = "lcmt_drake_signal_utils",
-    testonly = 1,
-    srcs = ["lcmt_drake_signal_utils.cc"],
-    hdrs = ["lcmt_drake_signal_utils.h"],
-    deps = [
-        "//common:essential",
-        "//lcmtypes:drake_signal",
-    ],
-)
-
-drake_cc_library(
     name = "translator_base",
     hdrs = [
         "translator_base.h",
@@ -101,9 +90,9 @@ drake_cc_library(
 drake_cc_googletest(
     name = "drake_lcm_interface_test",
     deps = [
-        ":lcmt_drake_signal_utils",
         ":mock",
         "//common/test_utilities",
+        "//lcm/test_utilities",
     ],
 )
 
@@ -112,8 +101,8 @@ drake_cc_googletest(
     # Flaky because LCM self-test can fail (PR #7311)
     flaky = 1,
     deps = [
-        ":lcmt_drake_signal_utils",
         ":real",
+        "//lcm/test_utilities",
     ],
 )
 
@@ -121,22 +110,15 @@ drake_cc_googletest(
     name = "drake_lcm_log_test",
     deps = [
         ":lcm_log",
-        ":lcmt_drake_signal_utils",
+        "//lcm/test_utilities",
     ],
 )
 
 drake_cc_googletest(
     name = "drake_mock_lcm_test",
     deps = [
-        ":lcmt_drake_signal_utils",
         ":mock",
-    ],
-)
-
-drake_cc_googletest(
-    name = "lcmt_drake_signal_utils_test",
-    deps = [
-        ":lcmt_drake_signal_utils",
+        "//lcm/test_utilities",
     ],
 )
 
