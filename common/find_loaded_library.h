@@ -11,5 +11,4 @@ namespace drake {
 /// process. Otherwise it returns an empty optional.
 optional<std::string> LoadedLibraryPath(const std::string& library_name);
 
-
 }  // namespace drake

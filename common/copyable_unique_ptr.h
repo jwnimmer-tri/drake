@@ -172,7 +172,7 @@ class copyable_unique_ptr : public std::unique_ptr<T> {
    heap-allocated copy of the source object, created using its copy
    constructor or `Clone()` method. The currently-held object (if any) is
    deleted. */
-  copyable_unique_ptr & operator=(const T& ref) {
+  copyable_unique_ptr& operator=(const T& ref) {
     std::unique_ptr<T>::reset(CopyOrNull(&ref));
     return *this;
   }
@@ -363,13 +363,12 @@ class copyable_unique_ptr : public std::unique_ptr<T> {
 
   // Default to copy constructor if present.
   template <typename U>
-  static
-  U* CopyOrNullHelper(const U* ptr, ...) {
+  static U* CopyOrNullHelper(const U* ptr, ...) {
     return new U(*ptr);
   }
 
   // If src is non-null, clone it; otherwise return nullptr.
-  static T* CopyOrNull(const T *ptr) {
+  static T* CopyOrNull(const T* ptr) {
     return ptr ? CopyOrNullHelper(ptr, 1) : nullptr;
   }
 };

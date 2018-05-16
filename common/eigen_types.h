@@ -70,7 +70,6 @@ using RowVector6 = Eigen::Matrix<Scalar, 1, 6>;
 template <typename Scalar>
 using RowVectorX = Eigen::Matrix<Scalar, 1, Eigen::Dynamic>;
 
-
 /// A matrix of 2 rows and 2 columns, templated on scalar type.
 template <typename Scalar>
 using Matrix2 = Eigen::Matrix<Scalar, 2, 2>;

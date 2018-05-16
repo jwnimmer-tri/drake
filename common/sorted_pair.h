@@ -53,8 +53,9 @@ struct SortedPair {
 
   /// Type-converting copy constructor.
   template <class U>
-  SortedPair(SortedPair<U>&& u) : first_{std::forward<T>(u.first())},
-      second_{std::forward<T>(u.second())} {}
+  SortedPair(SortedPair<U>&& u)
+      : first_{std::forward<T>(u.first())},
+        second_{std::forward<T>(u.second())} {}
 
   /// Resets the stored objects.
   template <class U>
@@ -80,14 +81,14 @@ struct SortedPair {
   /// Implements the @ref hash_append concept.
   template <class HashAlgorithm>
   friend void hash_append(HashAlgorithm& hasher, const SortedPair& p) noexcept {
-     using drake::hash_append;
+    using drake::hash_append;
     hash_append(hasher, p.first_);
     hash_append(hasher, p.second_);
   }
 
  private:
-  T first_{};          // The first of the two objects, according to operator<.
-  T second_{};         // The second of the two objects, according to operator<.
+  T first_{};   // The first of the two objects, according to operator<.
+  T second_{};  // The second of the two objects, according to operator<.
 };
 
 /// Two pairs of the same type are equal iff their members are equal after

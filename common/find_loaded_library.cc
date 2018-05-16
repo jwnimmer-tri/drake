@@ -27,8 +27,8 @@ namespace drake {
 
 namespace {
 // Reads memory from MacOS specific structures into an `unsigned char*`.
-unsigned char * ReadProcessMemory(mach_vm_address_t addr,
-                                  mach_msg_type_number_t* size) {
+unsigned char* ReadProcessMemory(mach_vm_address_t addr,
+                                 mach_msg_type_number_t* size) {
   vm_offset_t readMem;
 
   kern_return_t kr = vm_read(mach_task_self(), addr, *size,
@@ -36,7 +36,7 @@ unsigned char * ReadProcessMemory(mach_vm_address_t addr,
   if (kr != KERN_SUCCESS) {
     return NULL;
   }
-  return (reinterpret_cast<unsigned char *>(readMem));
+  return reinterpret_cast<unsigned char*>(readMem);
 }
 }  // namespace
 // Gets the list of all the dynamic libraries that have been loaded. Finds
@@ -51,31 +51,31 @@ optional<string> LoadedLibraryPath(const string& library_name) {
     // Recover list of dynamic libraries.
     mach_msg_type_number_t size = sizeof(dyld_all_image_infos);
     unsigned char* data =
-      ReadProcessMemory(dyld_info.all_image_info_addr, &size);
+        ReadProcessMemory(dyld_info.all_image_info_addr, &size);
     if (!data) {
       return nullopt;
     }
     dyld_all_image_infos* infos =
-      reinterpret_cast<dyld_all_image_infos *>(data);
+        reinterpret_cast<dyld_all_image_infos*>(data);
 
     // Recover number of dynamic libraries in list.
     mach_msg_type_number_t size2 =
-      sizeof(dyld_image_info) * infos->infoArrayCount;
+        sizeof(dyld_image_info) * infos->infoArrayCount;
     unsigned char* info_addr = ReadProcessMemory(
         reinterpret_cast<mach_vm_address_t>(infos->infoArray), &size2);
     if (!info_addr) {
       return nullopt;
     }
     dyld_image_info* info =
-      reinterpret_cast<dyld_image_info*>(info_addr);
+        reinterpret_cast<dyld_image_info*>(info_addr);
 
     // Loop over the dynamic libraries until `library_name` is found.
     for (uint32_t i=0; i < infos->infoArrayCount; i++) {
-      const char * pos_slash = strrchr(info[i].imageFilePath, '/');
+      const char* pos_slash = strrchr(info[i].imageFilePath, '/');
       if (!strcmp(pos_slash + 1, library_name.c_str())) {
         // Path is always absolute on MacOS.
         return string(info[i].imageFilePath,
-          pos_slash - info[i].imageFilePath);
+            pos_slash - info[i].imageFilePath);
       }
     }
   }
@@ -88,7 +88,7 @@ optional<string> LoadedLibraryPath(const string& library_name) {
 // This function is specific to Linux.
 optional<string> LoadedLibraryPath(const std::string& library_name) {
   void* handle = dlopen(NULL, RTLD_NOW);
-  link_map *map;
+  link_map* map;
   dlinfo(handle, RTLD_DI_LINKMAP, &map);
   // Loop over loaded shared objects until `library_name` is found.
   while (map) {
@@ -106,7 +106,7 @@ optional<string> LoadedLibraryPath(const std::string& library_name) {
         DRAKE_THROW_UNLESS(readlink_res >= 0 && readlink_res < PATH_MAX);
         buf[readlink_res] = '\0';
         return string(dirname(buf)) + "/" +
-              string(map->l_name, pos_slash - map->l_name);
+               string(map->l_name, pos_slash - map->l_name);
       } else {
         return string(map->l_name, pos_slash - map->l_name);
       }

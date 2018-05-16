@@ -111,7 +111,7 @@ optional<std::string> getenv_optional(const char* const name) {
 // libdrake.so's path; otherwise, return nullopt.  The resulting string will
 // already end with "drake"; that is, the directory will contain files named
 // like "common/foo.txt", not "drake/common/foo.txt".
-optional<std::string>  GetCandidateDirFromLibdrake() {
+optional<std::string> GetCandidateDirFromLibdrake() {
   optional<std::string> libdrake_dir = LoadedLibraryPath("libdrake.so");
   if (libdrake_dir) {
     libdrake_dir = libdrake_dir.value() + "/../share/drake";
@@ -292,10 +292,10 @@ Result FindResource(string resource_path) {
   // guard against it.
   for (const auto& candidate_dir : candidate_dirs) {
     if (candidate_dir && IsRelativePath(candidate_dir.value())) {
-        string error_message = "path is not absolute: " + candidate_dir.value();
-        return Result::make_error(std::move(resource_path), error_message);
-      }
+      string error_message = "path is not absolute: " + candidate_dir.value();
+      return Result::make_error(std::move(resource_path), error_message);
     }
+  }
 
   // See which (if any) candidate contains the requested resource.
   for (const auto& candidate_dir : candidate_dirs) {

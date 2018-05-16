@@ -58,5 +58,4 @@ bool IsApproxEqualAbsTolWithPermutedColumns(
   return true;
 }
 
-
 }  // namespace drake

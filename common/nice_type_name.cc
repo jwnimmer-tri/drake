@@ -112,4 +112,3 @@ string drake::NiceTypeName::RemoveNamespaces(const string& canonical) {
 }
 
 }  // namespace drake
-
