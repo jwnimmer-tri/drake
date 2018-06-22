@@ -35,6 +35,7 @@ class TestSystem : public LeafSystem<T> {
   ~TestSystem() override {}
 
   using LeafSystem<T>::DeclareContinuousState;
+  using LeafSystem<T>::DeclareVectorOutputPort;
 
   void AddPeriodicUpdate() {
     const double period = 10.0;
@@ -202,6 +203,24 @@ class LeafSystemTest : public ::testing::Test {
   std::unique_ptr<CompositeEventCollection<double>> event_info_;
   const LeafCompositeEventCollection<double>* leaf_info_;
 };
+
+// An incorrectly implemented BasicVector.
+class MissingCloneVector : public BasicVector<double> {
+ public:
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(MissingCloneVector)
+  MissingCloneVector() : BasicVector<double>(2) {}
+};
+
+// Tests that .. XXX
+TEST_F(LeafSystemTest, DeclareBrokenVectorOutput) {
+  const MissingCloneVector bad_model_vector;
+  // XXX This should throw.
+  system_.DeclareVectorOutputPort(
+      bad_model_vector,
+      [](const Context<double>&, BasicVector<double>*) {
+        // no-op
+      });
+}
 
 // Tests that witness functions can be declared. Tests that witness functions
 // stop Simulator at desired points (i.e., the raison d'etre of a witness
