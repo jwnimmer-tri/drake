@@ -19,6 +19,7 @@ namespace drake {
 namespace common {
 namespace {
 
+using ::testing::StartsWith;
 using std::regex;
 using std::regex_match;
 using std::move;
@@ -41,9 +42,8 @@ GTEST_TEST(TypeSafeIndex, Constructor) {
   // Construction with invalid index.
   AIndex invalid;  // Default constructor.
   EXPECT_FALSE(invalid.is_valid());
-  DRAKE_EXPECT_THROWS_MESSAGE_IF_ARMED(
-      AIndex(-1), std::runtime_error,
-      "Explicitly constructing an invalid index.+");
+  EXPECT_THAT_THROWN_MESSAGE(AIndex(-1), IfAssertArmed(StartsWith(
+      "Explicitly constructing an invalid index")));
   EXPECT_NO_THROW(unused(AIndex(invalid)));  // Copy construct invalid index.
 }
 
