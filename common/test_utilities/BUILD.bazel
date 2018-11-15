@@ -61,6 +61,9 @@ drake_cc_library(
     name = "expect_throws_message",
     testonly = 1,
     hdrs = ["expect_throws_message.h"],
+    deps = [
+        "//common:nice_type_name",
+    ],
 )
 
 drake_cc_library(
@@ -122,6 +125,13 @@ drake_cc_googletest(
     deps = [
         ":eigen_matrix_compare",
         "//common:essential",
+    ],
+)
+
+drake_cc_googletest(
+    name = "expect_throws_message_test",
+    deps = [
+        ":expect_throws_message",
     ],
 )
 
