@@ -298,5 +298,20 @@ bool IsNonNull(const std::vector<PtrType>& pointers) {
 }  // namespace internal
 #endif
 
+struct DiscreteUpdatePeriod {
+  double period_sec{};
+};
+
+struct DiscreteUpdatePeriodOffset {
+  DiscreteUpdatePeriodOffset() = default;
+
+  // NOLINTNEXTLINE(runtime/explicit)
+  DiscreteUpdatePeriodOffset(const DiscreteUpdatePeriod& other)
+      : period_sec(other.period_sec) {}
+
+  double period_sec{};
+  double offset_sec{};
+};
+
 }  // namespace systems
 }  // namespace drake

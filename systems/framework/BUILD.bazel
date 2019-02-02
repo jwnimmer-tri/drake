@@ -595,6 +595,19 @@ drake_cc_library(
     ],
 )
 
+drake_cc_library(
+    name = "symbolic_vector_system",
+    srcs = ["symbolic_vector_system.cc"],
+    hdrs = ["symbolic_vector_system.h"],
+    deps = [
+        ":framework_common",
+        ":leaf_system",
+        ":system_scalar_converter",
+        "//common:default_scalars",
+        "//common:essential",
+    ],
+)
+
 # === test/ ===
 
 drake_cc_googletest(
@@ -906,6 +919,15 @@ drake_cc_googletest(
     name = "userscalar_acceptance_test",
     deps = [
         ":framework",
+        "//systems/framework/test_utilities",
+    ],
+)
+
+drake_cc_googletest(
+    name = "symbolic_vector_system_test",
+    deps = [
+        ":symbolic_vector_system",
+        "//common/test_utilities:eigen_matrix_compare",
         "//systems/framework/test_utilities",
     ],
 )
