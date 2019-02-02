@@ -1,0 +1,14 @@
+namespace: "drake::systems::test"
+
+element {
+    name: "x"
+    default_value: "1.0"
+}
+element {
+    name: "y"
+    default_value: "2.0"
+}
+element {
+    name: "z"
+    default_value: "3.0"
+}

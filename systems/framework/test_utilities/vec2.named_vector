@@ -1,0 +1,14 @@
+namespace: "drake::systems::test"
+
+element {
+    name: "beta"
+    min_value: "0.0"
+    max_value: "1.0"
+    default_value: "1.0"
+}
+element {
+    name: "gamma"
+    min_value: "-1.0"
+    max_value: "1.0"
+    default_value: "0.0"
+}
