@@ -60,12 +60,14 @@ drake_cc_library(
     name = "vector",
     srcs = [
         "basic_vector.cc",
+        "null_vector.cc",
         "subvector.cc",
         "supervector.cc",
         "vector_base.cc",
     ],
     hdrs = [
         "basic_vector.h",
+        "null_vector.h",
         "subvector.h",
         "supervector.h",
         "vector_base.h",
