@@ -760,7 +760,20 @@ void MosekSolver::DoSolve(
     }
   }
 
-  if (with_integer_or_binary_variable && initial_guess.allFinite()) {
+  // Mosek can accept the initial guess on its integer/binary variables, but
+  // not on the continuous variables. So it allows some of the variables'
+  // initial guess to be unset, while setting the others. We loop through all
+  // initial guess, if any of them is finite, then we will ask Mosek to set
+  // the initial guess.
+  bool is_initial_guess_set = false;
+  for (int i = 0; i < initial_guess.rows(); ++i) {
+    is_initial_guess_set = std::isfinite(initial_guess(i));
+    if (is_initial_guess_set) {
+      break;
+    }
+  }
+
+  if (with_integer_or_binary_variable && is_initial_guess_set) {
     // Set the initial guess for the integer/binary variables.
     DRAKE_ASSERT(initial_guess.size() == prog.num_vars());
     MSKint32t num_mosek_vars{0};
