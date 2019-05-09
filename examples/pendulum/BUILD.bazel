@@ -26,6 +26,15 @@ drake_cc_vector_gen_library(
 )
 
 drake_cc_library(
+    name = "pendulum_plant3",
+    srcs = ["pendulum_plant3.cc"],
+    hdrs = ["pendulum_plant3.h"],
+    deps = [
+        "//common",
+    ],
+)
+
+drake_cc_library(
     name = "pendulum_plant",
     srcs = ["pendulum_plant.cc"],
     hdrs = ["pendulum_plant.h"],
