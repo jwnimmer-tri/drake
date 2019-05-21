@@ -436,6 +436,25 @@ def drake_cc_package_library(
         visibility = visibility,
         deps = deps,
     )
+    # Emit a summary list of the package library's external dependencies, as a
+    # convenient developer reference.  (We cull out Bazel's dependencies on the
+    # default C++ toolchain.)
+    native.genquery(
+        name = "drake_cc_package_library_externals.txt",
+        expression = " ".join([
+            "let d = deps(//{package_name}:{name}) in",
+            "let e = kind('cc_.* rule', $d) in",
+            "$e",
+            "except filter('^@bazel_tools//', $e)",
+            "except filter('^@local_config_cc//', $e)",
+            "except filter('^@drake//', $e)",
+        ]).format(package_name = native.package_name(), name = name),
+        opts = ["--output=package"],
+        scope = [":" + name],
+        testonly = 1,
+        tags = ["drake_cc_package_library_externals"],
+        visibility = ["//visibility:private"],
+    )
 
 def drake_cc_binary(
         name,
