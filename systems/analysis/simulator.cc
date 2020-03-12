@@ -10,35 +10,64 @@ namespace drake {
 namespace systems {
 
 template <typename T>
-Simulator<T>::Simulator(const System<T>& system,
+Simulator<T>::Simulator(std::unique_ptr<const System<T>> system,
                         std::unique_ptr<Context<T>> context)
-    : Simulator(&system, nullptr, std::move(context)) {}
+    : Simulator(nullptr, std::move(system), std::move(context), nullptr) {}
 
 template <typename T>
-Simulator<T>::Simulator(std::unique_ptr<const System<T>> owned_system,
-                        std::unique_ptr<Context<T>> context) :
-    Simulator(nullptr, std::move(owned_system), std::move(context)) {}
+Simulator<T>::Simulator(std::unique_ptr<const System<T>> system,
+                        std::shared_ptr<Context<T>> context)
+    : Simulator(nullptr, std::move(system), nullptr, std::move(context)) {}
+
+template <typename T>
+Simulator<T>::Simulator(const System<T>& system,
+                        std::unique_ptr<Context<T>> context)
+    : Simulator(&system, nullptr, std::move(context), nullptr) {}
+
+template <typename T>
+Simulator<T>::Simulator(const System<T>& system,
+                        std::shared_ptr<Context<T>> context)
+    : Simulator(&system, nullptr, nullptr, std::move(context)) {}
+
+template <typename T>
+Simulator<T>::Simulator(std::unique_ptr<const System<T>> system,
+                        std::nullptr_t)
+    : Simulator(nullptr, std::move(system), nullptr, nullptr) {}
+
+template <typename T>
+Simulator<T>::Simulator(const System<T>& system, std::nullptr_t)
+    : Simulator(&system, nullptr, nullptr, nullptr) {}
 
 template <typename T>
 Simulator<T>::Simulator(const System<T>* system,
                         std::unique_ptr<const System<T>> owned_system,
-                        std::unique_ptr<Context<T>> context)
+                        std::unique_ptr<Context<T>> unique_context,
+                        std::shared_ptr<Context<T>> shared_context)
     : owned_system_(std::move(owned_system)),
-      system_(owned_system_ ? *owned_system_ : *system),
-      context_(std::move(context)) {
+      system_(*(system ? system :
+	        owned_system_ ? owned_system_.get() :
+                throw std::runtime_error(
+                    "Creating a Simulator for a null System is not allowed"))),
+      owned_context_(shared_context ? std::move(shared_context)
+                                    : std::move(unique_context)),
+      context_(std::visit([](auto&& x) { return x.get(); }, owned_context_)) {
   // Setup defaults that should be generally reasonable.
   const double max_step_size = 0.1;
   const double initial_step_size = 1e-4;
   const double default_accuracy = 1e-4;
 
   // Create a context if necessary.
-  if (!context_) context_ = system_.CreateDefaultContext();
+  if (!context_) {
+    auto fresh_context = system_.CreateDefaultContext();
+    context_ = fresh_context.get();
+    owned_context_ = std::move(fresh_context);
+  }
 
   // Create a default integrator and initialize it.
   // N.B. Keep this in sync with systems::internal::kDefaultIntegratorName at
   // the top of this file.
   integrator_ = std::unique_ptr<IntegratorBase<T>>(
-      new RungeKutta3Integrator<T>(system_, context_.get()));
+      new RungeKutta3Integrator<T>(system_, context_));
   integrator_->request_initial_step_size_target(initial_step_size);
   integrator_->set_maximum_step_size(max_step_size);
   integrator_->set_target_accuracy(default_accuracy);
@@ -143,6 +172,9 @@ SimulatorStatus Simulator<T>::Initialize() {
   return status;
 }
 
+template <typename T>
+Simulator<T>::~Simulator() {}
+
 // Processes UnrestrictedUpdateEvent events.
 template <typename T>
 void Simulator<T>::HandleUnrestrictedUpdate(
@@ -153,7 +185,7 @@ void Simulator<T>::HandleUnrestrictedUpdate(
         unrestricted_updates_.get());
     // Now write the update back into the context.
     system_.ApplyUnrestrictedUpdate(events, unrestricted_updates_.get(),
-        context_.get());
+        context_);
     ++num_unrestricted_updates_;
 
     // Mark the witness function vector as needing to be redetermined.
@@ -171,7 +203,7 @@ void Simulator<T>::HandleDiscreteUpdate(
         discrete_updates_.get());
     // Then, write them back into the context.
     system_.ApplyDiscreteVariableUpdate(events, discrete_updates_.get(),
-        context_.get());
+        context_);
     ++num_discrete_updates_;
   }
 }
@@ -687,6 +719,40 @@ double Simulator<T>::get_actual_realtime_rate() const {
   const Duration realtime_passed = Clock::now() - initial_realtime_;
   const double rate = (simtime_passed / realtime_passed.count());
   return rate;
+}
+
+template <typename T>
+void Simulator<T>::reset_context(std::unique_ptr<Context<T>> context) {
+  context_ = context.get();
+  owned_context_ = std::move(context);
+  integrator_->reset_context(context_);
+  initialization_done_ = false;
+}
+
+template <typename T>
+void Simulator<T>::reset_context(std::shared_ptr<Context<T>> context) {
+  context_ = context.get();
+  owned_context_ = std::move(context);
+  integrator_->reset_context(context_);
+  initialization_done_ = false;
+}
+
+template <typename T>
+void Simulator<T>::reset_context(std::nullptr_t) {
+  this->reset_context(std::unique_ptr<Context<T>>{});
+}
+
+template <typename T>
+std::unique_ptr<Context<T>> Simulator<T>::release_context() {
+  using Result = std::unique_ptr<Context<T>>;
+  if (!std::holds_alternative<Result>(owned_context_)) {
+    throw std::runtime_error("...");
+  }
+  Result result = std::get<Result>(std::move(owned_context_));
+  context_ = nullptr;
+  integrator_->reset_context(nullptr);
+  initialization_done_ = false;
+  return result;
 }
 
 template <typename T>

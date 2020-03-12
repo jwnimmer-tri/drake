@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "drake/common/default_scalars.h"
@@ -213,28 +215,48 @@ class Simulator {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Simulator)
 
-  /// Create a %Simulator that can advance a given System through time to
+  /// Creates a %Simulator that can advance a given System through time to
   /// produce a trajectory consisting of a sequence of Context values. The
   /// System must not have unresolved input ports if the values of those ports
-  /// are necessary for computations performed during simulation (see class
-  /// documentation).
+  /// are necessary for computations performed during simulation (see
+  /// @ref Simulator "class documentation").
+  ///
+  /// @param system The System to simulate.
+  ///
+  /// @param context Context that will be used as the initial condition for the
+  /// simulation, or else nullptr to obtain a default Context from `system`.
+  explicit Simulator(std::unique_ptr<const System<T>> system,
+                     std::unique_ptr<Context<T>> context = nullptr);
+
+  /// @overload
+  /// @exclude_from_pydrake_mkdoc{This is just an ownership overload.}
+  Simulator(std::unique_ptr<const System<T>> system,
+            std::shared_ptr<Context<T>> context);
+
+  /// @overload
+  /// @exclude_from_pydrake_mkdoc{This is just an ownership overload.}
   ///
   /// The Simulator holds an internal, non-owned reference to the System
   /// object so you must ensure that `system` has a longer lifetime than the
-  /// %Simulator. It also owns a compatible Context internally that takes on
-  /// each of the trajectory values. You may optionally provide a Context that
-  /// will be used as the initial condition for the simulation; otherwise the
-  /// %Simulator will obtain a default Context from `system`.
+  /// %Simulator.
   explicit Simulator(const System<T>& system,
                      std::unique_ptr<Context<T>> context = nullptr);
 
-  /// Create a %Simulator which additionally maintains ownership of the System.
+  /// @overload
+  /// @exclude_from_pydrake_mkdoc{This is just an ownership overload.}
   ///
-  /// @exclude_from_pydrake_mkdoc{The prior overload's docstring is better, and
-  /// we only need one of the two -- overloading on ownership doesn't make
-  /// sense for pydrake.}
-  Simulator(std::unique_ptr<const System<T>> system,
-            std::unique_ptr<Context<T>> context = nullptr);
+  /// The Simulator holds an internal, non-owned reference to the System
+  /// object so you must ensure that `system` has a longer lifetime than the
+  /// %Simulator.
+  Simulator(const System<T>& system,
+            std::shared_ptr<Context<T>> context);
+
+#ifndef DRAKE_DOXYGEN_CXX
+  Simulator(std::unique_ptr<const System<T>>, std::nullptr_t);
+  Simulator(const System<T>&, std::nullptr_t);
+#endif
+
+  ~Simulator();
 
   // TODO(sherm1) Make Initialize() attempt to satisfy constraints.
   // TODO(sherm1) Add a ReInitialize() or Resume() method that is called
@@ -538,21 +560,21 @@ class Simulator {
   /// @param context The new context, which may be null. If the context is
   ///                null, a new context must be set before attempting to step
   ///                the system forward.
-  void reset_context(std::unique_ptr<Context<T>> context) {
-    context_ = std::move(context);
-    integrator_->reset_context(context_.get());
-    initialization_done_ = false;
-  }
+  void reset_context(std::unique_ptr<Context<T>> context);
+
+  /// @overload
+  /// @exclude_from_pydrake_mkdoc{This is just an ownership overload.}
+  void reset_context(std::shared_ptr<Context<T>> context);
+
+#ifndef DRAKE_DOXYGEN_CXX
+  void reset_context(std::nullptr_t);
+#endif
 
   /// Transfer ownership of this %Simulator's internal Context to the caller.
   /// The %Simulator will no longer contain a Context. The caller must not
   /// attempt to advance the simulator in time after that point.
   /// @sa reset_context()
-  std::unique_ptr<Context<T>> release_context() {
-    integrator_->reset_context(nullptr);
-    initialization_done_ = false;
-    return std::move(context_);
-  }
+  std::unique_ptr<Context<T>> release_context();
 
   /// Forget accumulated statistics. Statistics are reset to the values they
   /// have post construction or immediately after `Initialize()`.
@@ -697,10 +719,8 @@ class Simulator {
   };
 
   // All constructors delegate to here.
-  Simulator(
-      const System<T>* system,
-      std::unique_ptr<const System<T>> owned_system,
-      std::unique_ptr<Context<T>> context);
+  Simulator(const System<T>*, std::unique_ptr<const System<T>>,
+            std::unique_ptr<Context<T>>, std::shared_ptr<Context<T>>);
 
   void HandleUnrestrictedUpdate(
       const EventCollection<UnrestrictedUpdateEvent<T>>& events);
@@ -784,13 +804,17 @@ class Simulator {
   static constexpr double kDefaultAccuracy = 1e-3;  // 1/10 of 1%.
   static constexpr double kDefaultInitialStepSizeAttempt = 1e-3;
 
-  // Do not use this.  This is valid iff the constructor is passed a
-  // unique_ptr (allowing the Simulator to maintain ownership).  Use the
-  // system_ variable instead, which is valid always.
+  // Do not use owned_system_; it serves only to manage lifetime.
+  // Use the system_ variable instead.
   const std::unique_ptr<const System<T>> owned_system_;
+  const System<T>& system_;
 
-  const System<T>& system_;              // Just a reference; not owned.
-  std::unique_ptr<Context<T>> context_;  // The trajectory Context.
+  // Do not use owned_context_; it serves only to manage lifetime.
+  // Use the context_ variable instead.
+  std::variant<std::unique_ptr<Context<T>>,
+               std::shared_ptr<Context<T>>> owned_context_;
+  // The trajectory Context.
+  Context<T>* context_{};
 
   // Temporaries used for witness function isolation.
   std::vector<const WitnessFunction<T>*> triggered_witnesses_;
