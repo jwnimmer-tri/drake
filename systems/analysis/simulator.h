@@ -252,6 +252,8 @@ class Simulator {
             std::shared_ptr<Context<T>> context);
 
 #ifndef DRAKE_DOXYGEN_CXX
+  // If a user passes `nullptr` literal for `context`, the overloads would be
+  // ambiguous without these additions.  We'll hide them from Doxygen, though.
   Simulator(std::unique_ptr<const System<T>>, std::nullptr_t);
   Simulator(const System<T>&, std::nullptr_t);
 #endif
@@ -553,10 +555,13 @@ class Simulator {
   /// This is always true unless `reset_context()` has been called.
   bool has_context() const { return context_ != nullptr; }
 
-  /// Replace the internally-maintained Context with a different one. The
-  /// current Context is deleted. This is useful for supplying a new set of
-  /// initial conditions. You should invoke Initialize() after replacing the
-  /// Context.
+  /// Replaces the internally-maintained Context with a different one. This is
+  /// useful for supplying a new set of initial conditions. You should invoke
+  /// Initialize() after replacing the Context.
+  ///
+  /// The current context will be deleted, unless it had been provided as a
+  /// shared_ptr in which case only its use count is decremented.
+  ///
   /// @param context The new context, which may be null. If the context is
   ///                null, a new context must be set before attempting to step
   ///                the system forward.
@@ -567,6 +572,8 @@ class Simulator {
   void reset_context(std::shared_ptr<Context<T>> context);
 
 #ifndef DRAKE_DOXYGEN_CXX
+  // If a user passes `nullptr` literal for `context`, the overloads would be
+  // ambiguous without this addition.  We'll hide it from Doxygen, though.
   void reset_context(std::nullptr_t);
 #endif
 
