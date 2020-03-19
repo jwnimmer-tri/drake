@@ -801,19 +801,22 @@ GTEST_TEST(SimulatorTest, WitnessAndTimedSequences) {
 // TODO(edrumwri): Add tests for verifying that correct interval returned
 // in the case of multiple witness functions. See issue #6184.
 
-GTEST_TEST(SimulatorTest, SecondConstructor) {
-  // Create the spring-mass system and context.
+GTEST_TEST(SimulatorTest, ConstructorSpecifiedUniqueContext) {
+  // Create the spring-mass system and non-default context.
   analysis_test::MySpringMassSystem<double> spring_mass(1., 1., 0.);
   auto context = spring_mass.CreateDefaultContext();
-
-  // Mark the context with an arbitrary value.
+  auto context_ptr = context.get();
   context->SetTime(3.);
 
-  /// Construct the simulator with the created context.
+  /// Construct the simulator with the specified context.
   Simulator<double> simulator(spring_mass, std::move(context));
 
-  // Verify that context pointers are equivalent.
+  // Verify that context pointers are equivalent, and the context was aliased
+  // (not cloned).
+  EXPECT_EQ(&simulator.get_context(), context_ptr);
   EXPECT_EQ(simulator.get_context().get_time(), 3.);
+
+  Simulator<double> simulator2(spring_mass, nullptr);
 }
 
 GTEST_TEST(SimulatorTest, MiscAPI) {
@@ -854,9 +857,10 @@ GTEST_TEST(SimulatorTest, ContextAccess) {
   // Try some other context stuff.
   simulator.get_mutable_context().SetTime(3.);
   EXPECT_EQ(simulator.get_context().get_time(), 3.);
-  EXPECT_TRUE(simulator.has_context());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   simulator.release_context();
-  EXPECT_FALSE(simulator.has_context());
+#pragma GCC diagnostic pop
   DRAKE_EXPECT_THROWS_MESSAGE(simulator.Initialize(), std::logic_error,
       ".*Initialize.*Context.*not.*set.*");
 
@@ -865,10 +869,17 @@ GTEST_TEST(SimulatorTest, ContextAccess) {
   ucontext->SetTime(3.);
   simulator.reset_context(std::move(ucontext));
   EXPECT_EQ(simulator.get_context().get_time(), 3.);
-  EXPECT_TRUE(simulator.has_context());
   simulator.reset_context(nullptr);
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+GTEST_TEST(SimulatorTest, HasContext) {
+  analysis_test::MySpringMassSystem<double> spring_mass(1., 1., 0.);
+  Simulator<double> simulator(spring_mass);
   EXPECT_FALSE(simulator.has_context());
 }
+#pragma GCC diagnostic pop
 
 // Try a purely continuous system with no sampling.
 GTEST_TEST(SimulatorTest, SpringMassNoSample) {

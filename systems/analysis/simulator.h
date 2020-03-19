@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -12,6 +13,7 @@
 #include "drake/common/default_scalars.h"
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/extract_double.h"
 #include "drake/systems/analysis/integrator_base.h"
 #include "drake/systems/analysis/simulator_status.h"
@@ -213,28 +215,43 @@ class Simulator {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Simulator)
 
-  /// Create a %Simulator that can advance a given System through time to
+  /// Creates a %Simulator that can advance a given System through time to
   /// produce a trajectory consisting of a sequence of Context values. The
-  /// System must not have unresolved input ports if the values of those ports
-  /// are necessary for computations performed during simulation (see class
-  /// documentation).
+  /// `system` must not have unresolved input ports if the values of those
+  /// ports are necessary for computations performed during simulation (see
+  /// @ref Simulator "class documentation").
+  ///
+  /// @param system System to simulate.
+  ///
+  /// @param context Context that will be used as the initial condition for the
+  /// simulation, or else `nullptr` to obtain a default context from `system`.
+  explicit Simulator(std::unique_ptr<const System<T>> system,
+                     std::shared_ptr<Context<T>> context = nullptr);
+
+  /// @overload
+  /// @exclude_from_pydrake_mkdoc{This is just an ownership overload.}
   ///
   /// The Simulator holds an internal, non-owned reference to the System
   /// object so you must ensure that `system` has a longer lifetime than the
-  /// %Simulator. It also owns a compatible Context internally that takes on
-  /// each of the trajectory values. You may optionally provide a Context that
-  /// will be used as the initial condition for the simulation; otherwise the
-  /// %Simulator will obtain a default Context from `system`.
+  /// %Simulator.
   explicit Simulator(const System<T>& system,
-                     std::unique_ptr<Context<T>> context = nullptr);
+                     std::shared_ptr<Context<T>> context = nullptr);
 
-  /// Create a %Simulator which additionally maintains ownership of the System.
-  ///
-  /// @exclude_from_pydrake_mkdoc{The prior overload's docstring is better, and
-  /// we only need one of the two -- overloading on ownership doesn't make
-  /// sense for pydrake.}
+#ifndef DRAKE_DOXYGEN_CXX
+  // For backwards compatibility only in support of release_context.
   Simulator(std::unique_ptr<const System<T>> system,
-            std::unique_ptr<Context<T>> context = nullptr);
+            std::unique_ptr<Context<T>> context);
+  Simulator(const System<T>& system,
+            std::unique_ptr<Context<T>> context);
+
+  // If a user passes `nullptr` literal for `context`, the overloads would be
+  // ambiguous without these additions.
+  Simulator(std::unique_ptr<const System<T>>, std::nullptr_t);
+  Simulator(const System<T>&, std::nullptr_t);
+
+  // Not interesting for Doxygen.
+  ~Simulator();
+#endif
 
   // TODO(sherm1) Make Initialize() attempt to satisfy constraints.
   // TODO(sherm1) Add a ReInitialize() or Resume() method that is called
@@ -510,49 +527,52 @@ class Simulator {
 
   /// Returns a const reference to the internally-maintained Context holding the
   /// most recent step in the trajectory. This is suitable for publishing or
-  /// extracting information about this trajectory step. Do not call this method
-  /// if there is no Context.
-  const Context<T>& get_context() const {
-    DRAKE_ASSERT(context_ != nullptr);
-    return *context_;
-  }
+  /// extracting information about this trajectory step.
+  const Context<T>& get_context() const { return *context_; }
 
   /// Returns a mutable reference to the internally-maintained Context holding
   /// the most recent step in the trajectory. This is suitable for use in
   /// updates, sampling operations, event handlers, and constraint projection.
   /// You can also modify this prior to calling Initialize() to set initial
-  /// conditions. Do not call this method if there is no Context.
-  Context<T>& get_mutable_context()  {
-    DRAKE_ASSERT(context_ != nullptr);
-    return *context_;
-  }
+  /// conditions.
+  Context<T>& get_mutable_context() { return *context_; }
 
-  /// Returns `true` if this Simulator has an internally-maintained Context.
-  /// This is always true unless `reset_context()` has been called.
-  bool has_context() const { return context_ != nullptr; }
+  DRAKE_DEPRECATED("2020-07-01",
+     "The Simulator always has a Context; this method will always return true.")
+  bool has_context() const { return true; }
 
-  /// Replace the internally-maintained Context with a different one. The
-  /// current Context is deleted. This is useful for supplying a new set of
-  /// initial conditions. You should invoke Initialize() after replacing the
-  /// Context.
-  /// @param context The new context, which may be null. If the context is
-  ///                null, a new context must be set before attempting to step
-  ///                the system forward.
-  void reset_context(std::unique_ptr<Context<T>> context) {
-    context_ = std::move(context);
-    integrator_->reset_context(context_.get());
-    initialization_done_ = false;
-  }
+  /// Replaces the internally-maintained Context with a different one. This is
+  /// useful for supplying a new set of initial conditions. You should invoke
+  /// Initialize() after this method. The pre-existing context is returned.
+  ///
+  /// @param context Context that will be used as the initial condition for the
+  /// simulation, or else nullptr to obtain a default context from the system
+  /// being simulated.
+  std::shared_ptr<Context<T>> reset_context(
+      std::shared_ptr<Context<T>> context = nullptr);
 
-  /// Transfer ownership of this %Simulator's internal Context to the caller.
-  /// The %Simulator will no longer contain a Context. The caller must not
-  /// attempt to advance the simulator in time after that point.
-  /// @sa reset_context()
-  std::unique_ptr<Context<T>> release_context() {
-    integrator_->reset_context(nullptr);
-    initialization_done_ = false;
-    return std::move(context_);
-  }
+#ifndef DRAKE_DOXYGEN_CXX
+  // For backwards compatibility only in support of release_context.
+  std::shared_ptr<Context<T>> reset_context(std::unique_ptr<Context<T>>);
+
+  // If a user passes `nullptr` literal for `context`, the overloads would be
+  // ambiguous without this addition.  We'll hide it from Doxygen, though.
+  std::shared_ptr<Context<T>> reset_context(std::nullptr_t);
+#endif
+
+  /// (Deprecated.) Transfers ownership of this simulator's internal context to
+  /// the caller. The simulator's internal context is replaced by a default
+  /// context from the system being simulated.
+  ///
+  /// @pre The simulator was not provided its current context as a
+  /// std::shared_ptr by the user; the current context must either have been
+  /// created internally by the simulator, or provided by the user as a
+  /// std::unique_ptr.
+  DRAKE_DEPRECATED("2020-07-01",
+      "To extract the internal Context, call reset_context() instead of "
+      "release_context(). Note that exclusive (unique_ptr) ownership is "
+      "no longer supported, only shared_ptr ownership is available.")
+  std::unique_ptr<Context<T>> release_context();
 
   /// Forget accumulated statistics. Statistics are reset to the values they
   /// have post construction or immediately after `Initialize()`.
@@ -700,7 +720,7 @@ class Simulator {
   Simulator(
       const System<T>* system,
       std::unique_ptr<const System<T>> owned_system,
-      std::unique_ptr<Context<T>> context);
+      std::shared_ptr<Context<T>> context);
 
   void HandleUnrestrictedUpdate(
       const EventCollection<UnrestrictedUpdateEvent<T>>& events);
@@ -784,13 +804,13 @@ class Simulator {
   static constexpr double kDefaultAccuracy = 1e-3;  // 1/10 of 1%.
   static constexpr double kDefaultInitialStepSizeAttempt = 1e-3;
 
-  // Do not use this.  This is valid iff the constructor is passed a
-  // unique_ptr (allowing the Simulator to maintain ownership).  Use the
-  // system_ variable instead, which is valid always.
+  // Do not use owned_system_; it serves only to manage lifetime.
+  // Use the system_ variable instead.
   const std::unique_ptr<const System<T>> owned_system_;
+  const System<T>& system_;
 
-  const System<T>& system_;              // Just a reference; not owned.
-  std::unique_ptr<Context<T>> context_;  // The trajectory Context.
+  // The trajectory Context.
+  std::shared_ptr<Context<T>> context_;
 
   // Temporaries used for witness function isolation.
   std::vector<const WitnessFunction<T>*> triggered_witnesses_;

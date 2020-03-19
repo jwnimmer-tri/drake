@@ -8,23 +8,73 @@
 
 namespace drake {
 namespace systems {
+namespace {
 
+// A helper struct to allow us to demote shared_ptr to unique_ptr, for contexts
+// that are never owned outside of the Simulator.  This allows us to keep
+// release_context() intact during a deprecation period.
+template <typename T>
+struct DisarmableDeleter final : private std::default_delete<Context<T>> {
+  DisarmableDeleter() noexcept = default;
+  void operator()(Context<T>* context) {
+    if (armed) std::default_delete<Context<T>>::operator()(context);
+  }
+  bool armed{true};
+};
+
+// Convert unique_ptr to shared_ptr with an opportunity to convert back later.
+template <typename T>
+std::shared_ptr<Context<T>> UniqueToCustomShared(
+    std::unique_ptr<Context<T>> context) {
+  return std::shared_ptr<Context<T>>(context.release(), DisarmableDeleter<T>{});
+}
+
+}  // namespace
+
+// Public constructor.
+template <typename T>
+Simulator<T>::Simulator(std::unique_ptr<const System<T>> system,
+                        std::shared_ptr<Context<T>> context)
+    : Simulator(nullptr, std::move(system), std::move(context)) {}
+
+// Public constructor.
+template <typename T>
+Simulator<T>::Simulator(const System<T>& system,
+                        std::shared_ptr<Context<T>> context)
+    : Simulator(&system, nullptr, std::move(context)) {}
+
+// Public hidden (compatibility) constructor.
+template <typename T>
+Simulator<T>::Simulator(std::unique_ptr<const System<T>> system,
+                        std::unique_ptr<Context<T>> context)
+    : Simulator(std::move(system), UniqueToCustomShared(std::move(context))) {}
+
+// Public hidden (compatibility) constructor.
 template <typename T>
 Simulator<T>::Simulator(const System<T>& system,
                         std::unique_ptr<Context<T>> context)
-    : Simulator(&system, nullptr, std::move(context)) {}
+    : Simulator(system, UniqueToCustomShared(std::move(context))) {}
 
+// Public hidden (compatibility) constructor.
 template <typename T>
-Simulator<T>::Simulator(std::unique_ptr<const System<T>> owned_system,
-                        std::unique_ptr<Context<T>> context) :
-    Simulator(nullptr, std::move(owned_system), std::move(context)) {}
+Simulator<T>::Simulator(std::unique_ptr<const System<T>> system, std::nullptr_t)
+    : Simulator(std::move(system), std::unique_ptr<Context<T>>()) {}
 
+// Public hidden (compatibility) constructor.
+template <typename T>
+Simulator<T>::Simulator(const System<T>& system, std::nullptr_t)
+    : Simulator(system, std::unique_ptr<Context<T>>()) {}
+
+// All constructors delegate to here.
 template <typename T>
 Simulator<T>::Simulator(const System<T>* system,
                         std::unique_ptr<const System<T>> owned_system,
-                        std::unique_ptr<Context<T>> context)
+                        std::shared_ptr<Context<T>> context)
     : owned_system_(std::move(owned_system)),
-      system_(owned_system_ ? *owned_system_ : *system),
+      system_(*(system ? system :
+                owned_system_ ? owned_system_.get() :
+                throw std::runtime_error(
+                    "Creating a Simulator for a null System is not allowed"))),
       context_(std::move(context)) {
   // Setup defaults that should be generally reasonable.
   const double max_step_size = 0.1;
@@ -32,7 +82,8 @@ Simulator<T>::Simulator(const System<T>* system,
   const double default_accuracy = 1e-4;
 
   // Create a context if necessary.
-  if (!context_) context_ = system_.CreateDefaultContext();
+  if (!context_)
+    context_ = UniqueToCustomShared(system_.CreateDefaultContext());
 
   // Create a default integrator and initialize it.
   // N.B. Keep this in sync with systems::internal::kDefaultIntegratorName at
@@ -61,8 +112,6 @@ template <typename T>
 SimulatorStatus Simulator<T>::Initialize() {
   // TODO(sherm1) Modify Context to satisfy constraints.
   // TODO(sherm1) Invoke System's initial conditions computation.
-  if (!context_)
-    throw std::logic_error("Initialize(): Context has not been set.");
 
   // Record the current time so we can restore it later (see below).
   // *Don't* use a reference here!
@@ -142,6 +191,9 @@ SimulatorStatus Simulator<T>::Initialize() {
 
   return status;
 }
+
+template <typename T>
+Simulator<T>::~Simulator() {}
 
 // Processes UnrestrictedUpdateEvent events.
 template <typename T>
@@ -687,6 +739,48 @@ double Simulator<T>::get_actual_realtime_rate() const {
   const Duration realtime_passed = Clock::now() - initial_realtime_;
   const double rate = (simtime_passed / realtime_passed.count());
   return rate;
+}
+
+template <typename T>
+std::shared_ptr<Context<T>> Simulator<T>::reset_context(
+    std::shared_ptr<Context<T>> context) {
+  std::swap(context_, context);
+  if (!context_) {
+    context_ = UniqueToCustomShared(system_.CreateDefaultContext());
+  }
+  integrator_->reset_context(context_.get());
+  initialization_done_ = false;
+  return context;
+}
+
+// Hidden (compatibility) overload.
+template <typename T>
+std::shared_ptr<Context<T>> Simulator<T>::reset_context(
+    std::unique_ptr<Context<T>> context) {
+  return this->reset_context(UniqueToCustomShared(std::move(context)));
+}
+
+// Hidden (compatibility) overload.
+template <typename T>
+std::shared_ptr<Context<T>> Simulator<T>::reset_context(std::nullptr_t) {
+  return this->reset_context(std::unique_ptr<Context<T>>());
+}
+
+// TODO(jwnimmer-tri) When release_context() is removed on 2020-07-01, also
+// remove the DisarmableDeleter helper and all of the overloaded methods and
+// constructors that accept a Context via unique_ptr or nullptr.
+template <typename T>
+std::unique_ptr<Context<T>> Simulator<T>::release_context() {
+  // Here we do our best to prove that the Context was in fact uniquely owned.
+  // There are still obscure ways that the user could overcome these checks and
+  // end up with a double-free, but they are not worth defending against just
+  // for a deprecation period.
+  std::shared_ptr<Context<T>> prior = this->reset_context(nullptr);
+  auto* deleter = std::get_deleter<DisarmableDeleter<T>>(prior);
+  if ((deleter == nullptr) || (prior.use_count() != 1))
+    throw std::logic_error("Cannot release_context on a shared_ptr.");
+  deleter->armed = false;
+  return std::unique_ptr<Context<T>>(prior.get());
 }
 
 template <typename T>

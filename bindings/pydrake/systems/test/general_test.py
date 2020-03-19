@@ -453,21 +453,20 @@ class TestGeneral(unittest.TestCase):
 
     def test_simulator_context_manipulation(self):
         system = ConstantVectorSource([1])
-        # Use default-constructed context.
         simulator = Simulator(system)
-        self.assertTrue(simulator.has_context())
-        context_default = simulator.get_mutable_context()
-        # WARNING: Once we call `simulator.reset_context()`, it will delete the
-        # context it currently owns, which is `context_default` in this case.
-        # BE CAREFUL IN SITUATIONS LIKE THIS!
-        # TODO(eric.cousineau): Bind `release_context()`, or migrate context
-        # usage to use `shared_ptr`.
-        context = system.CreateDefaultContext()
-        simulator.reset_context(context)
-        self.assertIs(context, simulator.get_mutable_context())
-        # WARNING: This will also invalidate `context`. Be careful!
+        # Use default-constructed context.
+        new_context = system.CreateDefaultContext()
+        simulator.reset_context(new_context)
+        self.assertIs(new_context, simulator.get_mutable_context())
         simulator.reset_context(None)
-        self.assertFalse(simulator.has_context())
+        self.assertIsNot(new_context, simulator.get_mutable_context())
+        self.assertIsNotNone(simulator.get_mutable_context())
+
+    def test_simulator_context_manipulation_deprecated(self):
+        system = ConstantVectorSource([1])
+        simulator = Simulator(system)
+        with catch_drake_warnings(expected_count=1):
+            self.assertTrue(simulator.has_context())
 
     def test_simulator_integrator_manipulation(self):
         system = ConstantVectorSource([1])
