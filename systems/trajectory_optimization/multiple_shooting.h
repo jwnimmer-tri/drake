@@ -36,11 +36,43 @@ namespace trajectory_optimization {
 /// This class assumes that there are a fixed number (N) time steps/samples, and
 /// that the trajectory is discretized into timesteps h (N-1 of these), state x
 /// (N of these), and control input u (N of these).
-class MultipleShooting : public solvers::MathematicalProgram {
+class MultipleShooting {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(MultipleShooting)
 
   virtual ~MultipleShooting() {}
+
+  solvers::MathematicalProgram& prog() { return prog_; }
+  const solvers::MathematicalProgram& prog() const { return prog_; }
+
+// Hide the deprecation shims.
+#ifndef DRAKE_DOXYGEN_CXX
+  operator const solvers::MathematicalProgram&() { return prog(); }
+#define DRAKE_PERFECT_FORWARD_MATH_PROG(method_name, maybe_const) \
+  template <typename... Args> \
+  decltype(auto) method_name(Args&&... args) maybe_const { \
+    return prog_.method_name(std::forward<Args>(args)...); \
+  }
+  DRAKE_PERFECT_FORWARD_MATH_PROG(AddCost, /* non-const */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(AddConstraint, /* non-const */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(AddLinearCost, /* non-const */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(AddLinearConstraint, /* non-const */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(AddQuadraticErrorCost, /* non-const */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(EvalBinding, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(EvalBindingAtInitialGuess, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(GetAllConstraints, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(GetAllCosts, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(GetInitialGuess, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(SetInitialGuess, /* non-const */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(SetInitialGuessForAllVariables, /* non */)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(decision_variable_index, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(generic_constraints, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(initial_guess, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(linear_equality_constraints, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(num_vars, const)
+  DRAKE_PERFECT_FORWARD_MATH_PROG(visualization_callbacks, const)
+#undef DRAKE_PERFECT_FORWARD_MATH_PROG
+#endif  // DRAKE_DOXYGEN_CXX
 
   /// Returns the decision variable associated with the timestep, h, at time
   /// index @p index.
@@ -157,7 +189,7 @@ class MultipleShooting : public solvers::MathematicalProgram {
       // For now, non-linear constraints can be added by users by simply adding
       // the constraint manually for each
       // time index in a loop.
-      AddConstraint(SubstitutePlaceholderVariables(f, i));
+      prog_.AddConstraint(SubstitutePlaceholderVariables(f, i));
     }
   }
 
@@ -191,7 +223,7 @@ class MultipleShooting : public solvers::MathematicalProgram {
   /// NewSequentialVariable(), are substituted with the relevant variables for
   /// the final time index.
   void AddFinalCost(const symbolic::Expression& e) {
-    AddCost(SubstitutePlaceholderVariables(e, N_ - 1));
+    prog_.AddCost(SubstitutePlaceholderVariables(e, N_ - 1));
   }
 
   /// Adds support for passing in a (scalar) matrix Expression, which is a
@@ -440,6 +472,9 @@ class MultipleShooting : public solvers::MathematicalProgram {
   symbolic::Substitution ConstructPlaceholderVariableSubstitution(
       int interval_index) const;
 
+  const std::unique_ptr<solvers::MathematicalProgram> owned_prog_;
+  solvers::MathematicalProgram& prog_;
+
   const int num_inputs_{};
   const int num_states_{};
   const int N_{};  // Number of time samples
@@ -460,6 +495,34 @@ class MultipleShooting : public solvers::MathematicalProgram {
 
   internal::SequentialExpressionManager sequential_expression_manager_;
 };
+
+// Hide the deprecation shims.
+#ifndef DRAKE_DOXYGEN_CXX
+namespace internal {
+struct MultipleShootingSolveDummy {};
+}  // namespace internal
+template <typename Dummy = internal::MultipleShootingSolveDummy>
+solvers::MathematicalProgramResult Solve(
+    const MultipleShooting& arg) {
+  const solvers::MathematicalProgram& prog = arg.prog();
+  return Solve((Dummy{}, prog));
+}
+template <typename Dummy = internal::MultipleShootingSolveDummy>
+solvers::MathematicalProgramResult Solve(
+    const MultipleShooting& arg,
+    const std::optional<Eigen::VectorXd>& initial_guess,
+    const std::optional<solvers::SolverOptions>& solver_options) {
+  const solvers::MathematicalProgram& prog = arg.prog();
+  return Solve((Dummy{}, prog), initial_guess, solver_options);
+}
+template <typename Dummy = internal::MultipleShootingSolveDummy>
+solvers::MathematicalProgramResult Solve(
+    const MultipleShooting& arg,
+    const Eigen::Ref<const Eigen::VectorXd>& initial_guess) {
+  const solvers::MathematicalProgram& prog = arg.prog();
+  return Solve((Dummy{}, prog), initial_guess);
+}
+#endif
 
 }  // namespace trajectory_optimization
 }  // namespace systems

@@ -79,14 +79,15 @@ MultipleShooting::MultipleShooting(
     const solvers::VectorXDecisionVariable& state, int num_time_samples,
     const std::optional<solvers::DecisionVariable>& time_var,
     double minimum_timestep, double maximum_timestep)
-    : MathematicalProgram(),
+    : owned_prog_(std::make_unique<solvers::MathematicalProgram>()),
+      prog_(*owned_prog_),
       num_inputs_(input.size()),
       num_states_(state.size()),
       N_(num_time_samples),
       timesteps_are_decision_variables_(time_var),
       fixed_timestep_(minimum_timestep),
-      x_vars_(NewContinuousVariables(num_states_ * N_, "x")),
-      u_vars_(NewContinuousVariables(num_inputs_ * N_, "u")),
+      x_vars_(prog_.NewContinuousVariables(num_states_ * N_, "x")),
+      u_vars_(prog_.NewContinuousVariables(num_inputs_ * N_, "u")),
       placeholder_x_vars_(state),
       placeholder_u_vars_(input),
       sequential_expression_manager_(N_) {
@@ -106,13 +107,13 @@ MultipleShooting::MultipleShooting(
   DRAKE_DEMAND(num_states_ > 0);
   DRAKE_DEMAND(num_inputs_ >= 0);
   if (timesteps_are_decision_variables_) {
-    h_vars_ = NewContinuousVariables(N_ - 1, "h");
+    h_vars_ = prog_.NewContinuousVariables(N_ - 1, "h");
     DRAKE_DEMAND(minimum_timestep >
                  0);  // == 0 tends to cause numerical issues.
     DRAKE_DEMAND(maximum_timestep >= minimum_timestep &&
                  std::isfinite(maximum_timestep));
 
-    AddBoundingBoxConstraint(minimum_timestep, maximum_timestep, h_vars_);
+    prog_.AddBoundingBoxConstraint(minimum_timestep, maximum_timestep, h_vars_);
     RowVectorX<Expression> t_expressions(N_);
     t_expressions(0) = 0;
     for (int i = 1; i < N_; ++i) {
@@ -135,7 +136,7 @@ MultipleShooting::MultipleShooting(
 solvers::VectorXDecisionVariable MultipleShooting::NewSequentialVariable(
     int rows, const std::string& name) {
   return sequential_expression_manager_.RegisterSequentialExpressions(
-      NewContinuousVariables(rows, N_, name).cast<Expression>(), name);
+      prog_.NewContinuousVariables(rows, N_, name).cast<Expression>(), name);
 }
 
 solvers::VectorXDecisionVariable MultipleShooting::GetSequentialVariableAtIndex(
@@ -148,27 +149,27 @@ solvers::VectorXDecisionVariable MultipleShooting::GetSequentialVariableAtIndex(
 void MultipleShooting::AddTimeIntervalBounds(double lower_bound,
                                              double upper_bound) {
   DRAKE_THROW_UNLESS(timesteps_are_decision_variables_);
-  AddBoundingBoxConstraint(lower_bound, upper_bound, h_vars_);
+  prog_.AddBoundingBoxConstraint(lower_bound, upper_bound, h_vars_);
 }
 
 void MultipleShooting::AddEqualTimeIntervalsConstraints() {
   DRAKE_THROW_UNLESS(timesteps_are_decision_variables_);
   for (int i = 1; i < N_ - 1; i++) {
-    AddLinearConstraint(h_vars_(i - 1) == h_vars_(i));
+    prog_.AddLinearConstraint(h_vars_(i - 1) == h_vars_(i));
   }
 }
 
 void MultipleShooting::AddDurationBounds(double lower_bound,
                                          double upper_bound) {
   DRAKE_THROW_UNLESS(timesteps_are_decision_variables_);
-  AddLinearConstraint(VectorXd::Ones(h_vars_.size()), lower_bound, upper_bound,
-                      h_vars_);
+  prog_.AddLinearConstraint(VectorXd::Ones(h_vars_.size()), lower_bound,
+                            upper_bound, h_vars_);
 }
 
 solvers::Binding<solvers::VisualizationCallback>
 MultipleShooting::AddInputTrajectoryCallback(
     const MultipleShooting::TrajectoryCallback& callback) {
-  return AddVisualizationCallback(
+  return prog_.AddVisualizationCallback(
       [this, callback](const Eigen::Ref<const Eigen::VectorXd>& x) {
         const Eigen::VectorXd times = GetSampleTimes(x.head(h_vars_.size()));
         const Eigen::Map<const Eigen::MatrixXd> inputs(
@@ -181,7 +182,7 @@ MultipleShooting::AddInputTrajectoryCallback(
 solvers::Binding<solvers::VisualizationCallback>
 MultipleShooting::AddStateTrajectoryCallback(
     const MultipleShooting::TrajectoryCallback& callback) {
-  return AddVisualizationCallback(
+  return prog_.AddVisualizationCallback(
       [this, callback](const Eigen::Ref<const Eigen::VectorXd>& x) {
         const Eigen::VectorXd times = GetSampleTimes(x.head(h_vars_.size()));
         const Eigen::Map<const Eigen::MatrixXd> states(
@@ -210,7 +211,7 @@ MultipleShooting::AddCompleteTrajectoryCallback(
     row_offset += size_extra_vars[ii] * N_;
   }
 
-  return AddVisualizationCallback(
+  return prog_.AddVisualizationCallback(
       [this, callback,
        size_extra_vars](const Eigen::Ref<const Eigen::VectorXd>& x) {
         const Eigen::VectorXd times = GetSampleTimes(x.head(h_vars_.size()));
@@ -253,7 +254,7 @@ void MultipleShooting::SetInitialTrajectory(
     }
     DRAKE_DEMAND(start_time <= end_time);
     h = (end_time - start_time) / (N_ - 1);
-    SetInitialGuess(h_vars_, VectorXd::Constant(h_vars_.size(), h));
+    prog_.SetInitialGuess(h_vars_, VectorXd::Constant(h_vars_.size(), h));
   }
 
   VectorXd guess_u(u_vars_.size());
@@ -265,7 +266,7 @@ void MultipleShooting::SetInitialTrajectory(
           traj_init_u.value(start_time + i * h);
     }
   }
-  SetInitialGuess(u_vars_, guess_u);
+  prog_.SetInitialGuess(u_vars_, guess_u);
 
   VectorXd guess_x(x_vars_.size());
   if (traj_init_x.empty()) {
@@ -277,7 +278,7 @@ void MultipleShooting::SetInitialTrajectory(
           traj_init_x.value(start_time + i * h);
     }
   }
-  SetInitialGuess(x_vars_, guess_x);
+  prog_.SetInitialGuess(x_vars_, guess_x);
 }
 
 Eigen::VectorXd MultipleShooting::GetSampleTimes(

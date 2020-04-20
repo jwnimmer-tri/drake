@@ -333,7 +333,7 @@ GTEST_TEST(DirectTranscriptionTest, DiscreteTimeSystemTest) {
       {0, timespan_init}, {initial_state.get_value(), final_state.get_value()});
   dirtran.SetInitialTrajectory(PiecewisePolynomial<double>(), traj_init_x);
 
-  const auto result = snopt_solver.Solve(dirtran, {}, {});
+  const auto result = snopt_solver.Solve(dirtran);
   DRAKE_DEMAND(result.is_success());
 }
 
