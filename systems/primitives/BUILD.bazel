@@ -38,6 +38,7 @@ drake_cc_package_library(
         ":trajectory_affine_system",
         ":trajectory_linear_system",
         ":trajectory_source",
+        ":value_multiplexer",
         ":wrap_to_system",
         ":zero_order_hold",
     ],
@@ -296,6 +297,15 @@ drake_cc_library(
     deps = [
         "//common/trajectories:trajectory",
         "//systems/framework",
+    ],
+)
+
+drake_cc_library(
+    name = "value_multiplexer",
+    srcs = ["value_multiplexer.cc"],
+    hdrs = ["value_multiplexer.h"],
+    deps = [
+        "//systems/framework:leaf_system",
     ],
 )
 
