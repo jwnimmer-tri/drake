@@ -53,7 +53,6 @@ drake_cc_library(
         "//common/trajectories:piecewise_polynomial",
         "//multibody/parsing",
         "//systems/framework:leaf_system",
-        "@lcmtypes_bot2_core",
         "@lcmtypes_robotlocomotion",
     ],
 )
@@ -96,7 +95,6 @@ drake_cc_googletest(
         ":robot_plan_interpolator",
         "//common:find_resource",
         "//systems/framework",
-        "@lcmtypes_bot2_core",
         "@lcmtypes_robotlocomotion",
     ],
 )

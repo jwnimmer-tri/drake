@@ -9,6 +9,8 @@
 
 #include "drake/common/eigen_types.h"
 
+// TODO(jwnimer-tri) Deprecate this whole file.
+
 void EncodeVector3d(
     const Eigen::Ref<const Eigen::Vector3d>& vec,
     // NOLINTNEXTLINE(runtime/references)

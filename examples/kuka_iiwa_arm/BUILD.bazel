@@ -34,7 +34,6 @@ drake_cc_library(
         "//common/trajectories:piecewise_polynomial",
         "//manipulation/kuka_iiwa:iiwa_constants",
         "//manipulation/util:robot_plan_utils",
-        "@lcmtypes_bot2_core",
         "@lcmtypes_robotlocomotion",
     ],
 )
@@ -149,7 +148,6 @@ drake_cc_binary(
         ":iiwa_lcm",
         "//multibody/parsing",
         "//multibody/plant",
-        "@lcmtypes_bot2_core",
         "@lcmtypes_robotlocomotion",
     ],
 )
@@ -171,7 +169,6 @@ drake_cc_binary(
         "//multibody/parsing",
         "//multibody/plant",
         "@lcm",
-        "@lcmtypes_bot2_core",
         "@lcmtypes_robotlocomotion",
     ],
 )
