@@ -324,10 +324,13 @@ def _raw_drake_cc_library(
         )
 
 def _maybe_add_pruned_private_hdrs_dep(
+        *,
         base_name,
         srcs,
+        copts,
+        tags,
         deps,
-        **kwargs):
+        testonly):
     """Given some srcs, prunes any header files into a separate cc_library, and
     appends that new library to deps, returning new_srcs (sans headers) and
     new_deps.  The separate cc_library is private with linkstatic = 1.
@@ -339,19 +342,18 @@ def _maybe_add_pruned_private_hdrs_dep(
     new_srcs, private_hdrs = _prune_private_hdrs(srcs)
     if private_hdrs:
         name = "_" + base_name + "_private_headers_impl"
-        kwargs.pop("linkshared", "")
-        kwargs.pop("linkstatic", "")
-        kwargs.pop("visibility", "")
         _raw_drake_cc_library(
             name = name,
             hdrs = private_hdrs,
             srcs = [],
             deps = deps,
-            linkstatic = 1,
+            linkstatic = True,
+            linkshared = False,
             visibility = ["//visibility:private"],
-            **kwargs
+            tags = tags + ["manual"],
+            testonly = testonly,
         )
-        new_deps = deps + [":" + name]
+        new_deps = [":" + name] + deps
     else:
         new_deps = deps
     return new_srcs, new_deps
@@ -459,22 +461,25 @@ def drake_cc_package_library(
 def drake_cc_binary(
         name,
         srcs = [],
-        data = [],
-        deps = [],
-        copts = [],
-        linkopts = [],
-        gcc_copts = [],
-        clang_copts = [],
-        linkshared = 0,
-        linkstatic = 1,
-        testonly = 0,
-        add_test_rule = 0,
-        test_rule_args = [],
-        test_rule_data = [],
+        copts = None,
+        gcc_copts = None,
+        clang_copts = None,
+        defines = None,
+        linkopts = None,
+        linkshared = False,
+        linkstatic = True,
+        data = None,
+        tags = None,
+        deps = None,
+        visibility = None,
+        testonly = False,
+        deprecation = None,
+        add_test_rule = False,
+        test_rule_args = None,
+        test_rule_data = None,
         test_rule_size = None,
         test_rule_timeout = None,
-        test_rule_flaky = 0,
-        **kwargs):
+        test_rule_flaky = False):
     """Creates a rule to declare a C++ binary.
 
     By default, we prefer to link static libraries whenever they are available.
@@ -486,31 +491,69 @@ def drake_cc_binary(
     tests. The smoke-test will be named <name>_test. You may override cc_test
     defaults using test_rule_args=["-f", "--bar=42"] or test_rule_size="baz".
     """
+    if "@gtest//:main" in deps:
+        fail("Use drake_cc_googletest to declare %s as a test" % name)
+
+    # Fold together the relevant copts for the current compuler.
     new_copts = _platform_copts(copts, gcc_copts, clang_copts)
+
+    # Pull out any *.h files in srcs into their own library.
     new_srcs, new_deps = _maybe_add_pruned_private_hdrs_dep(
         base_name = name,
         srcs = srcs,
-        deps = deps,
         copts = new_copts,
+        defines = defines,
+        # linkopts does not carry though.
+        # linkshared does not carry though.
+        # linkstatic does not carry though.
+        # data does not carry though.
+        tags = tags,
+        deps = deps,
+        # visibility does not carry though.
         testonly = testonly,
-        **kwargs
+        # deprecation does not carry though.
     )
 
+    # To avoid compiling the binary's srcs twice when adding a test rule, first
+    # compile them into object code, and then link the object code separately.
+    if add_test_rule:
+        private_main = "_" + name + "_private_main"
+        native.cc_library(
+            name = private_main,
+            srcs = new_srcs,
+            copts = new_copts,
+            defines = defines,
+            # linkopts does not carry though.
+            linkshared = 0,
+            linkstatic = 1,
+            # data does not carry though.
+            tags = tags + ["manual"],
+            visibility = ["//visibility:private"],
+            deps = new_deps,
+            testonly = testonly,
+            # deprecation does not carry though.
+        )
+        new_srcs = []
+        new_deps = [":" + private_main] + new_deps
+
+    # Compile the main binary.
     native.cc_binary(
         name = name,
         srcs = new_srcs,
-        data = data,
-        deps = new_deps,
         copts = new_copts,
-        testonly = testonly,
+        defines = defines,
+        linkopts = linkopts,
         linkshared = linkshared,
         linkstatic = linkstatic,
-        linkopts = linkopts,
-        **kwargs
+        data = data,
+        tags = tags,
+        visibility = visibility,
+        deps = new_deps,
+        testonly = testonly,
+        deprecation = deprecation,
     )
 
     # Also generate the OS X debug symbol file for this binary.
-    tags = kwargs.pop("tags", [])
     native.genrule(
         name = name + "_dsym",
         srcs = [":" + name],
@@ -522,24 +565,22 @@ def drake_cc_binary(
         cmd = _dsym_command(name),
     )
 
-    if "@gtest//:main" in deps:
-        fail("Use drake_cc_googletest to declare %s as a test" % name)
-
     if add_test_rule:
+        if new_srcs:
+            fail("We're assuming that new_srcs was zero'd above.")
         drake_cc_test(
             name = name + "_test",
-            srcs = new_srcs,
+            linkopts = linkopts,
+            linkshared = linkshared,
+            linkstatic = linkstatic,
             data = data + test_rule_data,
+            tags = tags,
+            visibility = ["//visibility:private"],
             deps = new_deps,
-            copts = copts,
-            gcc_copts = gcc_copts,
             size = test_rule_size,
             timeout = test_rule_timeout,
             flaky = test_rule_flaky,
-            linkstatic = linkstatic,
             args = test_rule_args,
-            tags = tags + ["nolint"],
-            **kwargs
         )
 
 def drake_cc_test(
