@@ -8,11 +8,10 @@
 #include <stdexcept>
 #include <utility>
 
-#include <Eigen/Dense>
-
 #include "drake/common/default_scalars.h"
 #include "drake/common/drake_throw.h"
 #include "drake/common/dummy_value.h"
+#include "drake/common/eigen_types.h"
 #include "drake/systems/framework/vector_base.h"
 
 namespace drake {
@@ -25,9 +24,6 @@ namespace systems {
 template <typename T>
 class BasicVector : public VectorBase<T> {
  public:
-  // BasicVector cannot be copied or moved; use Clone instead.  (We cannot
-  // support copy or move because of the slicing problem, and also because
-  // assignment of a BasicVector could change its size.)
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(BasicVector)
 
   /// Constructs an empty BasicVector.
@@ -49,6 +45,8 @@ class BasicVector : public VectorBase<T> {
       (*this)[i++] = datum;
     }
   }
+
+  ~BasicVector() override;
 
   /// Constructs a BasicVector whose elements are the elements of @p init.
   static std::unique_ptr<BasicVector<T>> Make(
@@ -73,11 +71,8 @@ class BasicVector : public VectorBase<T> {
   /// must be identical to b.
   /// @throws std::out_of_range if the new value has different dimensions.
   void set_value(const Eigen::Ref<const VectorX<T>>& value) {
-    if (value.rows() != values_.rows()) {
-      throw std::out_of_range(
-          "Cannot set a BasicVector of size " + std::to_string(values_.rows()) +
-          " with a value of size " + std::to_string(value.rows()));
-    }
+    const int n = value.rows();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
     values_ = value;
   }
 
@@ -92,42 +87,47 @@ class BasicVector : public VectorBase<T> {
     return values_.head(values_.rows());
   }
 
+  void SetFrom(const VectorBase<T>& value) final {
+    value.CopyToPreSizedVector(&values_);
+  }
+
   void SetFromVector(const Eigen::Ref<const VectorX<T>>& value) final {
     set_value(value);
   }
 
+  void SetZero() final { values_.setZero(); }
+
   VectorX<T> CopyToVector() const final { return values_; }
+
+  void CopyToPreSizedVector(EigenPtr<VectorX<T>> vec) const final {
+    const int n = vec->rows();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    *vec = values_;
+  }
 
   void ScaleAndAddToVector(const T& scale,
                            EigenPtr<VectorX<T>> vec) const final {
     DRAKE_THROW_UNLESS(vec != nullptr);
-    if (vec->rows() != size()) {
-      throw std::out_of_range("Addends must be the same size.");
-    }
+    const int n = vec->rows();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
     *vec += scale * values_;
   }
-
-  void SetZero() final { values_.setZero(); }
 
   /// Copies the entire vector to a new BasicVector, with the same concrete
   /// implementation type.
   ///
   /// Uses the Non-Virtual Interface idiom because smart pointers do not have
   /// type covariance.
-  std::unique_ptr<BasicVector<T>> Clone() const {
-    auto clone = std::unique_ptr<BasicVector<T>>(DoClone());
-    clone->set_value(this->get_value());
-    return clone;
-  }
+  std::unique_ptr<BasicVector<T>> Clone() const;
 
  protected:
   const T& DoGetAtIndex(int index) const final {
-    DRAKE_THROW_UNLESS(index < size());
+    if (index >= size()) { this->ThrowOutOfRange(index); }
     return values_[index];
   }
 
   T& DoGetAtIndex(int index) final {
-    DRAKE_THROW_UNLESS(index < size());
+    if (index >= size()) { this->ThrowOutOfRange(index); }
     return values_[index];
   }
 
