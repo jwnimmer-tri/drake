@@ -417,7 +417,7 @@ def _check_package_library_name(name):
               "should be named \"{}\"").format(name, expected_name))
 
 def drake_cc_package_library(
-        name,
+        name, *,
         deps = [],
         testonly = 0,
         visibility = None):
@@ -459,21 +459,23 @@ def drake_cc_package_library(
     )
 
 def drake_cc_binary(
-        name,
+        name, *,
         srcs = [],
+        # Optional arguments.
         copts = None,
         gcc_copts = None,
         clang_copts = None,
+        data = None,
         defines = None,
+        deprecation = None,
+        deps = None,
         linkopts = None,
         linkshared = False,
         linkstatic = True,
-        data = None,
         tags = None,
-        deps = None,
-        visibility = None,
         testonly = False,
-        deprecation = None,
+        visibility = None,
+        # Additional options for adding a smoke test.
         add_test_rule = False,
         test_rule_args = None,
         test_rule_data = None,
@@ -494,7 +496,7 @@ def drake_cc_binary(
     if "@gtest//:main" in deps:
         fail("Use drake_cc_googletest to declare %s as a test" % name)
 
-    # Fold together the relevant copts for the current compuler.
+    # Fold together the relevant copts for the current compiler.
     new_copts = _platform_copts(copts, gcc_copts, clang_copts)
 
     # Pull out any *.h files in srcs into their own library.
