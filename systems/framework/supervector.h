@@ -11,94 +11,111 @@
 namespace drake {
 namespace systems {
 
-/// Supervector is a concrete class template that implements
-/// VectorBase by concatenating multiple VectorBases, which it
-/// does not own.
+/// Supervector is a concrete class template that implements VectorBase by
+/// concatenating multiple VectorBases, which it does not own.
 ///
 /// @tparam_default_scalar
 template <typename T>
 class Supervector final : public VectorBase<T> {
  public:
-  // Supervector objects are neither copyable nor moveable.
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Supervector)
 
-  /// Constructs a supervector consisting of all the vectors in
-  /// subvectors, which must live at least as long as this supervector.
-  explicit Supervector(const std::vector<VectorBase<T>*>& subvectors)
-      : vectors_(subvectors) {
-    int sum = 0;
-    for (const VectorBase<T>* vec : vectors_) {
-      sum += vec->size();
-      lookup_table_.push_back(sum);
+  /// Constructs a supervector consisting of all the vectors in subvectors,
+  /// which must live at least as long as this supervector.
+  explicit Supervector(const std::vector<VectorBase<T>*>& subvectors) {
+    for (VectorBase<T>* vec : subvectors) {
+      if (vec == nullptr) {
+        throw std::logic_error("Cannot create Supervector of a nullptr.");
+      }
+      const int sub_n = vec->size();
+      for (int i = 0; i < sub_n; ++i) {
+        T& element_ref = (*vec)[i];
+        data_.push_back(&element_ref);
+      }
     }
   }
 
+  ~Supervector() final = default;
+
   int size() const final {
-    return lookup_table_.empty() ? 0 : lookup_table_.back();
+    return data_.size();
+  }
+
+  void CopyToPreSizedVector(EigenPtr<VectorX<T>> vec) const final {
+    DRAKE_THROW_UNLESS(vec != nullptr);
+    const int n = vec->size();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    for (int i = 0; i < n; ++i) {
+      const T& datum = *(data_[i]);
+      (*vec)[i] = datum;
+    }
+  }
+
+  void SetFrom(const VectorBase<T>& value) final {
+    const int n = value.size();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    for (int i = 0; i < n; ++i) {
+      T& datum = *(data_[i]);
+      datum = value[i];
+    }
+  }
+
+  void SetFromVector(const Eigen::Ref<const VectorX<T>>& value) final {
+    const int n = value.size();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    for (int i = 0; i < n; ++i) {
+      T& datum = *(data_[i]);
+      datum = value[i];
+    }
+  }
+
+  void ScaleAndAddToVector(const T& scale,
+                           EigenPtr<VectorX<T>> vec) const final {
+    DRAKE_THROW_UNLESS(vec != nullptr);
+    const int n = vec->rows();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    for (int i = 0; i < n; ++i) {
+      const T& datum = *(data_[i]);
+      (*vec)[i] += scale * datum;
+    }
   }
 
  private:
+  using ScaledVectorInitList = typename VectorBase<T>::ScaledVectorInitList;
+
   const T& DoGetAtIndexUnchecked(int index) const final {
     DRAKE_ASSERT(index < size());
-    const auto& [subvector, offset] = GetSubvectorAndOffset(index);
-    return (*subvector)[offset];
+    return *(data_[index]);
   }
 
-  T& DoGetAtIndexUnchecked(int index) final {
+  T& DoGetAtIndexChecked(int index) final {
     DRAKE_ASSERT(index < size());
-    const auto& [subvector, offset] = GetSubvectorAndOffset(index);
-    return (*subvector)[offset];
+    return *(data_[index]);
   }
 
   const T& DoGetAtIndexChecked(int index) const final {
     if (index >= size()) { this->ThrowOutOfRange(index); }
-    const auto& [subvector, offset] = GetSubvectorAndOffset(index);
-    return (*subvector)[offset];
+    return *(data_[index]);
   }
 
   T& DoGetAtIndexChecked(int index) final {
     if (index >= size()) { this->ThrowOutOfRange(index); }
-    const auto& [subvector, offset] = GetSubvectorAndOffset(index);
-    return (*subvector)[offset];
+    return *(data_[index]);
   }
 
-  // Given an index into the supervector, returns the subvector that
-  // contains that index, and its offset within the subvector. This operation
-  // is O(log(N)) in the number of subvectors.
-  //
-  // Example: if the lookup table is [1, 4, 9], and @p index is 5, this
-  // function returns a pointer to the third of three subvectors, with offset
-  // 1, because the element at index 5 in the supervector is at index 1 in
-  // that subvector.
-  //
-  // 0 | 1 2 3 | 4 5 6 7 8
-  //               ^ index 5
-  std::pair<VectorBase<T>*, int> GetSubvectorAndOffset(int index) const {
-    // Binary-search the lookup_table_ for the first element that is larger
-    // than the specified index.
-    const auto it =
-        std::upper_bound(lookup_table_.begin(), lookup_table_.end(), index);
-    DRAKE_DEMAND(it != lookup_table_.end());
-
-    // Use the lookup result to identify the subvector that contains the index.
-    const int subvector_id =
-        static_cast<int>(std::distance(lookup_table_.begin(), it));
-    VectorBase<T>* subvector = vectors_[subvector_id];
-
-    // The item at index 0 in vectors_[subvector_id] corresponds to index
-    // lookup_table_[subvector_id - 1] in the supervector.
-    const int start_of_subvector = (subvector_id == 0) ? 0 : *(it - 1);
-    return std::make_pair(subvector, index - start_of_subvector);
+  void DoPlusEqScaled(const ScaledVectorInitList& rhs_scale) final {
+    const int n = size();
+    for (int i = 0; i < n; ++i) {
+      T value(0);
+      for (const auto& [scale, rhs] : rhs_scale) {
+        value += rhs[i] * scale;
+      }
+      T& datum = *(data_[i]);
+      datum += value;
+    }
   }
 
-  // An ordered list of all the constituent vectors in this supervector.
-  std::vector<VectorBase<T>*> vectors_;
-
-  // The integer in the lookup_table_ at index N is the sum of the number of
-  // elements in the constituent vectors 0 through N inclusive.
-  // For example, if the sizes of the constituent vectors are [1, 3, 5],
-  // the lookup table is [1, 4, 9].
-  std::vector<int> lookup_table_;
+  std::vector<T*> data_;
 };
 
 }  // namespace systems

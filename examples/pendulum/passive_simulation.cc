@@ -16,6 +16,7 @@ namespace {
 DEFINE_double(target_realtime_rate, 1.0,
               "Playback speed.  See documentation for "
               "Simulator::set_target_realtime_rate() for details.");
+DEFINE_double(simulation_sec, 10.0, "");
 
 int DoMain() {
   systems::DiagramBuilder<double> builder;
@@ -43,7 +44,7 @@ int DoMain() {
 
   simulator.set_target_realtime_rate(FLAGS_target_realtime_rate);
   simulator.Initialize();
-  simulator.AdvanceTo(10);
+  simulator.AdvanceTo(FLAGS_simulation_sec);
 
   const double final_energy = pendulum->CalcTotalEnergy(pendulum_context);
 

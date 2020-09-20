@@ -13,18 +13,17 @@
 namespace drake {
 namespace systems {
 
-/// Subvector is a concrete class template that implements
-/// VectorBase by providing a sliced view of a VectorBase.
+/// Subvector is a concrete class template that implements VectorBase by
+/// providing a sliced view of another VectorBase.
 ///
 /// @tparam_default_scalar
 template <typename T>
 class Subvector final : public VectorBase<T> {
  public:
-  // Subvector objects are neither copyable nor moveable.
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Subvector)
 
-  /// Constructs a subvector of vector that consists of num_elements starting
-  /// at first_element.
+  /// Constructs a subvector of `vector` that consists of `num_elements`
+  /// starting at `first_element`.
   /// @param vector The vector to slice.  Must not be nullptr. Must remain
   ///               valid for the lifetime of this object.
   Subvector(VectorBase<T>* vector, int first_element, int num_elements)
@@ -50,7 +49,17 @@ class Subvector final : public VectorBase<T> {
   explicit Subvector(VectorBase<T>* vector)
       : Subvector(vector, 0, 0) {}
 
+  ~Subvector() final = default;
+
   int size() const final { return num_elements_; }
+
+  void SetFromVector(const Eigen::Ref<const VectorX<T>>& value) final {
+    const int n = value.rows();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    for (int i = 0; i < n; ++i) {
+      (*vector_)[first_element_ + i] = value[i];
+    }
+  }
 
  private:
   const T& DoGetAtIndexUnchecked(int index) const final {
@@ -73,9 +82,9 @@ class Subvector final : public VectorBase<T> {
     return (*vector_)[first_element_ + index];
   }
 
-  VectorBase<T>* vector_{nullptr};
-  int first_element_{0};
-  int num_elements_{0};
+  VectorBase<T>* const vector_;
+  const int first_element_;
+  const int num_elements_;
 };
 
 }  // namespace systems

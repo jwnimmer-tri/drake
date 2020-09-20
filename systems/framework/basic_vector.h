@@ -20,9 +20,6 @@ namespace systems {
 template <typename T>
 class BasicVector : public VectorBase<T> {
  public:
-  // BasicVector cannot be copied or moved; use Clone instead.  (We cannot
-  // support copy or move because of the slicing problem, and also because
-  // assignment of a BasicVector could change its size.)
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(BasicVector)
 
   /// Constructs an empty BasicVector.
@@ -34,7 +31,8 @@ class BasicVector : public VectorBase<T> {
       : values_(VectorX<T>::Constant(size, dummy_value<T>::get())) {}
 
   /// Constructs a BasicVector with the specified @p vec data.
-  explicit BasicVector(VectorX<T> vec) : values_(std::move(vec)) {}
+  explicit BasicVector(VectorX<T> vec)
+      : values_(std::move(vec)) {}
 
   /// Constructs a BasicVector whose elements are the elements of @p init.
   BasicVector(const std::initializer_list<T>& init)
@@ -44,6 +42,8 @@ class BasicVector : public VectorBase<T> {
       (*this)[i++] = datum;
     }
   }
+
+  ~BasicVector() override = default;
 
   /// Constructs a BasicVector whose elements are the elements of @p init.
   static std::unique_ptr<BasicVector<T>> Make(
@@ -84,11 +84,24 @@ class BasicVector : public VectorBase<T> {
     return values_.head(values_.rows());
   }
 
+  void SetFrom(const VectorBase<T>& value) final {
+    value.CopyToPreSizedVector(&values_);
+  }
+
   void SetFromVector(const Eigen::Ref<const VectorX<T>>& value) final {
     set_value(value);
   }
 
+  void SetZero() final { values_.setZero(); }
+
   VectorX<T> CopyToVector() const final { return values_; }
+
+  void CopyToPreSizedVector(EigenPtr<VectorX<T>> vec) const final {
+    DRAKE_THROW_UNLESS(vec != nullptr);
+    const int n = vec->rows();
+    if (n != size()) { this->ThrowMismatchedSize(n); }
+    *vec = values_;
+  }
 
   void ScaleAndAddToVector(const T& scale,
                            EigenPtr<VectorX<T>> vec) const final {
@@ -97,8 +110,6 @@ class BasicVector : public VectorBase<T> {
     if (n != size()) { this->ThrowMismatchedSize(n); }
     *vec += scale * values_;
   }
-
-  void SetZero() final { values_.setZero(); }
 
   /// Copies the entire vector to a new BasicVector, with the same concrete
   /// implementation type.
@@ -167,16 +178,16 @@ class BasicVector : public VectorBase<T> {
   VectorX<T>& values() { return values_; }
 
  private:
-  // Add in multiple scaled vectors to this vector. All vectors
-  // must be the same size. This function overrides the default DoPlusEqScaled()
-  // implementation toward maximizing speed. This implementation should be able
-  // to leverage Eigen's fast scale and add functions in the case that rhs_scal
-  // is also (i.e., in addition to 'this') a contiguous vector.
-  void DoPlusEqScaled(
-      const std::initializer_list<std::pair<T, const VectorBase<T>&>>& rhs_scal)
-      final {
-    for (const auto& operand : rhs_scal)
-      operand.second.ScaleAndAddToVector(operand.first, &values_);
+  using ScaledVectorInitList = typename VectorBase<T>::ScaledVectorInitList;
+
+  // This function overrides the default DoPlusEqScaled() implementation toward
+  // maximizing speed. This implementation should be able to leverage Eigen's
+  // fast scale and add functions in the case that rhs_scale is also (i.e., in
+  // addition to 'this') a contiguous vector.
+  void DoPlusEqScaled(const ScaledVectorInitList& rhs_scale) final {
+    for (const auto& [scale, rhs] : rhs_scale) {
+      rhs.ScaleAndAddToVector(scale, &values_);
+    }
   }
 
   // The column vector of T values.

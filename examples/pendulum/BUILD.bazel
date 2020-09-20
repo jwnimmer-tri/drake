@@ -61,6 +61,7 @@ drake_cc_binary(
     deps = [
         ":pendulum_geometry",
         ":pendulum_plant",
+        "//common:add_text_logging_gflags",
         "//geometry:geometry_visualization",
         "//systems/analysis:simulator",
         "//systems/framework:diagram",

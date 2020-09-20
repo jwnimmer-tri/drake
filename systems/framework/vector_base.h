@@ -18,23 +18,22 @@
 namespace drake {
 namespace systems {
 
-/// VectorBase is an abstract base class that real-valued signals
-/// between Systems and real-valued System state vectors must implement.
-/// Classes that inherit from VectorBase will typically provide names
-/// for the elements of the vector, and may also provide other
-/// computations for the convenience of Systems handling the
-/// signal. The vector is always a column vector. It may or may not
-/// be contiguous in memory. Contiguous subclasses should typically
-/// inherit from BasicVector, not from VectorBase directly.
+/// VectorBase is an abstract base class for real-valued signals within the
+/// framework. The vector is always a column vector. It may or may not be
+/// contiguous in memory. Contiguous subclasses should typically inherit from
+/// BasicVector, not from VectorBase directly.
 ///
 /// @tparam_default_scalar
 template <typename T>
 class VectorBase {
  public:
-  // VectorBase objects are neither copyable nor moveable.
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(VectorBase)
 
-  virtual ~VectorBase() {}
+  virtual ~VectorBase() = default;
+
+  /// A convenient typedef for use in this class's function signatures.
+  using ScaledVectorInitList =
+      std::initializer_list<std::pair<const T&, const VectorBase<T>&>>;
 
   /// Returns the number of elements in the vector.
   ///
@@ -121,17 +120,15 @@ class VectorBase {
   /// value and allocates only the O(N) memory that it returns.
   virtual VectorX<T> CopyToVector() const {
     VectorX<T> vec(size());
-    for (int i = 0; i < size(); ++i) {
-      vec[i] = (*this)[i];
-    }
+    this->CopyToPreSizedVector(&vec);
     return vec;
   }
 
   /// Copies this entire %VectorBase into a pre-sized Eigen Vector.
+  /// @throws std::exception if `vec` is the wrong size.
   ///
   /// Implementations should ensure this operation is O(N) in the size of the
   /// value.
-  /// @throws std::exception if `vec` is the wrong size.
   virtual void CopyToPreSizedVector(EigenPtr<VectorX<T>> vec) const {
     DRAKE_THROW_UNLESS(vec != nullptr);
     const int n = vec->rows();
@@ -164,8 +161,7 @@ class VectorBase {
 
   /// Add in multiple scaled vectors to this vector.
   /// @throws std::exception if any rhs are a different size than this.
-  VectorBase& PlusEqScaled(const std::initializer_list<
-                           std::pair<T, const VectorBase<T>&>>& rhs_scale) {
+  VectorBase& PlusEqScaled(const ScaledVectorInitList& rhs_scale) {
     const int n = size();
     for (const auto& [scale, rhs] : rhs_scale) {
       unused(scale);
@@ -199,7 +195,7 @@ class VectorBase {
   }
 
  protected:
-  VectorBase() {}
+  VectorBase() = default;
 
   /// Implementations should ensure this operation is O(1) and allocates no
   /// memory.  The index need not be validated when in release mode.
@@ -230,8 +226,7 @@ class VectorBase {
   /// operations should be far more efficient. Overriding implementations should
   /// ensure that this operation remains O(N) in the size of
   /// the value and allocates no memory.
-  virtual void DoPlusEqScaled(const std::initializer_list<
-                              std::pair<T, const VectorBase<T>&>>& rhs_scale) {
+  virtual void DoPlusEqScaled(const ScaledVectorInitList& rhs_scale) {
     const int n = size();
     for (int i = 0; i < n; ++i) {
       T value(0);
