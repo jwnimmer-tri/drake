@@ -449,6 +449,18 @@ drake_cc_googletest(
 )
 
 drake_cc_googletest(
+    name = "repro_test",
+    deps = [
+        "//lcmtypes:drake_signal",
+        "//systems/analysis:simulator",
+        "//systems/framework:diagram_builder",
+        "//systems/lcm:lcm_interface_system",
+        "//systems/lcm:lcm_publisher_system",
+        "//systems/primitives:constant_value_source",
+    ],
+)
+
+drake_cc_googletest(
     name = "simulator_denorm_test",
     # Valgrind core does not support the floating point register
     # instructions that this test uses.

@@ -1040,12 +1040,12 @@ class ExampleDiscreteSystem : public LeafSystem<double> {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(ExampleDiscreteSystem)
 
-  ExampleDiscreteSystem() {
+  ExampleDiscreteSystem(double period = kPeriod) {
     DeclareDiscreteState(1);  // Just one state variable, x[0], default=0.
 
     // Update to x_{n+1} using a Drake "discrete update" event (occurs
     // at the beginning of step n+1).
-    DeclarePeriodicDiscreteUpdateEvent(kPeriod, kOffset,
+    DeclarePeriodicDiscreteUpdateEvent(period, kOffset,
                                        &ExampleDiscreteSystem::Update);
 
     // Present y_n (=S_n) at the output port.
@@ -2332,23 +2332,7 @@ GTEST_TEST(SimulatorTest, MonitorFunctionAndStatusReturn) {
       "failed with message.*Something terrible happened.*");
 }
 
-// Simulator::Initialize() called at time t temporarily moves time back to
-// t̅ = t-δ prior to calling CalcNextUpdateTime() so that timed events scheduled
-// for time t will trigger. (t̅ is the next floating point value below t.)
-// This causes trouble for DoCalcNextUpdateTime() overloads that want an
-// event "right now", since those return contact.get_time(), which in this
-// case will be t̅ when it should have been t. When a Diagram runs through
-// all its subsystems looking for the "next" update time, it keeps only the
-// ones that occur at the earliest of all times reported, and forgets any
-// later ones (since obviously those are not "next"). Without special handling,
-// the "right now" events at t̅ would prevent other time t events from being
-// seen. (This was not done originally, see Drake issue #13296.)
-//
-// The case here creates a two-subsystem Diagram in which one of the subsystems
-// specifies a "right now" update time while the other has an event that occurs
-// at a specified time t. We'll verify that they play well together under
-// various circumstances that can occur during Simulator::Initialize().
-GTEST_TEST(SimulatorTest, MissedPublishEventIssue13296) {
+namespace {
   // This models systems like LcmSubscriberSystem that want to generate
   // an event as soon as possible after an external message arrives. Here we
   // just set a flag to indicate that a "message" is waiting and generate an
@@ -2385,13 +2369,47 @@ GTEST_TEST(SimulatorTest, MissedPublishEventIssue13296) {
     mutable int publish_counter_{0};
   };
 
+  class RightNowEventSystem2 : public LeafSystem<double> {
+   public:
+    int publish_count() const { return publish_counter_; }
+    void reset_count() { publish_counter_ = 0; }
+
+   private:
+    void DoCalcNextUpdateTime(const Context<double>& context,
+                              CompositeEventCollection<double>* event_info,
+                              double* next_update_time) const final {
+      const double inf = std::numeric_limits<double>::infinity();
+      if (context.get_time() == last_publish_) {
+	*next_update_time = inf;
+	return;
+      }
+      *next_update_time = context.get_time();
+      PublishEvent<double> event(
+          TriggerType::kTimed,
+          [this](const Context<double>& handler_context,
+                 const PublishEvent<double>& publish_event) {
+            this->MyPublishHandler(handler_context, publish_event);
+          });
+      event.AddToComposite(event_info);
+    }
+
+    void MyPublishHandler(const Context<double>& context,
+                          const PublishEvent<double>& publish_event) const {
+      ++publish_counter_;
+      last_publish_ = context.get_time();
+    }
+
+    mutable double last_publish_{-1.0};
+    mutable int publish_counter_{0};
+  };
+
   // Just an ordinary system that has a periodic event with period 0.25. It
   // should play nicely with simultaneous events from the
   // RightNowEventSystem above.
   class PeriodicEventSystem : public LeafSystem<double> {
    public:
-    PeriodicEventSystem() {
-      this->DeclarePeriodicPublishEvent(0.25, 0.,
+    PeriodicEventSystem(double period = 0.25) {
+      this->DeclarePeriodicPublishEvent(period, 0.,
                                         &PeriodicEventSystem::MakeItCount);
     }
 
@@ -2406,6 +2424,41 @@ GTEST_TEST(SimulatorTest, MissedPublishEventIssue13296) {
     mutable int publish_counter_{0};
   };
 
+  class PerStepPublishSystem : public LeafSystem<double> {
+   public:
+    PerStepPublishSystem() {
+      this->DeclarePerStepPublishEvent(&PerStepPublishSystem::MakeItCount);
+    }
+
+    int publish_count() const { return publish_counter_; }
+    void reset_count() { publish_counter_ = 0; }
+
+   private:
+    EventStatus MakeItCount(const Context<double>&) const {
+      ++publish_counter_;
+      return EventStatus::Succeeded();
+    }
+    mutable int publish_counter_{0};
+  };
+}  // namespace
+
+// Simulator::Initialize() called at time t temporarily moves time back to
+// t̅ = t-δ prior to calling CalcNextUpdateTime() so that timed events scheduled
+// for time t will trigger. (t̅ is the next floating point value below t.)
+// This causes trouble for DoCalcNextUpdateTime() overloads that want an
+// event "right now", since those return contact.get_time(), which in this
+// case will be t̅ when it should have been t. When a Diagram runs through
+// all its subsystems looking for the "next" update time, it keeps only the
+// ones that occur at the earliest of all times reported, and forgets any
+// later ones (since obviously those are not "next"). Without special handling,
+// the "right now" events at t̅ would prevent other time t events from being
+// seen. (This was not done originally, see Drake issue #13296.)
+//
+// The case here creates a two-subsystem Diagram in which one of the subsystems
+// specifies a "right now" update time while the other has an event that occurs
+// at a specified time t. We'll verify that they play well together under
+// various circumstances that can occur during Simulator::Initialize().
+GTEST_TEST(SimulatorTest, MissedPublishEventIssue13296) {
   DiagramBuilder<double> builder;
   auto right_now_system = builder.AddSystem<RightNowEventSystem>();
   auto periodic_system = builder.AddSystem<PeriodicEventSystem>();
@@ -2462,6 +2515,26 @@ GTEST_TEST(SimulatorTest, MissedPublishEventIssue13296) {
   simulator.Initialize();
   EXPECT_EQ(right_now_system->publish_count(), 1);
   EXPECT_EQ(periodic_system->publish_count(), 1);
+}
+
+GTEST_TEST(SimulatorTest, Bork) {
+  DiagramBuilder<double> builder;
+  auto one = builder.AddSystem<ConstantVectorSource<double>>(1.0);
+  auto integrator = builder.AddSystem<Integrator<double>>(1);
+  builder.Cascade(*one, *integrator);
+  auto per_step_system = builder.AddSystem<PerStepPublishSystem>();
+  auto right_now_system = builder.AddSystem<RightNowEventSystem2>();
+  auto periodic_system = builder.AddSystem<PeriodicEventSystem>(1.0 / 60.0);
+  auto disc = builder.AddSystem<ExampleDiscreteSystem>(0.001);
+  unused(disc);
+  Simulator<double> simulator(builder.Build());
+  simulator.Initialize();
+  while (simulator.get_context().get_time() < 2.999) {
+    simulator.AdvanceTo(simulator.get_context().get_time() + 0.005);
+  }
+  EXPECT_EQ(periodic_system->publish_count(), 3 * 60);
+  EXPECT_EQ(right_now_system->publish_count(), 3 * 200);
+  EXPECT_GE(per_step_system->publish_count(), 3 * 200);
 }
 
 }  // namespace
