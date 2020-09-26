@@ -370,6 +370,8 @@ void LeafSystem<T>::DoCalcNextUpdateTime(
   for (const Event<T>* event : next_events) {
     event->AddToComposite(events);
   }
+  DRAKE_LOGGER_TRACE("LeafSystem::CalcNextUpdateTime after {} on {} is {}",
+      context.get_time(), this->GetSystemName(), *time);
 }
 
 template <typename T>

@@ -34,6 +34,7 @@ class PeriodicEventSystem : public LeafSystem<double> {
 
  private:
   EventStatus MakeItCount(const Context<double>&) const {
+    DRAKE_LOGGER_TRACE("PeriodicEventSystem::MakeItCount");
     ++publish_counter_;
     return EventStatus::Succeeded();
   }

@@ -74,6 +74,7 @@ void LcmInterfaceSystem::DoCalcNextUpdateTime(
   } else {
     *time = std::numeric_limits<double>::infinity();
   }
+  DRAKE_LOGGER_TRACE("LcmInterfaceSystem handled {} messages", num_handled);
 }
 
 }  // namespace lcm

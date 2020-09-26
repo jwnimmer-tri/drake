@@ -368,6 +368,9 @@ T System<T>::CalcNextUpdateTime(const Context<T>& context,
   if (context.get_true_time() && time == context.get_time())
     time = *context.get_true_time();
 
+  DRAKE_LOGGER_TRACE("System::CalcNextUpdateTime after {} on {} is {}",
+      context.get_time(), this->GetSystemName(), time);
+
   return time;
 }
 
