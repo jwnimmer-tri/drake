@@ -18,73 +18,70 @@
 namespace drake {
 namespace systems {
 
-/// VectorBase is an abstract base class that real-valued signals
-/// between Systems and real-valued System state vectors must implement.
-/// Classes that inherit from VectorBase will typically provide names
-/// for the elements of the vector, and may also provide other
-/// computations for the convenience of Systems handling the
-/// signal. The vector is always a column vector. It may or may not
-/// be contiguous in memory. Contiguous subclasses should typically
-/// inherit from BasicVector, not from VectorBase directly.
-///
-/// @tparam_default_scalar
+/** VectorBase is an abstract base class for real-valued signals within the
+framework. The vector is always a column vector. It may or may not be
+contiguous in memory. Contiguous subclasses should typically inherit from
+BasicVector, not from VectorBase directly.
+
+@tparam_default_scalar */
 template <typename T>
 class VectorBase {
  public:
-  // VectorBase objects are neither copyable nor moveable.
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(VectorBase)
 
-  virtual ~VectorBase() {}
+  virtual ~VectorBase() = default;
 
-  /// Returns the number of elements in the vector.
-  ///
-  /// Implementations should ensure this operation is O(1) and allocates no
-  /// memory.
+  /** A list of [(scale, vector), ...] pairs for use in this class's function
+  signatures. */
+  using ScaledVectorInitList =
+      std::initializer_list<std::pair<const T&, const VectorBase<T>&>>;
+
+  /** Returns the number of elements in the vector. Implementations should
+  ensure this operation is O(1) and allocates no memory. */
   virtual int size() const = 0;
 
-  /// Returns the element at the given index in the vector.
-  /// @pre 0 <= `index` < size()
+  /** Returns the mutable element at the given index in the vector.
+  @pre 0 <= `index` < size() */
   T& operator[](int index) {
     DRAKE_ASSERT(index >= 0);
     return DoGetAtIndexUnchecked(index);
   }
 
-  /// Returns the element at the given index in the vector.
-  /// @pre 0 <= `index` < size()
+  /** Returns the element at the given index in the vector.
+  @pre 0 <= `index` < size() */
   const T& operator[](int index) const {
     DRAKE_ASSERT(index >= 0);
     return DoGetAtIndexUnchecked(index);
   }
 
-  /// Returns the element at the given index in the vector.
-  /// @throws std::exception if the index is >= size() or negative.
-  /// Consider operator[]() instead if bounds-checking is unwanted.
+  /** Returns the element at the given index in the vector.
+  @throws std::exception if the index is >= size() or negative.
+  Consider operator[]() instead if bounds-checking is unwanted. */
   const T& GetAtIndex(int index) const {
     if (index < 0) { this->ThrowOutOfRange(index); }
     return DoGetAtIndexChecked(index);
   }
 
-  /// Returns the element at the given index in the vector.
-  /// @throws std::exception if the index is >= size() or negative.
-  /// Consider operator[]() instead if bounds-checking is unwanted.
+  /** Returns the mutable element at the given index in the vector.
+  @throws std::exception if the index is >= size() or negative.
+  Consider operator[]() instead if bounds-checking is unwanted. */
   T& GetAtIndex(int index) {
     if (index < 0) { this->ThrowOutOfRange(index); }
     return DoGetAtIndexChecked(index);
   }
 
-  /// Replaces the state at the given index with the value.
-  /// @throws std::exception if the index is >= size().
-  /// Consider operator[]() instead if bounds-checking is unwanted.
+  /** Replaces the element at the given index with the value.
+  @throws std::exception if the index is >= size().
+  Consider operator[]() instead if bounds-checking is unwanted. */
   void SetAtIndex(int index, const T& value) {
     GetAtIndex(index) = value;
   }
 
-  /// Replaces the entire vector with the contents of @p value.
-  /// @throws std::exception if @p value is not a column vector with size()
-  /// rows.
-  ///
-  /// Implementations should ensure this operation is O(N) in the size of the
-  /// value and allocates no memory.
+  /** Replaces the entire vector with the contents of @p value.
+  @throws std::exception if @p value is not a column vector with size() rows.
+
+  Implementations should ensure this operation is O(N) in the size of the value
+  and allocates no memory. */
   virtual void SetFrom(const VectorBase<T>& value) {
     const int n = value.size();
     if (n != size()) { this->ThrowMismatchedSize(n); }
@@ -93,12 +90,11 @@ class VectorBase {
     }
   }
 
-  /// Replaces the entire vector with the contents of @p value.
-  /// @throws std::exception if @p value is not a column vector with size()
-  /// rows.
-  ///
-  /// Implementations should ensure this operation is O(N) in the size of the
-  /// value and allocates no memory.
+  /** Replaces the entire vector with the contents of @p value.
+  @throws std::exception if @p value is not a column vector with size() rows.
+
+  Implementations should ensure this operation is O(N) in the size of the value
+  and allocates no memory. */
   virtual void SetFromVector(const Eigen::Ref<const VectorX<T>>& value) {
     const int n = value.rows();
     if (n != size()) { this->ThrowMismatchedSize(n); }
@@ -107,7 +103,7 @@ class VectorBase {
     }
   }
 
-  /// Sets all elements of this vector to zero.
+  /** Sets all elements of this vector to zero. */
   virtual void SetZero() {
     const int n = size();
     for (int i = 0; i < n; ++i) {
@@ -115,10 +111,10 @@ class VectorBase {
     }
   }
 
-  /// Copies this entire %VectorBase into a contiguous Eigen Vector.
-  ///
-  /// Implementations should ensure this operation is O(N) in the size of the
-  /// value and allocates only the O(N) memory that it returns.
+  /* Copies this entire %VectorBase into a contiguous Eigen Vector.
+
+  Implementations should ensure this operation is O(N) in the size of the value
+  and allocates only the O(N) memory that it returns. */
   virtual VectorX<T> CopyToVector() const {
     VectorX<T> vec(size());
     for (int i = 0; i < size(); ++i) {
@@ -127,11 +123,11 @@ class VectorBase {
     return vec;
   }
 
-  /// Copies this entire %VectorBase into a pre-sized Eigen Vector.
-  ///
-  /// Implementations should ensure this operation is O(N) in the size of the
-  /// value.
-  /// @throws std::exception if `vec` is the wrong size.
+  /** Copies this entire %VectorBase into a pre-sized Eigen Vector.
+  @throws std::exception if `vec` is the wrong size.
+
+  Implementations should ensure this operation is O(N) in the size of the
+  value. */
   virtual void CopyToPreSizedVector(EigenPtr<VectorX<T>> vec) const {
     DRAKE_THROW_UNLESS(vec != nullptr);
     const int n = vec->rows();
@@ -141,11 +137,11 @@ class VectorBase {
     }
   }
 
-  /// Adds a scaled version of this vector to Eigen vector @p vec.
-  /// @throws std::exception if `vec` is the wrong size.
-  ///
-  /// Implementations should ensure this operation remains O(N) in the size of
-  /// the value and allocates no memory.
+  /** Adds a scaled version of this vector to Eigen vector @p vec.
+  @throws std::exception if `vec` is the wrong size.
+
+  Implementations should ensure this operation remains O(N) in the size of the
+  value and allocates no memory. */
   virtual void ScaleAndAddToVector(const T& scale,
                                    EigenPtr<VectorX<T>> vec) const {
     DRAKE_THROW_UNLESS(vec != nullptr);
@@ -156,16 +152,15 @@ class VectorBase {
     }
   }
 
-  /// Add in scaled vector @p rhs to this vector.
-  /// @throws std::exception if @p rhs is a different size than this.
+  /** Adds in scaled vector @p rhs to this vector.
+  @throws std::exception if @p rhs is a different size than this. */
   VectorBase& PlusEqScaled(const T& scale, const VectorBase<T>& rhs) {
     return PlusEqScaled({{scale, rhs}});
   }
 
-  /// Add in multiple scaled vectors to this vector.
-  /// @throws std::exception if any rhs are a different size than this.
-  VectorBase& PlusEqScaled(const std::initializer_list<
-                           std::pair<T, const VectorBase<T>&>>& rhs_scale) {
+  /** Adds in multiple scaled vectors to this vector.
+  @throws std::exception if any rhs are a different size than this. */
+  VectorBase& PlusEqScaled(const ScaledVectorInitList& rhs_scale) {
     const int n = size();
     for (const auto& [scale, rhs] : rhs_scale) {
       unused(scale);
@@ -176,22 +171,22 @@ class VectorBase {
     return *this;
   }
 
-  /// Add in vector @p rhs to this vector.
-  /// @throws std::exception if @p rhs is a different size than this.
+  /** Adds in vector @p rhs to this vector.
+  @throws std::exception if @p rhs is a different size than this. */
   VectorBase& operator+=(const VectorBase<T>& rhs) {
     return PlusEqScaled(T(1), rhs);
   }
 
-  /// Subtract in vector @p rhs to this vector.
-  /// @throws std::exception if @p rhs is a different size than this.
+  /** Subtracts in vector @p rhs to this vector.
+  @throws std::exception if @p rhs is a different size than this. */
   VectorBase& operator-=(const VectorBase<T>& rhs) {
     return PlusEqScaled(T(-1), rhs);
   }
 
-  /// Get the bounds for the elements.
-  /// If lower and upper are both empty size vectors, then there are no bounds.
-  /// Otherwise, the bounds are (*lower)(i) <= GetAtIndex(i) <= (*upper)(i)
-  /// The default output is no bounds.
+  /** Gets the bounds for the elements.
+  If lower and upper are both empty size vectors, then there are no bounds.
+  Otherwise, the bounds are (*lower)(i) <= GetAtIndex(i) <= (*upper)(i).
+  The default output is no bounds. */
   virtual void GetElementBounds(Eigen::VectorXd* lower,
                                 Eigen::VectorXd* upper) const {
     lower->resize(0);
@@ -199,39 +194,37 @@ class VectorBase {
   }
 
  protected:
-  VectorBase() {}
+  VectorBase() = default;
 
-  /// Implementations should ensure this operation is O(1) and allocates no
-  /// memory.  The index need not be validated when in release mode.
+  /** Implementations should ensure this operation is O(1) and allocates no
+  memory. The index need not be validated when in release mode. */
   virtual const T& DoGetAtIndexUnchecked(int index) const = 0;
 
-  /// Implementations should ensure this operation is O(1) and allocates no
-  /// memory.  The index need not be validated when in release mode.
+  /** Implementations should ensure this operation is O(1) and allocates no
+  memory. The index need not be validated when in release mode. */
   virtual T& DoGetAtIndexUnchecked(int index) = 0;
 
-  /// Implementations should ensure this operation is O(1) and allocates no
-  /// memory.  The index has already been checked for negative, but not size.
-  /// Implementations must throw an exception when index >= size().
+  /** Implementations should ensure this operation is O(1) and allocates no
+  memory. The index has already been checked for negative, but not size.
+  Implementations must throw an exception when index >= size(). */
   virtual const T& DoGetAtIndexChecked(int index) const = 0;
 
-  /// Implementations should ensure this operation is O(1) and allocates no
-  /// memory.  The index has already been checked for negative, but not size.
-  /// Implementations must throw an exception when index >= size().
+  /** Implementations should ensure this operation is O(1) and allocates no
+  memory. The index has already been checked for negative, but not size.
+  Implementations must throw an exception when index >= size(). */
   virtual T& DoGetAtIndexChecked(int index) = 0;
 
-  /// Adds in multiple scaled vectors to this vector. All vectors
-  /// are guaranteed to be the same size.
-  ///
-  /// You should override this method if possible with a more efficient
-  /// approach that leverages structure; the default implementation performs
-  /// element-by-element computations that are likely inefficient, but even
-  /// this implementation minimizes memory accesses for efficiency. If the
-  /// vector is contiguous, for example, implementations that leverage SIMD
-  /// operations should be far more efficient. Overriding implementations should
-  /// ensure that this operation remains O(N) in the size of
-  /// the value and allocates no memory.
-  virtual void DoPlusEqScaled(const std::initializer_list<
-                              std::pair<T, const VectorBase<T>&>>& rhs_scale) {
+  /** Adds in multiple scaled vectors to this vector. All vectors are
+  guaranteed to be the same size.
+
+  You should override this method if possible with a more efficient approach
+  that leverages structure; the default implementation performs
+  element-by-element computations that are likely inefficient, but even this
+  implementation minimizes memory accesses for efficiency. If the vector is
+  contiguous, for example, implementations that leverage SIMD should be far
+  more efficient. Overriding implementations should that this operation remains
+  O(N) in the size of value and allocates no memory. */
+  virtual void DoPlusEqScaled(const ScaledVectorInitList& rhs_scale) {
     const int n = size();
     for (int i = 0; i < n; ++i) {
       T value(0);
@@ -255,8 +248,8 @@ class VectorBase {
   }
 };
 
-/// Allows a VectorBase<T> to be streamed into a string as though it were a
-/// RowVectorX<T>. This is useful for debugging purposes.
+/** Allows a VectorBase<T> to be streamed into a string as though it were a
+RowVectorX<T>. This is useful for debugging purposes. */
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const VectorBase<T>& vec) {
   os << vec.CopyToVector().transpose();
