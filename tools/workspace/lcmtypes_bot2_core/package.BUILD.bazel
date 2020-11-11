@@ -20,6 +20,12 @@ licenses([
 
 package(default_visibility = ["//visibility:public"])
 
+_DEPRECATION_2021_05 = " ".join([
+    "DRAKE DEPRECATED: The @lcmtypes_bot2_core repository is unused within",
+    "Drake and therefore is being removed. The deprecated code will be",
+    "removed from Drake on or after 2021-05-01.",
+])
+
 LCM_SRCS = glob(["lcmtypes/*.lcm"])
 
 # Input file "lcmtypes/bot_core_foo_t.lcm" yields struct "foo_t".
@@ -35,6 +41,7 @@ lcm_cc_library(
     lcm_package = "bot_core",
     lcm_srcs = LCM_SRCS,
     lcm_structs = LCM_STRUCTS,
+    deprecation = _DEPRECATION_2021_05,
 )
 
 lcm_java_library(
@@ -42,6 +49,7 @@ lcm_java_library(
     lcm_package = "bot_core",
     lcm_srcs = LCM_SRCS,
     lcm_structs = LCM_STRUCTS,
+    deprecation = _DEPRECATION_2021_05,
 )
 
 lcm_py_library(
@@ -50,6 +58,7 @@ lcm_py_library(
     lcm_package = "bot_core",
     lcm_srcs = LCM_SRCS,
     lcm_structs = LCM_STRUCTS,
+    deprecation = _DEPRECATION_2021_05,
 )
 
 CMAKE_PACKAGE = "bot2-core-lcmtypes"
