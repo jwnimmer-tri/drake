@@ -9,6 +9,7 @@ load(
 load(
     "@drake//tools/skylark:drake_cc.bzl",
     "drake_cc_library",
+    "drake_cc_test",
     "drake_transitive_installed_hdrs_filegroup",
 )
 load(
@@ -532,8 +533,20 @@ install(
 )
 
 # === test/ ===
+
+drake_cc_test(
+    name = "nested_types_test_cc",
+    srcs = ["test/nested_types_test.cc"],
+    deps = [
+        ":lcmtypes_drake_cc",
+        "//common:unused",
+    ],
+)
+
 drake_py_test(
-    name = "polynomial_matrix_test",
+    name = "nested_types_test_py",
+    srcs = ["test/nested_types_test.py"],
+    main = "test/nested_types_test.py",
     deps = [
         ":lcmtypes_drake_py",
     ],
