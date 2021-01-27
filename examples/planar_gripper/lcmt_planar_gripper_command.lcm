@@ -1,4 +1,4 @@
-package drake;
+package drake.examples.planar_gripper;
 
 // Commands a single set of joint states for the planar gripper.  All angular
 // positions/velocities are expressed in radians and radians/second.

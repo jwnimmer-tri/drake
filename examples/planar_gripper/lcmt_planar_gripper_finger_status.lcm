@@ -1,4 +1,4 @@
-package drake;
+package drake.examples.planar_gripper;
 
 struct lcmt_planar_gripper_finger_status
 {

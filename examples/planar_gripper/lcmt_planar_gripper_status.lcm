@@ -1,4 +1,4 @@
-package drake;
+package drake.examples.planar_gripper;
 
 // The current status of a planar-gripper.  All angular
 // positions/velocities are expressed in radians and radians/second.

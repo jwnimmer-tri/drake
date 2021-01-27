@@ -1,4 +1,4 @@
-package drake;
+package drake.examples.planar_gripper;
 
 // Communicates the finger-face assignment info for a specified finger.
 struct lcmt_planar_gripper_finger_face_assignment {
