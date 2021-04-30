@@ -1078,7 +1078,9 @@ TEST_F(DiagramTest, ToAutoDiffXd) {
   const bool use_double_only = true;
   auto diagram_with_double_only = std::make_unique<ExampleDiagram>(
       kSize, use_abstract, use_double_only);
-  EXPECT_THROW(diagram_with_double_only->ToAutoDiffXd(), std::exception);
+  DRAKE_EXPECT_THROWS_MESSAGE(
+      diagram_with_double_only->ToAutoDiffXd(), std::exception,
+      ".*DoubleOnlySystem.*");
 }
 
 /// Tests that a diagram can be transmogrified to symbolic.
