@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include <png.h>
 #include <vtkImageExport.h>
 #include <vtkJPEGReader.h>
 #include <vtkNew.h>
@@ -12,12 +11,23 @@
 #include "drake/common/text_logging.h"
 #include "drake/common/unused.h"
 #include "drake/lcmt_image_array.hpp"
+#include "drake/systems/sensors/image_io_png.h"
 #include "drake/systems/sensors/lcm_image_traits.h"
 
 namespace drake {
 namespace systems {
 namespace sensors {
 namespace {
+
+#if 0
+    if ((static_cast<int>(png_get_image_width(png_ptr, info_ptr)) !=
+         lcm_image->width) ||
+        (static_cast<int>(png_get_image_height(png_ptr, info_ptr)) !=
+         lcm_image->height)) {
+      drake::log()->error("Decoded PNG parameter mismatch");
+      goto out;
+    }
+#endif
 
 bool is_color_image(int8_t type) {
   switch (type) {
@@ -47,88 +57,21 @@ bool image_has_alpha(int8_t type) {
   return false;
 }
 
-struct PngDecodeData {
-  const unsigned char* data{nullptr};
-  int size{0};
-  int pos{0};
-  std::string error_msg;
-};
-
-void CopyNextPngBytes(png_structp png_ptr, png_bytep data, size_t length) {
-  DRAKE_DEMAND(png_ptr);
-  PngDecodeData* decode_data = reinterpret_cast<PngDecodeData*>(
-      png_get_io_ptr(png_ptr));
-  DRAKE_DEMAND(decode_data);
-
-  if (decode_data->pos + static_cast<int>(length) > decode_data->size) {
-    png_error(png_ptr, "Attempt to read past end of PNG input buffer");
-  }
-
-  memcpy(data, decode_data->data + decode_data->pos, length);
-  decode_data->pos += length;
-}
-
 template <PixelType kPixelType>
 bool DecompressPng(const lcmt_image* lcm_image, Image<kPixelType>* image) {
-  PngDecodeData decode_data;
-  decode_data.data = lcm_image->data.data();
-  decode_data.size = lcm_image->size;
-
-  png_structp png_ptr = png_create_read_struct(
-      PNG_LIBPNG_VER_STRING, 0, 0, 0);
-  DRAKE_DEMAND(png_ptr);
-
-  png_infop info_ptr = png_create_info_struct(png_ptr);
-  DRAKE_DEMAND(info_ptr);
-
-  if (setjmp(png_jmpbuf(png_ptr)) == 0) {
-    png_set_read_fn(png_ptr, &decode_data, CopyNextPngBytes);
-    png_read_info(png_ptr, info_ptr);
-    if ((static_cast<int>(png_get_image_width(png_ptr, info_ptr)) !=
-         lcm_image->width) ||
-        (static_cast<int>(png_get_image_height(png_ptr, info_ptr)) !=
-         lcm_image->height)) {
-      drake::log()->error("Decoded PNG parameter mismatch");
-      goto out;
-    }
-
-    if (png_get_bit_depth(png_ptr, info_ptr) !=
-        sizeof(typename ImageTraits<kPixelType>::ChannelType) * 8) {
-      drake::log()->error("Decoded PNG bit depth mismatch");
-      goto out;
-    }
-
-    if (png_get_channels(png_ptr, info_ptr) != image->kNumChannels) {
-      drake::log()->error("Decoded PNG bit channel mismatch");
-      goto out;
-    }
-
-    if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_PALETTE) {
-      png_set_palette_to_rgb(png_ptr);
-    }
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    png_set_swap(png_ptr);
-#endif
-
-    png_read_update_info(png_ptr, info_ptr);
-
-    std::vector<png_bytep> row_pointers(lcm_image->height);
-    for (int i = 0; i < lcm_image->height; ++i) {
-      row_pointers[i] = reinterpret_cast<png_bytep>(image->at(0, i));
-    }
-
-    png_read_image(png_ptr, row_pointers.data());
-    png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-    return true;
-
+  DRAKE_DEMAND(lcm_image->size >= 0);
+  std::string error_message;
+  if constexpr (kPixelType == PixelType::kDepth32F) {
+    error_message = "PNG decoding of FLOAT32 is not supported";
+    unused(image);
   } else {
-    drake::log()->error("Error during PNG decoding");
+    LoadPngData(lcm_image->data.data(), lcm_image->size, image, &error_message);
   }
-
- out:
-  png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-  return false;
+  if (!error_message.empty()) {
+    drake::log()->error(error_message);
+    return false;
+  }
+  return true;
 }
 
 template <PixelType kPixelType>

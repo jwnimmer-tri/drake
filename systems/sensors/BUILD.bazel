@@ -31,6 +31,8 @@ drake_cc_package_library(
         ":color_palette",
         ":gyroscope",
         ":image",
+        ":image_io_png",
+        ":image_io_tiff",
         ":image_to_lcm_image_array_t",
         ":image_writer",
         ":lcm_image_array_to_images",
@@ -114,6 +116,30 @@ drake_cc_library(
     ],
 )
 
+drake_cc_library(
+    name = "image_io_png",
+    srcs = ["image_io_png.cc"],
+    hdrs = ["image_io_png.h"],
+    deps = [
+        ":image",
+        "//common:essential",
+        "//common:scope_exit",
+        "@libpng",
+    ],
+)
+
+drake_cc_library(
+    name = "image_io_tiff",
+    srcs = ["image_io_tiff.cc"],
+    hdrs = ["image_io_tiff.h"],
+    deps = [
+        ":image",
+        "//common:essential",
+        "@vtk//:vtkCommonDataModel",
+        "@vtk//:vtkIOImage",
+    ],
+)
+
 # TODO(jwnimmer-tri) This header assists with the deprecation of the
 # @lcmtypes_robotlocomotion repository; remove it on or after 2021-08-01.
 drake_cc_library(
@@ -171,6 +197,7 @@ drake_cc_library(
         "lcm_image_array_to_images.h",
     ],
     deps = [
+        ":image_io_png",
         ":lcm_image_traits",
         "//common:essential",
         "//lcmtypes:image_array",
@@ -245,11 +272,11 @@ drake_cc_library(
     hdrs = ["image_writer.h"],
     deps = [
         ":image",
+        ":image_io_png",
+        ":image_io_tiff",
         "//common:essential",
         "//common:filesystem",
-        "//systems/framework",
-        "@vtk//:vtkCommonDataModel",
-        "@vtk//:vtkIOImage",
+        "//systems/framework:leaf_system",
     ],
 )
 
