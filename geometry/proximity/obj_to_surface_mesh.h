@@ -31,6 +31,7 @@ namespace geometry {
 SurfaceMesh<double> ReadObjToSurfaceMesh(
     const std::string& filename,
     double scale = 1.0,
+    // TODO(jwnimmer-tri) Use a DiagnosticPolicy here instead.
     std::function<void(std::string_view)> on_warning = {});
 
 /**
@@ -40,6 +41,7 @@ SurfaceMesh<double> ReadObjToSurfaceMesh(
 SurfaceMesh<double> ReadObjToSurfaceMesh(
     std::istream* input_stream,
     double scale = 1.0,
+    // TODO(jwnimmer-tri) Use a DiagnosticPolicy here instead.
     std::function<void(std::string_view)> on_warning = {});
 
 }  // namespace geometry

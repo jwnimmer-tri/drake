@@ -293,6 +293,7 @@ void LcmImageArrayToImages::CalcDepthImage(
       break;
     }
     default: {
+      // TODO(jwnimmer-tri) Use a DiagnosticPolicy here instead.
       drake::log()->error("Unsupported depth image channel type: {}",
                           lcm_image->channel_type);
       *depth_image = ImageDepth32F();
