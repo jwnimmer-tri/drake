@@ -112,7 +112,7 @@ SurfaceMesh<double> DoReadObjToSurfaceMesh(
     std::istream* input_stream,
     const double scale,
     const std::optional<std::string>& mtl_basedir,
-    const std::function<void(std::string_view)> on_warning) {
+    const DiagnosticPolicy& diagnostic) {
   tinyobj::attrib_t attrib;  // Used for vertices.
   std::vector<tinyobj::shape_t> shapes;  // Used for triangles.
   std::vector<tinyobj::material_t> materials;  // Not used.
@@ -136,11 +136,7 @@ SurfaceMesh<double> DoReadObjToSurfaceMesh(
     if (warn.back() == '\n') {
       warn.pop_back();
     }
-    if (on_warning) {
-      on_warning(warn);
-    } else {
-      drake::log()->warn(warn);
-    }
+    diagnostic.Warning(warn);
   }
   if (shapes.size() == 0) {
     throw std::runtime_error("The Wavefront obj file has no faces.");
@@ -171,7 +167,7 @@ SurfaceMesh<double> DoReadObjToSurfaceMesh(
 SurfaceMesh<double> ReadObjToSurfaceMesh(
     const std::string& filename,
     const double scale,
-    std::function<void(std::string_view)> on_warning) {
+    const DiagnosticPolicy& diagnostic) {
   std::ifstream input_stream(filename);
   if (!input_stream.is_open()) {
     throw std::runtime_error("Cannot open file '" + filename +"'");
@@ -179,16 +175,16 @@ SurfaceMesh<double> ReadObjToSurfaceMesh(
   const std::string mtl_basedir =
       filesystem::path(filename).parent_path().string() + "/";
   return DoReadObjToSurfaceMesh(&input_stream, scale, mtl_basedir,
-                                std::move(on_warning));
+                                diagnostic);
 }
 
 SurfaceMesh<double> ReadObjToSurfaceMesh(
     std::istream* input_stream,
     const double scale,
-    std::function<void(std::string_view)> on_warning) {
+    const DiagnosticPolicy& diagnostic) {
   DRAKE_THROW_UNLESS(input_stream != nullptr);
   return DoReadObjToSurfaceMesh(input_stream, scale,
-      std::nullopt /* mtl_basedir */, std::move(on_warning));
+      std::nullopt /* mtl_basedir */, diagnostic);
 }
 
 }  // namespace geometry

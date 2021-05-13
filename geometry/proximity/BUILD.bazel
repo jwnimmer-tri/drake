@@ -459,6 +459,7 @@ drake_cc_library(
     hdrs = ["obj_to_surface_mesh.h"],
     deps = [
         ":surface_mesh",
+        "//common:diagnostic_policy",
         "//common:essential",
         "@fmt",
         "@tinyobjloader",
