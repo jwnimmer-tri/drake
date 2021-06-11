@@ -526,18 +526,21 @@ int LeafSystem<T>::DeclareAbstractParameter(const AbstractValue& model_value) {
   return index;
 }
 
+// (This function is deprecated.)
 template <typename T>
 void LeafSystem<T>::DeclarePeriodicPublish(
     double period_sec, double offset_sec) {
   DeclarePeriodicEvent(period_sec, offset_sec, PublishEvent<T>());
 }
 
+// (This function is deprecated.)
 template <typename T>
 void LeafSystem<T>::DeclarePeriodicDiscreteUpdate(
     double period_sec, double offset_sec) {
   DeclarePeriodicEvent(period_sec, offset_sec, DiscreteUpdateEvent<T>());
 }
 
+// (This function is deprecated.)
 template <typename T>
 void LeafSystem<T>::DeclarePeriodicUnrestrictedUpdate(
     double period_sec, double offset_sec) {
@@ -651,6 +654,7 @@ InputPort<T>& LeafSystem<T>::DeclareAbstractInputPort(
                                 kAbstractValued, 0 /* size */);
 }
 
+// (This function is deprecated.)
 template <typename T>
 InputPort<T>& LeafSystem<T>::DeclareVectorInputPort(
     const BasicVector<T>& model_vector,
@@ -658,6 +662,7 @@ InputPort<T>& LeafSystem<T>::DeclareVectorInputPort(
   return DeclareVectorInputPort(kUseDefaultName, model_vector, random_type);
 }
 
+// (This function is deprecated.)
 template <typename T>
 InputPort<T>& LeafSystem<T>::DeclareAbstractInputPort(
     const AbstractValue& model_value) {
@@ -688,6 +693,7 @@ LeafOutputPort<T>& LeafSystem<T>::DeclareAbstractOutputPort(
   return port;
 }
 
+// (This function is deprecated.)
 template <typename T>
 LeafOutputPort<T>& LeafSystem<T>::DeclareVectorOutputPort(
     const BasicVector<T>& model_vector,
@@ -698,6 +704,7 @@ LeafOutputPort<T>& LeafSystem<T>::DeclareVectorOutputPort(
                                  std::move(prerequisites_of_calc));
 }
 
+// (This function is deprecated.)
 template <typename T>
 LeafOutputPort<T>& LeafSystem<T>::DeclareAbstractOutputPort(
     typename LeafOutputPort<T>::AllocCallback alloc_function,

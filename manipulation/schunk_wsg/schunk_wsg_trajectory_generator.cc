@@ -25,11 +25,11 @@ SchunkWsgTrajectoryGenerator::SchunkWsgTrajectoryGenerator(int input_size,
               systems::kVectorValued, input_size).get_index()),
       target_output_port_(
           this->DeclareVectorOutputPort(
-              BasicVector<double>(2),
+              systems::kUseDefaultName, BasicVector<double>(2),
               &SchunkWsgTrajectoryGenerator::OutputTarget).get_index()),
       max_force_output_port_(
           this->DeclareVectorOutputPort(
-              BasicVector<double>(1),
+              systems::kUseDefaultName, BasicVector<double>(1),
               &SchunkWsgTrajectoryGenerator::OutputForce).get_index()) {
   this->DeclareDiscreteState(
       SchunkWsgTrajectoryGeneratorStateVector<double>());

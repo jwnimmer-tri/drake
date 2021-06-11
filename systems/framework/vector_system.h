@@ -95,8 +95,8 @@ class VectorSystem : public LeafSystem<T> {
         };
       }
       this->DeclareVectorOutputPort(
-          BasicVector<T>(output_size), &VectorSystem::CalcVectorOutput,
-          std::move(prerequisites_of_calc));
+          kUseDefaultName, BasicVector<T>(output_size),
+          &VectorSystem::CalcVectorOutput, std::move(prerequisites_of_calc));
     }
   }
 

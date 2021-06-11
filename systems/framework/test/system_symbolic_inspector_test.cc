@@ -17,14 +17,18 @@ const int kSize = 2;
 class SparseSystem : public LeafSystem<symbolic::Expression> {
  public:
   SparseSystem() {
-    this->DeclareInputPort(kVectorValued, kSize);
-    this->DeclareInputPort(kVectorValued, kSize);
+    this->DeclareInputPort(kUseDefaultName, kVectorValued, kSize);
+    this->DeclareInputPort(kUseDefaultName, kVectorValued, kSize);
 
-    this->DeclareVectorOutputPort(BasicVector<symbolic::Expression>(kSize),
-                                  &SparseSystem::CalcY0);
-    this->DeclareVectorOutputPort(BasicVector<symbolic::Expression>(kSize),
-                                  &SparseSystem::CalcY1);
-    this->DeclareAbstractOutputPort("port_42", 42, &SparseSystem::CalcNothing);
+    this->DeclareVectorOutputPort(
+        kUseDefaultName, BasicVector<symbolic::Expression>(kSize),
+        &SparseSystem::CalcY0);
+    this->DeclareVectorOutputPort(
+        kUseDefaultName, BasicVector<symbolic::Expression>(kSize),
+        &SparseSystem::CalcY1);
+    this->DeclareAbstractOutputPort(
+        "port_42", 42,
+        &SparseSystem::CalcNothing);
 
     this->DeclareContinuousState(kSize);
     this->DeclareDiscreteState(kSize);

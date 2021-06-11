@@ -99,7 +99,8 @@ AllegroStatusSender::AllegroStatusSender(int num_joints)
   command_torque_input_port_ = this->DeclareInputPort(
                               systems::kVectorValued, num_joints_).get_index();
 
-  this->DeclareAbstractOutputPort(&AllegroStatusSender::MakeOutputStatus,
+  this->DeclareAbstractOutputPort(systems::kUseDefaultName,
+                                  &AllegroStatusSender::MakeOutputStatus,
                                   &AllegroStatusSender::OutputStatus);
 }
 
