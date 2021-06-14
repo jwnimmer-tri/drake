@@ -815,6 +815,57 @@ class SystemBase : public internal::SystemMessageInterface {
   /** (Internal use only). */
   SystemBase() = default;
 
+  //============================================================================
+  /** @name                       Scratch storage
+
+  XXX Insert background / motivation here.
+
+  Because scratch is ultimately stored in AbstractValue objects, the ValueType
+  must be suitable. That means it must be copy constructible or cloneable.
+  See drake::Value.
+
+  XXX Give an example
+  */
+  //@{
+
+  /** Declares the scratch storage type used by this System.
+  May be called at most once per %System.
+  @tparam ValueType must be copyable or cloneable; see drake::Value
+  @throws std::exception if DeclareScratchStorage has already been called */
+  template <typename ValueType>
+  void DeclareScratchStorage(const ValueType& model_value = {}) {
+    if (scratch_storage_cache_index_.has_value()) {
+      ThrowScratchStorageMisconfigured();
+    }
+    // TODO(jwnimmer-tri) De-duplicate the owned_model boilerplate vs the other
+    // places that it already occurs.
+    copyable_unique_ptr<AbstractValue> owned_model(
+        std::make_unique<Value<ValueType>>(model_value));
+    auto alloc_callback = [model = std::move(owned_model)]() {
+      return model->Clone();
+    };
+    scratch_storage_cache_index_ =
+        this->DeclareCacheEntry(
+            "scratch_storage",
+            std::move(alloc_callback),
+            [](const ContextBase&, AbstractValue*) { /* do nothing */ },
+            {this->nothing_ticket()}).cache_index();
+  }
+
+  /** Retrieves this System's scratch storage from the given Context.
+  @throws std::exception if DeclareScratchStorage has not been called first, or
+  if ValueType is not the same type given to DeclareScratchStorage. */
+  template <typename ValueType>
+  ValueType& get_scratch_storage(const ContextBase& context) const {
+    if (!scratch_storage_cache_index_.has_value()) {
+      ThrowScratchStorageMisconfigured();
+    }
+    return this->get_cache_entry(*scratch_storage_cache_index_)
+        .get_mutable_cache_entry_value(context)
+        .template GetMutableValueOrThrow<ValueType>();
+  }
+  //@}
+
   /** (Internal use only) Adds an already-constructed input port to this System.
   Insists that the port already contains a reference to this System, and that
   the port's index is already set to the next available input port index for
@@ -1080,6 +1131,10 @@ class SystemBase : public internal::SystemMessageInterface {
   [[noreturn]] static void ThrowUnsupportedScalarConversion(
       const SystemBase& from, const std::string& destination_type_name);
 
+  /** (Internal use only) Throws std::exception for scratch_storage_cache_index_
+  having the wrong has_value result, i.e., the call-exactly-once requirement. */
+  [[noreturn]] void ThrowScratchStorageMisconfigured() const;
+
   /** This method must be invoked from within derived class DoAllocateContext()
   implementations right after the concrete Context object has been allocated.
   It allocates cache entries, sets up all intra-Context dependencies, and marks
@@ -1234,6 +1289,9 @@ class SystemBase : public internal::SystemMessageInterface {
   // Defaults to num_continuous_states() if no value here. Diagrams always
   // fill this in by summing the value from their immediate subsystems.
   std::optional<int> implicit_time_derivatives_residual_size_;
+
+  // The index of a cache entry for scratch storage, if any was declared.
+  std::optional<CacheIndex> scratch_storage_cache_index_{};
 };
 
 // Implementations of templatized DeclareCacheEntry() methods.
