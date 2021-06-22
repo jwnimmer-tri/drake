@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+#include "drake/common/diagnostic_policy.h"
 #include "drake/geometry/proximity/surface_mesh.h"
 
 namespace drake {
@@ -31,7 +32,7 @@ namespace geometry {
 SurfaceMesh<double> ReadObjToSurfaceMesh(
     const std::string& filename,
     double scale = 1.0,
-    std::function<void(std::string_view)> on_warning = {});
+    const DiagnosticPolicy& diagnostic = {});
 
 /**
  Overload of @ref ReadObjToSurfaceMesh(const std::string&, double) with the
@@ -40,7 +41,7 @@ SurfaceMesh<double> ReadObjToSurfaceMesh(
 SurfaceMesh<double> ReadObjToSurfaceMesh(
     std::istream* input_stream,
     double scale = 1.0,
-    std::function<void(std::string_view)> on_warning = {});
+    const DiagnosticPolicy& diagnostic = {});
 
 }  // namespace geometry
 }  // namespace drake

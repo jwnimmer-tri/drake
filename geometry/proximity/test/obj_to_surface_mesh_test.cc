@@ -160,10 +160,6 @@ GTEST_TEST(ObjToSurfaceMeshTest, ThrowExceptionForEmptyFile) {
                               "The Wavefront obj file has no faces.");
 }
 
-void FailOnWarning(std::string_view message) {
-  throw std::runtime_error(fmt::format("FailOnWarning: {}", message));
-}
-
 GTEST_TEST(ObjToSurfaceMeshTest, WarningCallback) {
   // This *.obj file refers to a separate *.mtl file.  In various cases below,
   // this may cause warnings from the parser.
@@ -177,12 +173,18 @@ GTEST_TEST(ObjToSurfaceMeshTest, WarningCallback) {
     EXPECT_NO_THROW(ReadObjToSurfaceMesh(&input, 1.0));
   }
 
+  // Fail on warnings.
+  DiagnosticPolicy diagnostic;
+  diagnostic.SetActionForWarnings([](const auto& detail) {
+    throw std::runtime_error(fmt::format("FailOnWarning: {}", detail.message));
+  });
+
   // When loaded as a stream (such that the *.mtl file is missing), the user-
   // provided callback may choose to throw, and our test stub callback does so.
   {
     std::ifstream input(filename);
     DRAKE_EXPECT_THROWS_MESSAGE(
-        ReadObjToSurfaceMesh(&input, 1.0, &FailOnWarning),
+        ReadObjToSurfaceMesh(&input, 1.0, diagnostic),
         std::exception,
         "FailOnWarning: Warning parsing Wavefront obj file : "
         ".*CubeMaterial.*not found.*");
@@ -190,7 +192,7 @@ GTEST_TEST(ObjToSurfaceMeshTest, WarningCallback) {
 
   // When parsing using a filename, we are able to locate the *.mtl file with
   // no warnings.
-  EXPECT_NO_THROW(ReadObjToSurfaceMesh(filename, 1.0, &FailOnWarning));
+  EXPECT_NO_THROW(ReadObjToSurfaceMesh(filename, 1.0, diagnostic));
 }
 
 GTEST_TEST(ObjToSurfaceMeshTest, ThrowExceptionFileHasNoFaces) {

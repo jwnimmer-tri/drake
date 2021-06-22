@@ -30,6 +30,7 @@ FileType DetermineFileType(const std::string& file_name) {
   if ((ext == ".sdf") || (ext == ".SDF")) {
     return FileType::kSdf;
   }
+  // TODO(jwnimmer-tri) Use the DiagnosticPolicy here instead.
   throw std::runtime_error(fmt::format(
       "The file type '{}' is not supported for '{}'",
       ext, file_name));
