@@ -514,25 +514,13 @@ class LeafSystem : public System<T> {
         std::make_pair(periodic_data, std::move(event_copy)));
   }
 
-  /** (To be deprecated) Declares a periodic publish event that invokes the
-  Publish() dispatcher but does not provide a handler function. This does
-  guarantee that a Simulator step will end exactly at the publish time,
-  but otherwise has no effect unless the DoPublish() dispatcher has been
-  overloaded (not recommended). */
+  DRAKE_DEPRECATED("2021-11-01", "XXX")
   void DeclarePeriodicPublish(double period_sec, double offset_sec = 0);
 
-  /** (To be deprecated) Declares a periodic discrete update event that invokes
-  the DiscreteUpdate() dispatcher but does not provide a handler
-  function. This does guarantee that a Simulator step will end exactly at
-  the update time, but otherwise has no effect unless the
-  DoDiscreteUpdate() dispatcher has been overloaded (not recommended). */
+  DRAKE_DEPRECATED("2021-11-01", "XXX")
   void DeclarePeriodicDiscreteUpdate(double period_sec, double offset_sec = 0);
 
-  /** (To be deprecated) Declares a periodic unrestricted update event that
-  invokes the UnrestrictedUpdate() dispatcher but does not provide a handler
-  function. This does guarantee that a Simulator step will end exactly at
-  the update time, but otherwise has no effect unless the
-  DoUnrestrictedUpdate() dispatcher has been overloaded (not recommended). */
+  DRAKE_DEPRECATED("2021-11-01", "XXX")
   void DeclarePeriodicUnrestrictedUpdate(double period_sec,
                                          double offset_sec = 0);
   //@}
