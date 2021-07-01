@@ -130,7 +130,8 @@ SymbolicVectorSystem<T>::SymbolicVectorSystem(
       this->DeclareContinuousState(state_vars_.size());
     } else {
       this->DeclareDiscreteState(state_vars_.size());
-      this->DeclarePeriodicDiscreteUpdate(time_period_, 0.0);
+      this->DeclarePeriodicDiscreteUpdateEvent(
+          time_period_, 0.0, &SymbolicVectorSystem<T>::CalcDiscreteStateUpdate);
     }
   }
   if (parameter_vars_.size() > 0) {
@@ -353,11 +354,9 @@ void SymbolicVectorSystem<T>::DoCalcTimeDerivatives(
 }
 
 template <typename T>
-void SymbolicVectorSystem<T>::DoCalcDiscreteVariableUpdates(
+void SymbolicVectorSystem<T>::CalcDiscreteStateUpdate(
     const drake::systems::Context<T>& context,
-    const std::vector<const drake::systems::DiscreteUpdateEvent<T>*>& events,
     drake::systems::DiscreteValues<T>* updates) const {
-  unused(events);
   DRAKE_DEMAND(time_period_ > 0.0);
   DRAKE_DEMAND(dynamics_.size() > 0);
   EvaluateWithContext(context, dynamics_, dynamics_jacobian_,

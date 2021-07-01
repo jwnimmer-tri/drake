@@ -125,10 +125,9 @@ class TimeVaryingAffineSystem : public LeafSystem<T> {
   /// Computes @f[ x(t+h) = A(t) x(t) + B(t) u(t) + f_0(t), @f] with by calling
   /// `A(t)`, `B(t)`, and `f0(t)` with runtime size checks.  Derived classes
   /// may override this for performance reasons.
-  void DoCalcDiscreteVariableUpdates(
+  virtual void CalcDiscreteStateUpdate(
       const drake::systems::Context<T>& context,
-      const std::vector<const drake::systems::DiscreteUpdateEvent<T>*>& events,
-      drake::systems::DiscreteValues<T>* updates) const override;
+      drake::systems::DiscreteValues<T>* updates) const;
 
   /// Sets the initial conditions.
   void SetDefaultState(const Context<T>& context,
@@ -270,9 +269,8 @@ class AffineSystem : public TimeVaryingAffineSystem<T> {
   void DoCalcTimeDerivatives(const Context<T>& context,
                              ContinuousState<T>* derivatives) const final;
 
-  void DoCalcDiscreteVariableUpdates(
+  void CalcDiscreteStateUpdate(
       const drake::systems::Context<T>& context,
-      const std::vector<const drake::systems::DiscreteUpdateEvent<T>*>& events,
       drake::systems::DiscreteValues<T>* updates) const final;
 
   const Eigen::MatrixXd A_;
