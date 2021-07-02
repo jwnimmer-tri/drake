@@ -3,6 +3,8 @@
 #include <regex>
 #include <string>
 
+#include <gmock/gmock.h>
+
 #include "drake/common/drake_assert.h"
 
 // TODO(sherm1) Add unit tests for these macros. See issue #8403.
@@ -90,14 +92,12 @@ try { \
 } while (0)
 
 #define DRAKE_EXPECT_THROWS_MESSAGE(expression, exception, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-      expression, exception, regexp, \
-      true /*must_throw*/, false /*non-fatal*/)
+  EXPECT_THAT([&]() { expression; }, ::testing::ThrowsMessage<exception>( \
+      ::testing::MatchesRegex(regexp)))
 
 #define DRAKE_ASSERT_THROWS_MESSAGE(expression, exception, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-      expression, exception, regexp, \
-      true /*must_throw*/, true /*fatal*/)
+  EXPECT_THAT([&]() { expression; }, ::testing::ThrowsMessage<exception>( \
+      ::testing::MatchesRegex(regexp)))
 
 #define DRAKE_EXPECT_THROWS_MESSAGE_IF_ARMED(expression, exception, regexp) \
   DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
