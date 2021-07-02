@@ -90,14 +90,19 @@ GTEST_TEST(QPtest, TestUnitBallExample) {
   }
 }
 
-class NoisyQuadraticCost {
+class NoisyQuadraticCost final : public Cost {
  public:
   explicit NoisyQuadraticCost(const double max_noise)
-      : max_noise_(max_noise) {}
-  int numInputs() const { return 1; }
-  int numOutputs() const { return 1; }
-  template <typename T>
-  void eval(internal::VecIn<T> const& x, internal::VecOut<T>* y) const {
+      : Cost(1), max_noise_(max_noise) {}
+
+ private:
+  void DoEval(const Eigen::Ref<const Eigen::VectorXd>&,
+              Eigen::VectorXd*) const final {
+    throw std::runtime_error("Not implemented");
+  }
+
+  void DoEval(const Eigen::Ref<const AutoDiffVecXd>& x,
+              AutoDiffVecXd* y) const final {
     // Parabola with minimum at (-1, 1) with some deterministic noise applied to
     // the input so derivatives will be correctish but not easily followable to
     // the minimum.
@@ -114,8 +119,12 @@ class NoisyQuadraticCost {
       noise_counter_ *= -1;
     }
     auto noisy_x = x(0) + noise;
-    y->resize(1);
     (*y)(0) = (noisy_x + 1) * (noisy_x + 1) + 1;
+  }
+
+  void DoEval(const Eigen::Ref<const VectorX<symbolic::Variable>>&,
+              VectorX<symbolic::Expression>*) const final {
+    throw std::runtime_error("Not implemented");
   }
 
  private:
@@ -138,7 +147,7 @@ GTEST_TEST(IpoptSolverTest, AcceptableResult) {
       // the specified tolerance.
       MathematicalProgram prog;
       auto x = prog.NewContinuousVariables(1);
-      prog.AddCost(NoisyQuadraticCost(max_noise), x);
+      prog.AddCost(std::make_shared<NoisyQuadraticCost>(max_noise), x);
       auto result = solver.Solve(prog, x_initial_guess, options);
       // Expect to hit iteration limit
       EXPECT_FALSE(result.is_success());
@@ -154,7 +163,7 @@ GTEST_TEST(IpoptSolverTest, AcceptableResult) {
       // should be feasible with even with the noise.
       MathematicalProgram prog;
       auto x = prog.NewContinuousVariables(1);
-      prog.AddCost(NoisyQuadraticCost(max_noise), x);
+      prog.AddCost(std::make_shared<NoisyQuadraticCost>(max_noise), x);
       auto result = solver.Solve(prog, x_initial_guess, options);
       EXPECT_EQ(result.get_solver_details<IpoptSolver>().status,
                 kIpoptStopAtAcceptablePoint);

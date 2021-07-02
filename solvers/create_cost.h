@@ -8,7 +8,6 @@
 #include "drake/common/symbolic.h"
 #include "drake/solvers/binding.h"
 #include "drake/solvers/cost.h"
-#include "drake/solvers/function.h"
 
 namespace drake {
 namespace solvers {
@@ -36,9 +35,8 @@ Binding<PolynomialCost> ParsePolynomialCost(const symbolic::Expression& e);
  */
 Binding<Cost> ParseCost(const symbolic::Expression& e);
 
-// TODO(eric.cousineau): Remove this when functor cost is no longer exposed
-// externally, and must be explicitly called.
-
+// TODO(jwnimmer-tri) When other deprecations on 2021-11-01 are removed, this
+// function will become dead code and therefore we should remove it.
 /**
  * Enables us to catch and provide a meaningful assertion if a Constraint is
  * passed in, when we should have a Cost.
@@ -53,6 +51,8 @@ struct is_binding_compatible
               (std::is_convertible_v<F, std::unique_ptr<C>>) ||
               (std::is_convertible_v<F, Binding<C>>)> {};
 
+// TODO(jwnimmer-tri) When other deprecations on 2021-11-01 are removed, this
+// function will become dead code and therefore we should remove it.
 /**
  * Template condition to check if @p F is a candidate to be used to construct a
  * FunctionCost object for generic costs.

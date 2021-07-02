@@ -32,7 +32,6 @@
 #include "drake/solvers/create_constraint.h"
 #include "drake/solvers/create_cost.h"
 #include "drake/solvers/decision_variable.h"
-#include "drake/solvers/function.h"
 #include "drake/solvers/indeterminate.h"
 #include "drake/solvers/program_attribute.h"
 #include "drake/solvers/solver_options.h"
@@ -113,6 +112,8 @@ void SetVariableNames(const std::string& name, int rows, int cols,
   }
 }
 
+// TODO(jwnimmer-tri) When other deprecations on 2021-11-01 are removed, this
+// struct will become dead code and therefore we should remove it.
 /**
  * Template condition to only catch when Constraints are inadvertently passed
  * as an argument. If the class is binding-compatible with a Constraint, then
@@ -909,46 +910,48 @@ class MathematicalProgram {
     return AddCost(obj, ConcatenateVariableRefList(vars));
   }
 
-  /**
-   * Convert an input of type @p F to a FunctionCost object.
-   * @tparam F This class should have functions numInputs(), numOutputs and
-   * eval(x, y).
-   */
   template <typename F>
+  DRAKE_DEPRECATED("2021-11-01",
+      "Functor objects are no longer supported.  Instead, choose one of the"
+      " existing subclasses of Cost or Constraint, or implement your own.")
   static std::shared_ptr<Cost> MakeCost(F&& f) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return MakeFunctionCost(f);
+#pragma GCC diagnostic pop
   }
 
-  /**
-   * Adds a cost to the optimization program on a list of variables.
-   * @tparam F it should define functions numInputs, numOutputs and eval. Check
-   */
   template <typename F>
+  DRAKE_DEPRECATED("2021-11-01",
+      "Functor objects are no longer supported.  Instead, choose one of the"
+      " existing subclasses of Cost or Constraint, or implement your own.")
   typename std::enable_if_t<internal::is_cost_functor_candidate<F>::value,
                             Binding<Cost>>
   AddCost(F&& f, const VariableRefList& vars) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return AddCost(f, ConcatenateVariableRefList(vars));
+#pragma GCC diagnostic pop
   }
 
-  /**
-   * Adds a cost to the optimization program on an Eigen::Vector containing
-   * decision variables.
-   * @tparam F Type that defines functions numInputs, numOutputs and eval.
-   */
   template <typename F>
+  DRAKE_DEPRECATED("2021-11-01",
+      "Functor objects are no longer supported.  Instead, choose one of the"
+      " existing subclasses of Cost or Constraint, or implement your own.")
   typename std::enable_if_t<internal::is_cost_functor_candidate<F>::value,
                             Binding<Cost>>
   AddCost(F&& f, const Eigen::Ref<const VectorXDecisionVariable>& vars) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto c = MakeFunctionCost(std::forward<F>(f));
     return AddCost(c, vars);
+#pragma GCC diagnostic pop
   }
 
-  /**
-   * Statically assert if a user inadvertently passes a
-   * binding-compatible Constraint.
-   * @tparam F The type to check.
-   */
   template <typename F, typename Vars>
+  DRAKE_DEPRECATED("2021-11-01",
+      "Functor objects are no longer supported.  Instead, choose one of the"
+      " existing subclasses of Cost or Constraint, or implement your own.")
   typename std::enable_if_t<internal::assert_if_is_constraint<F>::value,
                             Binding<Cost>>
   AddCost(F&&, Vars&&) {

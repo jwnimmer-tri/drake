@@ -308,7 +308,6 @@ drake_cc_library(
         ":create_constraint",
         ":create_cost",
         ":decision_variable",
-        ":function",
         ":indeterminate",
         ":program_attribute",
         ":solver_id",

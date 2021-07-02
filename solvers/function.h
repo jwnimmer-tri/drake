@@ -10,6 +10,9 @@ namespace drake {
 namespace solvers {
 namespace internal {
 
+// TODO(jwnimmer-tri) When other deprecations on 2021-11-01 are removed, this
+// internal file will become dead code and therefore we should remove it.
+
 template <typename ScalarType>
 using VecIn = Eigen::Ref<const VectorX<ScalarType>>;
 template <typename ScalarType>

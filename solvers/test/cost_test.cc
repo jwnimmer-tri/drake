@@ -319,6 +319,9 @@ GTEST_TEST(testCost, testCostShim) {
       Vector1d(2), VectorXPoly::Constant(1, poly), var_mapping);
 }
 
+// TODO(jwnimmer-tri) When other deprecations on 2021-11-01 are removed,
+// we should remove everything below this point.
+
 // Generic dereferencing for a value type, or a managed pointer.
 template <typename T>
 const T& deref(const T& x) {
@@ -333,6 +336,8 @@ const T& deref(const unique_ptr<T>& x) {
   return *x;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Verifies that FunctionCost form can be constructed correctly.
 template <typename F>
 void VerifyFunctionCost(F&& f, const Ref<const VectorXd>& x_value) {
@@ -349,7 +354,7 @@ void VerifyFunctionCost(F&& f, const Ref<const VectorXd>& x_value) {
   EXPECT_TRUE(CompareMatrices(y, y_expected));
 }
 
-GTEST_TEST(testCost, testFunctionCost) {
+GTEST_TEST(testCost, testDeprecatedFunctionCost) {
   // Test that we can construct FunctionCosts with different signatures.
   Eigen::Vector2d x(1, 2);
   VerifyFunctionCost(GenericTrivialCost2(), x);
@@ -360,6 +365,7 @@ GTEST_TEST(testCost, testFunctionCost) {
   VerifyFunctionCost(make_shared<GenericTrivialCost2>(), x);
   VerifyFunctionCost(make_unique<GenericTrivialCost2>(), x);
 }
+#pragma GCC diagnostic pop
 
 GTEST_TEST(TestL2NormCost, Eval) {
   Matrix<double, 2, 4> A;

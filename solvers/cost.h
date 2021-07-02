@@ -361,18 +361,16 @@ class PolynomialCost : public EvaluatorCost<PolynomialEvaluator> {
   }
 };
 
-/**
- * Converts an input of type @p F to a nonlinear cost.
- * @tparam FF The forwarded function type (e.g., `const F&, `F&&`, ...).
- * The class `F` should have functions numInputs(), numOutputs(), and
- * eval(x, y).
- *
- * @ingroup solver_evaluators
- */
 template <typename FF>
+DRAKE_DEPRECATED("2021-11-01",
+    "Functor objects are no longer supported.  Instead, choose one of the"
+    " existing subclasses of Cost or Constraint, or implement your own.")
 std::shared_ptr<Cost> MakeFunctionCost(FF&& f) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return std::make_shared<EvaluatorCost<>>(
       MakeFunctionEvaluator(std::forward<FF>(f)));
+#pragma GCC diagnostic pop
 }
 
 }  // namespace solvers

@@ -11,6 +11,7 @@
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/polynomial.h"
 #include "drake/common/symbolic.h"
@@ -271,24 +272,18 @@ class PolynomialEvaluator : public EvaluatorBase {
       taylor_evaluation_point_temp_;
 };
 
-/**
- * An evaluator that may be specified using a callable object. Consider
- * constructing these instances using MakeFunctionEvaluator(...).
- * @tparam F The function / functor's type.
- */
 template <typename F>
-class FunctionEvaluator : public EvaluatorBase {
+class DRAKE_DEPRECATED("2021-11-01",
+    "Functor objects are no longer supported.  Instead, choose one of the"
+    " existing subclasses of Cost or Constraint, or implement your own.")
+FunctionEvaluator : public EvaluatorBase {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(FunctionEvaluator)
 
-  /**
-   * Constructs an instance by copying from an lvalue or rvalue of `F`.
-   * @tparam FF Perfect-forwarding type of `F` (e.g., `const F&`, `F&&`).
-   * @param f The callable object. If rvalue, this value will be std::move'd.
-   * Otherwise, it will be copied.
-   * @param args Arguments to be forwarded to EvaluatorBase constructor.
-   */
   template <typename FF, typename... Args>
+  DRAKE_DEPRECATED("2021-11-01",
+      "Functor objects are no longer supported.  Instead, choose one of the"
+      " existing subclasses of Cost or Constraint, or implement your own.")
   FunctionEvaluator(FF&& f, Args&&... args)
       : EvaluatorBase(internal::FunctionTraits<F>::numOutputs(f),
                       internal::FunctionTraits<F>::numInputs(f),
@@ -325,17 +320,16 @@ class FunctionEvaluator : public EvaluatorBase {
   const F f_;
 };
 
-/**
- * Creates a FunctionEvaluator instance bound to a given callable object.
- * @tparam FF Perfect-forwarding type of `F` (e.g., `const F&`, `F&&`).
- * @param f Callable function object.
- * @return An implementation of EvaluatorBase using the callable object.
- * @relates FunctionEvaluator
- */
 template <typename FF>
+DRAKE_DEPRECATED("2021-11-01",
+    "Functor objects are no longer supported.  Instead, choose one of the"
+    " existing subclasses of Cost or Constraint, or implement your own.")
 std::shared_ptr<EvaluatorBase> MakeFunctionEvaluator(FF&& f) {
   using F = std::decay_t<FF>;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return std::make_shared<FunctionEvaluator<F>>(std::forward<FF>(f));
+#pragma GCC diagnostic pop
 }
 
 /**
