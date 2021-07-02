@@ -38,15 +38,21 @@ class PoseSmootherTest : public ::testing::Test {
  public:
   void Initialize(double max_linear_velocity, double max_angular_velocity,
                   int filter_window_size = 0) {
-      dut_ = std::make_unique<PoseSmoother>(
-          max_linear_velocity, max_angular_velocity,
-          kPoseSmootherPeriod, filter_window_size);
-
+    dut_ = std::make_unique<PoseSmoother>(
+        max_linear_velocity, max_angular_velocity,
+        kPoseSmootherPeriod, filter_window_size
+        false);
     context_ = dut_->CreateDefaultContext();
-    output_ = dut_->AllocateOutput();
-
     EXPECT_EQ(dut_->num_input_ports(), 1);
     EXPECT_EQ(dut_->num_output_ports(), 2);
+
+    deprecated_dut_ = std::make_unique<PoseSmoother>(
+        max_linear_velocity, max_angular_velocity,
+        kPoseSmootherPeriod, filter_window_size
+        true);
+    deprecated_context_ = deprecated_dut_->CreateDefaultContext();
+    EXPECT_EQ(deprecated_dut_->num_input_ports(), 1);
+    EXPECT_EQ(deprecated_dut_->num_output_ports(), 2);
   }
 
   CombinedState UpdateStateCalcOutput(
@@ -72,7 +78,8 @@ class PoseSmootherTest : public ::testing::Test {
  private:
   std::unique_ptr<PoseSmoother> dut_;
   std::unique_ptr<systems::Context<double>> context_;
-  std::unique_ptr<systems::SystemOutput<double>> output_;
+  std::unique_ptr<PoseSmoother> deprecated_dut_;
+  std::unique_ptr<systems::Context<double>> deprecated_context_;
 };
 
 TEST_F(PoseSmootherTest, OutlierRejectionTest) {

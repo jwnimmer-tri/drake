@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "drake/manipulation/util/moving_average_filter.h"
+#include "drake/math/rigid_transform.h"
 #include "drake/systems/framework/event.h"
 #include "drake/systems/framework/leaf_system.h"
 
@@ -11,9 +12,8 @@ namespace drake {
 namespace manipulation {
 namespace perception {
 /**
- * This class accepts the pose of a rigid body (composed by a
- * Eigen::Isometry3d) and returns a smoothed pose by performing either the first
- * or both of these processes :
+ * This class accepts the pose of a rigid body and returns a smoothed pose by
+ * performing either the first or both of these processes:
  *  i. Rejecting outliers on the basis of user-defined linear/angular velocity
  *  thresholds on consecutive pose data values.
  *  ii. Moving average smoothing of the resulting data within a specified
@@ -48,10 +48,15 @@ class PoseSmoother : public systems::LeafSystem<double> {
    * This must be set to a value greater than 0.
    * @param filter_window_size Window size for the moving average smoothing.
    * Must be set to a value greater than 1 to enable averaging (smoothing).
+   * @param use_eigen_isometry3 When true, the input and output poses will be
+   * typed as Eigen::Isometry3d; when false, the input and output poses will be
+   * typed as math::RigidTransformd.  The use of Isometry3 is deprecated and
+   * will be removed from Drake on or after 2021-11-01.
    */
   PoseSmoother(double desired_max_linear_velocity,
                double desired_max_angular_velocity,
-               double period_sec, int filter_window_size);
+               double period_sec, int filter_window_size,
+               bool use_eigen_isometry3 = true);
 
   const systems::OutputPort<double>& get_smoothed_pose_output_port() const {
     return this->get_output_port(smoothed_pose_output_port_);
@@ -68,17 +73,21 @@ class PoseSmoother : public systems::LeafSystem<double> {
       systems::State<double>* state) const override;
 
   void OutputSmoothedPose(const systems::Context<double>& context,
-                          Eigen::Isometry3d* output) const;
+                          math::RigidTransformd* output) const;
+
+  void OutputSmoothedPoseDeprecated(const systems::Context<double>& context,
+                                    Eigen::Isometry3d* output) const;
 
   void OutputSmoothedVelocity(const systems::Context<double>& context,
                               Vector6<double>* output) const;
 
  private:
-  const int smoothed_pose_output_port_{0};
-  const int smoothed_velocity_output_port_{0};
-  const double max_linear_velocity_{0.0};
-  const double max_angular_velocity_{0.0};
-  const bool is_filter_enabled_{false};
+  int smoothed_pose_output_port_{};
+  int smoothed_velocity_output_port_{};
+  const double max_linear_velocity_;
+  const double max_angular_velocity_;
+  const bool is_filter_enabled_;
+  const bool use_eigen_isometry3_;
 };
 
 }  // namespace perception
