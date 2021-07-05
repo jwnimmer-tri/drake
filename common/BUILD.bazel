@@ -595,6 +595,13 @@ install(
 # === test/ ===
 
 drake_cc_googletest(
+    name = "eigen_svd_test",
+    deps = [
+        "@eigen",
+    ],
+)
+
+drake_cc_googletest(
     name = "autodiffxd_test",
     # The following `autodiffxd_*_test.cc` files were in a single
     # `autodiffxd_test.cc`. We found that it takes more than 150 sec to build
