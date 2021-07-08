@@ -203,14 +203,11 @@ class TemplateSystem(TemplateClass):
         return False
 
     def _make(self, T, U, system_U):
-        # Converts system_U (of scalar type U) to an instance of scalar type
-        # T. This should mirror the logic in
-        # `system_scalar_converter_internal::Make` under the file
-        # `system_scalar_converter.h`.
+        # Converts system_U (of scalar type U) to an instance of scalar type T.
+        # This re-implements the logic of SystemScalarConverter::MaybeAddConstructor
+        # in the file system_scalar_converter.h.  Be sure to keep both in sync.
         assert isinstance(system_U, self[U])
-        result_T = self[T](system_U)
-        result_T.set_name(system_U.get_name())
-        return result_T
+        return self[T](system_U)
 
     def _make_converter(self):
         # Creates system scalar converter for the template class.

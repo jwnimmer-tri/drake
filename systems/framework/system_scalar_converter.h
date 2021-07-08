@@ -10,6 +10,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/drake_deprecated.h"
+#include "drake/common/pointer_cast.h"
 #include "drake/common/symbolic.h"
 #include "drake/systems/framework/scalar_conversion_traits.h"
 #include "drake/systems/framework/system_type_tag.h"
@@ -17,6 +18,7 @@
 namespace drake {
 namespace systems {
 
+class SystemBase;
 template <typename T> class System;
 
 /// Helper class to convert a System<U> into a System<T>, intended for internal
@@ -113,9 +115,11 @@ class SystemScalarConverter {
     return result;
   }
 
+  ~SystemScalarConverter();
+
   /// Returns true iff no conversions are supported.  (In other words, whether
   /// this is a default-constructed object.)
-  bool empty() const { return funcs_.empty(); }
+  bool empty() const;
 
   template <typename T, typename U>
   using ConverterFunction
@@ -155,7 +159,13 @@ class SystemScalarConverter {
   /// Converts a System<U> into a System<T>.  This is the API that LeafSystem
   /// uses to provide a default implementation of DoToAutoDiffXd, etc.
   template <typename T, typename U>
-  std::unique_ptr<System<T>> Convert(const System<U>& other) const;
+  std::unique_ptr<System<T>> Convert(const System<U>& other) const {
+    // This function definition must appear in the header, because it returns a
+    // unique_ptr to a forward-declared class.  Only callers that have already
+    // included system.h to define SystemBase and System may call this function.
+    return static_pointer_cast<System<T>>(
+        Convert({typeid(T), typeid(U)}, other));
+  }
 
  private:
   // Like ConverterFunc, but with the args and return value decayed into void*.
@@ -193,15 +203,15 @@ class SystemScalarConverter {
             template <typename> class S, typename T, typename U>
   void MaybeAddConstructor();
 
-  // Given typeid(T), typeid(U), returns a converter.  If no converter has been
-  // added yet, returns nullptr.
-  const ErasedConverterFunc* Find(
-      const std::type_info&, const std::type_info&) const;
+  void Insert(Key, ErasedConverterFunc);
 
-  // Given typeid(T), typeid(U), adds a converter.
-  void Insert(
-      const std::type_info&, const std::type_info&,
-      const ErasedConverterFunc&);
+  std::unique_ptr<SystemBase> Convert(const Key&, const SystemBase&) const;
+
+  // Throws an exception that `other` cannot be converted from S<U> to S<T>.
+  [[noreturn]] static void ThrowConversionMismatch(
+      const std::type_info& s_t_info,
+      const std::type_info& s_u_info,
+      const std::type_info& other_info);
 
   // Maps from {T, U} to the function that converts from U into T.
   std::unordered_map<Key, ErasedConverterFunc, KeyHasher> funcs_;
@@ -227,71 +237,37 @@ void SystemScalarConverter::Add(const ConverterFunction<T, U>& func) {
 }
 #pragma GCC diagnostic pop
 
-template <typename T, typename U>
-bool SystemScalarConverter::IsConvertible() const {
-  const ErasedConverterFunc* converter = Find(typeid(T), typeid(U));
-  return (converter != nullptr);
-}
-
-template <typename T, typename U>
-std::unique_ptr<System<T>> SystemScalarConverter::Convert(
-    const System<U>& other) const {
-  // Lookup the lambda that Add() stored and call it.
-  System<T>* result = nullptr;
-  const ErasedConverterFunc* converter = Find(typeid(T), typeid(U));
-  if (converter) {
-    result = static_cast<System<T>*>((*converter)(&other));
-  }
-  return std::unique_ptr<System<T>>(result);
-}
-
-namespace system_scalar_converter_internal {
-// Throws an exception that `other` cannot be converted from S<U> to S<T>.
-[[noreturn]] void ThrowConversionMismatch(
-    const std::type_info& s_t_info,
-    const std::type_info& s_u_info,
-    const std::type_info& other_info);
-
-// N.B. This logic should be reflected in `TemplateSystem._make` in the file
-// `scalar_conversion.py`.
-template <bool subtype_preservation,
-          template <typename> class S, typename T, typename U>
-static std::unique_ptr<System<T>> Make(const System<U>& other) {
-  // We conditionally require that system scalar conversion maintain the exact
-  // system type.  Fail fast if `other` is not of exact type S<U>.
-  if (subtype_preservation &&
-      (std::type_index{typeid(other)} != std::type_index{typeid(S<U>)})) {
-    ThrowConversionMismatch(typeid(S<T>), typeid(S<U>), typeid(other));
-  }
-  const S<U>& my_other = dynamic_cast<const S<U>&>(other);
-  auto result = std::make_unique<S<T>>(my_other);
-  // We manually propagate the name from the old System to the new.  The name
-  // is the only extrinsic property of the System and LeafSystem base classes
-  // that is stored within the System itself.
-  result->set_name(other.get_name());
-  return result;
-}
-}  // namespace system_scalar_converter_internal
-
-template <bool subtype_preservation,
-          template <typename> class S, typename T, typename U>
+// N.B. The pydrake method TemplateSystem._make re-implements this logic in the
+// file scalar_conversion.py.  Be sure to keep both in sync.
+template <
+  bool enable_subtype_preservation,
+  template <typename> class S, typename T, typename U>
 void SystemScalarConverter::MaybeAddConstructor() {
   using Traits = typename scalar_conversion::Traits<S>;
   if constexpr (Traits::template supported<T, U>::value) {
-    // The lambda is typed as `void* => void*` in order to have a non-templated
-    // signature and thus fit into a homogeneously-typed std::unordered_map.
-    auto func = [](const void* const other_system_u) -> void* {
-      DRAKE_ASSERT(other_system_u != nullptr);
-      const System<U>& other = *static_cast<const System<U>*>(other_system_u);
-      // Dispatch to an overload based on whether S<U> ==> S<T> is supported.
-      // (At runtime, this block is only executed for supported conversions,
-      // but at compile time, Make will be instantiated unconditionally.)
-      std::unique_ptr<System<T>> result =
-          system_scalar_converter_internal::
-              Make<subtype_preservation, S, T, U>(other);
-      return result.release();
-    };
-    Insert(typeid(T), typeid(U), func);
+    Insert({typeid(T), typeid(U)}, [](const void* const bare_u) {
+      DRAKE_ASSERT(bare_u != nullptr);
+      const System<U>& other = *static_cast<const System<U>*>(bare_u);
+      // Confirm the runtime type of `other`.
+      const S<U>* typed_other;
+      if constexpr (enable_subtype_preservation) {
+        // Require an exact match to S.
+        const std::type_info& other_info = typeid(other);
+        if (other_info != typeid(S<U>)) {
+          ThrowConversionMismatch(typeid(S<T>), typeid(S<U>), other_info);
+        }
+        typed_other = static_cast<const S<U>*>(&other);
+      } else {
+        // Allow for any subclass of S.
+        typed_other = dynamic_cast<const S<U>*>(&other);
+        if (typed_other == nullptr) {
+          const std::type_info& other_info = typeid(other);
+          ThrowConversionMismatch(typeid(S<T>), typeid(S<U>), other_info);
+        }
+      }
+      // Call the scalar-converting copy constructor.
+      return static_cast<void*>(new S<T>(*typed_other));
+    });
   }
 }
 

@@ -526,10 +526,12 @@ drake_cc_library(
         "system_type_tag.h",
     ],
     deps = [
+        ":system_base",
         "//common:default_scalars",
         "//common:essential",
         "//common:hash",
         "//common:nice_type_name",
+        "//common:pointer_cast",
     ],
 )
 
