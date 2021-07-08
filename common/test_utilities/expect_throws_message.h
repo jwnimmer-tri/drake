@@ -60,14 +60,25 @@ whenever `DRAKE_ENABLE_ASSERTS` is defined, which Debug builds do by default.
 
 #else  // DRAKE_DOXYGEN_CXX
 
-#define DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-    expression, exception, regexp, must_throw, fatal_failure) \
+namespace drake {
+namespace internal {
+[[deprecated(
+"\nDRAKE DEPRECATED: "
+"DRAKE_EXPECT_THROWS_MESSAGE no longer accept a specific 'exception' type."
+"\nThe deprecated code will be removed from Drake on or after 2021-11-01.")]]
+void ShowDrakeExpectThrowsMessageDeprecation() {}
+}  // namespace internal
+}  // namespace drake
+
+#define DRAKE_EXPECT_THROWS_MESSAGE_HELPER_3( \
+    expression, exception_t, regexp, must_throw, fatal_failure) \
 do { \
+::drake::internal::ShowDrakeExpectThrowsMessageDeprecation(); \
 try { \
   expression; \
   if (must_throw) { \
     std::string message = "\tExpected: " #expression " throws an exception " \
-                          "of type " #exception ".\n Actual: it throws " \
+                          "of type " #exception_t ".\n Actual: it throws " \
                           "nothing"; \
     if (fatal_failure) { \
       GTEST_FATAL_FAILURE_(message.c_str()); \
@@ -75,7 +86,7 @@ try { \
       GTEST_NONFATAL_FAILURE_(message.c_str());\
     } \
   } \
-} catch (const exception& err) { \
+} catch (const exception_t& err) { \
   auto matcher = [](const char* s, const std::string& re) { \
     return std::regex_match(s, std::regex(re)); }; \
   if (fatal_failure) { \
@@ -85,7 +96,40 @@ try { \
   } \
 } catch (...) { \
   std::string message = "\tExpected: " #expression " throws an exception of " \
-      "type " #exception  ".\n Actual: it throws a different type."; \
+      "type " #exception_t  ".\n Actual: it throws a different type."; \
+  if (fatal_failure) { \
+    GTEST_FATAL_FAILURE_(message.c_str()); \
+  } else { \
+    GTEST_NONFATAL_FAILURE_(message.c_str()); \
+  } \
+} \
+} while (0)
+
+#define DRAKE_EXPECT_THROWS_MESSAGE_HELPER_2( \
+    expression, regexp, must_throw, fatal_failure) \
+do { \
+try { \
+  expression; \
+  if (must_throw) { \
+    std::string message = "\tExpected: " #expression " throws an exception." \
+                          "\n Actual: it throws nothing"; \
+    if (fatal_failure) { \
+      GTEST_FATAL_FAILURE_(message.c_str()); \
+    } else { \
+      GTEST_NONFATAL_FAILURE_(message.c_str()); \
+    } \
+  } \
+} catch (const std::exception& err) { \
+  auto matcher = [](const char* s, const std::string& re) { \
+    return std::regex_match(s, std::regex(re)); }; \
+  if (fatal_failure) { \
+    ASSERT_PRED2(matcher, err.what(), regexp); \
+  } else { \
+    EXPECT_PRED2(matcher, err.what(), regexp); \
+  } \
+} catch (...) { \
+  std::string message = "\tExpected: " #expression " throws an exception." \
+      "\n Actual: it threw something that wasn't an exception."; \
   if (fatal_failure) { \
     GTEST_FATAL_FAILURE_(message.c_str()); \
   } else { \
@@ -95,43 +139,43 @@ try { \
 } while (0)
 
 #define DRAKE_EXPECT_THROWS_MESSAGE_3(expression, exception, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_3( \
       expression, exception, regexp, \
       true /*must_throw*/, false /*non-fatal*/)
 
 #define DRAKE_ASSERT_THROWS_MESSAGE_3(expression, exception, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_3( \
       expression, exception, regexp, \
       true /*must_throw*/, true /*fatal*/)
 
 #define DRAKE_EXPECT_THROWS_MESSAGE_IF_ARMED_3(expression, exception, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_3( \
       expression, exception, regexp, \
       ::drake::kDrakeAssertIsArmed /*must_throw*/, false /*non-fatal*/)
 
 #define DRAKE_ASSERT_THROWS_MESSAGE_IF_ARMED_3(expression, exception, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_3( \
       expression, exception, regexp, \
       ::drake::kDrakeAssertIsArmed /*must_throw*/, true /*fatal*/)
 
 #define DRAKE_EXPECT_THROWS_MESSAGE_2(expression, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-      expression, std::exception, regexp, \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_2( \
+      expression, regexp, \
       true /*must_throw*/, false /*non-fatal*/)
 
 #define DRAKE_ASSERT_THROWS_MESSAGE_2(expression, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-      expression, std::exception, regexp, \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_2( \
+      expression, regexp, \
       true /*must_throw*/, true /*fatal*/)
 
 #define DRAKE_EXPECT_THROWS_MESSAGE_IF_ARMED_2(expression, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-      expression, std::exception, regexp, \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_2( \
+      expression, regexp, \
       ::drake::kDrakeAssertIsArmed /*must_throw*/, false /*non-fatal*/)
 
 #define DRAKE_ASSERT_THROWS_MESSAGE_IF_ARMED_2(expression, regexp) \
-  DRAKE_EXPECT_THROWS_MESSAGE_HELPER( \
-      expression, std::exception, regexp, \
+  DRAKE_EXPECT_THROWS_MESSAGE_HELPER_2( \
+      expression, regexp, \
       ::drake::kDrakeAssertIsArmed /*must_throw*/, true /*fatal*/)
 
 // Now overload the macro based on 2 vs 3 arguments.
