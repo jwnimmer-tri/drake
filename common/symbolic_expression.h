@@ -1218,6 +1218,35 @@ struct ScalarBinaryOpTraits<double, drake::symbolic::Expression, BinaryOp> {
   typedef drake::symbolic::Expression ReturnType;
 };
 
+// Specialize Eigen's packet (boolean redux) functions; for details, refer
+// to https://github.com/RobotLocomotion/drake/issues/15298.
+#if EIGEN_VERSION_AT_LEAST(3, 3, 5)
+namespace internal {
+  // pnot
+template<> EIGEN_DEVICE_FUNC inline ::drake::symbolic::Expression
+ptrue(const ::drake::symbolic::Expression&) {
+  return numext::bit_cast<double>(0xFFFFFFFFFFFFFFFFull);
+}
+template<> EIGEN_DEVICE_FUNC inline ::drake::symbolic::Expression
+pzero(const ::drake::symbolic::Expression&) { return 0; }
+template<> EIGEN_DEVICE_FUNC inline ::drake::symbolic::Expression
+pand(const ::drake::symbolic::Expression& a,
+     const ::drake::symbolic::Expression& b) {
+  return static_cast<int>(a.Evaluate()) & static_cast<int>(b.Evaluate());
+}
+template<> EIGEN_DEVICE_FUNC inline ::drake::symbolic::Expression
+por(const ::drake::symbolic::Expression& a,
+    const ::drake::symbolic::Expression& b) {
+  return static_cast<int>(a.Evaluate()) | static_cast<int>(b.Evaluate());
+}
+template<> EIGEN_DEVICE_FUNC inline ::drake::symbolic::Expression
+pxor(const ::drake::symbolic::Expression& a,
+     const ::drake::symbolic::Expression& b) {
+  return static_cast<int>(a.Evaluate()) ^ static_cast<int>(b.Evaluate());
+}
+}  // namespace internal
+#endif  // EIGEN_VERSION...
+
 }  // namespace Eigen
 #endif  // !defined(DRAKE_DOXYGEN_CXX)
 
