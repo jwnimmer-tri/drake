@@ -125,8 +125,8 @@ RunfilesSingleton Create() {
 // Returns the RunfilesSingleton for the current process, latch-initializing it
 // first if necessary.
 const RunfilesSingleton& GetRunfilesSingleton() {
-  static const never_destroyed<RunfilesSingleton> result{Create()};
-  return result.access();
+  static const never_destroyed<RunfilesSingleton> kInstance{Create()};
+  return kInstance.access();
 }
 
 }  // namespace

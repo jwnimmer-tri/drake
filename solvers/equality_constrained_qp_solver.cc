@@ -319,8 +319,8 @@ std::string EqualityConstrainedQPSolver::FeasibilityTolOptionName() {
 }
 
 SolverId EqualityConstrainedQPSolver::id() {
-  static const never_destroyed<SolverId> singleton{"Equality constrained QP"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"Equality constrained QP"};
+  return kInstance.access();
 }
 
 bool EqualityConstrainedQPSolver::is_available() { return true; }
@@ -329,14 +329,14 @@ bool EqualityConstrainedQPSolver::is_enabled() { return true; }
 
 bool EqualityConstrainedQPSolver::ProgramAttributesSatisfied(
     const MathematicalProgram& prog) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kQuadraticCost, ProgramAttribute::kLinearCost,
           ProgramAttribute::kLinearEqualityConstraint});
   // TODO(hongkai.dai) also make sure that there exists at least a quadratic
   // cost.
   return AreRequiredAttributesSupported(prog.required_capabilities(),
-                                        solver_capabilities.access());
+                                        kSolverCapabilities.access());
 }
 
 }  // namespace solvers

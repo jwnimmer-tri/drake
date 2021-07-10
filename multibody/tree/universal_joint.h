@@ -88,8 +88,8 @@ class UniversalJoint final : public Joint<T> {
   }
 
   const std::string& type_name() const override {
-    static const never_destroyed<std::string> name{kTypeName};
-    return name.access();
+    static const never_destroyed<std::string> kInstance{kTypeName};
+    return kInstance.access();
   }
 
   /// Returns `this` joint's damping constant in N⋅m⋅s. The damping torque

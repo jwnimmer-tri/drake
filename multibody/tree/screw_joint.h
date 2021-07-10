@@ -87,8 +87,8 @@ class ScrewJoint final : public Joint<T> {
   }
 
   const std::string& type_name() const final {
-    static const never_destroyed<std::string> name{kTypeName};
-    return name.access();
+    static const never_destroyed<std::string> kInstance{kTypeName};
+    return kInstance.access();
   }
 
   /// Returns `this` joint's amount of translation in meters

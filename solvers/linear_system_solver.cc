@@ -82,8 +82,8 @@ void LinearSystemSolver::DoSolve(
 }
 
 SolverId LinearSystemSolver::id() {
-  static const never_destroyed<SolverId> singleton{"Linear system"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"Linear system"};
+  return kInstance.access();
 }
 
 namespace {
@@ -93,12 +93,12 @@ namespace {
 bool CheckAttributes(
       const MathematicalProgram& prog,
       std::string* explanation) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kLinearEqualityConstraint});
   const ProgramAttributes& required_capabilities = prog.required_capabilities();
   const bool capabilities_match = AreRequiredAttributesSupported(
-      required_capabilities, solver_capabilities.access(), explanation);
+      required_capabilities, kSolverCapabilities.access(), explanation);
   if (!capabilities_match || required_capabilities.empty()) {
     if (explanation) {
       if (required_capabilities.empty()) {

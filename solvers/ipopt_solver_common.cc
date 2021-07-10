@@ -15,14 +15,14 @@ IpoptSolver::IpoptSolver()
 IpoptSolver::~IpoptSolver() = default;
 
 SolverId IpoptSolver::id() {
-  static const never_destroyed<SolverId> singleton{"IPOPT"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"IPOPT"};
+  return kInstance.access();
 }
 
 bool IpoptSolver::is_enabled() { return true; }
 
 bool IpoptSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kGenericConstraint,
           ProgramAttribute::kLinearEqualityConstraint,
@@ -33,7 +33,7 @@ bool IpoptSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
           ProgramAttribute::kGenericCost, ProgramAttribute::kLinearCost,
           ProgramAttribute::kQuadraticCost, ProgramAttribute::kCallback});
   return AreRequiredAttributesSupported(prog.required_capabilities(),
-                                        solver_capabilities.access());
+                                        kSolverCapabilities.access());
 }
 }  // namespace solvers
 }  // namespace drake

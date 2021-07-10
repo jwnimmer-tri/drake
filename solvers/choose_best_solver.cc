@@ -78,14 +78,14 @@ constexpr std::array<StaticSolverInterface, 12> kKnownSolvers{
 using KnownSolversMap = std::unordered_map<
     SolverId, const StaticSolverInterface*>;
 const KnownSolversMap& GetKnownSolversMap() {
-  static const never_destroyed<KnownSolversMap> result{[]() {
+  static const never_destroyed<KnownSolversMap> kInstance{[]() {
     KnownSolversMap prototype;
     for (const auto& solver : kKnownSolvers) {
       prototype.emplace(solver.id(), &solver);
     }
     return prototype;
   }()};
-  return result.access();
+  return kInstance.access();
 }
 
 template <typename SomeSolver>
@@ -135,14 +135,14 @@ SolverId ChooseBestSolver(const MathematicalProgram& prog) {
 }
 
 const std::set<SolverId>& GetKnownSolvers() {
-  static const never_destroyed<std::set<SolverId>> result{[]() {
+  static const never_destroyed<std::set<SolverId>> kInstance{[]() {
     std::set<SolverId> prototype;
     for (const auto& solver : kKnownSolvers) {
       prototype.insert(solver.id());
     }
     return prototype;
   }()};
-  return result.access();
+  return kInstance.access();
 }
 
 std::unique_ptr<SolverInterface> MakeSolver(const SolverId& id) {

@@ -370,8 +370,8 @@ class ExternalSystemConstraint final {
   // (i.e., for when we can return references to our calc_foo_ member fields).
   template <typename T>
   const SystemConstraintCalc<T>& do_get_calc() const {
-    static const never_destroyed<SystemConstraintCalc<T>> empty;
-    return empty.access();
+    static const never_destroyed<SystemConstraintCalc<T>> kEmpty;
+    return kEmpty.access();
   }
 
   std::string description_;

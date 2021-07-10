@@ -44,8 +44,8 @@ class WeldJoint final : public Joint<T> {
         X_PC_(X_PC) {}
 
   const std::string& type_name() const override {
-    static const never_destroyed<std::string> name{kTypeName};
-    return name.access();
+    static const never_destroyed<std::string> kInstance{kTypeName};
+    return kInstance.access();
   }
 
   /// Returns the pose X_PC of frame C in P.

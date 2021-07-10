@@ -125,7 +125,7 @@ NamedResetIntegratorFunc<T> MakeResetter() {
 // here must be kept in sync with the help string in simulator_gflags.cc.
 template <typename T>
 const vector<NamedResetIntegratorFunc<T>>& GetAllNamedResetIntegratorFuncs() {
-  static const never_destroyed<vector<NamedResetIntegratorFunc<T>>> result{
+  static const never_destroyed<vector<NamedResetIntegratorFunc<T>>> kInstance{
     std::initializer_list<NamedResetIntegratorFunc<T>>{
       // Keep this list sorted alphabetically.
       MakeResetter<T, BogackiShampine3Integrator>(),
@@ -139,7 +139,7 @@ const vector<NamedResetIntegratorFunc<T>>& GetAllNamedResetIntegratorFuncs() {
       MakeResetter<T, SemiExplicitEulerIntegrator>(),
       MakeResetter<T, VelocityImplicitEulerIntegrator>(),
   }};
-  return result.access();
+  return kInstance.access();
 }
 
 }  // namespace
@@ -162,7 +162,7 @@ IntegratorBase<T>& ResetIntegratorFromFlags(
 }
 
 const vector<string>& GetIntegrationSchemes() {
-  static const never_destroyed<vector<string>> result{[]() {
+  static const never_destroyed<vector<string>> kInstance{[]() {
     vector<string> names;
     const auto& name_func_pairs = GetAllNamedResetIntegratorFuncs<double>();
     for (const auto& [one_name, one_func] : name_func_pairs) {
@@ -171,7 +171,7 @@ const vector<string>& GetIntegrationSchemes() {
     }
     return names;
   }()};
-  return result.access();
+  return kInstance.access();
 }
 
 void ApplySimulatorConfig(

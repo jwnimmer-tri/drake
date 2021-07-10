@@ -15,8 +15,8 @@ ClpSolver::ClpSolver()
 ClpSolver::~ClpSolver() = default;
 
 SolverId ClpSolver::id() {
-  static const never_destroyed<SolverId> singleton{"CLP"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"CLP"};
+  return kInstance.access();
 }
 
 bool ClpSolver::is_enabled() { return true; }
@@ -27,13 +27,13 @@ namespace {
 // case, the explanation can be nullptr in which case it is ignored.
 bool CheckAttributes(const MathematicalProgram& prog,
                      std::string* explanation) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kLinearEqualityConstraint,
           ProgramAttribute::kLinearConstraint, ProgramAttribute::kLinearCost,
           ProgramAttribute::kQuadraticCost});
   return internal::CheckConvexSolverAttributes(
-      prog, solver_capabilities.access(), "ClpSolver", explanation);
+      prog, kSolverCapabilities.access(), "ClpSolver", explanation);
 }
 }  // namespace
 

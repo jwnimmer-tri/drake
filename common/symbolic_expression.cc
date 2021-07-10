@@ -89,33 +89,33 @@ void Expression::HashAppend(DelegatingHasher* hasher) const {
 }
 
 Expression Expression::Zero() {
-  static const never_destroyed<Expression> zero{
+  static const never_destroyed<Expression> kInstance{
       Expression{make_shared<ExpressionConstant>(0.0)}};
-  return zero.access();
+  return kInstance.access();
 }
 
 Expression Expression::One() {
-  static const never_destroyed<Expression> one{
+  static const never_destroyed<Expression> kInstance{
       Expression{make_shared<ExpressionConstant>(1.0)}};
-  return one.access();
+  return kInstance.access();
 }
 
 Expression Expression::Pi() {
-  static const never_destroyed<Expression> pi{
+  static const never_destroyed<Expression> kInstance{
       Expression{make_shared<ExpressionConstant>(M_PI)}};
-  return pi.access();
+  return kInstance.access();
 }
 
 Expression Expression::E() {
-  static const never_destroyed<Expression> e{
+  static const never_destroyed<Expression> kInstance{
       Expression{make_shared<ExpressionConstant>(M_E)}};
-  return e.access();
+  return kInstance.access();
 }
 
 Expression Expression::NaN() {
-  static const never_destroyed<Expression> nan{
+  static const never_destroyed<Expression> kInstance{
       Expression{make_shared<ExpressionNaN>()}};
-  return nan.access();
+  return kInstance.access();
 }
 
 Variables Expression::GetVariables() const {

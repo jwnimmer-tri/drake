@@ -1040,8 +1040,8 @@ template <typename T>
 MobyLCPSolver<T>::~MobyLCPSolver() = default;
 
 SolverId MobyLcpSolverId::id() {
-  static const never_destroyed<SolverId> singleton{"Moby LCP"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"Moby LCP"};
+  return kInstance.access();
 }
 
 template <typename T>

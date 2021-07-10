@@ -54,8 +54,8 @@ class StubSolverBase final : public SolverBase {
 
   // Helper static method for SolverBase ctor.
   static SolverId id() {
-    static const never_destroyed<SolverId> result{"stub"};
-    return result.access();
+    static const never_destroyed<SolverId> kInstance{"stub"};
+    return kInstance.access();
   }
 
   // The return values for stubbed methods.

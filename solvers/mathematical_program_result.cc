@@ -8,8 +8,8 @@ namespace drake {
 namespace solvers {
 namespace {
 SolverId UnknownId() {
-  static const never_destroyed<SolverId> result(SolverId({}));
-  return result.access();
+  static const never_destroyed<SolverId> kInstance(SolverId({}));
+  return kInstance.access();
 }
 }  // namespace
 

@@ -15,14 +15,14 @@ NloptSolver::NloptSolver()
 NloptSolver::~NloptSolver() = default;
 
 SolverId NloptSolver::id() {
-  static const never_destroyed<SolverId> singleton{"NLopt"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"NLopt"};
+  return kInstance.access();
 }
 
 bool NloptSolver::is_enabled() { return true; }
 
 bool NloptSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kGenericConstraint,
           ProgramAttribute::kLinearEqualityConstraint,
@@ -33,7 +33,7 @@ bool NloptSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
           ProgramAttribute::kGenericCost, ProgramAttribute::kLinearCost,
           ProgramAttribute::kQuadraticCost, ProgramAttribute::kCallback});
   return AreRequiredAttributesSupported(prog.required_capabilities(),
-                                        solver_capabilities.access());
+                                        kSolverCapabilities.access());
 }
 
 std::string NloptSolver::ConstraintToleranceName() { return "constraint_tol"; }

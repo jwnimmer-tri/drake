@@ -71,10 +71,10 @@ string ResolveUri(const string& uri, const PackageMap& package_map,
   filesystem::path result;
 
   // Parse the given URI into pieces.
-  static const never_destroyed<std::regex> uri_matcher{
+  static const never_destroyed<std::regex> kUriMatcher{
       "^([a-z0-9+.-]+)://([^/]*)/+(.*)"};
   std::smatch match;
-  if (std::regex_match(uri, match, uri_matcher.access())) {
+  if (std::regex_match(uri, match, kUriMatcher.access())) {
     // The `uri` was actually a URI (not a bare filename).
     DRAKE_DEMAND(match.size() == 4);
     const auto& uri_scheme = match[1];

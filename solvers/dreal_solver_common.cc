@@ -18,14 +18,14 @@ DrealSolver::DrealSolver()
 DrealSolver::~DrealSolver() = default;
 
 SolverId DrealSolver::id() {
-  static const never_destroyed<SolverId> singleton{"dReal"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"dReal"};
+  return kInstance.access();
 }
 
 bool DrealSolver::is_enabled() { return true; }
 
 bool DrealSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kGenericConstraint,
           ProgramAttribute::kLinearEqualityConstraint,
@@ -36,7 +36,7 @@ bool DrealSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
           ProgramAttribute::kLinearCost, ProgramAttribute::kQuadraticCost,
           ProgramAttribute::kBinaryVariable});
   return AreRequiredAttributesSupported(prog.required_capabilities(),
-                                        solver_capabilities.access());
+                                        kSolverCapabilities.access());
 }
 
 }  // namespace solvers

@@ -122,8 +122,8 @@ class RevoluteJoint final : public Joint<T> {
   }
 
   const std::string& type_name() const override {
-    static const never_destroyed<std::string> name{kTypeName};
-    return name.access();
+    static const never_destroyed<std::string> kInstance{kTypeName};
+    return kInstance.access();
   }
 
   /// Returns the axis of revolution of `this` joint as a unit vector.

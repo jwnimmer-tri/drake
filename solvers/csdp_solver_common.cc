@@ -18,14 +18,14 @@ CsdpSolver::CsdpSolver(RemoveFreeVariableMethod method)
 CsdpSolver::~CsdpSolver() = default;
 
 SolverId CsdpSolver::id() {
-  static const never_destroyed<SolverId> singleton{"CSDP"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"CSDP"};
+  return kInstance.access();
 }
 
 bool CsdpSolver::is_enabled() { return true; }
 
 bool CsdpSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kLinearCost, ProgramAttribute::kLinearConstraint,
           ProgramAttribute::kLinearEqualityConstraint,
@@ -33,7 +33,7 @@ bool CsdpSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
           ProgramAttribute::kRotatedLorentzConeConstraint,
           ProgramAttribute::kPositiveSemidefiniteConstraint});
   return AreRequiredAttributesSupported(prog.required_capabilities(),
-                                        solver_capabilities.access());
+                                        kSolverCapabilities.access());
 }
 
 }  // namespace solvers

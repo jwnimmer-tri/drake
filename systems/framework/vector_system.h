@@ -109,8 +109,8 @@ class VectorSystem : public LeafSystem<T> {
     if (this->num_input_ports() > 0) {
       return this->get_input_port().Eval(context);
     }
-    static const never_destroyed<VectorX<T>> empty_vector(0);
-    return empty_vector.access().segment(0, 0);
+    static const never_destroyed<VectorX<T>> kEmpty(0);
+    return kEmpty.access().segment(0, 0);
   }
 
   /// Returns a reference to an %Eigen vector version of the state from within

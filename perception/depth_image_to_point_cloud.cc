@@ -28,16 +28,16 @@ using pc_flags::kXYZs;
 // Given a PixelType, return a Value<Image<PixelType>> dummy.
 const AbstractValue& GetModelValue(PixelType pixel_type) {
   if (pixel_type == PixelType::kDepth32F) {
-    static const never_destroyed<Value<ImageDepth32F>> image32f;
-    return image32f.access();
+    static const never_destroyed<Value<ImageDepth32F>> kInstance;
+    return kInstance.access();
   }
   if (pixel_type == PixelType::kDepth16U) {
-    static const never_destroyed<Value<ImageDepth16U>> image16u;
-    return image16u.access();
+    static const never_destroyed<Value<ImageDepth16U>> kInstance;
+    return kInstance.access();
   }
   if (pixel_type == PixelType::kRgba8U) {
-    static const never_destroyed<Value<ImageRgba8U>> image8u;
-    return image8u.access();
+    static const never_destroyed<Value<ImageRgba8U>> kInstance;
+    return kInstance.access();
   }
   throw std::logic_error("Unsupported pixel_type in DepthImageToPointCloud");
 }

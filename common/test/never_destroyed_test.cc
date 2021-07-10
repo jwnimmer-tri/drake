@@ -60,13 +60,13 @@ GTEST_TEST(NeverDestroyedExampleTest, Singleton) {
 enum class Foo { kBar, kBaz };
 Foo ParseFoo(const std::string& foo_string) {
   using Dict = std::unordered_map<std::string, Foo>;
-  static const drake::never_destroyed<Dict> string_to_enum{
+  static const drake::never_destroyed<Dict> kInstance{
     std::initializer_list<Dict::value_type>{
       {"bar", Foo::kBar},
       {"baz", Foo::kBaz},
     }
   };
-  return string_to_enum.access().at(foo_string);
+  return kInstance.access().at(foo_string);
 }
 
 GTEST_TEST(NeverDestroyedExampleTest, ParseFoo) {
@@ -77,7 +77,7 @@ GTEST_TEST(NeverDestroyedExampleTest, ParseFoo) {
 // This is an example from the class overview API docs; we repeat it here to
 // ensure it remains valid.
 const std::vector<double>& GetConstantMagicNumbers() {
-  static const drake::never_destroyed<std::vector<double>> result{[]() {
+  static const drake::never_destroyed<std::vector<double>> kInstance{[]() {
     std::vector<double> prototype;
     std::mt19937 random_generator;
     for (int i = 0; i < 10; ++i) {
@@ -86,7 +86,7 @@ const std::vector<double>& GetConstantMagicNumbers() {
     }
     return prototype;
   }()};
-  return result.access();
+  return kInstance.access();
 }
 
 GTEST_TEST(NeverDestroyedExampleTest, GetConstantMagicNumbers) {

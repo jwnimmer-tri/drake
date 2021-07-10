@@ -22,8 +22,8 @@ GurobiSolver::GurobiSolver()
 GurobiSolver::~GurobiSolver() = default;
 
 SolverId GurobiSolver::id() {
-  static const never_destroyed<SolverId> singleton{"Gurobi"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"Gurobi"};
+  return kInstance.access();
 }
 
 bool GurobiSolver::is_enabled() {
@@ -39,7 +39,7 @@ namespace {
 bool CheckAttributes(const MathematicalProgram& prog,
                      std::string* explanation) {
   // TODO(hongkai.dai): Gurobi supports callback. Add callback capability.
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kLinearCost, ProgramAttribute::kQuadraticCost,
           ProgramAttribute::kLinearConstraint,
@@ -48,7 +48,7 @@ bool CheckAttributes(const MathematicalProgram& prog,
           ProgramAttribute::kRotatedLorentzConeConstraint,
           ProgramAttribute::kBinaryVariable});
   return internal::CheckConvexSolverAttributes(
-      prog, solver_capabilities.access(), "GurobiSolver", explanation);
+      prog, kSolverCapabilities.access(), "GurobiSolver", explanation);
 }
 }  // namespace
 

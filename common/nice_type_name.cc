@@ -53,7 +53,7 @@ string NiceTypeName::Canonicalize(const string& demangled) {
   using SPair = std::pair<std::regex, string>;
   using SPairList = std::initializer_list<SPair>;
   // These are applied in this order.
-  static const never_destroyed<std::vector<SPair>> subs{SPairList{
+  static const never_destroyed<std::vector<SPair>> kSubstitutions{SPairList{
     // Remove unwanted keywords and following space. (\b is word boundary.)
     SPair(std::regex("\\b(class|struct|enum|union) "), ""),
     // Tidy up anonymous namespace.
@@ -93,7 +93,7 @@ string NiceTypeName::Canonicalize(const string& demangled) {
   }};
 
   string canonical(demangled);
-  for (const auto& sp : subs.access()) {
+  for (const auto& sp : kSubstitutions.access()) {
     canonical = std::regex_replace(canonical, sp.first, sp.second);
   }
   return canonical;
@@ -105,10 +105,10 @@ string NiceTypeName::RemoveNamespaces(const string& canonical) {
   // string unprocessed. We are depending on the fact that namespaces can't be
   // templatized to avoid bad behavior for template types where the template
   // argument might include namespaces (those should not be touched).
-  static const never_destroyed<std::regex> regex{"^[^<>]*::"};
+  static const never_destroyed<std::regex> kRegex{"^[^<>]*::"};
 
   const std::string no_namespace =
-      std::regex_replace(canonical, regex.access(), "");
+      std::regex_replace(canonical, kRegex.access(), "");
 
   return no_namespace.empty() ? canonical : no_namespace;
 }

@@ -16,8 +16,8 @@ ScsSolver::ScsSolver()
 ScsSolver::~ScsSolver() = default;
 
 SolverId ScsSolver::id() {
-  static const never_destroyed<SolverId> singleton{"SCS"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"SCS"};
+  return kInstance.access();
 }
 
 bool ScsSolver::is_enabled() { return true; }
@@ -28,7 +28,7 @@ namespace {
 // case, the explanation can be nullptr in which case it is ignored.
 bool CheckAttributes(const MathematicalProgram& prog,
                      std::string* explanation) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kLinearEqualityConstraint,
           ProgramAttribute::kLinearConstraint,
@@ -38,7 +38,7 @@ bool CheckAttributes(const MathematicalProgram& prog,
           ProgramAttribute::kExponentialConeConstraint,
           ProgramAttribute::kLinearCost, ProgramAttribute::kQuadraticCost});
   return internal::CheckConvexSolverAttributes(
-      prog, solver_capabilities.access(), "ScsSolver", explanation);
+      prog, kSolverCapabilities.access(), "ScsSolver", explanation);
 }
 }  // namespace
 

@@ -58,8 +58,8 @@ class NiceTypeName {
   invoked during program tear-down. */
   template <typename T>
   static const std::string& GetFromStorage() {
-    static const never_destroyed<std::string> result(NiceTypeName::Get<T>());
-    return result.access();
+    static const never_destroyed<std::string> kStorage(NiceTypeName::Get<T>());
+    return kStorage.access();
   }
 
   /** Returns the type name of the most-derived type of an object of type T,

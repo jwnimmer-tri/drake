@@ -19,8 +19,8 @@ OsqpSolver::OsqpSolver()
 OsqpSolver::~OsqpSolver() = default;
 
 SolverId OsqpSolver::id() {
-  static const never_destroyed<SolverId> singleton{"OSQP"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"OSQP"};
+  return kInstance.access();
 }
 
 bool OsqpSolver::is_enabled() { return true; }
@@ -32,7 +32,7 @@ namespace {
 bool CheckAttributes(
     const MathematicalProgram& prog,
     std::string* explanation) {
-  static const never_destroyed<ProgramAttributes> solver_capabilities(
+  static const never_destroyed<ProgramAttributes> kSolverCapabilities(
       std::initializer_list<ProgramAttribute>{
           ProgramAttribute::kLinearCost,
           ProgramAttribute::kQuadraticCost,
@@ -40,7 +40,7 @@ bool CheckAttributes(
           ProgramAttribute::kLinearEqualityConstraint});
   const ProgramAttributes& required_capabilities = prog.required_capabilities();
   const bool capabilities_match = AreRequiredAttributesSupported(
-      required_capabilities, solver_capabilities.access(), explanation);
+      required_capabilities, kSolverCapabilities.access(), explanation);
   if (!capabilities_match) {
     if (explanation) {
       *explanation = fmt::format(

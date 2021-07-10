@@ -70,9 +70,9 @@ namespace {
 template <typename T>
 const std::unordered_map<std::string, T>& GetOptionsHelper(
     const SolverId& solver_id, const MapMap<T>& options) {
-  static never_destroyed<std::unordered_map<std::string, T>> empty;
+  static const never_destroyed<std::unordered_map<std::string, T>> kEmpty;
   const auto iter = options.find(solver_id);
-  return (iter != options.end()) ? iter->second : empty.access();
+  return (iter != options.end()) ? iter->second : kEmpty.access();
 }
 }  // namespace
 

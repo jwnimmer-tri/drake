@@ -86,12 +86,12 @@ INDICES_END = """
 
 INDICIES_NAMES_ACCESSOR_IMPL_START = """
 const std::vector<std::string>& %(camel)sIndices::GetCoordinateNames() {
-  static const drake::never_destroyed<std::vector<std::string>> coordinates(
+  static const drake::never_destroyed<std::vector<std::string>> kInstance(
       std::vector<std::string>{
 """
 INDICES_NAMES_ACCESSOR_IMPL_MID = """    \"%(name)s\",  // BR"""
 INDICES_NAMES_ACCESSOR_IMPL_END = """  });
-  return coordinates.access();
+  return kInstance.access();
 }"""
 
 

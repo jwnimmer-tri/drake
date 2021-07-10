@@ -879,8 +879,8 @@ template <typename T>
 UnrevisedLemkeSolver<T>::~UnrevisedLemkeSolver() = default;
 
 SolverId UnrevisedLemkeSolverId::id() {
-  static const never_destroyed<SolverId> singleton{"Unrevised Lemke"};
-  return singleton.access();
+  static const never_destroyed<SolverId> kInstance{"Unrevised Lemke"};
+  return kInstance.access();
 }
 
 template <typename T>
