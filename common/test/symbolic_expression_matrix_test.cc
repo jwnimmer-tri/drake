@@ -579,6 +579,18 @@ TEST_F(SymbolicExpressionMatrixTest, SparseMatrixMultiplicationNoMemoryLeak) {
   (M1 * M2).eval();
 }
 
+// As of Eigen 3.4, its internal implementation of boolean reductions uses
+// packet functions, and its default implementation assumes that scalars are
+// primitive types. This unit test confirms that our symbolics have been
+// specialized to replace the default implementation.
+TEST_F(SymbolicExpressionMatrixTest, EigenPacketFunctions) {
+  VectorX<Expression> input;
+  input << 1.0, 3.0, 0.0;
+  const Expression result =
+      input.cwiseAbs().template maxCoeff<Eigen::PropagateNaN>();
+  EXPECT_PRED2(ExprEqual, result, Expression{3.0});
+}
+
 }  // namespace
 }  // namespace symbolic
 }  // namespace drake
