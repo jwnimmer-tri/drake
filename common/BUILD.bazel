@@ -243,6 +243,7 @@ drake_cc_library(
         ":extract_double",
         ":hash",
         ":random",
+        ":reset_after_move",
         "@fmt",
     ],
 )
