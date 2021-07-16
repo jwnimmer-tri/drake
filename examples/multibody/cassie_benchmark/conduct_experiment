@@ -13,4 +13,4 @@ shift
 cd "$HERE"/../../..
 
 python3 -B tools/performance/benchmark_tool.py conduct_experiment \
-    $TARGET "$OUTPUT_DIR" -- "$@"
+    "--target=${TARGET}" "--output_dir=${OUTPUT_DIR}" -- "$@"

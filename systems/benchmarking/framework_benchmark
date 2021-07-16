@@ -1,0 +1,11 @@
+#!/bin/bash
+# Execute the complete set of steps for a well-controlled benchmark experiment.
+
+set -e -u -o pipefail
+
+TARGET="//systems/benchmarking:framework_benchmarks"
+
+ME=$(python3 -c 'import os; print(os.path.realpath("'"$0"'"))')
+PERFORMANCE_TOOLS=$(cd $(dirname $ME)/../../tools/performance && pwd)
+python3 -B "${PERFORMANCE_TOOLS}/benchmark_tool" conduct_experiment \
+    "--target=${TARGET}" "$@"

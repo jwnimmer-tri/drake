@@ -1,0 +1,26 @@
+# -*- python -*-
+
+load(
+    "@drake//tools/performance:defs.bzl",
+    "drake_cc_googlebench_binary",
+    "drake_py_experiment_binary",
+)
+load("//tools/lint:lint.bzl", "add_lint_tests")
+
+package(default_visibility = ["//visibility:private"])
+
+drake_cc_googlebench_binary(
+    name = "framework_benchmarks",
+    srcs = ["framework_benchmarks.cc"],
+    deps = [
+        "//systems/framework:diagram_builder",
+        "//systems/primitives:pass_through",
+    ],
+)
+
+drake_py_experiment_binary(
+    name = "framework_experiment",
+    googlebench_binary = ":framework_benchmarks",
+)
+
+add_lint_tests()

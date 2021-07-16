@@ -11,7 +11,14 @@ load("//tools/lint:lint.bzl", "add_lint_tests")
 drake_cc_binary(
     name = "identify_compiler",
     srcs = ["identify_compiler.cc"],
+)
+
+genrule(
+    name = "compiler_genrule",
+    outs = [":compiler.txt"],
+    tools = [":identify_compiler"],
     visibility = ["//:__subpackages__"],
+    cmd = "$(execpath :identify_compiler) > $@",
 )
 
 add_lint_tests()
