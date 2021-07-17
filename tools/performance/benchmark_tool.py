@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Tool to help with controlled benchmark experiments.
 
 Subcommands:
