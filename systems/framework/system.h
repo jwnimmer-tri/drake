@@ -941,7 +941,7 @@ class System : public SystemBase {
   // TODO(sherm1) Make this an OutputPortIndex.
   /** Returns the typed output port at index @p port_index. */
   const OutputPort<T>& get_output_port(int port_index) const {
-    return dynamic_cast<const OutputPort<T>&>(
+    return static_cast<const OutputPort<T>&>(
         this->GetOutputPortBaseOrThrow(__func__, port_index));
   }
 

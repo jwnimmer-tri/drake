@@ -959,11 +959,11 @@ LeafOutputPort<T>& LeafSystem<T>::CreateVectorLeafOutputPort(
   // BasicVector<T> calculator function.
   auto cache_calc_function = [vector_calculator](
       const ContextBase& context_base, AbstractValue* abstract) {
-    auto& context = dynamic_cast<const Context<T>&>(context_base);
+    auto& context = static_cast<const Context<T>&>(context_base);
 
     // The abstract value must be a Value<BasicVector<T>>, even if the
     // underlying object is a more-derived vector type.
-    auto value = dynamic_cast<Value<BasicVector<T>>*>(abstract);
+    auto value = static_cast<Value<BasicVector<T>>*>(abstract);
 
     // TODO(sherm1) Make this error message more informative by capturing
     // system and port index info.

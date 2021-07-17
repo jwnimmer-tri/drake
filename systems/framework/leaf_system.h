@@ -1341,7 +1341,7 @@ class LeafSystem : public System<T> {
         // Calculator function downcasts to specific vector type and invokes
         // the given member function.
         [this_ptr, calc](const Context<T>& context, BasicVector<T>* result) {
-          auto typed_result = dynamic_cast<BasicVectorSubtype*>(result);
+          auto typed_result = static_cast<BasicVectorSubtype*>(result);
           DRAKE_DEMAND(typed_result != nullptr);
           (this_ptr->*calc)(context, typed_result);
         },
