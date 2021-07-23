@@ -25,14 +25,14 @@ namespace drake {
 namespace symbolic {
 
 using std::logic_error;
-using std::make_shared;
+using std::make_unique;
 using std::map;
 using std::numeric_limits;
 using std::ostream;
 using std::ostringstream;
 using std::pair;
 using std::runtime_error;
-using std::shared_ptr;
+using std::unique_ptr;
 using std::streamsize;
 using std::string;
 using std::vector;
@@ -55,35 +55,53 @@ Expression NegateMultiplication(const Expression& e) {
   DRAKE_ASSERT(is_multiplication(e));
   return ExpressionMulFactory{to_multiplication(e)}.Negate().GetExpression();
 }
-}  // namespace
 
-shared_ptr<ExpressionCell> Expression::make_cell(const double d) {
-  if (d == 0.0) {
-    // The objects created by `Expression(0.0)` share the unique
-    // `ExpressionConstant` object created in `Expression::Zero()`.
-    //
-    // See https://github.com/RobotLocomotion/drake/issues/12453 for details.
-    //
-    // Typically we should never access a ptr_ directly, but here we know it
-    // poses no risk because ExpressionConstant has no non-const member fields
-    // of any consequence (only "is_expanded_" is non-const, and it can never
-    // be reset to false).
-    return Expression::Zero().ptr_;
-  }
-  if (std::isnan(d)) {
-    return make_shared<ExpressionNaN>();
-  }
-  return make_shared<ExpressionConstant>(d);
+ExpressionConstant* GetZeroCellFlyweight() {
+  static ExpressionConstant* const result{[]() {
+    auto* prototype = new ExpressionConstant(0.0);
+    prototype->use_count()++;
+    return prototype;
+  }()};
+  return result;
 }
 
+ExpressionNaN* GetNaNCellFlyweight() {
+  static ExpressionNaN* const result{[]() {
+    auto* prototype = new ExpressionNaN();
+    prototype->use_count()++;
+    return prototype;
+  }()};
+  return result;
+}
+
+// This is a helper function used to handle `Expression(double)` constructor.
+// The caller is responsible for incrementing the use_count on the result.
+ExpressionCell* GetFlyweightOrMakeNewCell(const double d) {
+  if (d == 0.0) {
+    // The objects created by `Expression(0.0)` share the unique
+    // `ExpressionConstant` object created by `GetZeroCellFlyweight()`.
+    //
+    // See https://github.com/RobotLocomotion/drake/issues/12453 for details.
+    return GetZeroCellFlyweight();
+  }
+  if (std::isnan(d)) {
+    return GetNaNCellFlyweight();
+  }
+  return new ExpressionConstant(d);
+}
+}  // namespace
+
 Expression::Expression(const Variable& var)
-    : Expression{make_shared<ExpressionVar>(var)} {}
+    : Expression{make_unique<ExpressionVar>(var)} {}
 
-Expression::Expression(const double d) : Expression{make_cell(d)} {}
+Expression::Expression(const double d) {
+  set_cell(GetFlyweightOrMakeNewCell(d));
+}
 
-Expression::Expression(std::shared_ptr<ExpressionCell> ptr)
-    : ptr_{std::move(ptr)} {
-  DRAKE_ASSERT(ptr_ != nullptr);
+Expression::Expression(std::unique_ptr<ExpressionCell> cell) {
+  DRAKE_ASSERT(cell != nullptr);
+  DRAKE_ASSERT(cell->use_count() == 0);
+  set_cell(cell.release());
 }
 
 ExpressionKind Expression::get_kind() const {
@@ -97,39 +115,35 @@ void Expression::HashAppend(DelegatingHasher* hasher) const {
 }
 
 ExpressionCell& Expression::mutable_cell() {
-  DRAKE_ASSERT(ptr_ != nullptr);
-  DRAKE_DEMAND(ptr_.use_count() == 1);
-  return *ptr_;
+  ExpressionCell& result = const_cast<ExpressionCell&>(cell());
+  DRAKE_DEMAND(result.use_count() == 1);
+  return result;
 }
 
 Expression Expression::Zero() {
-  static const never_destroyed<Expression> zero{
-      Expression{make_shared<ExpressionConstant>(0.0)}};
-  return zero.access();
+  return {0.0};
 }
 
 Expression Expression::One() {
   static const never_destroyed<Expression> one{
-      Expression{make_shared<ExpressionConstant>(1.0)}};
+      Expression{make_unique<ExpressionConstant>(1.0)}};
   return one.access();
 }
 
 Expression Expression::Pi() {
   static const never_destroyed<Expression> pi{
-      Expression{make_shared<ExpressionConstant>(M_PI)}};
+      Expression{make_unique<ExpressionConstant>(M_PI)}};
   return pi.access();
 }
 
 Expression Expression::E() {
   static const never_destroyed<Expression> e{
-      Expression{make_shared<ExpressionConstant>(M_E)}};
+      Expression{make_unique<ExpressionConstant>(M_E)}};
   return e.access();
 }
 
 Expression Expression::NaN() {
-  static const never_destroyed<Expression> nan{
-      Expression{make_shared<ExpressionNaN>()}};
-  return nan.access();
+  return Expression{std::numeric_limits<double>::quiet_NaN()};
 }
 
 Variables Expression::GetVariables() const {
@@ -546,7 +560,7 @@ Expression& operator/=(Expression& lhs, const Expression& rhs) {
     lhs = Expression::One();
     return lhs;
   }
-  lhs = Expression{make_shared<ExpressionDiv>(lhs, rhs)};
+  lhs = Expression{make_unique<ExpressionDiv>(lhs, rhs)};
   return lhs;
 }
 
@@ -582,7 +596,7 @@ Expression log(const Expression& e) {
     ExpressionLog::check_domain(v);
     return Expression{std::log(v)};
   }
-  return Expression{make_shared<ExpressionLog>(e)};
+  return Expression{make_unique<ExpressionLog>(e)};
 }
 
 Expression abs(const Expression& e) {
@@ -590,7 +604,7 @@ Expression abs(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::fabs(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionAbs>(e)};
+  return Expression{make_unique<ExpressionAbs>(e)};
 }
 
 Expression exp(const Expression& e) {
@@ -598,7 +612,7 @@ Expression exp(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::exp(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionExp>(e)};
+  return Expression{make_unique<ExpressionExp>(e)};
 }
 
 Expression sqrt(const Expression& e) {
@@ -614,7 +628,7 @@ Expression sqrt(const Expression& e) {
       return abs(get_first_argument(e));
     }
   }
-  return Expression{make_shared<ExpressionSqrt>(e)};
+  return Expression{make_unique<ExpressionSqrt>(e)};
 }
 
 Expression pow(const Expression& e1, const Expression& e2) {
@@ -642,9 +656,9 @@ Expression pow(const Expression& e1, const Expression& e2) {
     // pow(base, exponent) ^ e2 => pow(base, exponent * e2)
     const Expression& base{get_first_argument(e1)};
     const Expression& exponent{get_second_argument(e1)};
-    return Expression{make_shared<ExpressionPow>(base, exponent * e2)};
+    return Expression{make_unique<ExpressionPow>(base, exponent * e2)};
   }
-  return Expression{make_shared<ExpressionPow>(e1, e2)};
+  return Expression{make_unique<ExpressionPow>(e1, e2)};
 }
 
 Expression sin(const Expression& e) {
@@ -652,7 +666,7 @@ Expression sin(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::sin(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionSin>(e)};
+  return Expression{make_unique<ExpressionSin>(e)};
 }
 
 Expression cos(const Expression& e) {
@@ -661,7 +675,7 @@ Expression cos(const Expression& e) {
     return Expression{std::cos(get_constant_value(e))};
   }
 
-  return Expression{make_shared<ExpressionCos>(e)};
+  return Expression{make_unique<ExpressionCos>(e)};
 }
 
 Expression tan(const Expression& e) {
@@ -669,7 +683,7 @@ Expression tan(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::tan(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionTan>(e)};
+  return Expression{make_unique<ExpressionTan>(e)};
 }
 
 Expression asin(const Expression& e) {
@@ -679,7 +693,7 @@ Expression asin(const Expression& e) {
     ExpressionAsin::check_domain(v);
     return Expression{std::asin(v)};
   }
-  return Expression{make_shared<ExpressionAsin>(e)};
+  return Expression{make_unique<ExpressionAsin>(e)};
 }
 
 Expression acos(const Expression& e) {
@@ -689,7 +703,7 @@ Expression acos(const Expression& e) {
     ExpressionAcos::check_domain(v);
     return Expression{std::acos(v)};
   }
-  return Expression{make_shared<ExpressionAcos>(e)};
+  return Expression{make_unique<ExpressionAcos>(e)};
 }
 
 Expression atan(const Expression& e) {
@@ -697,7 +711,7 @@ Expression atan(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::atan(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionAtan>(e)};
+  return Expression{make_unique<ExpressionAtan>(e)};
 }
 
 Expression atan2(const Expression& e1, const Expression& e2) {
@@ -706,7 +720,7 @@ Expression atan2(const Expression& e1, const Expression& e2) {
     return Expression{
         std::atan2(get_constant_value(e1), get_constant_value(e2))};
   }
-  return Expression{make_shared<ExpressionAtan2>(e1, e2)};
+  return Expression{make_unique<ExpressionAtan2>(e1, e2)};
 }
 
 Expression sinh(const Expression& e) {
@@ -714,7 +728,7 @@ Expression sinh(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::sinh(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionSinh>(e)};
+  return Expression{make_unique<ExpressionSinh>(e)};
 }
 
 Expression cosh(const Expression& e) {
@@ -722,7 +736,7 @@ Expression cosh(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::cosh(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionCosh>(e)};
+  return Expression{make_unique<ExpressionCosh>(e)};
 }
 
 Expression tanh(const Expression& e) {
@@ -730,7 +744,7 @@ Expression tanh(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::tanh(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionTanh>(e)};
+  return Expression{make_unique<ExpressionTanh>(e)};
 }
 
 Expression min(const Expression& e1, const Expression& e2) {
@@ -742,7 +756,7 @@ Expression min(const Expression& e1, const Expression& e2) {
   if (is_constant(e1) && is_constant(e2)) {
     return Expression{std::min(get_constant_value(e1), get_constant_value(e2))};
   }
-  return Expression{make_shared<ExpressionMin>(e1, e2)};
+  return Expression{make_unique<ExpressionMin>(e1, e2)};
 }
 
 Expression max(const Expression& e1, const Expression& e2) {
@@ -754,7 +768,7 @@ Expression max(const Expression& e1, const Expression& e2) {
   if (is_constant(e1) && is_constant(e2)) {
     return Expression{std::max(get_constant_value(e1), get_constant_value(e2))};
   }
-  return Expression{make_shared<ExpressionMax>(e1, e2)};
+  return Expression{make_unique<ExpressionMax>(e1, e2)};
 }
 
 Expression ceil(const Expression& e) {
@@ -762,7 +776,7 @@ Expression ceil(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::ceil(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionCeiling>(e)};
+  return Expression{make_unique<ExpressionCeiling>(e)};
 }
 
 Expression floor(const Expression& e) {
@@ -770,7 +784,7 @@ Expression floor(const Expression& e) {
   if (is_constant(e)) {
     return Expression{std::floor(get_constant_value(e))};
   }
-  return Expression{make_shared<ExpressionFloor>(e)};
+  return Expression{make_unique<ExpressionFloor>(e)};
 }
 
 Expression if_then_else(const Formula& f_cond, const Expression& e_then,
@@ -783,11 +797,11 @@ Expression if_then_else(const Formula& f_cond, const Expression& e_then,
   if (f_cond.EqualTo(Formula::False())) {
     return e_else;
   }
-  return Expression{make_shared<ExpressionIfThenElse>(f_cond, e_then, e_else)};
+  return Expression{make_unique<ExpressionIfThenElse>(f_cond, e_then, e_else)};
 }
 
 Expression uninterpreted_function(string name, vector<Expression> arguments) {
-  return Expression{make_shared<ExpressionUninterpretedFunction>(
+  return Expression{make_unique<ExpressionUninterpretedFunction>(
       std::move(name), std::move(arguments))};
 }
 

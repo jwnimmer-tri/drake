@@ -29,7 +29,7 @@ using std::domain_error;
 using std::endl;
 using std::equal;
 using std::lexicographical_compare;
-using std::make_shared;
+using std::make_unique;
 using std::map;
 using std::numeric_limits;
 using std::ostream;
@@ -665,7 +665,7 @@ Expression ExpressionAddFactory::GetExpression() const {
     const auto it(expr_to_coeff_map_.cbegin());
     return it->first * it->second;
   }
-  return Expression{make_shared<ExpressionAdd>(constant_, expr_to_coeff_map_)};
+  return Expression{make_unique<ExpressionAdd>(constant_, expr_to_coeff_map_)};
 }
 
 void ExpressionAddFactory::AddConstant(const double constant) {
@@ -958,7 +958,7 @@ Expression ExpressionMulFactory::GetExpression() const {
     return pow(it->first, it->second);
   }
   return Expression{
-      make_shared<ExpressionMul>(constant_, base_to_exponent_map_)};
+      make_unique<ExpressionMul>(constant_, base_to_exponent_map_)};
 }
 
 void ExpressionMulFactory::AddConstant(const double constant) {

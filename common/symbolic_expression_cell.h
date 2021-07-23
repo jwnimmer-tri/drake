@@ -12,6 +12,7 @@
 #endif
 
 #include <algorithm>  // for cpplint only
+#include <atomic>
 #include <cstddef>
 #include <map>
 #include <ostream>
@@ -45,6 +46,12 @@ bool is_non_negative_integer(double v);
 class ExpressionCell {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(ExpressionCell)
+
+  /** Default destructor. */
+  virtual ~ExpressionCell() = default;
+
+  /** Returns the intrusive use count. */
+  std::atomic<int>& use_count() { return use_count_; }
 
   /** Returns expression kind. */
   [[nodiscard]] ExpressionKind get_kind() const { return kind_; }
@@ -101,15 +108,14 @@ class ExpressionCell {
 
  protected:
   /** Constructs ExpressionCell of kind @p k with @p is_poly and @p is_expanded.
-   */
+   * The initial use_count is zero. */
   ExpressionCell(ExpressionKind k, bool is_poly, bool is_expanded);
-  /** Default destructor. */
-  virtual ~ExpressionCell() = default;
 
  private:
   const ExpressionKind kind_{};
   const bool is_polynomial_{false};
   bool is_expanded_{false};
+  std::atomic<int> use_count_{int{}};
 };
 
 /** Represents the base class for unary expressions.  */
@@ -831,6 +837,32 @@ bool is_floor(const ExpressionCell& c);
 bool is_if_then_else(const ExpressionCell& c);
 /** Checks if @p c is an uninterpreted-function expression. */
 bool is_uninterpreted_function(const ExpressionCell& c);
+
+// This is a definition of a private function of Expression. It cannot live
+// in symbolic_expression.h because it requires ExpressionCell's declaration.
+inline void Expression::set_cell(ExpressionCell* cell) noexcept {
+  // Guard against self-assignment.
+  if (raw_ == cell) {
+    return;
+  }
+
+  // Remember our prior cell, to clean up later.
+  ExpressionCell* const old_raw = raw_;
+
+  // Accept the new cell.
+  raw_ = cell;
+  if (raw_ != nullptr) {
+    ++(raw_->use_count());
+  }
+
+  // Clean up the prior cell.
+  if (old_raw != nullptr) {
+    const int new_use_count = --(old_raw->use_count());
+    if (new_use_count == 0) {
+      delete old_raw;
+    }
+  }
+}
 
 }  // namespace symbolic
 }  // namespace drake

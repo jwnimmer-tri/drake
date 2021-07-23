@@ -1284,11 +1284,18 @@ GTEST_TEST(ExpressionTest, CompatibleWithVector) {
   vec.push_back(123.0);
 }
 
-GTEST_TEST(ExpressionTest, NoThrowMoveConstructible) {
-  // Make sure that symbolic::Expression is nothrow move-constructible so that
-  // it can be moved (not copied) when a STL container (i.e. vector<Expression>)
-  // is resized.
+// All of our basic lifecycle operations should be noexcept. In particular, a
+// symbolic::Expression must be nothrow move-constructible so that it can be
+// moved (not copied) when an STL container (e.g., std::vector) is resized.
+GTEST_TEST(ExpressionTest, NoThrowLifecycle) {
+  EXPECT_TRUE(std::is_nothrow_copy_constructible_v<Expression>);
+  EXPECT_TRUE(std::is_nothrow_copy_assignable_v<Expression>);
   EXPECT_TRUE(std::is_nothrow_move_constructible_v<Expression>);
+  EXPECT_TRUE(std::is_nothrow_move_assignable_v<Expression>);
+  EXPECT_TRUE(std::is_nothrow_destructible_v<Expression>);
+
+  // TODO(jwnimmer-tri) Ideally, this one would be nothrow as well.
+  EXPECT_FALSE(std::is_nothrow_default_constructible_v<Expression>);
 }
 
 TEST_F(SymbolicExpressionTest, Log) {

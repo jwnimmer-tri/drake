@@ -193,20 +193,48 @@ symbolic::Expression can be used as a scalar type of Eigen types.
 */
 class Expression {
  public:
-  DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(Expression)
-  ~Expression() = default;
-
   /** Default constructor. It constructs Zero(). */
-  Expression() { *this = Zero(); }
+  Expression() : Expression(0.0) {}
 
   /** Constructs a constant. */
   // NOLINTNEXTLINE(runtime/explicit): This conversion is desirable.
   Expression(double d);
+
   /** Constructs an expression from @p var.
    * @pre @p var is neither a dummy nor a BOOLEAN variable.
    */
   // NOLINTNEXTLINE(runtime/explicit): This conversion is desirable.
   Expression(const Variable& var);
+
+  /** Copyable. */
+  Expression(const Expression& other) noexcept {
+    set_cell(other.raw_);
+  }
+
+  /** Copyable-assignable. */
+  Expression& operator=(const Expression& other) noexcept {
+    // N.B. The set_cell already guards against self-assignment.
+    set_cell(other.raw_);
+    return *this;
+  }
+
+  /** Moveable. */
+  Expression(Expression&& other) noexcept {
+    std::swap(raw_, other.raw_);
+  }
+
+  /** Move-assignable. */
+  Expression& operator=(Expression&& other) noexcept {
+    std::swap(raw_, other.raw_);
+    return *this;
+  }
+
+  /** Destructor. */
+  ~Expression() {
+    // This is required in order to decrement our use_count of the cell.
+    set_cell(nullptr);
+  }
+
   /** Returns expression kind. */
   [[nodiscard]] ExpressionKind get_kind() const;
   /** Collects variables in expression. */
@@ -450,7 +478,7 @@ class Expression {
                                            std::vector<Expression> arguments);
 
   friend std::ostream& operator<<(std::ostream& os, const Expression& e);
-  friend void swap(Expression& a, Expression& b) { std::swap(a.ptr_, b.ptr_); }
+  friend void swap(Expression& a, Expression& b) { std::swap(a.raw_, b.raw_); }
 
   friend bool is_constant(const Expression& e);
   friend bool is_variable(const Expression& e);
@@ -548,17 +576,19 @@ class Expression {
   friend class ExpressionMulFactory;
 
  private:
-  // This is a helper function used to handle `Expression(double)` constructor.
-  static std::shared_ptr<ExpressionCell> make_cell(double d);
+  // @pre The cell's use_count is zero, i.e., it was constructed just for us.
+  explicit Expression(std::unique_ptr<ExpressionCell> cell);
 
-  explicit Expression(std::shared_ptr<ExpressionCell> ptr);
+  // Resets this to point at the given cell, increasing its use_count.
+  // The definition of this function is inlined in symbolic_expression_cell.h.
+  void set_cell(ExpressionCell* cell) noexcept;
 
   void HashAppend(DelegatingHasher* hasher) const;
 
   // Returns a const reference to the owned cell.
   const ExpressionCell& cell() const {
-    DRAKE_ASSERT(ptr_ != nullptr);
-    return *ptr_;
+    DRAKE_ASSERT(raw_ != nullptr);
+    return *raw_;
   }
 
   // Returns a mutable reference to the owned cell. This function may only be
@@ -567,10 +597,15 @@ class Expression {
 
   // Note: We use "non-const" ExpressionCell type. This allows us to perform
   // destructive updates on the pointed cell if the cell is not shared with
-  // other Expressions (that is, ptr_.use_count() == 1). However, because that
+  // other Expressions (that is, raw_->use_count() == 1). However, because that
   // pattern needs careful attention, our library code should never access
-  // ptr_ directly, it should always use cell() or mutable_cell().
-  std::shared_ptr<ExpressionCell> ptr_;
+  // raw_ directly, it should always use cell() or mutable_cell().
+  //
+  // This raw_ is allowed to be nullptr only during the lifecycle functions
+  // (constructors, copies, moves, destructor) where it is accessed directly.
+  // For all other functions, we always use cell() which presumes that the
+  // pointer is non-null (and guards that with an assertion in Debug builds).
+  ExpressionCell* raw_{nullptr};
 };
 
 Expression operator+(Expression lhs, const Expression& rhs);
