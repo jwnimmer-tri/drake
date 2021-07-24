@@ -291,5 +291,17 @@ void SystemBase::ThrowValidateContextMismatch(
   throw std::logic_error(ss.str().c_str());
 }
 
+void SystemBase::ThrowScratchStorageMisconfigured() const {
+  if (scratch_storage_cache_index_.has_value()) {
+    throw std::logic_error(fmt::format(
+        "{} has already been called; it may be called at most once.",
+        FmtFunc("DeclareScratchStorage")));
+  } else {
+    throw std::logic_error(fmt::format(
+        "{} must be called prior to using {}.",
+        FmtFunc("DeclareScratchStorage"), FmtFunc("get_scratch_storage")));
+  }
+}
+
 }  // namespace systems
 }  // namespace drake

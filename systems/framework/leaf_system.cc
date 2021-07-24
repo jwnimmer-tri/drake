@@ -304,8 +304,8 @@ std::multimap<int, int> LeafSystem<T>::GetDirectFeedthroughs() const {
 }
 
 namespace {
-// The type of our cache entry for temporary storage.  Any function that uses
-// this storage is responsible for resetting any values prior to their use.
+// The type of our scratch storage.  Any function that uses this storage is
+// responsible for resetting any values prior to use.
 template <typename T>
 struct Scratch {
   std::vector<const Event<T>*> next_events;
@@ -324,16 +324,7 @@ LeafSystem<T>::LeafSystem(SystemScalarConverter converter)
       AllocateForcedDiscreteUpdateEventCollection());
   this->set_forced_unrestricted_update_events(
       AllocateForcedUnrestrictedUpdateEventCollection());
-
-  // This cache entry maintains temporary storage. Since this declaration
-  // invokes no invalidation support from the cache system, code that uses
-  // this storage is responsible for ensuring that no stale data is used.
-  scratch_cache_index_ =
-      this->DeclareCacheEntry(
-          "scratch", ValueProducer(
-              Scratch<T>{}, &ValueProducer::NoopCalc),
-          {this->nothing_ticket()}).cache_index();
-
+  this->template DeclareScratchStorage<Scratch<T>>();
   per_step_events_.set_system_id(this->get_system_id());
   initialization_events_.set_system_id(this->get_system_id());
   model_discrete_state_.set_system_id(this->get_system_id());
@@ -376,10 +367,7 @@ void LeafSystem<T>::DoCalcNextUpdateTime(
 
   // Use a cached vector to calculate which events to fire. Clear it to ensure
   // that no data values leak between invocations.
-  Scratch<T>& scratch =
-      this->get_cache_entry(scratch_cache_index_)
-      .get_mutable_cache_entry_value(context)
-      .template GetMutableValueOrThrow<Scratch<T>>();
+  auto& scratch = this->template get_scratch_storage<Scratch<T>>(context);
   std::vector<const Event<T>*>& next_events = scratch.next_events;
   next_events.clear();
 

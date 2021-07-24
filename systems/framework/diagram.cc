@@ -14,6 +14,15 @@
 namespace drake {
 namespace systems {
 
+namespace {
+// The type of our scratch storage.  Any function that uses this storage is
+// responsible for resetting any values prior to use.
+template <typename T>
+struct Scratch {
+  std::vector<T> event_times_buffer;
+};
+}  // namespace
+
 template <typename T>
 Diagram<T>::~Diagram() {}
 
@@ -861,10 +870,8 @@ void Diagram<T>::DoCalcNextUpdateTime(const Context<T>& context,
   DRAKE_DEMAND(diagram_context != nullptr);
   DRAKE_DEMAND(info != nullptr);
 
-  CacheEntryValue& value =
-      this->get_cache_entry(event_times_buffer_cache_index_)
-      .get_mutable_cache_entry_value(context);
-  auto& event_times_buffer = value.GetMutableValueOrThrow<std::vector<T>>();
+  auto& scratch = this->template get_scratch_storage<Scratch<T>>(context);
+  std::vector<T>& event_times_buffer = scratch.event_times_buffer;
   DRAKE_DEMAND(
       static_cast<int>(event_times_buffer.size()) == num_subsystems());
 
@@ -1412,18 +1419,6 @@ void Diagram<T>::Initialize(std::unique_ptr<Blueprint> blueprint) {
   output_port_ids_ = std::move(blueprint->output_port_ids);
   registered_systems_ = std::move(blueprint->systems);
 
-  // This cache entry just maintains temporary storage. It is only ever used
-  // by DoCalcNextUpdateTime(). Since this declaration of the cache entry
-  // invokes no invalidation support from the cache system, it is the
-  // responsibility of DoCalcNextUpdateTime() to ensure that no stale data is
-  // used.
-  event_times_buffer_cache_index_ =
-      this->DeclareCacheEntry(
-          "event_times_buffer", ValueProducer(
-              std::vector<T>(num_subsystems()),
-              &ValueProducer::NoopCalc),
-          {this->nothing_ticket()}).cache_index();
-
   // Generate a map from the System pointer to its index in the registered
   // order.
   for (SubsystemIndex i(0); i < num_subsystems(); ++i) {
@@ -1487,6 +1482,9 @@ void Diagram<T>::Initialize(std::unique_ptr<Blueprint> blueprint) {
   this->set_forced_unrestricted_update_events(
       AllocateForcedEventCollection<UnrestrictedUpdateEvent<T>>(
           &System<T>::AllocateForcedUnrestrictedUpdateEventCollection));
+
+  this->template DeclareScratchStorage<Scratch<T>>({
+      .event_times_buffer = std::vector<T>(num_subsystems())});
 
   // Total up all needed Context resources, and the size of the implicit time
   // derivative residual. Note that we are depending on sub-Diagrams already to

@@ -141,6 +141,8 @@ class TestSystem : public LeafSystem<T> {
   using LeafSystem<T>::DeclareVectorOutputPort;
   using LeafSystem<T>::DeclareAbstractOutputPort;
   using LeafSystem<T>::DeclarePerStepEvent;
+  using LeafSystem<T>::DeclareScratchStorage;
+  using LeafSystem<T>::get_scratch_storage;
 
   void AddPeriodicUpdate() {
     const double period = 10.0;
@@ -932,6 +934,28 @@ TEST_F(LeafSystemTest, ContinuousStateBelongsWithSystem) {
       other_system.CalcTimeDerivatives(*other_context, derivatives.get()),
       std::logic_error,
       ".*::ContinuousState<double> was not created for.*::TestSystem.*");
+}
+
+// Tests that DeclareScratchStorage works as intended.
+TEST_F(LeafSystemTest, DeclareScratchStorage) {
+  // Normally, we'd use a fully-fledged `struct Scratch` here, but for unit
+  // testing purposes, a `string` will be good enough.
+  using Scratch = std::string;
+
+  // Fetching scratch that doesn't exist will throw.
+  EXPECT_THROW(system_.get_scratch_storage<Scratch>(context_), std::exception);
+
+  // Declaring and then fetching scratch works fine.
+  system_.DeclareScratchStorage<Scratch>();
+  auto new_context = system_.CreateDefaultContext();
+  std::string& scratch = system_.get_scratch_storage<Scratch>(*new_context);
+  EXPECT_EQ(scratch, "");
+
+  // Fetching the wrong type will throw.
+  EXPECT_THROW(system_.get_scratch_storage<int>(*new_context), std::exception);
+
+  // A second declaration will throw.
+  EXPECT_THROW(system_.DeclareScratchStorage<Scratch>(), std::exception);
 }
 
 TEST_F(LeafSystemTest, DeclarePerStepEvents) {
