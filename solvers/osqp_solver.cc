@@ -1,12 +1,22 @@
 #include "drake/solvers/osqp_solver.h"
 
+#include <iostream>
 #include <vector>
 
 #include <osqp.h>
 
 #include "drake/common/text_logging.h"
+#include "drake/common/scope_exit.h"
 #include "drake/math/eigen_sparse_triplet.h"
 #include "drake/solvers/mathematical_program.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtautological-compare"
+static_assert(c_malloc == malloc,
+    "Our code below assumes that malloc is not redirected");
+static_assert(c_free == free,
+    "Our code below assumes that free is not redirected");
+#pragma GCC diagnostic pop
 
 namespace drake {
 namespace solvers {
@@ -76,7 +86,7 @@ void ParseQuadraticCosts(const MathematicalProgram& prog,
 
 void ParseLinearCosts(const MathematicalProgram& prog, std::vector<c_float>* q,
                       double* constant_cost_term) {
-  // Add the linear costs to the osqp cost.
+  // Add the linear costs to the OSQP cost.
   DRAKE_ASSERT(static_cast<int>(q->size()) == prog.num_vars());
 
   // Loop over the linear costs stored inside prog.
@@ -131,7 +141,7 @@ void ParseLinearConstraints(
     const Binding<Constraint> constraint_cast =
         internal::BindingDynamicCast<Constraint>(constraint);
     constraint_start_row->emplace(constraint_cast, *num_A_rows);
-    // Append constraint.A to osqp A.
+    // Append constraint.A to OSQP A.
     for (const auto& Ai_triplet : Ai_triplets) {
       A_triplets->emplace_back(*num_A_rows + Ai_triplet.row(),
                                x_indices[Ai_triplet.col()],
@@ -158,7 +168,7 @@ void ParseBoundingBoxConstraints(
     const Binding<Constraint> constraint_cast =
         internal::BindingDynamicCast<Constraint>(constraint);
     constraint_start_row->emplace(constraint_cast, *num_A_rows);
-    // Append constraint.A to osqp A.
+    // Append constraint.A to OSQP A.
     for (int i = 0; i < static_cast<int>(constraint.GetNumElements()); ++i) {
       A_triplets->emplace_back(
           *num_A_rows + i,
@@ -176,13 +186,19 @@ void ParseBoundingBoxConstraints(
   }
 }
 
+// @param[out] A
+// @param[out] l are lower bounds
+// @param[out] u are lower bounds
+// @param[out] constraint_start_row
 void ParseAllLinearConstraints(
     const MathematicalProgram& prog, Eigen::SparseMatrix<c_float>* A,
     std::vector<c_float>* l, std::vector<c_float>* u,
     std::unordered_map<Binding<Constraint>, int>* constraint_start_row) {
+  DRAKE_DEMAND(A->nonZeros() == 0);
+  DRAKE_DEMAND(l->empty());
+  DRAKE_DEMAND(u->empty());
+  DRAKE_DEMAND(constraint_start_row->empty());
   std::vector<Eigen::Triplet<c_float>> A_triplets;
-  l->clear();
-  u->clear();
   int num_A_rows = 0;
   ParseLinearConstraints(prog, prog.linear_constraints(), &A_triplets, l, u,
                          &num_A_rows, constraint_start_row);
@@ -210,28 +226,61 @@ void ParseAllLinearConstraints(
   A->setFromTriplets(A_triplets.begin(), A_triplets.end());
 }
 
-// Convert an Eigen::SparseMatrix to csc_matrix, to be used by osqp.
-// Make sure the input Eigen sparse matrix is compressed, by calling
-// makeCompressed() function.
-// The caller of this function is responsible for freeing the memory allocated
-// here.
-csc* EigenSparseToCSC(const Eigen::SparseMatrix<c_float>& mat) {
-  // A csc matrix is in the compressed column major.
-  c_float* values =
-      static_cast<c_float*>(c_malloc(sizeof(c_float) * mat.nonZeros()));
-  c_int* inner_indices =
-      static_cast<c_int*>(c_malloc(sizeof(c_int) * mat.nonZeros()));
-  c_int* outer_indices =
-      static_cast<c_int*>(c_malloc(sizeof(c_int) * (mat.cols() + 1)));
-  for (int i = 0; i < mat.nonZeros(); ++i) {
-    values[i] = *(mat.valuePtr() + i);
-    inner_indices[i] = static_cast<c_int>(*(mat.innerIndexPtr() + i));
+// Convert an Eigen::SparseMatrix to csc_matrix to be used by OSQP.
+//
+// @param[in,out] result points to an owned scs struct. If the pointed-to
+// value is null, then this function will allocate a new struct.  If the value
+// is non-null, then the existing struct will be reused if appropriately sized,
+// or else free'd and then malloc'd again.
+//
+// @post Either way, *result will be non-null and contain a copy of the values
+// in @p mat and the caller is responsible for calling csc_spfree() on it.
+void EigenSparseToCSC(
+    const Eigen::SparseMatrix<c_float>& mat,
+    csc** result) {
+  DRAKE_DEMAND(result != nullptr);
+
+  const int non_zeros = mat.nonZeros();
+  const int rows = mat.rows();
+  const int cols = mat.cols();
+
+  // A csc matrix uses the compressed column major format.
+  const int num_values = non_zeros;
+  const int num_inner_indices = non_zeros;
+  const int num_outer_indices = cols + 1;
+
+  // Allocate or re-allocate storage when necessary.
+  const bool needs_allocation =
+      (*result == nullptr) ||
+      ((**result).nzmax != non_zeros) ||
+      ((**result).n != cols);
+  if (needs_allocation) {
+    if (*result != nullptr) {
+      csc_spfree(*result);
+    }
+    c_float* values = static_cast<c_float*>(
+        malloc(num_values * sizeof(c_float)));
+    c_int* inner_indices = static_cast<c_int*>(
+        malloc(num_inner_indices * sizeof(c_int)));
+    c_int* outer_indices = static_cast<c_int*>(
+        malloc(num_outer_indices * sizeof(c_int)));
+    *result = csc_matrix(rows, cols, non_zeros, values, inner_indices,
+        outer_indices);
   }
-  for (int i = 0; i < mat.cols() + 1; ++i) {
-    outer_indices[i] = static_cast<c_int>(*(mat.outerIndexPtr() + i));
+  DRAKE_DEMAND((**result).nzmax == non_zeros);
+  DRAKE_DEMAND((**result).m == rows);
+  DRAKE_DEMAND((**result).n == cols);
+
+  // Copy the matrix data.
+  for (int i = 0; i < num_values; ++i) {
+    (**result).x[i] = *(mat.valuePtr() + i);
   }
-  return csc_matrix(mat.rows(), mat.cols(), mat.nonZeros(), values,
-                    inner_indices, outer_indices);
+  for (int i = 0; i < num_inner_indices; ++i) {
+    (**result).i[i] = static_cast<c_int>(*(mat.innerIndexPtr() + i));
+  }
+  for (int i = 0; i < num_outer_indices; ++i) {
+    (**result).p[i] = static_cast<c_int>(*(mat.outerIndexPtr() + i));
+  }
 }
 
 template <typename T1, typename T2>
@@ -241,19 +290,6 @@ void SetOsqpSolverSetting(const std::unordered_map<std::string, T1>& options,
   const auto it = options.find(option_name);
   if (it != options.end()) {
     *osqp_setting_field = it->second;
-  }
-}
-
-template <typename T1, typename T2>
-void SetOsqpSolverSettingWithDefaultValue(
-    const std::unordered_map<std::string, T1>& options,
-    const std::string& option_name, T2* osqp_setting_field,
-    const T1& default_field_value) {
-  const auto it = options.find(option_name);
-  if (it != options.end()) {
-    *osqp_setting_field = it->second;
-  } else {
-    *osqp_setting_field = default_field_value;
   }
 }
 
@@ -274,15 +310,10 @@ void SetOsqpSolverSettings(const SolverOptions& solver_options,
                        &(settings->eps_dual_inf));
   SetOsqpSolverSetting(options_double, "alpha", &(settings->alpha));
   SetOsqpSolverSetting(options_double, "delta", &(settings->delta));
-  // Default polish to true, to get an accurate solution.
-  SetOsqpSolverSettingWithDefaultValue(options_int, "polish",
-                                       &(settings->polish), 1);
+  SetOsqpSolverSetting(options_int, "polish", &(settings->polish));
   SetOsqpSolverSetting(options_int, "polish_refine_iter",
                        &(settings->polish_refine_iter));
-  // The fallback value for console verbosity is the value set by drake options.
-  int verbose_console = solver_options.get_print_to_console() != 0;
-  SetOsqpSolverSettingWithDefaultValue(options_int, "verbose",
-                                       &(settings->verbose), verbose_console);
+  SetOsqpSolverSetting(options_int, "verbose", &(settings->verbose));
   SetOsqpSolverSetting(options_int, "scaled_termination",
                        &(settings->scaled_termination));
   SetOsqpSolverSetting(options_int, "check_termination",
@@ -317,6 +348,48 @@ void SetDualSolution(
                                    constraint.evaluator()->num_constraints()));
   }
 }
+
+struct Workspace {
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Workspace)
+
+  Workspace() = default;
+
+  ~Workspace() {
+    csc_spfree(P);
+    csc_spfree(A);
+  }
+
+  std::unique_ptr<Workspace> Clone() const {
+    // We use reset_on_copy semantics, i.e., copy-construction is a no-op.
+    return std::make_unique<Workspace>();
+  }
+
+  void Clear() {
+    P_sparse.setZero();
+    // XXX P.clear
+    q.clear();
+    A_sparse.setZero();
+    // XXX A.clear
+    A_lower.clear();
+    A_upper.clear();
+  }
+
+  // The consolidated Hessian matrix of quadratic costs.
+  Eigen::SparseMatrix<c_float> P_sparse;
+  csc* P = nullptr;
+
+  // The consolidated coefficients of linear costs.
+  std::vector<c_float> q;
+
+  // The consolidated coefficients of linear constraints.
+  Eigen::SparseMatrix<c_float> A_sparse;
+  csc* A = nullptr;
+
+  // The upper and lower bounds A_sparse;
+  std::vector<c_float> A_lower;
+  std::vector<c_float> A_upper;
+};
+
 }  // namespace
 
 bool OsqpSolver::is_available() { return true; }
@@ -328,6 +401,12 @@ void OsqpSolver::DoSolve(
     MathematicalProgramResult* result) const {
   OsqpSolverDetails& solver_details =
       result->SetSolverDetailsType<OsqpSolverDetails>();
+  if (solver_details.workspace == nullptr) {
+    solver_details.workspace = std::make_unique<Value<Workspace>>();
+  }
+  Workspace& workspace =
+      solver_details.workspace->get_mutable_value<Workspace>();
+  workspace.Clear();
 
   // TODO(hongkai.dai): OSQP uses initial guess to warm start.
   unused(initial_guess);
@@ -338,144 +417,121 @@ void OsqpSolver::DoSolve(
   // OSQP is written in C, so this function will be in C style.
 
   // Get the cost for the QP.
-  Eigen::SparseMatrix<c_float> P_sparse;
-  std::vector<c_float> q(prog.num_vars(), 0);
+  workspace.q.assign(prog.num_vars(), c_float{0});
   double constant_cost_term{0};
-
-  ParseQuadraticCosts(prog, &P_sparse, &q, &constant_cost_term);
-  ParseLinearCosts(prog, &q, &constant_cost_term);
+  ParseQuadraticCosts(prog, &workspace.P_sparse, &workspace.q,
+      &constant_cost_term);
+  ParseLinearCosts(prog, &workspace.q, &constant_cost_term);
 
   // linear_constraint_start_row[binding] stores the starting row index in A
   // corresponding to the linear constraint `binding`.
+  // XXX Remove this allocation, somehow.
   std::unordered_map<Binding<Constraint>, int> constraint_start_row;
 
   // Parse the linear constraints.
-  Eigen::SparseMatrix<c_float> A_sparse;
-  std::vector<c_float> l, u;
-  ParseAllLinearConstraints(prog, &A_sparse, &l, &u, &constraint_start_row);
+  ParseAllLinearConstraints(prog, &workspace.A_sparse, &workspace.A_lower,
+      &workspace.A_upper, &constraint_start_row);
 
   // Now pass the constraint and cost to osqp data.
-  OSQPData* data = nullptr;
+  ::OSQPData osqp_data{};
+  osqp_data.n = prog.num_vars();
+  osqp_data.m = workspace.A_sparse.rows();
+  EigenSparseToCSC(workspace.P_sparse, &workspace.P);
+  osqp_data.P = workspace.P;
+  osqp_data.q = workspace.q.data();
+  EigenSparseToCSC(workspace.A_sparse, &workspace.A);
+  osqp_data.A = workspace.A;
+  osqp_data.l = workspace.A_lower.data();
+  osqp_data.u = workspace.A_upper.data();
 
-  // Populate data.
-  data = static_cast<OSQPData*>(c_malloc(sizeof(OSQPData)));
-
-  data->n = prog.num_vars();
-  data->m = A_sparse.rows();
-  data->P = EigenSparseToCSC(P_sparse);
-  data->q = q.data();
-  data->A = EigenSparseToCSC(A_sparse);
-  data->l = l.data();
-  data->u = u.data();
-
-  // Define Solver settings as default.
-  // Problem settings
-  OSQPSettings* settings =
-      static_cast<OSQPSettings*>(c_malloc(sizeof(OSQPSettings)));
-  osqp_set_default_settings(settings);
-
-  SetOsqpSolverSettings(merged_options, settings);
-
-  // If any step fails, it will set the solution_result and skip other steps.
-  std::optional<SolutionResult> solution_result;
+  // Consolidate the OSQP defaults + our defaults + solve options.
+  // Default polish to true, to get an accurate solution.
+  OSQPSettings osqp_settings{};
+  osqp_set_default_settings(&osqp_settings);
+  osqp_settings.polish = 1;
+  osqp_settings.verbose = 0;
+  SetOsqpSolverSettings(merged_options, &osqp_settings);
 
   // Setup workspace.
   OSQPWorkspace* work = nullptr;
-  if (!solution_result) {
-    const c_int osqp_setup_err = osqp_setup(&work, data, settings);
-    if (osqp_setup_err != 0) {
-      solution_result = SolutionResult::kInvalidInput;
-    }
+  ScopeExit guard([work]() { osqp_cleanup(work); });
+  if (osqp_setup(&work, &osqp_data, &osqp_settings) != 0) {
+    result->set_solution_result(SolutionResult::kInvalidInput);
+    return;
   }
+  DRAKE_THROW_UNLESS(work != nullptr);
 
   // Solve problem.
-  if (!solution_result) {
-    DRAKE_THROW_UNLESS(work != nullptr);
-    const c_int osqp_solve_err = osqp_solve(work);
-    if (osqp_solve_err != 0) {
-      solution_result = SolutionResult::kInvalidInput;
-    }
+  if (osqp_solve(work) != 0) {
+    result->set_solution_result(SolutionResult::kInvalidInput);
+    return;
   }
+  DRAKE_THROW_UNLESS(work->info != nullptr);
 
-  // Extract results.
-  if (!solution_result) {
-    DRAKE_THROW_UNLESS(work->info != nullptr);
+  // Copy some details into the result.
+  solver_details.iter = work->info->iter;
+  solver_details.status_val = work->info->status_val;
+  solver_details.primal_res = work->info->pri_res;
+  solver_details.dual_res = work->info->dua_res;
+  solver_details.setup_time = work->info->setup_time;
+  solver_details.solve_time = work->info->solve_time;
+  solver_details.polish_time = work->info->polish_time;
+  solver_details.run_time = work->info->run_time;
 
-    solver_details.iter = work->info->iter;
-    solver_details.status_val = work->info->status_val;
-    solver_details.primal_res = work->info->pri_res;
-    solver_details.dual_res = work->info->dua_res;
-    solver_details.setup_time = work->info->setup_time;
-    solver_details.solve_time = work->info->solve_time;
-    solver_details.polish_time = work->info->polish_time;
-    solver_details.run_time = work->info->run_time;
+  // Convert the OSQP result into a MathematicalProgramResult.
+  std::optional<SolutionResult> solution_result;
+  switch (work->info->status_val) {
+    case OSQP_SOLVED:
+    case OSQP_SOLVED_INACCURATE: {
+      const Eigen::Map<Eigen::Matrix<c_float, Eigen::Dynamic, 1>> osqp_sol(
+          work->solution->x, prog.num_vars());
 
-    switch (work->info->status_val) {
-      case OSQP_SOLVED:
-      case OSQP_SOLVED_INACCURATE: {
-        const Eigen::Map<Eigen::Matrix<c_float, Eigen::Dynamic, 1>> osqp_sol(
-            work->solution->x, prog.num_vars());
-
-        // Scale solution back if `scale_map` is not empty.
-        const auto& scale_map = prog.GetVariableScaling();
-        if (!scale_map.empty()) {
-          drake::VectorX<double> scaled_sol = osqp_sol.cast<double>();
-          for (const auto& [index, scale] : scale_map) {
-            scaled_sol(index) *= scale;
-          }
-          result->set_x_val(scaled_sol);
-        } else {
-          result->set_x_val(osqp_sol.cast<double>());
+      // Scale solution back if `scale_map` is not empty.
+      const auto& scale_map = prog.GetVariableScaling();
+      if (!scale_map.empty()) {
+        drake::VectorX<double> scaled_sol = osqp_sol.cast<double>();
+        for (const auto& [index, scale] : scale_map) {
+          scaled_sol(index) *= scale;
         }
+        result->set_x_val(scaled_sol);
+      } else {
+        result->set_x_val(osqp_sol.cast<double>());
+      }
 
-        result->set_optimal_cost(work->info->obj_val + constant_cost_term);
-        solver_details.y =
-            Eigen::Map<Eigen::VectorXd>(work->solution->y, work->data->m);
-        solution_result = SolutionResult::kSolutionFound;
-        SetDualSolution(prog.linear_constraints(), solver_details.y,
-                        constraint_start_row, result);
-        SetDualSolution(prog.linear_equality_constraints(), solver_details.y,
-                        constraint_start_row, result);
-        SetDualSolution(prog.bounding_box_constraints(), solver_details.y,
-                        constraint_start_row, result);
+      result->set_optimal_cost(work->info->obj_val + constant_cost_term);
+      solver_details.y =
+          Eigen::Map<Eigen::VectorXd>(work->solution->y, work->data->m);
+      solution_result = SolutionResult::kSolutionFound;
+      SetDualSolution(prog.linear_constraints(), solver_details.y,
+                      constraint_start_row, result);
+      SetDualSolution(prog.linear_equality_constraints(), solver_details.y,
+                      constraint_start_row, result);
+      SetDualSolution(prog.bounding_box_constraints(), solver_details.y,
+                      constraint_start_row, result);
 
-        break;
-      }
-      case OSQP_PRIMAL_INFEASIBLE:
-      case OSQP_PRIMAL_INFEASIBLE_INACCURATE: {
-        solution_result = SolutionResult::kInfeasibleConstraints;
-        result->set_optimal_cost(MathematicalProgram::kGlobalInfeasibleCost);
-        break;
-      }
-      case OSQP_DUAL_INFEASIBLE:
-      case OSQP_DUAL_INFEASIBLE_INACCURATE: {
-        solution_result = SolutionResult::kDualInfeasible;
-        break;
-      }
-      case OSQP_MAX_ITER_REACHED: {
-        solution_result = SolutionResult::kIterationLimit;
-        break;
-      }
-      default: {
-        solution_result = SolutionResult::kUnknownError;
-        break;
-      }
+      break;
+    }
+    case OSQP_PRIMAL_INFEASIBLE:
+    case OSQP_PRIMAL_INFEASIBLE_INACCURATE: {
+      solution_result = SolutionResult::kInfeasibleConstraints;
+      result->set_optimal_cost(MathematicalProgram::kGlobalInfeasibleCost);
+      break;
+    }
+    case OSQP_DUAL_INFEASIBLE:
+    case OSQP_DUAL_INFEASIBLE_INACCURATE: {
+      solution_result = SolutionResult::kDualInfeasible;
+      break;
+    }
+    case OSQP_MAX_ITER_REACHED: {
+      solution_result = SolutionResult::kIterationLimit;
+      break;
+    }
+    default: {
+      solution_result = SolutionResult::kUnknownError;
+      break;
     }
   }
   result->set_solution_result(solution_result.value());
-
-  // Clean workspace.
-  osqp_cleanup(work);
-  c_free(data->P->x);
-  c_free(data->P->i);
-  c_free(data->P->p);
-  c_free(data->P);
-  c_free(data->A->x);
-  c_free(data->A->i);
-  c_free(data->A->p);
-  c_free(data->A);
-  c_free(data);
-  c_free(settings);
 }
 
 }  // namespace solvers

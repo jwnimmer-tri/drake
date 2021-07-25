@@ -4,10 +4,12 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
+#include "drake/common/test_utilities/limit_malloc.h"
 #include "drake/solvers/mathematical_program.h"
 #include "drake/solvers/test/quadratic_program_examples.h"
 
 using ::testing::HasSubstr;
+using drake::test::LimitMalloc;
 
 namespace drake {
 namespace solvers {
@@ -351,6 +353,31 @@ GTEST_TEST(OsqpSolverTest, VariableScaling2) {
   }
 }
 
+GTEST_TEST(OsqpSolverTest, TestHeapUse) {
+  MathematicalProgram prog;
+  auto x = prog.NewContinuousVariables<3>("x");
+  prog.AddQuadraticCost(x(0) * x(0));
+  prog.AddQuadraticCost((x(1) + x(2) - 2) * (x(1) + x(2) - 2));
+
+  OsqpSolver solver;
+  if (!solver.available()) {
+    return;
+  }
+
+  // The first Solve is expected to allocate on the heap.
+  MathematicalProgramResult result;
+  solver.Solve(prog, {}, {}, &result);
+  EXPECT_TRUE(result.is_success());
+
+  // Repeated calls to Solve should (ideally) not have any more allocations,
+  // but for now at least we'll enforce an upper bound.
+  {
+    LimitMalloc guard({.max_num_allocations = 167,
+        .min_num_allocations = 167 });
+    solver.Solve(prog, {}, {}, &result);
+  }
+  EXPECT_TRUE(result.is_success());
+}
 }  // namespace test
 }  // namespace solvers
 }  // namespace drake

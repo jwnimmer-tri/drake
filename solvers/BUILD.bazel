@@ -983,8 +983,11 @@ drake_cc_library(
         ":aggregate_costs_constraints",
         ":mathematical_program",
         ":solver_base",
+        "//common:value",
     ] + select({
         "//conditions:default": [
+            "//common:copyable_unique_ptr",
+            "//common:scope_exit",
             "//math:eigen_sparse_triplet",
             "@osqp",
         ],
@@ -1614,6 +1617,7 @@ drake_cc_googletest(
         ":osqp_solver",
         ":quadratic_program_examples",
         "//common/test_utilities:eigen_matrix_compare",
+        "//common/test_utilities:limit_malloc",
     ],
 )
 

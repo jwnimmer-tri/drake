@@ -2,7 +2,9 @@
 
 #include <string>
 
+#include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/value.h"
 #include "drake/solvers/solver_base.h"
 
 namespace drake {
@@ -13,6 +15,11 @@ namespace solvers {
  * details.
  */
 struct OsqpSolverDetails {
+  DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(OsqpSolverDetails)
+
+  OsqpSolverDetails();
+  ~OsqpSolverDetails();
+
   /// Number of iterations taken.
   int iter{};
   /// Status of the solver at termination. Please refer to
@@ -35,6 +42,9 @@ struct OsqpSolverDetails {
   /// the problem. Notice that the order of the linear constraints are linear
   /// inequality first, and then linear equality constraints.
   Eigen::VectorXd y{};
+
+  /// For private use of the solver back-end, not for any users.
+  copyable_unique_ptr<AbstractValue> workspace;
 };
 
 class OsqpSolver final : public SolverBase {

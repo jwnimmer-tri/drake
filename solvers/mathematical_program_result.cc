@@ -29,6 +29,17 @@ const AbstractValue& MathematicalProgramResult::get_abstract_solver_details()
   return *solver_details_;
 }
 
+void MathematicalProgramResult::Clear() {
+  std::unique_ptr<AbstractValue> old_details;
+  if (solver_details_) {
+    old_details = std::move(solver_details_);
+  } else if (solver_details_stale_) {
+    old_details = std::move(solver_details_stale_);
+  }
+  *this = {};
+  solver_details_stale_ = std::move(old_details);
+}
+
 bool MathematicalProgramResult::is_success() const {
   return solution_result_ == SolutionResult::kSolutionFound;
 }

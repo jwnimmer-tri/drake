@@ -44,7 +44,8 @@ void SolverBase::Solve(const MathematicalProgram& prog,
                        const std::optional<Eigen::VectorXd>& initial_guess,
                        const std::optional<SolverOptions>& solver_options,
                        MathematicalProgramResult* result) const {
-  *result = {};
+  DRAKE_THROW_UNLESS(result != nullptr);
+  result->Clear();
   if (!available()) {
     const std::string name = ShortName(*this);
     throw std::invalid_argument(fmt::format(

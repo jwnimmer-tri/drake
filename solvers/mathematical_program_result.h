@@ -162,13 +162,28 @@ class MathematicalProgramResult final {
    * until this MathematicalProgramResult is destroyed. */
   template <typename T>
   T& SetSolverDetailsType() {
-    // Leave the storage alone if it already has the correct type.
-    if (!solver_details_ ||
-        (solver_details_->static_type_info() != typeid(T))) {
+    // If we have a current value of the correct type, then we'll use it;
+    // else we have a stale value of the correct type, then we'll use it;
+    // else we'll make a new value.
+    if (solver_details_ &&
+        (solver_details_->static_type_info() == typeid(T))) {
+      // Current value is fine.
+    } else if (solver_details_stale_ &&
+               (solver_details_stale_->static_type_info() == typeid(T))) {
+      // Promote the stale value to current.
+      solver_details_ = std::move(solver_details_stale_);
+    } else {
+      // Make a new value.
       solver_details_ = std::make_unique<Value<T>>();
     }
+
+    // We don't need to retain a stale value anymore.
+    solver_details_stale_.reset();
     return solver_details_->get_mutable_value<T>();
   }
+
+  /** XXX */
+  void Clear();
 
   /**
    * Gets the solution of all decision variables.
@@ -496,6 +511,7 @@ class MathematicalProgramResult final {
   double optimal_cost_{};
   SolverId solver_id_;
   copyable_unique_ptr<AbstractValue> solver_details_;
+  copyable_unique_ptr<AbstractValue> solver_details_stale_;
   // Some solvers (like Gurobi, Cplex, etc) can store a pool of (suboptimal)
   // solutions for mixed integer programming model.
   // suboptimal_objectives_[i] is the objective value computed with the
