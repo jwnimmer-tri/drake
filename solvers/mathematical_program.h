@@ -2689,66 +2689,42 @@ class MathematicalProgram {
    * class for more details on the supported options of each solver.
    */
 
-  //@{
   /**
    * See @ref set_solver_option for more details.
-   * Set the double-valued options.
-   * @pydrake_mkdoc_identifier{double_option}
    */
-  void SetSolverOption(const SolverId& solver_id,
-                       const std::string& solver_option, double option_value) {
+  void SetSolverOption(const SolverId& solver_id, std::string solver_option,
+                       SolverOptions::OptionValue option_value) {
     solver_options_.SetOption(solver_id, solver_option, option_value);
   }
 
-  /**
-   * See @ref set_solver_option for more details.
-   * Set the integer-valued options.
-   * @pydrake_mkdoc_identifier{int_option}
-   */
-  void SetSolverOption(const SolverId& solver_id,
-                       const std::string& solver_option, int option_value) {
-    solver_options_.SetOption(solver_id, solver_option, option_value);
-  }
-
-  /**
-   * See @ref set_solver_option for more details.
-   * Set the string-valued options.
-   * @pydrake_mkdoc_identifier{string_option}
-   */
-  void SetSolverOption(const SolverId& solver_id,
-                       const std::string& solver_option,
-                       const std::string& option_value) {
-    solver_options_.SetOption(solver_id, solver_option, option_value);
-  }
-
-  /**
-   * Overwrite the stored solver options inside MathematicalProgram with the
-   * provided solver options.
-   */
+  DRAKE_DEPRECATED("2021-12-01", "")
   void SetSolverOptions(const SolverOptions& solver_options) {
     solver_options_ = solver_options;
   }
-  //@}
 
   /**
    * Returns the solver options stored inside MathematicalProgram.
    */
   const SolverOptions& solver_options() const { return solver_options_; }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  DRAKE_DEPRECATED("2021-12-01", "")
   const std::unordered_map<std::string, double>& GetSolverOptionsDouble(
       const SolverId& solver_id) const {
     return solver_options_.GetOptionsDouble(solver_id);
   }
-
+  DRAKE_DEPRECATED("2021-12-01", "")
   const std::unordered_map<std::string, int>& GetSolverOptionsInt(
       const SolverId& solver_id) const {
     return solver_options_.GetOptionsInt(solver_id);
   }
-
+  DRAKE_DEPRECATED("2021-12-01", "")
   const std::unordered_map<std::string, std::string>& GetSolverOptionsStr(
       const SolverId& solver_id) const {
     return solver_options_.GetOptionsStr(solver_id);
   }
+#pragma GCC diagnostic pop
 
   /**
    * Getter for all callbacks.

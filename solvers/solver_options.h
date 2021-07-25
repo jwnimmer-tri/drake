@@ -8,6 +8,7 @@
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/solvers/common_solver_option.h"
 #include "drake/solvers/solver_id.h"
 
@@ -55,67 +56,64 @@ namespace solvers {
  */
 class SolverOptions {
  public:
-  SolverOptions() = default;
-
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(SolverOptions)
 
-  /** The values stored in SolverOptions can be double, int, or string.
-   * In the future, we might re-order or add more allowed types without any
-   * deprecation period, so be sure to use std::visit or std::get<T> to
-   * retrieve the variant's value in a future-proof way. */
+  SolverOptions() = default;
+
+  // XXX group into setters, for users
+
+  /** The values stored in SolverOptions can be double, int, or string. In the
+  future, we might re-order or add more allowed types without any deprecation
+  period, so be sure to use std::visit or std::get<T> to retrieve the variant's
+  value in a future-proof way. */
   using OptionValue = std::variant<double, int, std::string>;
 
-  /** Sets a double-valued solver option for a specific solver.
-   * @pydrake_mkdoc_identifier{double_option}
-   */
-  void SetOption(const SolverId& solver_id, const std::string& solver_option,
-                 double option_value);
-
-  /** Sets an integer-valued solver option for a specific solver.
-   * @pydrake_mkdoc_identifier{int_option}
-   */
-  void SetOption(const SolverId& solver_id, const std::string& solver_option,
-                 int option_value);
-
-  /** Sets a string-valued solver option for a specific solver.
-   * @pydrake_mkdoc_identifier{str_option}
-   */
-  void SetOption(const SolverId& solver_id, const std::string& solver_option,
-                 const std::string& option_value);
-
   /** Sets a common option for all solvers supporting that option (for example,
-   * printing the progress in each iteration). If the solver doesn't support
-   * the option, the option is ignored.
-   * @pydrake_mkdoc_identifier{common_option} */
+  printing the progress in each iteration). If the solver doesn't support the
+  option, then the option is silently ignored. */
   void SetOption(CommonSolverOption key, OptionValue value);
 
-  const std::unordered_map<std::string, double>& GetOptionsDouble(
-      const SolverId& solver_id) const;
+  /** Sets a solver option for a specific solver. */
+  void SetOption(const SolverId& solver_id, std::string solver_option,
+                 OptionValue option_value);
 
-  const std::unordered_map<std::string, int>& GetOptionsInt(
-      const SolverId& solver_id) const;
-
-  const std::unordered_map<std::string, std::string>& GetOptionsStr(
-      const SolverId& solver_id) const;
-
-  /**
-   * Gets the common options for all solvers. Refer to CommonSolverOption for
-   * more details.
-   */
-  const std::unordered_map<CommonSolverOption, OptionValue>&
-  common_solver_options() const {
-    return common_solver_options_;
-  }
+  // XXX group into getters, for end solver implementations.
 
   /** Returns the kPrintFileName set via CommonSolverOption, or else an empty
-   * string if the option has not been set. */
+  string if the option has not been set. */
   std::string get_print_file_name() const;
 
   /** Returns the kPrintToConsole set via CommonSolverOption, or else false if
-   * the option has not been set. */
+  the option has not been set. */
   bool get_print_to_console() const;
 
+  /** Returns ... */
+  const std::map<std::string, OptionValue>& GetOptions(
+      const SolverId& solver_id) const;
+
+  // XXX group into infra, for SolverBase etc.
+
+  /**
+   * Merges the other solver options into this. If `other` and `this` option
+   * both define the same option for the same solver, we ignore then one from
+   * `other` and keep the one from `this`.
+   */
+  void Merge(const SolverOptions& other);
+
+  DRAKE_DEPRECATED("2021-12-01", "")
+  const std::unordered_map<std::string, double>& GetOptionsDouble(
+      const SolverId& solver_id) const;
+
+  DRAKE_DEPRECATED("2021-12-01", "")
+  const std::unordered_map<std::string, int>& GetOptionsInt(
+      const SolverId& solver_id) const;
+
+  DRAKE_DEPRECATED("2021-12-01", "")
+  const std::unordered_map<std::string, std::string>& GetOptionsStr(
+      const SolverId& solver_id) const;
+
   template <typename T>
+  DRAKE_DEPRECATED("2021-12-01", "")
   const std::unordered_map<std::string, T>& GetOptions(
       const SolverId& solver_id) const {
     if constexpr (std::is_same_v<T, double>) {
@@ -128,38 +126,20 @@ class SolverOptions {
     DRAKE_UNREACHABLE();
   }
 
-  /** Returns the IDs that have any option set. */
+  DRAKE_DEPRECATED("2021-12-01", "")
+  const std::unordered_map<CommonSolverOption, OptionValue>&
+  common_solver_options() const { return common_; }
+
+  DRAKE_DEPRECATED("2021-12-01", "")
   std::unordered_set<SolverId> GetSolverIds() const;
 
-  /**
-   * Merges the other solver options into this. If `other` and `this` option
-   * both define the same option for the same solver, we ignore then one from
-   * `other` and keep the one from `this`.
-   */
-  void Merge(const SolverOptions& other);
-
-  /**
-   * Returns true if `this` and `other` have exactly the same solvers, with
-   * exactly the same keys and values for the options for each solver.
-   */
+  DRAKE_DEPRECATED("2021-12-01", "")
   bool operator==(const SolverOptions& other) const;
 
-  /**
-   * Negate operator==.
-   */
+  DRAKE_DEPRECATED("2021-12-01", "")
   bool operator!=(const SolverOptions& other) const;
 
-  /**
-   * Check if for a given solver_id, the option keys are included in
-   * double_keys, int_keys and str_keys.
-   * @param solver_id If this SolverOptions has set options for this solver_id,
-   * then we check if the option keys are a subset of `double_keys`, `int_keys`
-   * and `str_keys`.
-   * @param double_keys The set of allowable keys for double options.
-   * @param int_keys The set of allowable keys for int options.
-   * @param str_keys The set of allowable keys for string options.
-   * @throws std::exception if the solver contains un-allowed options.
-   */
+  DRAKE_DEPRECATED("2021-12-01", "")
   void CheckOptionKeysForSolver(
       const SolverId& solver_id,
       const std::unordered_set<std::string>& allowable_double_keys,
@@ -167,14 +147,17 @@ class SolverOptions {
       const std::unordered_set<std::string>& allowable_str_keys) const;
 
  private:
+  std::unordered_map<CommonSolverOption, OptionValue> common_;
+  std::unordered_map<SolverId, std::map<std::string, OptionValue>> specific_;
+
+  // On 2021-12-01 when we remove the deprecated getters, we should also remove
+  // these member fields.
   std::unordered_map<SolverId, std::unordered_map<std::string, double>>
       solver_options_double_{};
   std::unordered_map<SolverId, std::unordered_map<std::string, int>>
       solver_options_int_{};
   std::unordered_map<SolverId, std::unordered_map<std::string, std::string>>
       solver_options_str_{};
-
-  std::unordered_map<CommonSolverOption, OptionValue> common_solver_options_{};
 };
 
 std::string to_string(const SolverOptions&);
