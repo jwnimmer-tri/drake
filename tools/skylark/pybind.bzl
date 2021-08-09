@@ -16,6 +16,7 @@ load(
     "drake_py_library",
     "drake_py_test",
 )
+load("@drake//tools/skylark:drake_py.bzl", "py_test_isolated")
 
 def pybind_py_library(
         name,
@@ -93,6 +94,18 @@ def pybind_py_library(
         py_target = py_name,
     )
 
+def _require_import_of_common(name, cc_srcs):
+    # Additional Drake lint.
+    cc_srcs_args = ["$(location {})".format(cc_src) for cc_src in cc_srcs]
+    py_test_isolated(
+        name = "_" + name + "_require_import_of_common_test",
+        srcs = ["@drake//tools/lint:pybind_require_import_of_common"],
+        data = cc_srcs,
+        args = cc_srcs_args,
+        main = "@drake//tools/lint:pybind_require_import_of_common.py",
+        tags = ["lint"],
+    )
+
 # TODO(eric.cousineau): Consider making a `PybindProvider`, to sort
 # out dependencies, sources, etc, and simplify installation
 # dependencies.
@@ -112,7 +125,8 @@ def drake_pybind_library(
         py_imports = [],
         add_install = True,
         visibility = None,
-        testonly = None):
+        testonly = None,
+        require_import_of_common = True):
     """Declares a pybind11 library with C++ and Python portions.
 
     For parameters `cc_srcs`, `py_srcs`, `py_deps`, `py_imports`, please refer
@@ -133,6 +147,9 @@ def drake_pybind_library(
         where the modules will be installed.
     @param add_install (optional)
         Add install targets.
+    @param require_import_of_common
+        Requires that `py::module::import("pydrake.common")` be present in at
+        least one of the C++ source files.
     """
     if package_info == None:
         fail("`package_info` must be supplied.")
@@ -171,6 +188,12 @@ def drake_pybind_library(
             py_dest = package_info.py_dest,
             library_dest = package_info.py_dest,
             visibility = visibility,
+        )
+
+    if require_import_of_common:
+        _require_import_of_common(
+            name = name,
+            cc_srcs = cc_srcs,
         )
 
 def get_drake_py_installs(targets):

@@ -417,6 +417,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
 PYBIND11_MODULE(eigen_geometry, m) {
   m.doc() = "Bindings for Eigen geometric types.";
 
+  py::module::import("pydrake.common");
   py::module::import("pydrake.autodiffutils");
   py::module::import("pydrake.symbolic");
   type_visit([m](auto dummy) { DoScalarDependentDefinitions(m, dummy); },

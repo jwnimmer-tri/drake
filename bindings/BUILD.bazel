@@ -24,6 +24,7 @@ drake_pybind_library(
     # Since `package_info` must be a `struct`, we must define this in a `*.bzl`
     # file.
     package_info = get_bazel_workaround_4594_libdrake_package_info(),
+    require_import_of_common = False,
 )
 
 add_lint_tests(

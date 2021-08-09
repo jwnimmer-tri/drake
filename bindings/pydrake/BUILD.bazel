@@ -381,6 +381,7 @@ drake_pybind_library(
     cc_srcs = ["test/autodiffutils_test_util_py.cc"],
     package_info = PACKAGE_INFO,
     py_srcs = ["test/__init__.py"],
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 
@@ -404,6 +405,7 @@ drake_pybind_library(
     cc_srcs = ["test/text_logging_test_py.cc"],
     package_info = PACKAGE_INFO,
     py_srcs = ["test/__init__.py"],
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 
@@ -437,6 +439,7 @@ drake_pybind_library(
     cc_srcs = ["test/odr_test_module_py.cc"],
     package_info = PACKAGE_INFO,
     py_srcs = ["test/__init__.py"],
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 

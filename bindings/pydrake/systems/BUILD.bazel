@@ -427,6 +427,7 @@ drake_pybind_library(
         ":primitives_py",
         "//bindings/pydrake/common:cpp_template_py",
     ],
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 

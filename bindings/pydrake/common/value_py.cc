@@ -42,6 +42,8 @@ PYBIND11_MODULE(value, m) {
   m.doc() = "Bindings for //common:value";
   constexpr auto& doc = pydrake_doc.drake;
 
+  py::module::import("pydrake.common");
+
   // `AddValueInstantiation` will define methods specific to `T` for
   // `Value<T>`. Since Python is nominally dynamic, these methods are
   // effectively "virtual".

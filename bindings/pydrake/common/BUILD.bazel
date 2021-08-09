@@ -61,6 +61,7 @@ drake_pybind_library(
     py_srcs = [
         "__init__.py",
     ],
+    require_import_of_common = False,
     visibility = [
         "//bindings/pydrake:__pkg__",
     ],
@@ -449,6 +450,7 @@ drake_pybind_library(
     py_deps = [
         "//bindings/pydrake:module_py",
     ],
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 
@@ -535,6 +537,7 @@ drake_pybind_library(
     cc_so_name = "test/eigen_geometry_test_util",
     cc_srcs = ["test/eigen_geometry_test_util_py.cc"],
     package_info = PACKAGE_INFO,
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 
@@ -576,6 +579,7 @@ drake_pybind_library(
     add_install = False,
     cc_srcs = ["test/compatibility_test_util_py.cc"],
     package_info = PACKAGE_INFO,
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 
@@ -615,6 +619,7 @@ drake_pybind_library(
     cc_so_name = "test/wrap_test_util",
     cc_srcs = ["test/wrap_test_util_py.cc"],
     package_info = PACKAGE_INFO,
+    require_import_of_common = False,
     visibility = ["//visibility:private"],
 )
 
