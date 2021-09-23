@@ -271,7 +271,7 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "styleguide" not in excludes:
         styleguide_repository(name = "styleguide", mirrors = mirrors)
     if "suitesparse" not in excludes:
-        suitesparse_repository(name = "suitesparse")
+        suitesparse_repository(name = "suitesparse", mirrors = mirrors)
     if "tinyobjloader" not in excludes:
         tinyobjloader_repository(name = "tinyobjloader", mirrors = mirrors)
     if "tinyxml2" not in excludes:
@@ -291,7 +291,7 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "xmlrunner_py" not in excludes:
         xmlrunner_py_repository(name = "xmlrunner_py", mirrors = mirrors)
     if "yaml_cpp" not in excludes:
-        yaml_cpp_repository(name = "yaml_cpp")
+        yaml_cpp_repository(name = "yaml_cpp", mirrors = mirrors)
     if "zlib" not in excludes:
         zlib_repository(name = "zlib")
 

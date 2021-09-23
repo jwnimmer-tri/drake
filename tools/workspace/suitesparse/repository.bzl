@@ -1,9 +1,7 @@
 # -*- mode: python -*-
 
-load(
-    "@drake//tools/workspace:os.bzl",
-    "determine_os",
-)
+load("@drake//tools/workspace:github.bzl", "github_download_and_extract")
+load("@drake//tools/workspace:os.bzl", "determine_os")
 
 def _impl(repo_ctx):
     # Find the include path.
@@ -21,10 +19,18 @@ def _impl(repo_ctx):
             os_result.homebrew_prefix,
         )
     elif os_result.is_manylinux:
-        # TODO(jwnimmer-tri) Ideally, we wouldn't be hard-coding paths when
-        # using manylinux.
-        include = "/opt/drake-dependencies/include"
-        lib = "/opt/drake-dependencies/lib"
+        github_download_and_extract(
+            repo_ctx,
+            "DrTimothyAldenDavis/SuiteSparse",
+            "v5.1.2",
+            repo_ctx.attr.mirrors,
+            sha256 = "97dc5fdc7f78ff5018e6a1fcc841e17a9af4e5a35cebd62df6922349bf12959e",  # noqa
+        )
+        repo_ctx.symlink(
+            Label("@drake//tools/workspace/suitesparse:package-manylinux.BUILD.bazel"),  # noqa
+            "BUILD.bazel",
+        )
+        return
     else:
         fail("Unknown OS")
 
@@ -50,6 +56,9 @@ def _impl(repo_ctx):
     )
 
 suitesparse_repository = repository_rule(
+    attrs = {
+        "mirrors": attr.string_list_dict(),
+    },
     local = True,
     implementation = _impl,
 )

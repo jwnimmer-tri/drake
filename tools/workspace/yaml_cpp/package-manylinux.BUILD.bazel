@@ -1,0 +1,33 @@
+# -*- python -*-
+
+load("@drake//tools/install:install.bzl", "install")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
+
+cmake(
+    name = "yaml_cpp",
+    build_args = [
+        "-j$(( $(nproc) / 4))",
+        "--",
+        "-l$(( $(nproc) / 2))",
+    ],
+    cache_entries = {
+        "BUILD_SHARED_LIBS:BOOL:": "OFF",
+        "CMAKE_POSITION_INDEPENDENT_CODE:BOOL": "ON",
+        "YAML_CPP_BUILD_CONTRIB:BOOL": "OFF",
+        "YAML_CPP_BUILD_TESTS:BOOL": "OFF",
+        "YAML_CPP_BUILD_TOOLS:BOOL": "OFF",
+    },
+    lib_source = "//:all_srcs",
+    out_static_libs = ["libyaml-cpp.a"],
+    visibility = ["//visibility:public"],
+)
+
+install(
+    name = "install",
+    docs = ["LICENSE"],
+)

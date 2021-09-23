@@ -1,0 +1,29 @@
+# -*- python -*-
+
+load("@drake//tools/install:install.bzl", "install")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
+
+make(
+    name = "amd",
+    args = [
+        "-C", "AMD/Lib",
+        "INSTALL_LIB=$$INSTALLDIR$$/lib",
+        "INSTALL_INCLUDE=$$INSTALLDIR$$/include",
+        # "-j$(( $(nproc) / 4))",
+        # "-l$(( $(nproc) / 2))",
+    ],
+    lib_source = ":all_srcs",
+    out_static_libs = ["AMD/Lib/libamd.a"],
+    targets = ["libamd.a"],
+    visibility = ["//visibility:public"],
+)
+
+install(
+    name = "install",
+    docs = ["AMD/Doc/License.txt"],
+)
