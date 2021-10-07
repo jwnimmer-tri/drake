@@ -18,9 +18,10 @@ namespace test {
 
 namespace {
 
-// SCS uses `eps = 1e-5` by default.  For testing, we'll allow for some
-// small cumulative error beyond that.
-constexpr double kTol = 1e-4;
+// SCS uses `eps_abs = 1e-4` by default (see
+// https://www.cvxgrp.org/scs/api/settings.html?highlight=eps_abs).  For
+// testing, we'll allow for some small cumulative error beyond that.
+constexpr double kTol = 1e-3;
 
 }  // namespace
 
@@ -202,7 +203,7 @@ INSTANTIATE_TEST_SUITE_P(SCSTest, TestQPasSOCP,
 TEST_P(TestFindSpringEquilibrium, TestSOCP) {
   ScsSolver scs_solver;
   if (scs_solver.available()) {
-    SolveAndCheckSolution(scs_solver, kTol);
+    SolveAndCheckSolution(scs_solver, 4E-3);
   }
 }
 
@@ -215,7 +216,7 @@ GTEST_TEST(TestSOCP, MaximizeGeometricMeanTrivialProblem1) {
   ScsSolver solver;
   if (solver.available()) {
     const auto result = solver.Solve(prob.prog(), {}, {});
-    prob.CheckSolution(result, 4E-6);
+    prob.CheckSolution(result, 7E-4);
   }
 }
 
@@ -224,14 +225,14 @@ GTEST_TEST(TestSOCP, MaximizeGeometricMeanTrivialProblem2) {
   ScsSolver solver;
   if (solver.available()) {
     const auto result = solver.Solve(prob.prog(), {}, {});
-    // On Mac the accuracy is about 2.1E-6. On Linux it is about 2E-6.
-    prob.CheckSolution(result, 2.1E-6);
+    // On Mac the accuracy is about 2.1E-6. On Linux it is about 2E-3.
+    prob.CheckSolution(result, 2E-3);
   }
 }
 
 GTEST_TEST(TestSOCP, SmallestEllipsoidCoveringProblem) {
   ScsSolver solver;
-  SolveAndCheckSmallestEllipsoidCoveringProblems(solver, 4E-6);
+  SolveAndCheckSmallestEllipsoidCoveringProblems(solver, 2E-4);
 }
 
 TEST_P(QuadraticProgramTest, TestQP) {
@@ -353,7 +354,7 @@ GTEST_TEST(TestScs, UnivariateQuarticSos) {
   ScsSolver solver;
   if (solver.available()) {
     const auto result = solver.Solve(dut.prog());
-    dut.CheckResult(result, 1E-6);
+    dut.CheckResult(result, 2E-5);
   }
 }
 
@@ -371,7 +372,7 @@ GTEST_TEST(TestScs, SimpleSos1) {
   ScsSolver solver;
   if (solver.available()) {
     const auto result = solver.Solve(dut.prog());
-    dut.CheckResult(result, 1E-6);
+    dut.CheckResult(result, 2E-6);
   }
 }
 
@@ -380,7 +381,7 @@ GTEST_TEST(TestScs, MotzkinPolynomial) {
   ScsSolver solver;
   if (solver.is_available()) {
     const auto result = solver.Solve(dut.prog());
-    dut.CheckResult(result, 1E-6);
+    dut.CheckResult(result, 5E-6);
   }
 }
 

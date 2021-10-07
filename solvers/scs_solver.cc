@@ -242,7 +242,7 @@ void ParseLinearEqualityConstraint(
     *A_row_count += num_Ai_rows;
     num_linear_equality_constraints_rows += num_Ai_rows;
   }
-  cone->f += num_linear_equality_constraints_rows;
+  cone->z += num_linear_equality_constraints_rows;
 }
 
 void ParseBoundingBoxConstraint(const MathematicalProgram& prog,
@@ -797,8 +797,9 @@ void ScsSolver::DoSolve(
   solver_details.dual_objective = scs_info.dobj;
   solver_details.primal_residue = scs_info.res_pri;
   solver_details.residue_infeasibility = scs_info.res_infeas;
-  solver_details.residue_unbounded = scs_info.res_unbdd;
-  solver_details.relative_duality_gap = scs_info.rel_gap;
+  solver_details.residue_unbounded_a = scs_info.res_unbdd_a;
+  solver_details.residue_unbounded_p = scs_info.res_unbdd_p;
+  solver_details.duality_gap = scs_info.gap;
   solver_details.scs_setup_time = scs_info.setup_time;
   solver_details.scs_solve_time = scs_info.solve_time;
 

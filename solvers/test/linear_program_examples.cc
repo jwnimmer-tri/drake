@@ -7,6 +7,7 @@
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/solvers/ipopt_solver.h"
 #include "drake/solvers/mosek_solver.h"
+#include "drake/solvers/scs_solver.h"
 #include "drake/solvers/test/mathematical_program_test_util.h"
 
 using Eigen::Vector4d;
@@ -178,8 +179,11 @@ LinearProgram1::LinearProgram1(CostForm cost_form,
 
 void LinearProgram1::CheckSolution(
     const MathematicalProgramResult& result) const {
-  const double tol = GetSolverSolutionDefaultCompareTolerance(
-      result.get_solver_id());
+  double tol = GetSolverSolutionDefaultCompareTolerance(result.get_solver_id());
+  if (result.get_solver_id() == ScsSolver::id()) {
+    tol = 9E-5;
+  }
+
   EXPECT_TRUE(CompareMatrices(result.GetSolution(x_), x_expected_, tol,
                               MatrixCompareType::absolute));
   ExpectSolutionCostAccurate(*prog(), result, tol);
@@ -268,8 +272,10 @@ LinearProgram2::LinearProgram2(CostForm cost_form,
 
 void LinearProgram2::CheckSolution(
     const MathematicalProgramResult& result) const {
-  const double tol = GetSolverSolutionDefaultCompareTolerance(
-      result.get_solver_id());
+  double tol = GetSolverSolutionDefaultCompareTolerance(result.get_solver_id());
+  if (result.get_solver_id() == ScsSolver::id()) {
+    tol = 3E-3;
+  }
   EXPECT_TRUE(CompareMatrices(result.GetSolution(x_), x_expected_, tol,
                               MatrixCompareType::absolute));
   ExpectSolutionCostAccurate(*prog(), result, tol);
