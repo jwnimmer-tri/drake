@@ -11,6 +11,7 @@
 #include "drake/solvers/clp_solver.h"
 #include "drake/solvers/gurobi_solver.h"
 #include "drake/solvers/mosek_solver.h"
+#include "drake/solvers/scs_solver.h"
 #include "drake/solvers/snopt_solver.h"
 #include "drake/solvers/test/mathematical_program_test_util.h"
 
@@ -317,6 +318,8 @@ void QuadraticProgram3::CheckSolution(
   double tol = GetSolverSolutionDefaultCompareTolerance(result.get_solver_id());
   if (result.get_solver_id() == MosekSolver::id()) {
     tol = 1E-8;
+  } else if (result.get_solver_id() == ScsSolver::id()) {
+    tol = 2E-3;
   }
   EXPECT_TRUE(CompareMatrices(result.GetSolution(x_), x_expected_, tol,
                               MatrixCompareType::absolute));
@@ -449,9 +452,15 @@ void TestQPonUnitBallExample(const SolverInterface& solver) {
     ASSERT_NO_THROW(result = RunSolver(prog, solver));
 
     const auto& x_value = result.GetSolution(x);
-    EXPECT_TRUE(CompareMatrices(x_value, x_expected, 1e-5,
+    double kTol_x = 1E-5;
+    double kTol_cost = 1E-5;
+    if (solver.solver_id() == ScsSolver::id()) {
+      kTol_x = 3E-4;
+      kTol_cost = 5E-4;
+    }
+    EXPECT_TRUE(CompareMatrices(x_value, x_expected, kTol_x,
                                 MatrixCompareType::absolute));
-    ExpectSolutionCostAccurate(prog, result, 1E-5);
+    ExpectSolutionCostAccurate(prog, result, kTol_cost);
   }
 }
 
