@@ -3,17 +3,19 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <stdexcept>
 
 #include <fmt/format.h>
 
 #include "drake/solvers/osqp_solver.h"
+#include "drake/solvers/mathematical_program.h"
 
 namespace drake {
 namespace manipulation {
 namespace planner {
+namespace {
 
-namespace internal {
-DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
+DifferentialInverseKinematicsResult DifferentialInverseKinematicsImpl(
     const Eigen::Ref<const VectorX<double>>& q_current,
     const Eigen::Ref<const VectorX<double>>& v_current,
     const math::RigidTransform<double>& X_WE,
@@ -47,7 +49,8 @@ DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
       q_current, v_current, V_WE_E_scaled.head(num_cart_constraints),
       J_WE_E_scaled.topRows(num_cart_constraints), parameters);
 }
-}  // namespace internal
+
+}  // namespace
 
 std::ostream& operator<<(std::ostream& os,
                          const DifferentialInverseKinematicsStatus value) {
@@ -253,7 +256,7 @@ DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
                                     frame_E, Vector3<double>::Zero(),
                                     frame_W, frame_W, &J_WE);
 
-  return internal::DoDifferentialInverseKinematics(
+  return DoDifferentialInverseKinematicsImpl(
       plant.GetPositions(context), plant.GetVelocities(context),
       X_WE, J_WE, multibody::SpatialVelocity<double>(V_WE_desired), parameters);
 }

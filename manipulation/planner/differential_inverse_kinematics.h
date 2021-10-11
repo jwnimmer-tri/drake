@@ -1,21 +1,18 @@
 #pragma once
 
-#include <iostream>
-#include <limits>
+#include <ostream>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/multibody/math/spatial_algebra.h"
 #include "drake/multibody/plant/multibody_plant.h"
-#include "drake/solvers/mathematical_program.h"
+#include "drake/solvers/constraint.h"
 
 namespace drake {
 namespace manipulation {
@@ -28,8 +25,7 @@ enum class DifferentialInverseKinematicsStatus {
                      /// likely due to constraints.
 };
 
-std::ostream& operator<<(std::ostream& os,
-                         const DifferentialInverseKinematicsStatus value);
+std::ostream& operator<<(std::ostream&, DifferentialInverseKinematicsStatus);
 
 struct DifferentialInverseKinematicsResult {
   std::optional<VectorX<double>> joint_velocities{};
@@ -290,7 +286,7 @@ DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
 
 /**
  * A wrapper over
- * DoDifferentialInverseKinematics(q_current, v_current, V, J, params)
+ * DoDifferentialInverseKinematics(q_current, v_current, V, J, parameters)
  * that tracks frame E's spatial velocity.
  * q_current and v_current are taken from @p context. V is computed by first
  * transforming @p V_WE to V_WE_E, then taking the element-wise product between
@@ -318,8 +314,8 @@ DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
 /**
  * A wrapper over
  * DoDifferentialInverseKinematics(robot, context, V_WE_desired, frame_E,
- * params) that tracks frame E's pose in the world frame.
- * q_current and v_current are taken from @p cache. V_WE is computed by
+ * parameters) that tracks frame E's pose in the world frame.
+ * q_current and v_current are taken from @p context. V_WE is computed by
  * ComputePoseDiffInCommonFrame(X_WE, X_WE_desired) / dt, where X_WE is computed
  * from @p context, and dt is taken from @p parameters.
  * @param robot A MultibodyPlant model.
@@ -340,18 +336,6 @@ DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
     const Isometry3<double>& X_WE_desired,
     const multibody::Frame<double>& frame_E,
     const DifferentialInverseKinematicsParameters& parameters);
-
-#ifndef DRAKE_DOXYGEN_CXX
-namespace internal {
-DifferentialInverseKinematicsResult DoDifferentialInverseKinematics(
-    const Eigen::Ref<const VectorX<double>>&,
-    const Eigen::Ref<const VectorX<double>>&,
-    const math::RigidTransform<double>&,
-    const Eigen::Ref<const Matrix6X<double>>&,
-    const multibody::SpatialVelocity<double>&,
-    const DifferentialInverseKinematicsParameters&);
-}  // namespace internal
-#endif
 
 }  // namespace planner
 }  // namespace manipulation
