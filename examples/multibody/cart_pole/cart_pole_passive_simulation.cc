@@ -9,6 +9,7 @@
 #include "drake/lcm/drake_lcm.h"
 #include "drake/multibody/parsing/parser.h"
 #include "drake/multibody/plant/multibody_plant.h"
+#include "drake/multibody/plant/multibody_plant_config_functions.h"
 #include "drake/multibody/tree/prismatic_joint.h"
 #include "drake/multibody/tree/revolute_joint.h"
 #include "drake/systems/analysis/simulator.h"
@@ -44,14 +45,13 @@ DEFINE_double(time_step, 0,
 int do_main() {
   systems::DiagramBuilder<double> builder;
 
-  SceneGraph<double>& scene_graph = *builder.AddSystem<SceneGraph>();
-  scene_graph.set_name("scene_graph");
+  drake::multibody::MultibodyPlantConfig config;
+  config.time_step = FLAGS_time_step;
+  auto [cart_pole, scene_graph] = AddMultibodyPlant(config, &builder);
 
   // Make and add the cart_pole model.
   const std::string full_name = FindResourceOrThrow(
       "drake/examples/multibody/cart_pole/cart_pole.sdf");
-  MultibodyPlant<double>& cart_pole =
-      *builder.AddSystem<MultibodyPlant>(FLAGS_time_step);
   Parser(&cart_pole, &scene_graph).AddModelFromFile(full_name);
 
   // Now the model is complete.
