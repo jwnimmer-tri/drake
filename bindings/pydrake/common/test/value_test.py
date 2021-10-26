@@ -51,22 +51,60 @@ class TestValue(unittest.TestCase):
         self.assertTrue("unique_ptr" in value.set_value.__doc__)
 
     def test_abstract_value_py_object(self):
-        expected = {"x": 10}
-        value = Value[object](expected)
-        # Value is by reference, *not* by copy.
-        self.assertTrue(value.get_value() is expected)
-        # Update mutable version.
-        value.get_mutable_value()["y"] = 30
-        self.assertEqual(value.get_value(), expected)
+        # The contained object is captured by reference, *not* by copying.
+        contained = {"a": 10}
+        value = Value[object](contained)
+        self.assertTrue(value.get_value() is contained)
+
+        # Change the conatined object; the reference remains intact.
+        value.get_mutable_value()["b"] = 20
+        self.assertTrue(value.get_value() is contained)
+        self.assertEqual(value.get_value().get("b"), 20)
+
         # Cloning the value should perform a deep copy of the Python object.
-        value_clone = copy.deepcopy(value)
-        self.assertEqual(value_clone.get_value(), expected)
-        self.assertTrue(value_clone.get_value() is not expected)
+        value_clone = value.Clone()
+        self.assertTrue(value.get_value() is contained)
+        self.assertTrue(value_clone.get_value() is not contained)
+        self.assertEqual(value_clone.get_value(), contained)
+        value_clone.get_mutable_value()["c"] = 30
+        self.assertEqual(value.get_value(), {"a": 10, "b": 20})
+        self.assertEqual(value_clone.get_value(),
+                         {"a": 10, "b": 20, "c": 30})
+
+        # Deep copying the value should perform a deep copy of the Python
+        # object.
+        value_deepcopy = copy.deepcopy(value)
+        self.assertTrue(value.get_value() is contained)
+        self.assertTrue(value_deepcopy.get_value() is not contained)
+        self.assertEqual(value_deepcopy.get_value(), contained)
+        value_deepcopy.get_mutable_value()["d"] = 40
+        self.assertEqual(value.get_value(), {"a": 10, "b": 20})
+        self.assertEqual(value_deepcopy.get_value(),
+                         {"a": 10, "b": 20, "d": 40})
+
         # Using `set_value` on the original value changes object reference.
-        expected_new = {"a": 20}
-        value.set_value(expected_new)
-        self.assertEqual(value.get_value(), expected_new)
-        self.assertTrue(value.get_value() is not expected)
+        new_contained = {"a": 20}
+        value.set_value(new_contained)
+        self.assertTrue(value.get_value() is new_contained)
+        self.assertTrue(value.get_value() is not contained)
+
+    def test_abstract_value_py_object_user(self):
+        # The contained object is captured by reference.
+        class Stuff:
+            def __init__(self):
+                self.member = None
+        contained = Stuff()
+        contained.member = ["a"]
+        value = Value[object](contained)
+        self.assertTrue(value.get_value() is contained)
+
+        # Cloning the value should perform a deep copy of the Python object.
+        value_clone = value.Clone()
+        self.assertTrue(value.get_value() is contained)
+        self.assertTrue(value_clone.get_value() is not contained)
+        value_clone.get_mutable_value().member.append("b")
+        self.assertEqual(value.get_value().member, ["a"])
+        self.assertEqual(value_clone.get_value().member, ["a", "b"])
 
     def assert_equal_but_not_aliased(self, a, b):
         self.assertEqual(a, b)
