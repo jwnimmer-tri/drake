@@ -53,11 +53,10 @@ cc_library(
         "src/urdf/urdf_world/types.h",
         "src/urdf/urdf_world/world.h",
     ],
-    # TODO(jamiesnape): Enable visibility after resolving warnings such as
-    # "Direct access in function means the weak symbol cannot be overridden at
-    # runtime. This was likely caused by different translation units being
-    # compiled with different visibility settings."
-    copts = ["-w"],
+    copts = [
+        "-w",
+        "-fvisibility=hidden",
+    ],
     defines = ["URDFDOM_STATIC"],
     includes = ["src/urdf"],
     linkstatic = 1,
@@ -262,11 +261,10 @@ cc_library(
         ":src/EmbeddedSdf.cc",
     ],
     hdrs = SDFORMAT_ALL_PUBLIC_HDRS,
-    # TODO(jamiesnape): Enable visibility after resolving warnings such as
-    # "Direct access in function means the weak symbol cannot be overridden at
-    # runtime. This was likely caused by different translation units being
-    # compiled with different visibility settings."
-    copts = ["-w"],
+    copts = [
+        "-w",
+        "-fvisibility=hidden",
+    ],
     defines = ["SDFORMAT_STATIC_DEFINE", "SDFORMAT_DISABLE_CONSOLE_LOGFILE"],
     includes = ["include"],
     linkstatic = 1,
