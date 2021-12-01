@@ -56,6 +56,7 @@ cc_library(
     copts = [
         "-w",
         "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
     ],
     defines = ["URDFDOM_STATIC"],
     includes = ["src/urdf"],

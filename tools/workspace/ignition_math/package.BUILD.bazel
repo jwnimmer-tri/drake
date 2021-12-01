@@ -69,7 +69,7 @@ generate_file(
 #ifdef IGNITION_MATH_VISIBLE
 #undef IGNITION_MATH_VISIBLE
 #endif
-#define IGNITION_MATH_VISIBLE __attribute__ ((visibility("default")))
+#define IGNITION_MATH_VISIBLE __attribute__ ((visibility("hidden")))
 
 #ifdef IGN_DEPRECATED
 #undef IGN_DEPRECATED
@@ -200,9 +200,9 @@ cc_library(
         "src/Vector3Stats.cc",
     ] + private_headers + public_headers,
     copts = [
-        # TODO(jwnimmer-tri) Ideally, we should use hidden visibility for the
-        # private builds of our dependencies.
         "-w",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
     ],
     linkstatic = True,
     includes = ["include"],
