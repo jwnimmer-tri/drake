@@ -11,15 +11,18 @@ namespace internal {
 
 // Helper function to express an ignition::math::Vector3d instance as
 // a Vector3d instance.
-Eigen::Vector3d ToVector3(const ignition::math::Vector3d& vector);
+Eigen::Vector3d ToVector3(const ignition::math::Vector3d& vector)
+    __attribute__((visibility("hidden")));
 
 // Helper function to express an ignition::math::Pose3d instance as
 // a RigidTransform instance.
-math::RigidTransformd ToRigidTransform(const ignition::math::Pose3d& pose);
+math::RigidTransformd ToRigidTransform(const ignition::math::Pose3d& pose)
+    __attribute__((visibility("hidden")));
 
 // Helper function to express a RigidTransform instance as an
 // ignition::math::Pose3d instance.
-ignition::math::Pose3d ToIgnitionPose3d(const math::RigidTransformd& pose);
+ignition::math::Pose3d ToIgnitionPose3d(const math::RigidTransformd& pose)
+    __attribute__((visibility("hidden")));
 
 }  // namespace internal
 }  // namespace multibody
