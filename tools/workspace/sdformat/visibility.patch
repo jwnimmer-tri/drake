@@ -1,0 +1,20 @@
+--- include/sdf/system_util.hh.orig	2021-09-30 15:33:35.000000000 -0700
++++ include/sdf/system_util.hh	2021-11-30 20:59:15.612714097 -0800
+@@ -25,6 +25,9 @@
+  * Use to represent "symbol hidden" if supported
+  */
+ 
++#define SDFORMAT_VISIBLE __attribute__ ((visibility ("hidden")))
++#define SDFORMAT_HIDDEN  __attribute__ ((visibility ("hidden")))
++#if 0
+ #if defined _WIN32 || defined __CYGWIN__
+   #ifdef BUILDING_SDFORMAT_SHARED
+     #define SDFORMAT_VISIBLE __declspec(dllexport)
+@@ -42,6 +45,7 @@
+     #define SDFORMAT_HIDDEN
+   #endif
+ #endif
++#endif
+ 
+ // SDF_VISIBLE_HH_
+ #endif
