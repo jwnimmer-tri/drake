@@ -59,7 +59,7 @@ generate_file(
 #ifdef IGNITION_UTILS_VISIBLE
 #undef IGNITION_UTILS_VISIBLE
 #endif
-#define IGNITION_UTILS_VISIBLE __attribute__ ((visibility("default")))
+#define IGNITION_UTILS_VISIBLE __attribute__ ((visibility("hidden")))
 
 #ifdef IGN_DEPRECATED
 #undef IGN_DEPRECATED
