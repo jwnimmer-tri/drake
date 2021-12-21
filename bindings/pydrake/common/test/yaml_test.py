@@ -203,3 +203,24 @@ class TestYaml(unittest.TestCase):
             }
         }
         self.assertDictEqual(yaml_load_data(data, private=True), expected)
+
+    def test_alias_removal(self):
+        """When loading, object graph alises are removed (copied)."""
+        data = yaml_load_data("""
+        foo:
+          a: &id1 {c: 1, d: 2}
+          b: *id1
+        """)
+        a = data["foo"]["a"]
+        b = data["foo"]["b"]
+        self.assertNotEqual(id(a), id(b))
+
+        # Mutate one sub-dictionary.  The other one is unaffected.
+        a["d"] = 3
+        self.assertEqual(yaml_dump(data), dedent(
+            r"""
+            foo:
+              a: {c: 1, d: 3}
+              b: {c: 1, d: 2}
+            """
+        ).lstrip())

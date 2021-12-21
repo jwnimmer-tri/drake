@@ -29,6 +29,66 @@ class _SchemaLoader(yaml.loader.SafeLoader):
 _SchemaLoader.add_multi_constructor("", _SchemaLoader._handle_multi_variant)
 
 
+def _remove_aliases(data, *, finished_ids=None, working_ids=None):
+    """Given YAML data (a dict, list, or primitive), replaces any aliased lists
+    or dicts with copies, so that only read-only data is aliased.  Returns the
+    (possibly copied) data.
+    """
+    # Bootstrap the worklists upon the first call.
+    if finished_ids is None:
+        assert working_ids is None
+        finished_ids = set()
+        working_ids = set()
+
+    # Guard against cycles in the data. Our YAML reader only supports trees,
+    # not graphs.
+    data_id = id(data)
+    if data_id in working_ids:
+        raise RuntimeError("Infinite recursion")
+
+    # Check for compound objects (i.e., collections).
+    is_sequence = isinstance(data, list)
+    is_mapping = isinstance(data, dict)
+    is_compound = is_sequence or is_mapping
+
+    # Any non-compound objects should be read-only (str, float, etc).
+    # Their copy operator should be a no-op.
+    if not is_compound:
+        check = copy.copy(data)
+        assert id(check) == data_id, f"Unexpected mutable data {data!r}"
+        return data
+
+    # Handle compound objects.
+    assert is_sequence or is_mapping
+    if data_id in finished_ids:
+        # We have seen this object once before.  We need to return a copy,
+        # instead of the alias.
+        return copy.deepcopy(data)
+
+    # This is the first time we've seen it.
+    working_ids.add(data_id)
+    if is_sequence:
+        new_data = list()
+        for old_item in data:
+            new_item = _remove_aliases(
+                data=old_item,
+                finished_ids=finished_ids,
+                working_ids=working_ids)
+            new_data.append(new_item)
+    else:
+        assert is_mapping
+        new_data = dict()
+        for key, old_item in data.items():
+            new_item = _remove_aliases(
+                data=old_item,
+                finished_ids=finished_ids,
+                working_ids=working_ids)
+            new_data[key] = new_item
+    working_ids.remove(data_id)
+    finished_ids.add(id(new_data))
+    return new_data
+
+
 def yaml_load_data(data, *, private=False):
     """Loads and returns the given `data` str as a yaml object, while also
     accounting for variant-like type tags.  The known variant yaml tags
@@ -48,6 +108,7 @@ def yaml_load_data(data, *, private=False):
         ]
         for key in keys_to_remove:
             del result[key]
+    result = _remove_aliases(result)
     return result
 
 
