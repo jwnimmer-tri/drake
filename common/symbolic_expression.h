@@ -1423,6 +1423,9 @@ MatrixX<Expression> Jacobian(const Eigen::Ref<const VectorX<Expression>>& f,
 MatrixX<Expression> Jacobian(const Eigen::Ref<const VectorX<Expression>>& f,
                              const Eigen::Ref<const VectorX<Variable>>& vars);
 
+/// Checks if `e` is affine in `vars`.
+bool IsAffine(const Expression& e, const Variables& vars);
+
 /// Checks if every element in `m` is affine in `vars`.
 /// @note If `m` is an empty matrix, it returns true.
 bool IsAffine(const Eigen::Ref<const MatrixX<Expression>>& m,
