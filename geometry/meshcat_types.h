@@ -241,6 +241,23 @@ struct MeshFileGeometryData : public GeometryData {
   }
 };
 
+struct StlGeometryData : public GeometryData {
+  std::string data;
+
+  // NOLINTNEXTLINE(runtime/references) cpplint disapproves of msgpack choices.
+  void msgpack_pack(msgpack::packer<std::stringstream>& o) const override {
+    o.pack_map(4);
+    o.pack("type");
+    o.pack("_meshfile");
+    PACK_MAP_VAR(o, uuid);
+    o.pack("format");
+    o.pack("stl");
+    msgpack::type::ext ext_data(0x12, data.data(), data.size());
+    o.pack("data");
+    o.pack(ext_data);
+  }
+};
+
 struct BufferGeometryData : public GeometryData {
   // We deviate from the meshcat data structure, since it is an unnecessarily
   // deep hierarchy of dictionaries, and simply implement the packer manually.

@@ -424,7 +424,12 @@ class MeshcatShapeReifier : public ShapeReifier {
       matrix(0, 0) = mesh.scale();
       matrix(1, 1) = mesh.scale();
       matrix(2, 2) = mesh.scale();
-    } else {  // not obj or no mtllib.
+    } else if (format == "stl") {
+      auto geometry = std::make_unique<internal::StlGeometryData>();
+      geometry->uuid = uuids::to_string((*uuid_generator_)());
+      geometry->data = std::move(mesh_data);
+      lumped.geometry = std::move(geometry);
+    } else {  // not stl; not obj-with-mtllib.
       auto geometry = std::make_unique<internal::MeshFileGeometryData>();
       geometry->uuid = uuids::to_string((*uuid_generator_)());
       geometry->format = std::move(format);
@@ -437,7 +442,7 @@ class MeshcatShapeReifier : public ShapeReifier {
       matrix(1, 1) = mesh.scale();
       matrix(2, 2) = mesh.scale();
     }
-    }
+  }
 
   void ImplementGeometry(const Mesh& mesh, void* data) override {
     ImplementMesh(mesh, data);
