@@ -14,6 +14,7 @@
 #include "drake/common/eigen_types.h"
 #include "drake/common/polynomial.h"
 #include "drake/common/symbolic.h"
+#include "drake/common/thread_local_ptr.h"
 #include "drake/math/autodiff.h"
 #include "drake/solvers/function.h"
 
@@ -56,11 +57,7 @@ class EvaluatorBase {
    * @param[in] x A `num_vars` x 1 input vector.
    * @param[out] y A `num_outputs` x 1 output vector.
    */
-  void Eval(const Eigen::Ref<const AutoDiffVecXd>& x, AutoDiffVecXd* y) const {
-    DRAKE_ASSERT(x.rows() == num_vars_ || num_vars_ == Eigen::Dynamic);
-    DoEval(x, y);
-    DRAKE_ASSERT(y->rows() == num_outputs_);
-  }
+  void Eval(const Eigen::Ref<const AutoDiffVecXd>& x, AutoDiffVecXd* y) const;
 
   /**
    * Evaluates the expression.
@@ -209,6 +206,9 @@ class EvaluatorBase {
   // false, the gradient matrix is regarded as non-sparse, i.e., every entry of
   // the gradient matrix can be non-zero.
   std::optional<std::vector<std::pair<int, int>>> gradient_sparsity_pattern_;
+  // XXX
+  struct Scratch;
+  mutable drake::internal::thread_local_ptr<Scratch> scratch_;
 };
 
 /**

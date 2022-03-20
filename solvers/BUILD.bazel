@@ -149,6 +149,7 @@ drake_cc_library(
         "//common:nice_type_name",
         "//common:polynomial",
         "//common:symbolic",
+        "//common:thread_local_ptr",
         "//math:autodiff",
         "//math:matrix_util",
     ],

@@ -13,6 +13,21 @@ using Eigen::VectorXd;
 namespace drake {
 namespace solvers {
 
+struct EvaluatorBase::Scratch {
+  AutoDiffVecXd dx;
+  AutoDiffVecXd dy;
+};
+
+// Moved to cc file only for demo purposes.
+void EvaluatorBase::Eval(const Eigen::Ref<const AutoDiffVecXd>& x, AutoDiffVecXd* y) const {
+  DRAKE_ASSERT(x.rows() == num_vars_ || num_vars_ == Eigen::Dynamic);
+  Scratch& scratch = *scratch_;
+  scratch.dx = x;
+  DoEval(scratch.dx, &scratch.dy);
+  *y = scratch.dy;
+  DRAKE_ASSERT(y->rows() == num_outputs_);
+}
+
 std::ostream& EvaluatorBase::Display(
     std::ostream& os, const VectorX<symbolic::Variable>& vars) const {
   const int num_vars = this->num_vars();

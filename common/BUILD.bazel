@@ -57,6 +57,7 @@ drake_cc_package_library(
         ":symbolic_latex",
         ":symbolic_trigonometric_polynomial",
         ":temp_directory",
+        ":thread_local_ptr",
         ":type_safe_index",
         ":unused",
         ":value",
@@ -553,6 +554,15 @@ drake_cc_library(
         "@gflags",
     ],
     alwayslink = 1,
+)
+
+drake_cc_library(
+    name = "thread_local_ptr",
+    hdrs = ["thread_local_ptr.h"],
+    deps = [
+        ":essential",
+        # ":hash",
+    ],
 )
 
 drake_cc_library(
