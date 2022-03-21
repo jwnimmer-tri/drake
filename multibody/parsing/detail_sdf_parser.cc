@@ -346,7 +346,9 @@ Vector3d ExtractJointAxis(
 // Right now we only parse the <damping> tag.
 // An exception is thrown if the provided damping value is negative or if there
 // is no <axis> under <joint>.
-double ParseJointDamping(const sdf::Joint& joint_spec) {
+double ParseJointDamping(
+//XXX
+    const sdf::Joint& joint_spec) {
   DRAKE_DEMAND(joint_spec.Type() == sdf::JointType::REVOLUTE ||
       joint_spec.Type() == sdf::JointType::PRISMATIC ||
       joint_spec.Type() == sdf::JointType::UNIVERSAL ||
@@ -373,6 +375,7 @@ double ParseJointDamping(const sdf::Joint& joint_spec) {
 // effort limit of zero are not actuated.
 // Only available for "revolute" and "prismatic" joints.
 void AddJointActuatorFromSpecification(
+//XXX
     const sdf::Joint &joint_spec, const Joint<double>& joint,
     MultibodyPlant<double>* plant) {
   DRAKE_THROW_UNLESS(plant != nullptr);
@@ -421,6 +424,7 @@ void AddJointActuatorFromSpecification(
 // Only available for "revolute" joints. The units for spring
 // reference is radians and the units for spring stiffness is N⋅m/rad.
 void AddRevoluteSpringFromSpecification(
+//XXX
     const sdf::Joint &joint_spec, const RevoluteJoint<double>& joint,
     MultibodyPlant<double>* plant) {
   DRAKE_THROW_UNLESS(plant != nullptr);
@@ -453,6 +457,7 @@ void AddRevoluteSpringFromSpecification(
 // Velocity and acceleration limits are always >= 0.  This method throws an
 // exception if the joint type is not one of revolute or prismatic.
 std::tuple<double, double, double, double> ParseJointLimits(
+//XXX
     const sdf::Joint& joint_spec) {
   DRAKE_THROW_UNLESS(joint_spec.Type() == sdf::JointType::REVOLUTE ||
       joint_spec.Type() == sdf::JointType::PRISMATIC);
@@ -809,6 +814,7 @@ const Frame<double>& AddFrameFromSpecification(
 
 Eigen::Vector3d ParseVector3(const sdf::ElementPtr node,
                              const char* element_name) {
+//XXX
   if (!node->HasElement(element_name)) {
     throw std::runtime_error(
         fmt::format("<{}>: Unable to find the <{}> child tag.", node->GetName(),
@@ -821,6 +827,7 @@ Eigen::Vector3d ParseVector3(const sdf::ElementPtr node,
 }
 
 const Frame<double>& ParseFrame(const sdf::ElementPtr node,
+//XXX
                                 ModelInstanceIndex model_instance,
                                 MultibodyPlant<double>* plant,
                                 const char* element_name) {
@@ -846,6 +853,7 @@ const Frame<double>& ParseFrame(const sdf::ElementPtr node,
 void AddDrakeJointFromSpecification(const sdf::ElementPtr node,
                                     ModelInstanceIndex model_instance,
                                     MultibodyPlant<double>* plant) {
+//XXX
   if (!node->HasAttribute("type")) {
     throw std::runtime_error(
         "<drake:joint>: Unable to find the 'type' attribute.");
@@ -881,6 +889,7 @@ void AddDrakeJointFromSpecification(const sdf::ElementPtr node,
 }
 
 const LinearBushingRollPitchYaw<double>& AddBushingFromSpecification(
+//XXX
     const sdf::ElementPtr node,
     ModelInstanceIndex model_instance,
     MultibodyPlant<double>* plant) {
@@ -923,6 +932,7 @@ bool AreWelded(
 void ParseCollisionFilterGroup(ModelInstanceIndex model_instance,
                                const sdf::Model& model,
                                MultibodyPlant<double>* plant) {
+//XXX
   auto next_child_element = [](const ElementNode& data_element,
                                const char* element_name) {
     return std::get<sdf::ElementPtr>(data_element)
