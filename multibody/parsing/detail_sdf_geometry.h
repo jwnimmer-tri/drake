@@ -28,7 +28,8 @@ using ResolveFilename = std::function<std::string (std::string)>;
  If no recognizable geometry is specified, nullptr is returned. If the geometry
  is recognized, but malformed, an exception is thrown.  */
 std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
-    const sdf::Geometry& sdf_geometry, ResolveFilename resolve_filename);
+    const drake::internal::DiagnosticPolicy& diagnostic,
+    const sdf::Geometry& sdf_geometry, const ResolveFilename& resolve_filename);
 
 /* Given an sdf::Visual object representing a <visual> element from an SDF
  file, this method makes a new drake::geometry::GeometryInstance object from
@@ -67,7 +68,8 @@ std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
  This feature is one way to provide multiple visual representations of a body.
  */
 std::unique_ptr<geometry::GeometryInstance> MakeGeometryInstanceFromSdfVisual(
-    const sdf::Visual& sdf_visual, ResolveFilename resolve_filename,
+    const drake::internal::DiagnosticPolicy& diagnostic,
+    const sdf::Visual& sdf_visual, const ResolveFilename& resolve_filename,
     const math::RigidTransformd& X_LG);
 
 /* Extracts the material properties from the given sdf::Visual object.
@@ -119,7 +121,8 @@ std::unique_ptr<geometry::GeometryInstance> MakeGeometryInstanceFromSdfVisual(
  there is no material tag, no material property tags, or no successfully
  parsed material property tags, the property set will be empty.  */
 geometry::IllustrationProperties MakeVisualPropertiesFromSdfVisual(
-    const sdf::Visual& sdf_visual, ResolveFilename resolve_filename);
+    const drake::internal::DiagnosticPolicy& diagnostic,
+    const sdf::Visual& sdf_visual, const ResolveFilename& resolve_filename);
 
 /* Computes the pose `X_LC` of frame C (the "canonical frame" of the geometry)
  relative to the link L containing the collision, given an `sdf_collision`
@@ -204,6 +207,7 @@ geometry::ProximityProperties MakeProximityPropertiesForCollision(
  If mu or mu2 (or both) are not found, it returns the default coefficients of
  mu = mu2 = 1, consistent with the SDFormat specification. */
 CoulombFriction<double> MakeCoulombFrictionFromSdfCollisionOde(
+    const drake::internal::DiagnosticPolicy& diagnostic,
     const sdf::Collision& sdf_collision);
 
 }  // namespace internal

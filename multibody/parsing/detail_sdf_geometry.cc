@@ -64,23 +64,26 @@ const sdf::Element* MaybeGetChildElement(
 // SDF file and no `default_value` is supplied, or the tag has a bad or missing
 // value.
 template <typename T>
-T GetChildElementValue(const sdf::Element& element,
+T GetChildElementValue(const DiagnosticPolicy& diagnostic,
+                       const sdf::Element& element,
                        const std::string& child_name,
                        const std::optional<T>& default_value = std::nullopt) {
   // TODO(amcastro-tri): unit tests for different error paths are needed.
   if (!element.HasElement(child_name)) {
     if (default_value) return *default_value;
-    throw std::runtime_error(
+    diagnostic.Error(fmt::format(
         "Element <" + child_name + "> is required within element "
-            "<" + element.GetName() + ">.");
+            "<" + element.GetName() + ">."));
+    return T{};
   }
   std::pair<T, bool> value_pair = element.Get<T>(child_name, T());
   if (value_pair.second == false) {
-    // TODO(amcastro-tri): Figure out a way to throw meaningful error messages
+    // TODO(amcastro-tri): Figure out a way to produce meaningful error messages
     // with line/row numbers within the file.
-    throw std::runtime_error(
+    diagnostic.Error(fmt::format(
         "Invalid value for <" + child_name + "> within element "
-            "<" + element.GetName() + ">.");
+            "<" + element.GetName() + ">."));
+    return T{};
   }
   return value_pair.first;
 }
@@ -88,7 +91,8 @@ T GetChildElementValue(const sdf::Element& element,
 }  // namespace
 
 std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
-    const sdf::Geometry& sdf_geometry, ResolveFilename resolve_filename) {
+    const DiagnosticPolicy& diagnostic, const sdf::Geometry& sdf_geometry,
+    const ResolveFilename& resolve_filename) {
   // TODO(amcastro-tri): unit tests for different error paths are needed.
 
   switch (sdf_geometry.Type()) {
@@ -102,19 +106,19 @@ std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
         const sdf::ElementPtr capsule_element =
             sdf_geometry.Element()->GetElement("drake:capsule");
         const double radius =
-            GetChildElementValue<double>(*capsule_element, "radius");
+            GetChildElementValue<double>(diagnostic, *capsule_element, "radius");
         const double length =
-            GetChildElementValue<double>(*capsule_element, "length");
+            GetChildElementValue<double>(diagnostic, *capsule_element, "length");
         return make_unique<geometry::Capsule>(radius, length);
       } else if (sdf_geometry.Element()->HasElement("drake:ellipsoid")) {
         const sdf::ElementPtr ellipsoid_element =
             sdf_geometry.Element()->GetElement("drake:ellipsoid");
         const double a =
-            GetChildElementValue<double>(*ellipsoid_element, "a");
+            GetChildElementValue<double>(diagnostic, *ellipsoid_element, "a");
         const double b =
-            GetChildElementValue<double>(*ellipsoid_element, "b");
+            GetChildElementValue<double>(diagnostic, *ellipsoid_element, "b");
         const double c =
-            GetChildElementValue<double>(*ellipsoid_element, "c");
+            GetChildElementValue<double>(diagnostic, *ellipsoid_element, "c");
         return make_unique<geometry::Ellipsoid>(a, b, c);
       }
 
@@ -152,12 +156,12 @@ std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
       DRAKE_DEMAND(mesh_element != nullptr);
       const std::string file_name =
           resolve_filename(
-              GetChildElementValue<std::string>(*mesh_element, "uri"));
+              GetChildElementValue<std::string>(diagnostic, *mesh_element, "uri"));
       double scale = 1.0;
       if (mesh_element->HasElement("scale")) {
         const ignition::math::Vector3d& scale_vector =
             GetChildElementValue<ignition::math::Vector3d>(
-                *mesh_element, "scale");
+                diagnostic, *mesh_element, "scale");
         // geometry::Mesh only supports isotropic scaling and therefore we
         // enforce it.
         if (!(scale_vector.X() == scale_vector.Y() &&
@@ -194,7 +198,8 @@ std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
 }
 
 std::unique_ptr<GeometryInstance> MakeGeometryInstanceFromSdfVisual(
-    const sdf::Visual& sdf_visual, ResolveFilename resolve_filename,
+    const DiagnosticPolicy& diagnostic, const sdf::Visual& sdf_visual,
+    const ResolveFilename& resolve_filename,
     const math::RigidTransformd& X_LG) {
   const sdf::Geometry& sdf_geometry = *sdf_visual.Geom();
   if (sdf_geometry.Type() == sdf::GeometryType::EMPTY) {
@@ -252,19 +257,20 @@ std::unique_ptr<GeometryInstance> MakeGeometryInstanceFromSdfVisual(
     }
   }
 
-  auto shape = MakeShapeFromSdfGeometry(sdf_geometry, resolve_filename);
+  auto shape = MakeShapeFromSdfGeometry(diagnostic, sdf_geometry, resolve_filename);
   if (shape == nullptr) {
     return nullptr;
   }
   auto instance =
       make_unique<GeometryInstance>(X_LC, move(shape), sdf_visual.Name());
   instance->set_illustration_properties(
-      MakeVisualPropertiesFromSdfVisual(sdf_visual, resolve_filename));
+      MakeVisualPropertiesFromSdfVisual(diagnostic, sdf_visual, resolve_filename));
   return instance;
 }
 
 IllustrationProperties MakeVisualPropertiesFromSdfVisual(
-    const sdf::Visual& sdf_visual, ResolveFilename resolve_filename) {
+    const DiagnosticPolicy& diagnostic, const sdf::Visual& sdf_visual,
+    const ResolveFilename& resolve_filename) {
   // This doesn't directly use the sdf::Material API on purpose. In the current
   // version, if a parameter (e.g., diffuse) is missing it will *not* be
   // included in the geometry properties. Using the sdf::Material, it is
@@ -296,10 +302,11 @@ IllustrationProperties MakeVisualPropertiesFromSdfVisual(
         const std::string resolved_path =
             resolve_filename(texture_name);
         if (resolved_path.empty()) {
-          throw std::runtime_error(fmt::format(
+          diagnostic.Error(fmt::format(
               "Unable to locate the texture file: {}", texture_name));
-        }
-        properties.AddProperty("phong", "diffuse_map", resolved_path);
+        } else {
+          properties.AddProperty("phong", "diffuse_map", resolved_path);
+	}
       }
     }
 
@@ -418,7 +425,8 @@ ProximityProperties MakeProximityPropertiesForCollision(
         [drake_element](const char* element_name) -> std::optional<double> {
       std::optional<double> result;
       if (MaybeGetChildElement(*drake_element, element_name) != nullptr) {
-        result = GetChildElementValue<double>(*drake_element, element_name);
+	DiagnosticPolicy inner_diagnostic;
+        result = GetChildElementValue<double>(inner_diagnostic, *drake_element, element_name);
       }
       return result;
     };
@@ -455,7 +463,7 @@ ProximityProperties MakeProximityPropertiesForCollision(
                               geometry::internal::kFriction)) {
     properties.AddProperty(
         geometry::internal::kMaterialGroup, geometry::internal::kFriction,
-        MakeCoulombFrictionFromSdfCollisionOde(sdf_collision));
+        MakeCoulombFrictionFromSdfCollisionOde(diagnostic, sdf_collision));
   } else {
     // We parsed friction from <drake:proximity_properties>; test for the
     // existence of the legacy mechanism and warn we're not using it.
@@ -484,7 +492,7 @@ ProximityProperties MakeProximityPropertiesForCollision(
 }
 
 CoulombFriction<double> MakeCoulombFrictionFromSdfCollisionOde(
-    const sdf::Collision& sdf_collision) {
+    const DiagnosticPolicy& diagnostic, const sdf::Collision& sdf_collision) {
 
   const sdf::ElementPtr collision_element = sdf_collision.Element();
   // Element pointers can only be nullptr if Load() was not called on the sdf::
@@ -508,10 +516,10 @@ CoulombFriction<double> MakeCoulombFrictionFromSdfCollisionOde(
   // Read <mu> (for static) and <mu2> (for dynamic), with default values.
   const double static_friction =
       GetChildElementValue<double>(
-          *ode_element, "mu", default_friction().static_friction());
+          diagnostic, *ode_element, "mu", default_friction().static_friction());
   const double dynamic_friction =
       GetChildElementValue<double>(
-          *ode_element, "mu2", default_friction().dynamic_friction());
+          diagnostic, *ode_element, "mu2", default_friction().dynamic_friction());
 
   return CoulombFriction<double>(static_friction, dynamic_friction);
 }

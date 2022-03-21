@@ -704,7 +704,7 @@ std::vector<LinkInfo> AddLinksFromSpecification(
             diagnostic, sdf_visual.SemanticPose());
         unique_ptr<GeometryInstance> geometry_instance =
             MakeGeometryInstanceFromSdfVisual(
-                sdf_visual, resolve_filename, X_LG);
+                diagnostic, sdf_visual, resolve_filename, X_LG);
         // We check for nullptr in case someone decided to specify an SDF
         // <empty/> geometry.
         if (geometry_instance) {
@@ -727,7 +727,7 @@ std::vector<LinkInfo> AddLinksFromSpecification(
         const sdf::Geometry& sdf_geometry = *sdf_collision.Geom();
 
         std::unique_ptr<geometry::Shape> shape =
-            MakeShapeFromSdfGeometry(sdf_geometry, resolve_filename);
+            MakeShapeFromSdfGeometry(diagnostic, sdf_geometry, resolve_filename);
         if (shape != nullptr) {
           const RigidTransformd X_LG = ResolveRigidTransform(
               diagnostic, sdf_collision.SemanticPose());
