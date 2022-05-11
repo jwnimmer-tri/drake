@@ -10,6 +10,21 @@ load("//tools/lint:lint.bzl", "add_lint_tests")
 package(default_visibility = ["//visibility:private"])
 
 drake_cc_googlebench_binary(
+    name = "analysis_benchmarks",
+    srcs = ["analysis_benchmarks.cc"],
+    deps = [
+        "//systems/analysis:monte_carlo",
+        "//systems/framework:diagram_builder",
+        "//tools/performance:fixture_common",
+    ],
+)
+
+drake_py_experiment_binary(
+    name = "analysis_experiment",
+    googlebench_binary = ":analysis_benchmarks",
+)
+
+drake_cc_googlebench_binary(
     name = "framework_benchmarks",
     srcs = ["framework_benchmarks.cc"],
     deps = [
