@@ -26,6 +26,6 @@ class TestFoo(unittest.TestCase):
                     (z[0] + u_opt[0] - z[2])])
         RHS = ell + dJdz.dot(f)
         start_time = time.time()
-        Polynomial(RHS)
+        Polynomial(RHS, Variables(z))
         end_time = time.time()
         print("Polynomial parse time: ", end_time-start_time)
