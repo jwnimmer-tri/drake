@@ -245,7 +245,7 @@ drake_cc_library(
     hdrs = [
         "symbolic.h",
     ],
-    deps = [
+    interface_deps = [
         ":bit_cast",
         ":cond",
         ":drake_bool",
@@ -255,6 +255,9 @@ drake_cc_library(
         ":hash",
         ":random",
         "@fmt",
+    ],
+    deps = [
+        "@abseil_cpp_internal//absl/container:flat_hash_map",
     ],
 )
 
