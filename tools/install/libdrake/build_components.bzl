@@ -11,6 +11,11 @@
 # should commit the changes made by the refresh script.
 LIBDRAKE_COMPONENTS = [
     "//common",
+    "//math",
+    "//solvers",
+]
+
+_OMIT = [
     "//common/proto",
     "//common/schema",
     "//common/trajectories",
@@ -51,7 +56,6 @@ LIBDRAKE_COMPONENTS = [
     "//manipulation/planner",
     "//manipulation/schunk_wsg",
     "//manipulation/util",
-    "//math",
     "//multibody/benchmarks/acrobot",
     "//multibody/benchmarks/free_body",
     "//multibody/benchmarks/inclined_plane",
@@ -73,7 +77,6 @@ LIBDRAKE_COMPONENTS = [
     "//multibody/tree",
     "//multibody/triangle_quadrature",
     "//perception",
-    "//solvers",
     "//solvers/fbstab",
     "//solvers/fbstab/components",
     "//systems/analysis",
