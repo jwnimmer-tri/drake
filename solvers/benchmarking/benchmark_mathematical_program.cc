@@ -1,4 +1,5 @@
 #include "drake/common/symbolic.h"
+#include "drake/common/text_logging.h"
 #include "drake/solvers/mathematical_program.h"
 #include "drake/tools/performance/fixture_common.h"
 
@@ -86,21 +87,35 @@ static void BenchmarkSosProgram3(benchmark::State& state) {  // NOLINT
   for (auto _ : state) {
     MathematicalProgram prog;
     const int nz = 3;
-    const int degree = 12;
+    const int degree = 8;
 
     const auto z = prog.NewIndeterminates(nz, "z");
-    const auto J = prog.NewFreePolynomial(symbolic::Variables(z), degree);
-    const auto J_expr = J.ToExpression();
-    const auto dJdz = J_expr.Jacobian(z);
+    drake::log()->warn("z = {}", z);
+
+    const symbolic::Polynomial J = prog.NewFreePolynomial(symbolic::Variables(z), degree);
+    const symbolic::Expression J_expr = J.ToExpression();
+    drake::log()->warn("J_expr.is_expanded = {}", J_expr.is_expanded());
+    drake::log()->warn("J_expr = {}", J_expr);
+    throw std::runtime_error("Quit");
+
+    const RowVectorX<symbolic::Expression> dJdz = J_expr.Jacobian(z);
+    for (int i = 0; i < dJdz.size(); ++i) {
+      drake::log()->warn("dJdz[{}].is_expanded = {}", i, dJdz(i).is_expanded());
+    }
+    drake::log()->warn("dJdz = {}", dJdz);
+
     const Eigen::Vector3d f2(0, 0, 1);
     const symbolic::Expression u_opt = -0.5 * dJdz.dot(f2);
+    drake::log()->warn("u_opt = {}", u_opt);
 
     const Eigen::Vector3d z0(0, 1, 0);
     using std::pow;
     const symbolic::Expression l = (z - z0).dot(z - z0) + pow(u_opt, 2);
+    drake::log()->warn("ell = {}", l.Expand());
     Vector3<symbolic::Expression> f(z(1) + z(2), -z(0) + z(2),
                                     (z(0) + u_opt - z(2)));
     const symbolic::Expression rhs = l + dJdz.dot(f);
+    drake::log()->warn("rhs = {}", rhs);
     const symbolic::Polynomial rhs_poly(rhs, symbolic::Variables(z));
   }
 }
