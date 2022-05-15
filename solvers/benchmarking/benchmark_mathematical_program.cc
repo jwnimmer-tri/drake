@@ -92,7 +92,8 @@ static void BenchmarkSosProgram3(benchmark::State& state) {  // NOLINT
     const auto z = prog.NewIndeterminates(nz, "z");
     drake::log()->warn("z = {}", z);
 
-    const symbolic::Polynomial J = prog.NewFreePolynomial(symbolic::Variables(z), degree);
+    const symbolic::Polynomial J =
+        prog.NewFreePolynomial(symbolic::Variables(z), degree);
     const symbolic::Expression J_expr = J.ToExpression();
     drake::log()->warn("J_expr.is_expanded = {}", J_expr.is_expanded());
     drake::log()->warn("J_expr = {}", J_expr);
