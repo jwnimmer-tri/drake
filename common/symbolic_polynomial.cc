@@ -453,6 +453,7 @@ const Polynomial::MapType& Polynomial::monomial_to_coefficient_map() const {
 
 Expression Polynomial::ToExpression() const {
   // Returns ∑ᵢ (cᵢ * mᵢ).
+#if 1
   return accumulate(
       monomial_to_coefficient_map_.begin(), monomial_to_coefficient_map_.end(),
       Expression{0.0},
@@ -461,6 +462,17 @@ Expression Polynomial::ToExpression() const {
         const Expression& coeff{p.second};
         return init + (coeff * m.ToExpression());
       });
+#else
+  ExpressionAddFactory factory;
+  for (const auto& [monomial, coeff] : monomial_to_coefficient_map_) {
+    Expression e = coeff * monomial.ToExpression();
+    DRAKE_DEMAND(e.is_expanded());
+    factory.AddExpression(e);
+  }
+  Expression result = factory.GetExpression();
+  DRAKE_DEMAND(result.is_expanded());
+  return result;
+#endif
 }
 
 namespace {
