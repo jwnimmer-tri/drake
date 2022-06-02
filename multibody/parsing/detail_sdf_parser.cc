@@ -1421,6 +1421,10 @@ sdf::InterfaceModelPtr ParseNestedInterfaceModel(
             sdf::ErrorCode::ELEMENT_INVALID, detail));
       });
 
+  // XXX unused
+  const bool is_merged = include.IsMerge().value_or(false);
+  (void)(is_merged);
+
   ModelInstanceIndex main_model_instance;
   // New instances will have indices starting from cur_num_models
   int cur_num_models = plant->num_model_instances();
@@ -1541,6 +1545,8 @@ sdf::InterfaceModelPtr ParseNestedInterfaceModel(
       parent_interface_model->AddNestedModel(interface_model);
     }
   }
+
+  main_interface_model->SetParserSupportsMergeInclude(true);
 
   return main_interface_model;
 }
