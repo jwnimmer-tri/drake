@@ -1,14 +1,13 @@
 #pragma once
 
 #include <initializer_list>
-#include <memory>
 #include <utility>
 #include <vector>
 
-#include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
+#include "drake/common/fast_pimpl.h"
 #include "drake/geometry/geometry_ids.h"
 #include "drake/math/rigid_transform.h"
 
@@ -90,8 +89,11 @@ namespace geometry {
   FramePoseVector<Scalar>             | KinematicsVector<FrameId,RigidTransform<Scalar>> | double/AutoDiffXd/Expression
   GeometryConfigurationVector<Scalar> | KinematicsVector<GeometryId, VectorX<Scalar>>    | double/AutoDiffXd/Expression
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
 template <class Id, class KinematicsValue>
 class KinematicsVector {
+#pragma GCC diagnostic pop  // NOLINTNEXTLINE(whitespace/blank_line)
  public:
   /** Initializes the vector with no data .*/
   KinematicsVector();
@@ -158,15 +160,8 @@ class KinematicsVector {
   std::vector<Id> GetAllIds() const;
 
  private:
-  class Impl;
-  Impl& impl();
-  const Impl& impl() const;
-  // This field is really a shared_ptr<Impl> but we must store it as <void>
-  // so that the Impl class can have __attribute__((visibility("hidden"))),
-  // required by the hidden `absl::flat_hash_map` used under the hood. Note
-  // that we never actually share an Impl object (the use_count is always 1),
-  // rather we use shared_ptr for its type-erased destructor feature.
-  std::shared_ptr<void> pimpl_;
+  struct Impl;
+  drake::internal::FastPimpl<Impl, 40, 16> pimpl_;
 };
 
 /** Class for communicating _pose_ information to SceneGraph for registered

@@ -35,6 +35,7 @@ drake_cc_package_library(
         ":dummy_value",
         ":essential",
         ":extract_double",
+        ":fast_pimpl",
         ":find_resource",
         ":find_runfiles",
         ":hash",
@@ -309,6 +310,12 @@ drake_cc_library(
 )
 
 # Miscellaneous utilities.
+
+drake_cc_library(
+    name = "fast_pimpl",
+    hdrs = ["fast_pimpl.h"],
+    deps = [":essential"],
+)
 
 drake_cc_library(
     name = "identifier",

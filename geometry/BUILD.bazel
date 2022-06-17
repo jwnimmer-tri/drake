@@ -161,6 +161,7 @@ drake_cc_library(
         ":geometry_ids",
         "//common:autodiff",
         "//common:essential",
+        "//common:fast_pimpl",
         "//common:nice_type_name",
         "//common:symbolic",
         "//math:geometric_transform",
