@@ -187,10 +187,11 @@ class CassieAutodiffFixture : public CassieDoubleFixture {
 BENCHMARK_F(CassieAutodiffFixture, AutodiffMassMatrix)
     // NOLINTNEXTLINE(runtime/references) cpplint disapproves of gbench choices.
     (benchmark::State& state) {
-  MatrixX<AutoDiffXd> M_autodiff(nv_, nv_);
-  auto x_autodiff = math::InitializeAutoDiff(x_);
+  VectorX<AutoDiffXd> x_autodiff;
+  math::InitializeAutoDiff(x_, {}, {}, &x_autodiff);
   plant_autodiff_->SetPositionsAndVelocities(context_autodiff_.get(),
       x_autodiff);
+  MatrixX<AutoDiffXd> M_autodiff(nv_, nv_);
 
   for (auto _ : state) {
     InvalidateState();

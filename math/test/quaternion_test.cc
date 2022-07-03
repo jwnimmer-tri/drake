@@ -81,7 +81,7 @@ GTEST_TEST(AreQuaternionsApproximatlyEqualInCanonicalFormTest, testA) {
 GTEST_TEST(CalculateQuaternionDtFromAngularVelocityExpressedInBTest, testA) {
   // For convenience, locally typedef Vector7d and AutoDiff7d.
   using Vector7d = Eigen::Matrix<double, 7, 1>;
-  using AutoDiff7d = Eigen::AutoDiffScalar<Vector7d>;
+  using AutoDiff7d = AutoDiffXd;
 
   // Initialize each variable that is to be regarded as an independent variable
   // (for purposes of partial differentiation) with its numerical value (i.e.,
@@ -138,7 +138,7 @@ GTEST_TEST(CalculateQuaternionDtFromAngularVelocityExpressedInBTest, testA) {
 GTEST_TEST(CalculateAngularVelocityExpressedInBFromQuaternionDtTest, testA) {
   // For convenience, locally typedef Vector8d and AutoDiff8d.
   using Vector8d = Eigen::Matrix<double, 8, 1>;
-  using AutoDiff8d = Eigen::AutoDiffScalar<Vector8d>;
+  using AutoDiff8d = AutoDiffXd;
 
   // Initialize each variable that is to be regarded as an independent variable
   // (for purposes of partial differentiation) with its numerical value (i.e.,

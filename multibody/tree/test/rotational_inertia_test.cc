@@ -697,8 +697,7 @@ GTEST_TEST(RotationalInertia, AutoDiff) {
   const double angle_value = 20 * M_PI / 180.0;
   const double wz = 1.0;  // Angular velocity in the z-axis.
 
-  AutoDiffXd angle = angle_value;
-  angle.derivatives() = Vector1d(wz);
+  AutoDiffXd angle{ angle_value, Vector1d(wz) };
   const drake::math::RotationMatrix<AutoDiffXd> R_WB =
       drake::math::RotationMatrix<AutoDiffXd>::MakeZRotation(angle);
 

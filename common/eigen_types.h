@@ -13,6 +13,9 @@
 
 #include <Eigen/Dense>
 
+static_assert(EIGEN_VERSION_AT_LEAST(3, 3, 4),
+              "Drake requires Eigen >= v3.3.4.");
+
 #include "drake/common/constants.h"
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
@@ -134,6 +137,12 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, 0, 6, 6>;
 /// on scalar type.
 template <typename Scalar>
 using Matrix6xUpTo6 = Eigen::Matrix<Scalar, 6, Eigen::Dynamic, 0, 6, 6>;
+
+/* The matrix of the same size as Derived but with a different scalar type. */
+template <typename T, typename Derived>
+using MatrixLikewise = Eigen::Matrix<T,
+    Derived::RowsAtCompileTime, Derived::ColsAtCompileTime, 0,
+    Derived::MaxRowsAtCompileTime, Derived::MaxColsAtCompileTime>;
 
 /// A quaternion templated on scalar type.
 template <typename Scalar>

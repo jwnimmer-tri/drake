@@ -23,7 +23,6 @@ drake_cc_package_library(
     visibility = ["//visibility:public"],
     deps = [
         ":autodiff",
-        ":autodiffxd_make_coherent",
         ":bit_cast",
         ":cond",
         ":copyable_unique_ptr",
@@ -134,13 +133,12 @@ drake_cc_library(
     hdrs = [
         "autodiff.h",
         "autodiff_overloads.h",
-        "autodiffxd.h",
-        "eigen_autodiff_types.h",
     ],
     deps = [
         ":cond",
         ":dummy_value",
         ":essential",
+        "//common/autodiff",
     ],
 )
 
@@ -167,15 +165,6 @@ drake_cc_library(
     hdrs = ["hash.h"],
     deps = [
         ":essential",
-    ],
-)
-
-drake_cc_library(
-    name = "autodiffxd_make_coherent",
-    hdrs = ["autodiffxd_make_coherent.h"],
-    deps = [
-        ":autodiff",
-        ":symbolic",
     ],
 )
 
@@ -655,6 +644,7 @@ drake_cc_googletest(
         "test/autodiffxd_tanh_test.cc",
         "test/autodiffxd_test.h",
     ],
+    tags = ["manual"],
     deps = [
         ":autodiff",
         "//common/test_utilities:eigen_matrix_compare",
@@ -663,6 +653,7 @@ drake_cc_googletest(
 
 drake_cc_googletest(
     name = "autodiffxd_heap_test",
+    tags = ["manual"],
     deps = [
         ":autodiff",
         "//common/test_utilities:limit_malloc",
@@ -671,6 +662,7 @@ drake_cc_googletest(
 
 drake_cc_googletest(
     name = "autodiff_overloads_test",
+    tags = ["manual"],
     deps = [
         ":autodiff",
         ":essential",
@@ -1012,15 +1004,6 @@ drake_cc_googletest(
 )
 
 drake_cc_googletest(
-    name = "autodiffxd_make_coherent_test",
-    deps = [
-        ":autodiffxd_make_coherent",
-        "//common/test_utilities:eigen_matrix_compare",
-        "//common/test_utilities:expect_no_throw",
-    ],
-)
-
-drake_cc_googletest(
     name = "symbolic_monomial_test",
     deps = [
         ":essential",
@@ -1282,6 +1265,7 @@ drake_cc_googletest(
 
 drake_cc_googletest(
     name = "eigen_autodiff_types_test",
+    tags = ["manual"],
     deps = [":autodiff"],
 )
 
