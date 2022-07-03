@@ -4,6 +4,7 @@
 
 #include "drake/common/autodiff/scalar.h"
 #include "drake/common/autodiff/operations.h"
+#include "drake/common/autodiff/functors.h"
 
 namespace drake {
 

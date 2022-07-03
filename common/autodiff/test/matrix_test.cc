@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/autodiff/operations.h"
+#include "drake/common/autodiff/functors.h"
 
 namespace drake {
 namespace autodiff {

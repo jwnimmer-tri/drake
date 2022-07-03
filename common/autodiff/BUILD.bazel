@@ -14,6 +14,7 @@ drake_cc_library(
     name = "autodiff",
     srcs = ["scalar.cc"],
     hdrs = [
+        "functors.h",
         "scalar.h",
         "operations.h"
     ],
