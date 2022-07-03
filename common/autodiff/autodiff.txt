@@ -1,28 +1,4 @@
 
-// This is https://en.cppreference.com/w/cpp/numeric/bit_cast, but we need to
-// roll our own until we have C++20 available.
-template <class To, class From>
-To bit_cast(const From& from) noexcept {
-  static_assert(sizeof(To) == sizeof(From));
-  static_assert(std::is_trivially_copyable_v<To>);
-  static_assert(std::is_trivially_copyable_v<From>);
-  static_assert(std::is_trivially_constructible_v<To>);
-  To result;
-  std::memcpy(&result, &from, sizeof(result));
-  return result;
-}
-
-      const Eigen::VectorXd* const storage = new Eigen::VectorXd(derivatives);
-      const std::uintptr_t owned = internal::bit_cast<std::uintptr_t>(storage);
-      const std::uintptr_t mask = 1;
-      derivatives_ = owned | mask;
-      // Owned storage.
-      const std::uintptr_t mask = 1;
-      const std::uintptr_t owned = derivatives_ & (~mask);
-      auto* derivatives = internal::bit_cast<const Eigen::VectorXd*>(owned);
-      data = derivatives->data();
-      size = derivatives->size();
-
 #if 0
 namespace internal {
 

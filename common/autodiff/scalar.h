@@ -12,35 +12,32 @@
 namespace drake {
 namespace internal {
 
-/* Helper class for LazyMac, below. */
-class LazyMacTerm {
+/* Helper class for Partials, below. */
+class CowVec {
  public:
-  LazyMacTerm() = default;
+  CowVec() = default;
 
-  explicit LazyMacTerm(const Eigen::Ref<const Eigen::VectorXd>& derivatives);
+  static CowVec Allocate(Eigen::Index size);
+  static CowVec Copy(const Eigen::Ref<const Eigen::VectorXd>& derivatives);
 
-  LazyMacTerm(LazyMacTerm&& other) noexcept {
-    coeff_ = other.coeff_;
+  CowVec(CowVec&& other) noexcept {
     std::swap(data_, other.data_);
   }
 
-  LazyMacTerm& operator=(LazyMacTerm&& other) noexcept {
-    coeff_ = other.coeff_;
+  CowVec& operator=(CowVec&& other) noexcept {
     std::swap(data_, other.data_);
     return *this;
   }
 
-  LazyMacTerm(const LazyMacTerm& other) noexcept {
-    coeff_ = other.coeff_;
+  CowVec(const CowVec& other) noexcept {
     if (other.data_ != nullptr) {
       ++other.use_count();
       data_ = other.data_;
     }
   }
 
-  LazyMacTerm& operator=(const LazyMacTerm& other) noexcept {
+  CowVec& operator=(const CowVec& other) noexcept {
     if (this != &other) {
-      coeff_ = other.coeff_;
       if (other.data_ != nullptr) {
         ++other.use_count();
         data_ = other.data_;
@@ -49,7 +46,7 @@ class LazyMacTerm {
     return *this;
   }
 
-  ~LazyMacTerm() {
+  ~CowVec() {
     if (data_ != nullptr) {
       UseCount& counter = use_count();
       if (--counter == 0) {
@@ -59,12 +56,9 @@ class LazyMacTerm {
     }
   }
 
-  bool is_zero() const { return coeff_ == 0.0 || data_ == nullptr; }
-
-  double coeff() const { return coeff_; }
-  double& coeff() { return coeff_; }
-
   const double* data() const { return data_; }
+
+  // XXX rename me (or inline)?
   double* mutable_data(Eigen::Index size);
 
   // XXX private
@@ -76,41 +70,34 @@ class LazyMacTerm {
   }
 
  private:
-  double coeff_{0.0};
   double* data_{nullptr};
 };
 
 /* A lazy multiply-accumulate over same-sized vectors, optimized for use with
 Drake's autodiff::Scalar.
 
-See https://en.wikipedia.org/wiki/Multiply–accumulate_operation
-
-All vectors must be either the same size or zero.
-
-The amount of laziness is bounded; once we reach the fourth new vector term, we
-squash the expression back down to a single vector. */
-class LazyMac {
+All vectors must be either the same size or zero. */
+class Partials {
  public:
-  DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(LazyMac);
+  DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(Partials);
 
-  LazyMac() = default;
+  Partials() = default;
 
-  explicit LazyMac(const Eigen::Ref<const Eigen::VectorXd>& derivatives) {
-    if (derivatives.size() > 0) {
-      reset(derivatives);
-    }
+  explicit Partials(const Eigen::Ref<const Eigen::VectorXd>& derivatives);
+
+  ~Partials() = default;
+
+  void clear() {
+    size_ = 0;
+    coeff_ = 0.0;
+    storage_ = {};
   }
-
-  ~LazyMac() = default;
-
-  void reset() { size_ = 0; }
-  void reset(const Eigen::Ref<const Eigen::VectorXd>& derivatives);
 
   bool empty() const { return size_ == 0; }
   Eigen::Index size() const { return size_; }
   double* SquashAndGetData();
 
-  void Add(const LazyMac& other) {
+  void Add(const Partials& other) {
     if (!other.empty()) {
       AddImpl(other);
     }
@@ -119,34 +106,36 @@ class LazyMac {
   void Mul(double scale) {
     if (scale == 0.0) {
       size_ = 0;
+      coeff_ = 0.0;
     } else {
-      for (auto& term : terms_) {
-        term.coeff() *= scale;
-      }
+      coeff_ *= scale;
     }
   }
 
-  void AddMul(double scale, const LazyMac& other) {
+  void AddMul(double scale, const Partials& other) {
     if (scale != 0.0 && !other.empty()) {
       AddMulImpl(scale, other);
     }
   }
 
  private:
-  void AddImpl(const LazyMac&);
-  void AddMulImpl(double, const LazyMac&);
+  void CheckInvariants() const;
+  void AddImpl(const Partials&);
+  void AddMulImpl(double, const Partials&);
 
   // Representation invariant:
   // - size_ >= 0
   // - if size_ > 0 then ∀i:
-  //   - if terms(i).data is non-null then:
-  //     - terms(i).data must contain storage for exactly size_ elements
+  //   - coeff != 0
+  //   - if term.data is non-null then:
+  //     - term.data must contain storage for exactly size_ elements
   // Abstraction function:
   // - When size == 0, the vector's value is zero (aka empty).
-  // - When size > 0, the vector's value is Σ term(i).coeff * term(i).data,
-  //   where a nullptr term(i).data denotes zero.
+  // - When size > 0, the vector's value is coeff * term.data,
+  //   where a nullptr term.data denotes a zero vector.
   reset_after_move<Eigen::Index> size_{0};
-  std::array<LazyMacTerm, 1> terms_;
+  reset_after_move<double> coeff_{0.0};
+  CowVec storage_;
 };
 
 }  // namespace internal
@@ -169,9 +158,10 @@ class Scalar {
 
   Scalar(double value, Eigen::Index size, Eigen::Index offset)
       : value_{value} {
-    Eigen::VectorXd derivatives = Eigen::VectorXd::Zero(size);
-    derivatives[offset] = 1.0;
-    derivatives_.reset(derivatives);
+    // XXX we could optimize this, but it's rarely used...?
+    Eigen::VectorXd unit = Eigen::VectorXd::Zero(size);
+    unit[offset] = 1.0;
+    derivatives_ = internal::Partials(unit);
   }
 
   /** Constructs a value with given derivatives. */
@@ -184,7 +174,7 @@ class Scalar {
   /** Assigns a value and clears the derivatives. */
   Scalar& operator=(double value) {
     value_ = value;
-    derivatives_.reset();
+    derivatives_.clear();
     return *this;
   }
 
@@ -195,7 +185,7 @@ class Scalar {
 
   Eigen::Map<const Eigen::VectorXd> derivatives() const {
     // [insert scary comment here]
-    auto& mutable_mac = const_cast<internal::LazyMac&>(derivatives_);
+    auto& mutable_mac = const_cast<internal::Partials&>(derivatives_);
     const double* data = mutable_mac.SquashAndGetData();
     const Eigen::Index size = derivatives_.size();
     return Eigen::VectorXd::Map(data, size);
@@ -254,7 +244,7 @@ class Scalar {
 
  private:
   double value_{0.0};
-  internal::LazyMac derivatives_{};
+  internal::Partials derivatives_{};
 };
 
 }  // namespace autodiff
