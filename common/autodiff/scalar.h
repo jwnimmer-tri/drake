@@ -84,7 +84,7 @@ class LazyMac {
   // - When size > 0, the vector's value is Σ term(i).coeff * term(i).data,
   //   where a nullptr term(i).data denotes zero.
   reset_after_move<Eigen::Index> size_{0};
-  std::array<LazyMacTerm, 3> terms_;
+  std::array<LazyMacTerm, 1> terms_;
 };
 
 }  // namespace internal
