@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <atomic>
+#include <cstdlib>
 #include <memory>
 
 #include "drake/common/drake_copyable.h"
@@ -11,11 +13,71 @@ namespace drake {
 namespace internal {
 
 /* Helper class for LazyMac, below. */
-struct LazyMacTerm {
-  bool is_zero() const { return coeff == 0.0 || data == nullptr; }
+class LazyMacTerm {
+ public:
+  LazyMacTerm() = default;
 
-  double coeff{};
-  std::shared_ptr<const double[]> data;
+  explicit LazyMacTerm(const Eigen::Ref<const Eigen::VectorXd>& derivatives);
+
+  LazyMacTerm(LazyMacTerm&& other) noexcept {
+    coeff_ = other.coeff_;
+    std::swap(data_, other.data_);
+  }
+
+  LazyMacTerm& operator=(LazyMacTerm&& other) noexcept {
+    coeff_ = other.coeff_;
+    std::swap(data_, other.data_);
+    return *this;
+  }
+
+  LazyMacTerm(const LazyMacTerm& other) noexcept {
+    coeff_ = other.coeff_;
+    if (other.data_ != nullptr) {
+      ++other.use_count();
+      data_ = other.data_;
+    }
+  }
+
+  LazyMacTerm& operator=(const LazyMacTerm& other) noexcept {
+    if (this != &other) {
+      coeff_ = other.coeff_;
+      if (other.data_ != nullptr) {
+        ++other.use_count();
+        data_ = other.data_;
+      }
+    }
+    return *this;
+  }
+
+  ~LazyMacTerm() {
+    if (data_ != nullptr) {
+      UseCount& counter = use_count();
+      if (--counter == 0) {
+	counter.~UseCount();
+	std::free(&counter);
+      }
+    }
+  }
+
+  bool is_zero() const { return coeff_ == 0.0 || data_ == nullptr; }
+
+  double coeff() const { return coeff_; }
+  double& coeff() { return coeff_; }
+
+  const double* data() const { return data_; }
+  double* mutable_data(Eigen::Index size);
+
+  // XXX private
+  using UseCount = std::atomic_int_fast64_t;
+  UseCount& use_count() const {
+    DRAKE_ASSERT(data_ != nullptr);
+    return *reinterpret_cast<UseCount*>(
+        reinterpret_cast<char*>(data_) - sizeof(UseCount));
+  }
+
+ private:
+  double coeff_{0.0};
+  double* data_{nullptr};
 };
 
 /* A lazy multiply-accumulate over same-sized vectors, optimized for use with
@@ -46,7 +108,7 @@ class LazyMac {
 
   bool empty() const { return size_ == 0; }
   Eigen::Index size() const { return size_; }
-  const double* SquashAndGetData();
+  double* SquashAndGetData();
 
   void Add(const LazyMac& other) {
     if (!other.empty()) {
@@ -59,7 +121,7 @@ class LazyMac {
       size_ = 0;
     } else {
       for (auto& term : terms_) {
-        term.coeff *= scale;
+        term.coeff() *= scale;
       }
     }
   }
