@@ -7,8 +7,7 @@ import numpy as np
 
 from pydrake.common import FindResourceOrThrow
 from pydrake.math import RigidTransform
-from pydrake.multibody.plant import MultibodyPlant
-from pydrake.multibody.parsing import Parser
+from pydrake.multibody import MultibodyPlant, Parser
 
 
 class TestPlanner(unittest.TestCase):

@@ -17,8 +17,7 @@ import webbrowser
 from pydrake.common import FindResourceOrThrow
 from pydrake.geometry import DrakeVisualizer, SceneGraph
 from pydrake.lcm import DrakeLcm
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import MultibodyPlant
+from pydrake.multibody import MultibodyPlant, Parser
 from pydrake.systems.drawing import plot_graphviz, plot_system_graphviz
 from pydrake.systems.framework import DiagramBuilder
 

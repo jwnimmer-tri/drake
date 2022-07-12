@@ -2,6 +2,7 @@
 #include "pybind11/stl.h"
 
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/multibody/multibody_py.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/multibody/parsing/package_map.h"
 #include "drake/multibody/parsing/parser.h"
@@ -14,11 +15,9 @@ using std::string;
 
 namespace drake {
 namespace pydrake {
+namespace internal {
 
-PYBIND11_MODULE(parsing, m) {
-  PYDRAKE_PREVENT_PYTHON3_MODULE_REIMPORT(m);
-  m.doc() = "SDF and URDF parsing for MultibodyPlant and SceneGraph.";
-
+void DefineMultibodyParsing(py::module m) {
   // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
   using namespace drake::multibody;
   constexpr auto& doc = pydrake_doc.drake.multibody;
@@ -145,5 +144,6 @@ PYBIND11_MODULE(parsing, m) {
       py::arg("frame"), doc.parsing.GetScopedFrameName.doc);
 }
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

@@ -11,6 +11,7 @@
 #include "drake/bindings/pydrake/common/type_pack.h"
 #include "drake/bindings/pydrake/common/type_safe_index_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/multibody/multibody_py.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/multibody/tree/ball_rpy_joint.h"
@@ -1039,21 +1040,17 @@ void DoScalarDependentDefinitions(py::module m, T) {
   }
   // NOLINTNEXTLINE(readability/fn_size)
 }
+
 }  // namespace
 
-PYBIND11_MODULE(tree, m) {
-  // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
-  using namespace drake::multibody;
+namespace internal {
 
-  m.doc() = "Bindings for MultibodyTree and related components.";
-
-  py::module::import("pydrake.common.eigen_geometry");
-  py::module::import("pydrake.multibody.math");
-
+void DefineMultibodyTree(py::module m) {
   DoScalarIndependentDefinitions(m);
   type_visit([m](auto dummy) { DoScalarDependentDefinitions(m, dummy); },
       CommonScalarPack{});
 }
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

@@ -8,11 +8,13 @@
 #include "drake/bindings/pydrake/common/type_pack.h"
 #include "drake/bindings/pydrake/common/value_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/multibody/multibody_py.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/multibody/math/spatial_algebra.h"
 
 namespace drake {
 namespace pydrake {
+namespace {
 
 using math::RotationMatrix;
 
@@ -83,7 +85,6 @@ void BindSpatialVectorMixin(PyClass* pcls) {
   DefCopyAndDeepCopy(&cls);
 }
 
-namespace {
 template <typename T>
 void DoScalarDependentDefinitions(py::module m, T) {
   py::tuple param = GetPyParam<T>();
@@ -212,20 +213,16 @@ void DoScalarDependentDefinitions(py::module m, T) {
     AddValueInstantiation<std::vector<Class>>(m);
   }
 }
+
 }  // namespace
 
-PYBIND11_MODULE(math, m) {
-  // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
-  using namespace drake::multibody;
+namespace internal {
 
-  py::module::import("pydrake.autodiffutils");
-  py::module::import("pydrake.math");
-  py::module::import("pydrake.symbolic");
-
-  m.doc() = "Bindings for multibody math.";
+void DefineMultibodyMath(py::module m) {
   type_visit([m](auto dummy) { DoScalarDependentDefinitions(m, dummy); },
       CommonScalarPack{});
 }
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

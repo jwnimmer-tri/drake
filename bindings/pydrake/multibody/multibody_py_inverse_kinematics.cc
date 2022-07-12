@@ -4,6 +4,7 @@
 #include "drake/bindings/pydrake/common/default_scalars_pybind.h"
 #include "drake/bindings/pydrake/common/sorted_pair_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/multibody/multibody_py.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/multibody/inverse_kinematics/angle_between_vectors_constraint.h"
 #include "drake/multibody/inverse_kinematics/com_in_polyhedron_constraint.h"
@@ -20,24 +21,18 @@
 
 namespace drake {
 namespace pydrake {
-namespace {
+namespace internal {
 
 using solvers::Constraint;
 constexpr char ctor_doc_ad[] =
     "Overloaded constructor. Constructs the constraint using "
     "MultibodyPlant<AutoDiffXd>";
 
-PYBIND11_MODULE(inverse_kinematics, m) {
+void DefineMultibodyInverseKinematics(py::module m) {
   // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
   using namespace drake::multibody;
   constexpr auto& doc = pydrake_doc.drake.multibody;
   constexpr auto& constraint_doc = pydrake_doc.drake.solvers.Constraint;
-
-  m.doc() = "InverseKinematics module";
-
-  py::module::import("pydrake.math");
-  py::module::import("pydrake.multibody.plant");
-  py::module::import("pydrake.solvers");
 
   {
     using Class = InverseKinematics;
@@ -642,6 +637,6 @@ PYBIND11_MODULE(inverse_kinematics, m) {
   // NOLINTNEXTLINE(readability/fn_size)
 }
 
-}  // namespace
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

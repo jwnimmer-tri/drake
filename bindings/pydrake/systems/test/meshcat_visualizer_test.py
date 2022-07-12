@@ -30,9 +30,14 @@ from pydrake.geometry import (
     Role,
     SceneGraph
 )
-from pydrake.multibody.plant import (
-    AddMultibodyPlantSceneGraph)
-from pydrake.multibody.parsing import Parser
+from pydrake.multibody import (
+    AddMultibodyPlantSceneGraph,
+    CoulombFriction,
+    MultibodyPlant,
+    Parser,
+    SpatialInertia,
+    UnitInertia,
+)
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.meshcat_visualizer import (
@@ -43,8 +48,6 @@ from pydrake.systems.meshcat_visualizer import (
     MeshcatPointCloudVisualizer
 )
 from pydrake.math import RigidTransform, RotationMatrix
-from pydrake.multibody.plant import CoulombFriction, MultibodyPlant
-from pydrake.multibody.tree import SpatialInertia, UnitInertia
 
 import pydrake.perception as mut
 

@@ -9,8 +9,7 @@ import numpy as np
 
 from pydrake.common import FindResourceOrThrow, temp_directory
 from pydrake.examples.manipulation_station import ManipulationStation
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import AddMultibodyPlantSceneGraph
+from pydrake.multibody import AddMultibodyPlantSceneGraph, Parser
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.planar_scenegraph_visualizer import (

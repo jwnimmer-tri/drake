@@ -15,8 +15,7 @@ from pydrake.common import (
     RandomGenerator,
     FindResourceOrThrow
 )
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import MultibodyPlant
+from pydrake.multibody import MultibodyPlant, Parser
 from pydrake.symbolic import (
     Expression,
     Variable

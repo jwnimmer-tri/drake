@@ -58,7 +58,7 @@ from pydrake.math import (
     RigidTransform,
     RotationMatrix,
 )
-from pydrake.multibody.meshcat import (
+from pydrake.multibody import (
     _HydroelasticContactVisualizer,
     _HydroelasticContactVisualizerItem,
     _PointContactVisualizer,

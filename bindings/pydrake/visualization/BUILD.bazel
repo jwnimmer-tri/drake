@@ -37,7 +37,7 @@ drake_py_library(
         ":module_py",
         "//bindings/pydrake:geometry_py",
         "//bindings/pydrake:lcm_py",
-        "//bindings/pydrake/multibody:meshcat_py",
+        "//bindings/pydrake/multibody",
         "//lcmtypes:lcmtypes_drake_py",
     ],
 )

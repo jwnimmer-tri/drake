@@ -38,8 +38,8 @@ using drake::multibody::Parser;
 will look similar in Python, but you won't use the header file's name:
 
 ```{.py}
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import MultibodyPlant
+from pydrake.multibody import Parser
+from pydrake.multibody import MultibodyPlant
 ```
 
 In general, you can find where a symbol is bound by searching for the symbol's

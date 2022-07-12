@@ -5,8 +5,7 @@ import argparse
 from pydrake.common import FindResourceOrThrow
 from pydrake.geometry import (DrakeVisualizer, SceneGraph)
 from pydrake.lcm import DrakeLcm
-from pydrake.multibody.plant import MultibodyPlant
-from pydrake.multibody.parsing import Parser
+from pydrake.multibody import MultibodyPlant, Parser
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.analysis import Simulator
 

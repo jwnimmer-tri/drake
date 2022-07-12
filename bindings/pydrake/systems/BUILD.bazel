@@ -133,7 +133,7 @@ drake_pybind_library(
         ":primitives_py",
         "//bindings/pydrake:math_py",
         "//bindings/pydrake:symbolic_py",
-        "//bindings/pydrake/multibody:plant_py",
+        "//bindings/pydrake/multibody",
     ],
 )
 
@@ -385,8 +385,7 @@ drake_py_binary(
         ":primitives_py",
         "//bindings/pydrake:geometry_py",
         "//bindings/pydrake:lcm_py",
-        "//bindings/pydrake/multibody:parsing_py",
-        "//bindings/pydrake/multibody:plant_py",
+        "//bindings/pydrake/multibody",
     ],
 )
 
@@ -401,8 +400,7 @@ drake_jupyter_py_binary(
         ":framework_py",
         ":jupyter_widgets_py",
         "//bindings/pydrake:geometry_py",
-        "//bindings/pydrake/multibody:parsing_py",
-        "//bindings/pydrake/multibody:plant_py",
+        "//bindings/pydrake/multibody",
     ],
 )
 
@@ -483,9 +481,7 @@ drake_py_unittest(
     deps = [
         ":controllers_py",
         "//bindings/pydrake/examples",
-        "//bindings/pydrake/multibody:parsing_py",
-        "//bindings/pydrake/multibody:plant_py",
-        "//bindings/pydrake/multibody:tree_py",
+        "//bindings/pydrake/multibody",
     ],
 )
 

@@ -24,7 +24,7 @@ from pydrake.geometry import (
 from pydrake.lcm import DrakeLcm, Subscriber
 from pydrake.math import RigidTransform, RotationMatrix
 from pydrake.systems.framework import LeafSystem, PublishEvent, TriggerType
-from pydrake.multibody.plant import ContactResults
+from pydrake.multibody import ContactResults
 import pydrake.perception as mut
 
 # TODO(eric.cousineau): Move this back to "third party" import positions

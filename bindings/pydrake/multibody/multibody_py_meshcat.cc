@@ -6,6 +6,7 @@
 #include "drake/bindings/pydrake/common/monostate_pybind.h"
 #include "drake/bindings/pydrake/common/type_pack.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/multibody/multibody_py.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/multibody/meshcat/contact_visualizer.h"
 #include "drake/multibody/meshcat/contact_visualizer_params.h"
@@ -232,18 +233,17 @@ void DoScalarDependentDefinitions(py::module m, T) {
             cls_doc.SetPositions.doc);
   }
 }
+
 }  // namespace
 
-PYBIND11_MODULE(meshcat, m) {
-  PYDRAKE_PREVENT_PYTHON3_MODULE_REIMPORT(m);
-  m.doc() = "Interface code for Meshcat-based visualization";
+namespace internal {
 
-  py::module::import("pydrake.multibody.plant");
-
+void DefineMultibodyMeshcat(py::module m) {
   DoScalarIndependentDefinitions(m);
   type_visit([m](auto dummy) { DoScalarDependentDefinitions(m, dummy); },
       NonSymbolicScalarPack{});
 }
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

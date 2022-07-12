@@ -10,6 +10,7 @@
 #include "drake/bindings/pydrake/common/type_pack.h"
 #include "drake/bindings/pydrake/common/value_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/multibody/multibody_py.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/common/eigen_types.h"
 #include "drake/geometry/query_results/penetration_as_point_pair.h"
@@ -28,6 +29,7 @@
 
 namespace drake {
 namespace pydrake {
+namespace {
 
 using std::string;
 using std::string_view;
@@ -36,8 +38,6 @@ using geometry::SceneGraph;
 using math::RigidTransform;
 using systems::Context;
 using systems::State;
-
-namespace {
 
 template <typename T>
 int GetVariableSize(const multibody::MultibodyPlant<T>& plant,
@@ -1179,21 +1179,14 @@ void DoScalarDependentDefinitions(py::module m, T) {
 
   // NOLINTNEXTLINE(readability/fn_size)
 }
+
 }  // namespace
 
-PYBIND11_MODULE(plant, m) {
-  PYDRAKE_PREVENT_PYTHON3_MODULE_REIMPORT(m);
+namespace internal {
+
+void DefineMultibodyPlant(py::module m) {
   // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
   using namespace drake::multibody;
-
-  m.doc() = "Bindings for MultibodyPlant and related classes.";
-
-  py::module::import("pydrake.geometry");
-  py::module::import("pydrake.math");
-  py::module::import("pydrake.multibody.math");
-  py::module::import("pydrake.multibody.tree");
-  py::module::import("pydrake.systems.framework");
-
   constexpr auto& doc = pydrake_doc.drake.multibody;
 
   using T = double;
@@ -1286,5 +1279,6 @@ PYBIND11_MODULE(plant, m) {
       CommonScalarPack{});
 }  // NOLINT(readability/fn_size)
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

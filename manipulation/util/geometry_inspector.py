@@ -69,8 +69,7 @@ import argparse
 import numpy as np
 
 from pydrake.geometry import SceneGraph
-from pydrake.multibody.meshcat import JointSliders
-from pydrake.multibody.plant import MultibodyPlant
+from pydrake.multibody import JointSliders, MultibodyPlant
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.rendering import MultibodyPositionToGeometryPose

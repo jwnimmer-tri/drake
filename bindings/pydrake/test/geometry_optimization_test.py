@@ -11,8 +11,7 @@ from pydrake.geometry import (
     GeometryInstance, SceneGraph, Sphere,
 )
 from pydrake.math import RigidTransform
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import AddMultibodyPlantSceneGraph
+from pydrake.multibody import AddMultibodyPlantSceneGraph, Parser
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.solvers import (
     Binding, ClpSolver, Constraint, Cost, MathematicalProgram,

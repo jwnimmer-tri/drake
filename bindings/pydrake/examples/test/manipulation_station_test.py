@@ -18,9 +18,7 @@ from pydrake.geometry.render import (
     RenderCameraCore,
 )
 from pydrake.math import RigidTransform, RollPitchYaw
-from pydrake.multibody.plant import MultibodyPlant
-from pydrake.multibody.tree import ModelInstanceIndex
-from pydrake.multibody.parsing import Parser
+from pydrake.multibody import ModelInstanceIndex, MultibodyPlant, Parser
 from pydrake.systems.sensors import CameraInfo
 
 

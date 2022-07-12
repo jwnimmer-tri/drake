@@ -13,11 +13,7 @@ from pydrake.common.test_utilities.deprecation import catch_drake_warnings
 from pydrake.common.value import AbstractValue
 from pydrake.geometry import SceneGraph
 from pydrake.math import RigidTransform
-from pydrake.multibody.plant import MultibodyPlant
-from pydrake.multibody.math import (
-    SpatialVelocity,
-)
-from pydrake.multibody.parsing import Parser
+from pydrake.multibody import MultibodyPlant, Parser, SpatialVelocity
 from pydrake.systems.framework import (
     BasicVector,
     PortDataType,

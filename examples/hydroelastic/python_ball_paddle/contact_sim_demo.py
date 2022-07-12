@@ -11,10 +11,12 @@ from pydrake.common import FindResourceOrThrow
 from pydrake.geometry import DrakeVisualizer
 from pydrake.math import RigidTransform
 from pydrake.math import RollPitchYaw
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import AddMultibodyPlant
-from pydrake.multibody.plant import ConnectContactResultsToDrakeVisualizer
-from pydrake.multibody.plant import MultibodyPlantConfig
+from pydrake.multibody import (
+    AddMultibodyPlant,
+    ConnectContactResultsToDrakeVisualizer,
+    MultibodyPlantConfig,
+    Parser,
+)
 from pydrake.systems.analysis import ApplySimulatorConfig
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.analysis import SimulatorConfig

@@ -17,7 +17,7 @@ from pydrake.examples import (
     CreateClutterClearingYcbObjectList, ManipulationStation,
     ManipulationStationHardwareInterface)
 from pydrake.geometry import DrakeVisualizer
-from pydrake.multibody.meshcat import JointSliders
+from pydrake.multibody import JointSliders
 from pydrake.math import RigidTransform, RotationMatrix
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.analysis import Simulator

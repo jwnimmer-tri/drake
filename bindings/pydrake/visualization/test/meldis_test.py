@@ -8,14 +8,10 @@ from pydrake.common import (
 from pydrake.geometry import (
     DrakeVisualizer,
 )
-from pydrake.multibody.parsing import (
-    Parser,
-)
-from pydrake.multibody.plant import (
+from pydrake.multibody import (
     AddMultibodyPlantSceneGraph,
     ConnectContactResultsToDrakeVisualizer,
-)
-from pydrake.multibody.tree import (
+    Parser,
     PrismaticJoint,
 )
 from pydrake.systems.framework import (

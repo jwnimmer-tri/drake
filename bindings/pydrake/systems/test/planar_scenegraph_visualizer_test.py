@@ -7,10 +7,13 @@ from pydrake.common import FindResourceOrThrow
 from pydrake.common.test_utilities.deprecation import catch_drake_warnings
 from pydrake.geometry import Box, Mesh
 from pydrake.math import RigidTransform
-from pydrake.multibody.parsing import Parser
-from pydrake.multibody.plant import (
-    AddMultibodyPlantSceneGraph, CoulombFriction)
-from pydrake.multibody.tree import SpatialInertia, UnitInertia
+from pydrake.multibody import (
+    AddMultibodyPlantSceneGraph,
+    CoulombFriction,
+    Parser
+    SpatialInertia,
+    UnitInertia,
+)
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.planar_scenegraph_visualizer import (

@@ -11,7 +11,7 @@ from pydrake.common.test_utilities.deprecation import catch_drake_warnings
 from pydrake.common.test_utilities.pickle_compare import assert_pickle
 from pydrake.common.value import AbstractValue, Value
 from pydrake.math import RigidTransform
-from pydrake.multibody.plant import CoulombFriction
+from pydrake.multibody import CoulombFriction
 
 PROPERTY_CLS_LIST = [
     mut.ProximityProperties,

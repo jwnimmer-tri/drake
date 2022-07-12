@@ -33,8 +33,7 @@ class TestAll(unittest.TestCase):
 
     def test_usage_no_all(self):
         from pydrake.common import FindResourceOrThrow
-        from pydrake.multibody.parsing import Parser
-        from pydrake.multibody.plant import AddMultibodyPlantSceneGraph
+        from pydrake.multibody import AddMultibodyPlantSceneGraph, Parser
         from pydrake.systems.analysis import Simulator
         from pydrake.systems.framework import DiagramBuilder
 

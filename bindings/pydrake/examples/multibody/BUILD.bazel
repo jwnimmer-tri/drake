@@ -38,8 +38,7 @@ drake_py_library(
     deps = [
         ":module_py",
         "//bindings/pydrake:lcm_py",
-        "//bindings/pydrake/multibody:parsing_py",
-        "//bindings/pydrake/multibody:plant_py",
+        "//bindings/pydrake/multibody",
         "//bindings/pydrake/systems:analysis_py",
     ],
 )
