@@ -362,6 +362,7 @@ install(
     install_tests = [
         ":test/all_install_test.py",
         ":test/common_install_test.py",
+        ":test/mypy_install_test.py",
     ],
     targets = PY_LIBRARIES + [":all_py"],
     py_dest = PACKAGE_INFO.py_dest,
