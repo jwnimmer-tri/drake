@@ -151,7 +151,7 @@ def install(src, dst):
     dst_full = os.path.join(prefix, dst)
     # Install file, if not up to date.
     if needs_install(src, dst):
-        print("-- Installing: {}".format(dst_full))
+        # print("-- Installing: {}".format(dst_full))
         if os.path.exists(dst_full):
             os.remove(dst_full)
         copy_or_link(src, dst_full)
