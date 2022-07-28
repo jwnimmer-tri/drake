@@ -12,6 +12,9 @@ namespace drake {
 namespace pydrake {
 namespace internal {
 
+/* Defines bindings per visualization_py_colorize.cc. */
+void DefineVisualizationColorize(py::module m);
+
 /* Defines bindings per visualization_py_config.cc. */
 void DefineVisualizationConfig(py::module m);
 

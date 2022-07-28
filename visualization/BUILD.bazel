@@ -14,8 +14,27 @@ drake_cc_package_library(
     name = "visualization",
     visibility = ["//visibility:public"],
     deps = [
+        ":colorize_depth_image",
         ":visualizer_config",
         ":visualizer_config_functions",
+    ],
+)
+
+drake_cc_library(
+    name = "colorize_depth_image",
+    srcs = ["colorize_depth_image.cc"],
+    hdrs = ["colorize_depth_image.h"],
+    deps = [
+        "//systems/framework:leaf_system",
+        "//systems/sensors:image",
+    ],
+)
+
+drake_cc_googletest(
+    name = "colorize_depth_image_test",
+    deps = [
+        ":colorize_depth_image",
+        "//systems/framework/test_utilities:scalar_conversion",
     ],
 )
 

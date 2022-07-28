@@ -28,11 +28,14 @@ drake_pybind_library(
     name = "visualization",
     cc_deps = [
         "//bindings/pydrake:documentation_pybind",
+        "//bindings/pydrake/common:cpp_template_pybind",
+        "//bindings/pydrake/common:default_scalars_pybind",
         "//bindings/pydrake/common:serialize_pybind",
     ],
     cc_so_name = "__init__",
     cc_srcs = [
         "visualization_py.cc",
+        "visualization_py_colorize.cc",
         "visualization_py_config.cc",
         "visualization_py.h",
     ],
@@ -40,6 +43,7 @@ drake_pybind_library(
     py_deps = [
         "//bindings/pydrake/multibody",
         "//bindings/pydrake/solvers",
+        "//bindings/pydrake/systems",
         "//bindings/pydrake:geometry_py",
         "//bindings/pydrake:lcm_py",
         "//bindings/pydrake:symbolic_py",
@@ -68,6 +72,13 @@ install(
     targets = [":visualization"],
     py_dest = PACKAGE_INFO.py_dest,
     deps = get_drake_py_installs([":visualization"]),
+)
+
+drake_py_unittest(
+    name = "colorize_test",
+    deps = [
+        ":visualization",
+    ],
 )
 
 drake_py_unittest(
