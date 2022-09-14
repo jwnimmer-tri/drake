@@ -49,6 +49,9 @@ $ bazel run //doc:build             -- --serve {drake,pydrake}.math  # Both at o
 
 # Further speed up preview by omitting expensive `dot` graphs:
 $ bazel run //doc/doxygen_cxx:build -- --serve --quick drake.math
+
+# Automatically-refreshed previewing during local editing.
+$ bazel run //doc:pages             -- --serve --watch
 ````
 
 To preview using a local branch of the styleguide instead of our pinned

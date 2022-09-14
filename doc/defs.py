@@ -3,6 +3,7 @@ documentation generation tools.
 """
 
 import argparse
+import filecmp
 import functools
 from http.server import SimpleHTTPRequestHandler
 import os.path
@@ -13,6 +14,8 @@ import shutil
 import subprocess
 from subprocess import PIPE, STDOUT
 import tempfile
+import threading
+import time
 
 from bazel_tools.tools.python.runfiles import runfiles
 
@@ -97,7 +100,7 @@ def perl_cleanup_html_output(*, out_dir, extra_perl_statements=None):
         for filename in filenames:
             if filename.endswith(".html"):
                 html_files.append(os.path.relpath(
-                    os.path.join(dirpath, filename), out_dir))
+                    join(dirpath, filename), out_dir))
 
     # Figure out what to do.
     default_perl_statements = [
@@ -116,12 +119,125 @@ def perl_cleanup_html_output(*, out_dir, extra_perl_statements=None):
                    cwd=out_dir)
 
 
-def _call_build(*, build, out_dir):
-    """Calls build() into out_dir, while also supplying a temp_dir."""
+def _sync(*, src, dst):
+    """Syncs (copies) the contents of src into dst, also removing any files
+    from dst that were not present in src. Returns a list of added or modified
+    files (as relative paths) in case dst was non-empty to begin with.
+
+    We use the styleguide-violating abbreviations `src` and `dst` to align
+    with the Python shutil.copytree convention.
+    """
+    # Scan the src and dst directories.
+    with os.scandir(src) as it:
+        src_entries = list(it)
+    os.makedirs(dst, exist_ok=True)
+    with os.scandir(dst) as it:
+        initial_dst_entries = list(it)
+
+    # Loop over src, copying the contents.
+    result = []
+    for src_entry in src_entries:
+        src_name = join(src, src_entry.name)
+        dst_name = join(dst, src_entry.name)
+        if src_entry.is_dir():
+            sub_result = _sync(src=src_name, dst=dst_name)
+            result.extend([
+                join(src_entry.name, sub_name)
+                for sub_name in sub_result
+            ])
+        else:
+            noop = (os.path.exists(dst_name)
+                    and filecmp.cmp(src_name, dst_name, shallow=False))
+            if not noop:
+                shutil.copy2(src=src_entry, dst=dst_name)
+                result.append(src_entry.name)
+
+    # Loop over initial_dst, removing anything no longer in src.
+    src_names = set([x.name for x in src_entries])
+    for dst_entry in initial_dst_entries:
+        if dst_entry.name in src_names:
+            continue
+        print(f"rm {dst_entry.name}")
+
+    # Don't report "changed files" when the dst started out empty.
+    if len(initial_dst_entries) == 0:
+        result = []
+
+    return result
+
+
+def _call_build(*, build, out_dir, inject_images):
+    """Calls build() into out_dir, while also supplying a temp_dir.
+
+    The files are built into a scratch folder (the build might be slow) and
+    then moved into out_dir (which should be quick) support of incremental
+    refreshes when in preview mode.
+
+    When inject_images is True, the Jekyll sites images are injected into the
+    result, which is necessary because C++ and Python API guides re-use those
+    images.
+
+    The result of `build()` (which is the list of suggested preview URLs) is
+    returned as the result of this function.
+    """
     with tempfile.TemporaryDirectory(
             dir=os.environ.get("TEST_TMPDIR"),
             prefix="doc_builder_temp_") as temp_dir:
-        return build(out_dir=out_dir, temp_dir=temp_dir)
+        with tempfile.TemporaryDirectory(
+                dir=os.environ.get("TEST_TMPDIR"),
+                prefix="doc_builder_scratch_") as scratch_dir:
+            # Call the specific builder (jekyll, doxygen, sphix, etc.).
+            result = build(out_dir=scratch_dir, temp_dir=temp_dir)
+
+            # Conditionally add some extra images.
+            if inject_images:
+                symlink_input(
+                    "drake/doc/header_and_footer_images.txt",
+                    strip_prefix=["drake/doc/"],
+                    temp_dir=scratch_dir)
+
+            # Sync the files from scratch to output, telling the user in case
+            # the preview site has changed.
+            changes = _sync(src=scratch_dir, dst=out_dir)
+            if changes:
+                print(f"Re-generated {len(changes)} files.", flush=True)
+    return result
+
+
+class _PreviewBuilder:
+    """Helper class that knows how to (re)build a site for local preview.
+
+    Optionally can start() this object to launch a background thread that
+    will rebuild the site repeatedly so local preview can refresh without
+    the user constantly re-running the preview command line.
+    """
+
+    def __init__(self, *, build, out_dir, inject_images):
+        self._build = build
+        self._out_dir = out_dir
+        self._inject_images = inject_images
+        self._thread = None
+        self._should_stop = False
+
+    def start(self):
+        self.thread = threading.Thread(target=self._loop)
+        self.thread.start()
+
+    def stop(self):
+        self._should_stop = True
+        if self._thread:
+            self._thread.join()
+            self._thread = None
+
+    def _loop(self):
+        while not self._should_stop:
+            self.build()
+
+    def build(self):
+        return _call_build(
+            build=self._build,
+            out_dir=self._out_dir,
+            inject_images=self._inject_images)
 
 
 class _HttpHandler(SimpleHTTPRequestHandler):
@@ -134,7 +250,7 @@ class _HttpHandler(SimpleHTTPRequestHandler):
         pass
 
 
-def _do_preview(*, build, subdir, port):
+def _do_preview(*, build, subdir, port, watch):
     """Implements the "serve" (http) mode of main().
 
     Args:
@@ -143,22 +259,23 @@ def _do_preview(*, build, subdir, port):
         port: Local port number to serve on, per the command line.
     """
     print("Generating documentation preview ...")
-    with tempfile.TemporaryDirectory(prefix="doc_builder_preview_") as scratch:
+    with tempfile.TemporaryDirectory(
+            prefix="doc_builder_preview_") as preview_dir:
         if subdir:
-            out_dir = join(scratch, subdir)
+            out_dir = join(preview_dir, subdir)
             os.mkdir(out_dir)
         else:
-            out_dir = scratch
-        pages = _call_build(build=build, out_dir=out_dir)
+            out_dir = preview_dir
+        preview_builder = _PreviewBuilder(
+            build=build,
+            out_dir=out_dir,
+            inject_images=bool(subdir))
+        pages = preview_builder.build()
         assert len(pages) > 0
-        if subdir:
-            # The C++ and Python API guides re-use images from the main site.
-            symlink_input(
-                "drake/doc/header_and_footer_images.txt",
-                strip_prefix=["drake/doc/"],
-                temp_dir=scratch)
-        os.chdir(scratch)
-        print(f"The files have temporarily been generated into {scratch}")
+        if watch:
+            preview_builder.start()
+        os.chdir(preview_dir)
+        print(f"The files have temporarily been generated into {preview_dir}")
         print()
         print("Serving at the following URLs for local preview:")
         print()
@@ -172,6 +289,7 @@ def _do_preview(*, build, subdir, port):
             server.serve_forever()
         except KeyboardInterrupt:
             print()
+            preview_builder.stop()
             return
 
 
@@ -194,7 +312,7 @@ def _do_generate(*, build, out_dir, on_error):
             print(f"+ mkdir -p {out_dir}", flush=True)
         os.makedirs(out_dir)
     print("Generating HTML ...")
-    pages = _call_build(build=build, out_dir=out_dir)
+    pages = _call_build(build=build, out_dir=out_dir, inject_images=False)
     assert len(pages) > 0
     # Disallow symlinks in the output dir.
     for root, dirs, _ in os.walk(out_dir):
@@ -220,7 +338,7 @@ def main(*, build, subdir, description, supports_modules=False,
     parser = argparse.ArgumentParser(description=description)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--serve", action='store_true',
+        "--serve", action="store_true",
         help="Serve the documentation on the given PORT for easy preview.")
     group.add_argument(
         "--out_dir", type=str, metavar="DIR",
@@ -229,6 +347,10 @@ def main(*, build, subdir, description, supports_modules=False,
         " If DIR already exists, then it must be empty."
         " (For regression testing, the DIR can be the magic value <test>,"
         " in which case a $TEST_TMPDIR subdir will be used.)")
+    parser.add_argument(
+        "--watch", action="store_true",
+        help="Rebuild the preview as the input files change, so that a"
+        " browser reload will reflect new source-file changes.")
     parser.add_argument(
         "--port", type=int, metavar="PORT", default=8000,
         help="Use a non-default PORT when serving for preview.")
@@ -264,8 +386,10 @@ def main(*, build, subdir, description, supports_modules=False,
             curried_build, quick=args.quick)
     if args.out_dir is None:
         assert args.serve
-        _do_preview(build=curried_build, subdir=subdir, port=args.port)
+        _do_preview(build=curried_build, subdir=subdir, port=args.port,
+                    watch=args.watch)
     else:
+        assert not args.watch
         _do_generate(build=curried_build, out_dir=args.out_dir,
                      on_error=parser.error)
 
