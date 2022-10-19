@@ -70,6 +70,18 @@ struct MyData2Docs {
   }
 };
 
+// Initially unbound type.
+struct MyData3 {};
+
+// Bound with initially unbound field type.
+struct MyData4 {
+  template <typename Archive>
+  void Serialize(Archive* a) {
+    a->Visit(DRAKE_NVP(meep));
+  }
+  MyData3 meep;
+};
+
 }  // namespace
 
 PYBIND11_MODULE(serialize_test_util, m) {
@@ -89,6 +101,28 @@ PYBIND11_MODULE(serialize_test_util, m) {
       .def(ParamInit<MyData2>());
   DefAttributesUsingSerialize(&cls2, cls2_doc);
   DefReprUsingSerialize(&cls2);
+
+  // Deferred binding of MyData3.
+  // This simulates forgetting to import a dependent module or bind a required
+  // type.
+  m.def("bind_MyData3", [m]() {
+    py::class_<MyData3> cls3(m, "MyData3");
+    cls3  // BR
+        .def(py::init())
+        .def(ParamInit<MyData3>());
+    DefAttributesUsingSerialize(&cls3);
+    DefReprUsingSerialize(&cls3);
+  });
+  // Binding of MyData4.
+  py::class_<MyData4> cls4(m, "MyData4");
+  cls4  // BR
+      .def(py::init())
+      .def(ParamInit<MyData4>());
+  // Defer binding of attributes and repr using serialize.
+  m.def("bind_MyData4_attributes_and_repr_using_serialize", [cls4]() mutable {
+    DefAttributesUsingSerialize(&cls4);
+    DefReprUsingSerialize(&cls4);
+  });
 }
 
 }  // namespace pydrake

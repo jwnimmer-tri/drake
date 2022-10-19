@@ -6,7 +6,9 @@ import numpy as np
 
 from pydrake.common.test.serialize_test_util import (
     MyData1,
-    MyData2
+    MyData2,
+    bind_MyData4_attributes_and_repr_using_serialize,
+    bind_MyData3,
 )
 
 
@@ -129,3 +131,17 @@ class TestSerializePybind(unittest.TestCase):
                          "some_vector=[5.0, 6.0], "
                          "some_map={'key': 7.0}, "
                          "some_variant=8.0)")
+
+    def test_negative_unbound_field_type(self):
+        # Fails fast on unbound field.
+        with self.assertRaises(RuntimeError) as cm:
+            bind_MyData4_attributes_and_repr_using_serialize()
+        self.assertIn(
+            "unable to find type info for \"drake::pydrake::"
+            "(anonymous namespace)::MyData3\"",
+            str(cm.exception),
+        )
+        # Now bind dependent type.
+        bind_MyData3()
+        # Now it works.
+        bind_MyData4_attributes_and_repr_using_serialize()
