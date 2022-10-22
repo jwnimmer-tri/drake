@@ -79,27 +79,25 @@ int DoMain() {
         "flag options for interpolator type.\n";
     return EXIT_FAILURE;
   }
-  auto plan_interpolator =
-      builder.AddSystem<LcmPlanInterpolator>(urdf, interpolator_type);
-  const int kNumJoints = plan_interpolator->num_joints();
+  auto& plan_interpolator =
+      *builder.AddSystem<LcmPlanInterpolator>(urdf, interpolator_type);
+  const int kNumJoints = plan_interpolator.num_joints();
 
-  auto plan_sub = builder.AddSystem(
+  auto& plan_sub = *builder.AddSystem(
       systems::lcm::LcmSubscriberSystem::Make<lcmt_robot_plan>(
           kLcmPlanChannel, &lcm));
-  plan_sub->set_name("plan_sub");
+  plan_sub.set_name("plan_sub");
 
-  auto command_pub = builder.AddSystem(
+  auto& command_pub = *builder.AddSystem(
       systems::lcm::LcmPublisherSystem::Make<lcmt_iiwa_command>(
           kLcmCommandChannel, &lcm));
-  command_pub->set_name("command_pub");
+  command_pub.set_name("command_pub");
 
   // Connect subscribers to input ports.
-  builder.Connect(plan_sub->get_output_port(),
-                  plan_interpolator->get_input_port_iiwa_plan());
+  builder.Connect(plan_sub, plan_interpolator["iiwa_plan"]);
 
   // Connect publisher to output port.
-  builder.Connect(plan_interpolator->get_output_port_iiwa_command(),
-                  command_pub->get_input_port());
+  builder.Connect(plan_interpolator["iiwa_command"], command_pub);
 
   // Create the diagram, simulator, and context.
   auto owned_diagram = builder.Build();
@@ -107,7 +105,7 @@ int DoMain() {
   systems::Simulator<double> simulator(std::move(owned_diagram));
   auto& diagram_context = simulator.get_mutable_context();
   auto& plan_interpolator_context =
-      diagram.GetMutableSubsystemContext(*plan_interpolator, &diagram_context);
+      diagram.GetMutableSubsystemContext(plan_interpolator, &diagram_context);
 
   // Wait for the first message.
   drake::log()->info("Waiting for first lcmt_iiwa_status");
@@ -122,8 +120,8 @@ int DoMain() {
     q0[i] = status_sub.message().joint_position_measured[i];
   }
   diagram_context.SetTime(t0);
-  plan_interpolator->Initialize(t0, q0, &plan_interpolator_context);
-  auto& status_value = plan_interpolator->get_input_port_iiwa_status().FixValue(
+  plan_interpolator.Initialize(t0, q0, &plan_interpolator_context);
+  auto& status_value = plan_interpolator.get_input_port_iiwa_status().FixValue(
       &plan_interpolator_context, status_sub.message());
 
   // Run forever, using the lcmt_iiwa_status message to dictate when simulation

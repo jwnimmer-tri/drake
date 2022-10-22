@@ -26,8 +26,8 @@ def simulate(*, initial_state, controller_params, t_final, tape_period):
     plant = builder.AddSystem(AcrobotPlant())
     controller = builder.AddSystem(AcrobotSpongController())
 
-    builder.Connect(plant.get_output_port(0), controller.get_input_port(0))
-    builder.Connect(controller.get_output_port(0), plant.get_input_port(0))
+    builder.Connect(plant, controller)
+    builder.Connect(controller, plant)
     state_logger = LogVectorOutput(plant.get_output_port(0), builder,
                                    tape_period)
 

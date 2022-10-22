@@ -81,6 +81,7 @@ DiagramBuilder<T>::connection_map() const {
   return connection_map_;
 }
 
+#if 0
 template <typename T>
 void DiagramBuilder<T>::Connect(
     const OutputPort<T>& src,
@@ -136,10 +137,29 @@ void DiagramBuilder<T>::Connect(const System<T>& src, const System<T>& dest) {
 }
 
 template <typename T>
+void DiagramBuilder<T>::Connect(
+    const System<T>& src, 
+    const InputPort<T>& dest) {
+  ThrowIfAlreadyBuilt();
+  DRAKE_THROW_UNLESS(src.num_output_ports() == 1);
+  Connect(src.get_output_port(0), dest);
+}
+
+template <typename T>
+void DiagramBuilder<T>::Connect(
+    const OutputPort<T>& src,
+    const System<T>& dest) {
+  ThrowIfAlreadyBuilt();
+  DRAKE_THROW_UNLESS(dest.num_input_ports() == 1);
+  Connect(src, dest.get_input_port(0));
+}
+
+template <typename T>
 void DiagramBuilder<T>::Cascade(const System<T>& src, const System<T>& dest) {
   ThrowIfAlreadyBuilt();
   Connect(src, dest);
 }
+#endif
 
 template <typename T>
 InputPortIndex DiagramBuilder<T>::ExportInput(

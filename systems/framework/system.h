@@ -884,6 +884,17 @@ class System : public SystemBase {
   because the address can vary from run to run. */
   std::string GetMemoryObjectName() const;
 
+  struct PortRef {
+    operator const InputPort<T>&() const;
+    operator const OutputPort<T>&() const;
+  };
+
+  const InputPort<T>& operator[](InputPortIndex index) const;
+  const OutputPort<T>& operator[](OutputPortIndex index) const;
+  const SystemConstraint<T>& operator[](SystemConstraintIndex index) const;
+  const CacheEntry& operator[](CacheIndex index) const;
+  PortRef operator[](std::string_view name) const;
+
   // So we don't have to keep writing this->num_input_ports().
   using SystemBase::num_input_ports;
   using SystemBase::num_output_ports;

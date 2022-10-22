@@ -306,6 +306,8 @@ class DiagramBuilder {
     return *dynamic_pointer_cast_or_throw<MySystem<T>>(&subsystem);
   }
 
+  // XXXXX BEGIN connections
+
   /// (Advanced) Returns a reference to the map of connections between Systems.
   /// The reference becomes invalid upon any call to Build or BuildInto.
   const std::map<InputPortLocator, OutputPortLocator>& connection_map() const;
@@ -317,8 +319,7 @@ class DiagramBuilder {
   /// already connected input port causes the resultant
   /// FixedInputPortValue to override any other value present on that
   /// port.
-  void Connect(const OutputPort<T>& src, const InputPort<T>& dest);
-
+  ///
   /// Declares that sole input port on the @p dest system is connected to sole
   /// output port on the @p src system.
   /// @note The connection created between @p src and @p dest via a call to
@@ -332,13 +333,11 @@ class DiagramBuilder {
   /// or @p src has no output ports, or @p src has more than one output port).
   ///
   /// @exclude_from_pydrake_mkdoc{Not bound in pydrake.}
-  void Connect(const System<T>& src, const System<T>& dest);
 
-  /// Cascades @p src and @p dest.  The sole input port on the @p dest system
-  /// is connected to sole output port on the @p src system.
-  /// @throws std::exception if the sole-port precondition is not met (i.e., if
-  /// @p dest has no input ports, or @p dest has more than one input port, or
-  /// @p src has no output ports, or @p src has more than one output port).
+  void Connect(const System<T>& src, const System<T>& dest);
+  void Connect(const OutputPort<T>& src, const InputPort<T>& dest);
+  void Connect(const System<T>& src, const InputPort<T>& dest);
+  void Connect(const OutputPort<T>& src, const System<T>& dest);
   void Cascade(const System<T>& src, const System<T>& dest);
 
   /// Declares that the given @p input port of a constituent system is
@@ -392,6 +391,12 @@ class DiagramBuilder {
       const OutputPort<T>& output,
       std::variant<std::string, UseDefaultName> name = kUseDefaultName);
 
+  /// Returns true iff the given input @p port of a constituent system is either
+  /// connected to another constituent system or exported as a diagram input.
+  bool IsConnectedOrExported(const InputPort<T>& port) const;
+
+  // XXXXX END connections
+
   /// Builds the Diagram that has been described by the calls to Connect,
   /// ExportInput, and ExportOutput.
   /// @throws std::exception if the graph is not buildable.
@@ -407,10 +412,6 @@ class DiagramBuilder {
   /// Only Diagram subclasses should call this method. The target must not
   /// already be initialized.
   void BuildInto(Diagram<T>* target);
-
-  /// Returns true iff the given input @p port of a constituent system is either
-  /// connected to another constituent system or exported as a diagram input.
-  bool IsConnectedOrExported(const InputPort<T>& port) const;
 
  private:
   // Declares a new input to the entire Diagram, using @p model_input to
