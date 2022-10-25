@@ -34,29 +34,61 @@ try:
 except ImportError:
     pass
 
+
+def _is_wheel():
+    """Returns true iff our runtime environment is from a wheel."""
+    # For wheels, the lib/lidrake.so will appear underneath pydrake.
+    # For other installation modes, it would be in a parent directory instead.
+    return os.path.exists(os.path.join(
+        os.path.dirname(__file__), "lib", "libdrake.so"))
+
+
+def _diagnose_import_error(e):
+    """Prints a message suggesting how to fix the given ImportError, in case
+    we can determine what might have happened and have a useful suggestion.
+    """
+    if not ("/pydrake/" in e.path and "cannot open shared object" in e.msg):
+        # This is not a native code problem.
+        return
+
+    # The baseline message is the same. We'll add to this as we go.
+    message = f"""
+Drake failed to load a required native code library. This could indicate an
+installation problem, or that your system is missing required packages that
+are normally provided by the operating system distribution.
+"""
+
+    # For macOS.
+    if "darwin" in sys.platform:
+        message += """
+For macOS, ensure that you're using Homebrew Python (not Apple's system
+Python).
+"""
+        print(message)
+        return
+
+    # For Ubuntu.
+    if "linux" in sys.platform and _is_wheel():
+        message += """
+For Ubuntu 20.04, install these additional libraries:
+
+  sudo apt install libx11-6 libsm6 libglib2.0-0 libxt6 libpython3.8
+
+For Ubuntu 22.04, install these additional libraries:
+
+  sudo apt install libx11-6 libsm6 libglib2.0-0
+"""
+        print(message)
+        return
+
+
 # We specifically load `common` prior to loading any other pydrake modules,
 # in order to a) get assertion configuration done as early as possible, and b)
 # detect whether we are able to load the shared libraries.
 try:
     from . import common
 except ImportError as e:
-    if '/pydrake/' in e.path and 'cannot open shared object file' in e.msg:
-        message = f'''
-Drake failed to load a required library. This could indicate an installation
-problem, or that your system is missing required distro-provided packages.
-Please refer to the installation instructions to ensure that all required
-dependencies are installed.
-'''
-        # For wheel builds, we have a file with additional advice.
-        wheel_doc = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), 'INSTALLATION')
-        if os.path.exists(wheel_doc):
-            with open(wheel_doc) as f:
-                message += f.read()
-        message += '''
-For more information, please see https://drake.mit.edu/installation.html
-'''
-        print(message)
+    _diagnose_import_error(e)
     raise
 
 __all__ = ['common', 'getDrakePath']

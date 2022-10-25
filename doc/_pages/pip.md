@@ -72,7 +72,7 @@ from the host Linux distribution.
 
 <!-- TODO(mwoehlke-kitware)
 On or after 2022-12-01 (once Drake 1.10.0 is released),
-remove these instructions and point to INSTALLATION instead.
+remove these instructions.
 -->
 
 For Ubuntu 20.04, install these additional libraries:

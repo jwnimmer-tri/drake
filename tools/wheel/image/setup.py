@@ -86,7 +86,6 @@ See https://drake.mit.edu/pip.html for installation instructions and caveats.
               'pydrake/lib/**',
               'pydrake/doc/**',
               'pydrake/share/**',
-              'pydrake/INSTALLATION',
           )
       },
       python_requires='>=3.8',
