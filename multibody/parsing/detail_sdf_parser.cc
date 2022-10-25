@@ -1595,6 +1595,7 @@ sdf::InterfaceModelPtr ParseNestedInterfaceModel(
     }
   }
 
+  main_interface_model->SetParserSupportsMergeInclude(true);
   return main_interface_model;
 }
 
