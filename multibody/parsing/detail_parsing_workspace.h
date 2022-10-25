@@ -51,6 +51,14 @@ class ParserInterface {
       const std::optional<std::string>& parent_model_name,
       const ParsingWorkspace& workspace) = 0;
 
+  virtual void MergeModel(
+      const DataSource& data_source, ModelInstanceIndex existing_model,
+      const ParsingWorkspace& workspace) {
+    (void)(data_source);
+    (void)(existing_model);
+    (void)(workspace);
+  }
+
   // Parses all models from the input file specified by @p data_source and adds
   // them to @p plant. New model instances will be added to @p plant.
   //

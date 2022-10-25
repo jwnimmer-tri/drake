@@ -933,6 +933,15 @@ std::optional<ModelInstanceIndex> UrdfParserWrapper::AddModel(
                           workspace);
 }
 
+void UrdfParserWrapper::MergeModel(
+    const DataSource& data_source, ModelInstanceIndex existing_model,
+    const ParsingWorkspace& workspace) {
+  (void)(data_source);
+  (void)(existing_model);
+  (void)(workspace);
+  DRAKE_DEMAND(false);
+}
+
 std::vector<ModelInstanceIndex> UrdfParserWrapper::AddAllModels(
     const DataSource& data_source,
     const std::optional<std::string>& parent_model_name,

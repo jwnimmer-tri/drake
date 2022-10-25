@@ -1492,19 +1492,29 @@ sdf::InterfaceModelPtr ParseNestedInterfaceModel(
             sdf::ErrorCode::ELEMENT_INVALID, detail));
       });
 
+  const bool is_merge = include.IsMerge().value_or(false);
+
   ModelInstanceIndex main_model_instance;
   // New instances will have indices starting from cur_num_models
   int cur_num_models = plant->num_model_instances();
   ParsingWorkspace subworkspace{
     package_map, subdiagnostic, plant, collision_resolver, parser_selector};
-  const std::optional<ModelInstanceIndex> maybe_model =
-      parser_selector(diagnostic, resolved_filename).
-      AddModel(data_source, include.LocalModelName().value_or(""),
-               include.AbsoluteParentName(), subworkspace);
-  if (maybe_model.has_value()) {
-    main_model_instance = *maybe_model;
+  if (is_merge) {
+    auto parent_model_instance =
+        plant->GetModelInstanceByName(include.AbsoluteParentName());
+    parser_selector(diagnostic, resolved_filename).
+        MergeModel(data_source, parent_model_instance, subworkspace);
+    main_model_instance = parent_model_instance;
   } else {
-    return nullptr;
+    const std::optional<ModelInstanceIndex> maybe_model =
+        parser_selector(diagnostic, resolved_filename).
+        AddModel(data_source, include.LocalModelName().value_or(""),
+                 include.AbsoluteParentName(), subworkspace);
+    if (maybe_model.has_value()) {
+      main_model_instance = *maybe_model;
+    } else {
+      return nullptr;
+    }
   }
 
   // Add explicit model frame to first link.
@@ -1595,7 +1605,9 @@ sdf::InterfaceModelPtr ParseNestedInterfaceModel(
     }
   }
 
-  main_interface_model->SetParserSupportsMergeInclude(true);
+  if (is_merge) {
+    main_interface_model->SetParserSupportsMergeInclude(true);
+  }
   return main_interface_model;
 }
 
