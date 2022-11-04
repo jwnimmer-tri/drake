@@ -98,6 +98,7 @@ struct Impl {
     using Base::DeclarePeriodicUnrestrictedUpdateEvent;
     using Base::DeclarePerStepEvent;
     using Base::DeclareStateOutputPort;
+    using Base::DeclareUntypedAbstractInputPort;
     using Base::DeclareVectorInputPort;
     using Base::DeclareVectorOutputPort;
     using Base::get_mutable_forced_discrete_update_events;
@@ -583,11 +584,19 @@ Note: The above is for the C++ documentation. For Python, use
         .def(
             "DeclareAbstractInputPort",
             [](PyLeafSystem* self, const std::string& name,
-                const AbstractValue& model_value) -> const InputPort<T>& {
-              return self->DeclareAbstractInputPort(name, model_value);
+                const AbstractValue* model_value) -> const InputPort<T>& {
+              if (model_value == nullptr) {
+                return self->DeclareUntypedAbstractInputPort(name);
+              } else {
+                return self->DeclareAbstractInputPort(name, *model_value);
+              }
             },
-            py_rvp::reference_internal, py::arg("name"), py::arg("model_value"),
-            doc.LeafSystem.DeclareAbstractInputPort.doc)
+            py_rvp::reference_internal, py::arg("name"),
+            py::arg("model_value") = py::none(),
+            (std::string(doc.LeafSystem.DeclareAbstractInputPort.doc) +
+                "\n\nIn Python, the model_value may be omitted in which case "
+                "type-checking will be skipped.")
+                .c_str())
         .def("DeclareAbstractParameter",
             &PyLeafSystem::DeclareAbstractParameter, py::arg("model_value"),
             doc.LeafSystem.DeclareAbstractParameter.doc)

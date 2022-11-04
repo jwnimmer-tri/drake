@@ -888,3 +888,34 @@ class TestCustom(unittest.TestCase):
             system.CalcOutput(context, output)
             value = output.get_data(0)
             self.assertEqual(value.get_value(), expected_output_value)
+
+    def test_untyped_input_port(self):
+        test = self
+
+        def assert_value_equal(a, b):
+            a_name, a_value = a
+            b_name, b_value = b
+            self.assertEqual(a_name, b_name)
+            numpy_compare.assert_equal(a_value, b_value)
+
+        # N.B. Since this has trivial operations, we can test all scalar types.
+        for T in [float, AutoDiffXd, Expression]:
+            class CustomAbstractSystem(LeafSystem_[T]):
+                def __init__(self):
+                    LeafSystem_[T].__init__(self)
+                    self.input_port = self.DeclareAbstractInputPort("in")
+                    self.output_port = self.DeclareAbstractOutputPort(
+                        "out",
+                        lambda: AbstractValue.Make(object()),
+                        self.DoCalcAbstractOutput)
+
+                def DoCalcAbstractOutput(self, context, y_data):
+                    input_value = self.EvalAbstractInput(
+                        context, 0).get_value()
+                    y_data.set_value(input_value)
+
+            system = CustomAbstractSystem()
+            context = system.CreateDefaultContext()
+            system.get_input_port().FixValue(context, ("foo", "bar"))
+            output = system.get_output_port().Eval(context)
+            self.assertEqual(output.get_value(), None)

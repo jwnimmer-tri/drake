@@ -657,6 +657,14 @@ InputPort<T>& LeafSystem<T>::DeclareAbstractInputPort(
 }
 
 template <typename T>
+InputPort<T>& LeafSystem<T>::DeclareUntypedAbstractInputPort(
+    std::string name) {
+  const int next_index = this->num_input_ports();
+  model_input_values_.AddModel(next_index, nullptr);
+  return this->DeclareInputPort(std::move(name), kAbstractValued, 0 /* size */);
+}
+
+template <typename T>
 void LeafSystem<T>::DeprecateInputPort(
     const InputPort<T>& port, std::string message) {
   InputPort<T>& mutable_port = const_cast<InputPort<T>&>(

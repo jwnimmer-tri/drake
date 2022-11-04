@@ -1206,6 +1206,9 @@ class LeafSystem : public System<T> {
       std::variant<std::string, UseDefaultName> name,
       const AbstractValue& model_value);
 
+  /** (Internal use only.) */
+  InputPort<T>& DeclareUntypedAbstractInputPort(std::string name);
+
   /** Flags an already-declared input port as deprecated. The first attempt to
   use the port in a program will log a warning message. This function may be
   called at most once for any given port. */
