@@ -45,8 +45,9 @@ configuration struct, but many do so.
 @ingroup planning_collision_checker */
 struct CollisionCheckerParams {
   /** A RobotDiagram model of the robot and environment. Must not be
-  nullptr. */
-  std::unique_ptr<RobotDiagram<double>> model;
+  nullptr. After passing the CollisionCheckerParams to a CollisionChecker
+  constructor, the user must not alter the pointed-to model anymore. */
+  std::shared_ptr<RobotDiagram<double>> model;
 
   // TODO(SeanCurtis-TRI): add doc hyperlinks to edge checking doc.
   /** A vector of model instance indices that identify which model instances

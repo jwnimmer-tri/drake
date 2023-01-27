@@ -154,6 +154,18 @@ std::vector<int> CalcUncontrolledDofsThatKinematicallyAffectTheRobot(
 
 }  // namespace
 
+std::unique_ptr<CollisionChecker> CollisionChecker::Clone() const {
+  // We must not allow a Clone() until the subclass ctor is finished.
+  DRAKE_THROW_UNLESS(!IsInitialSetup());
+
+  // Copying a (non-const) shared_ptr<RobotDiagram> would imply dangerous
+  // sharing of mutable resources. For clarity, we'll invariant-check here
+  // that the ptr is empty.
+  DRAKE_DEMAND(setup_model_.get() == nullptr);
+
+  return DoClone();
+}
+
 CollisionChecker::~CollisionChecker() = default;
 
 bool CollisionChecker::IsPartOfRobot(const Body<double>& body) const {

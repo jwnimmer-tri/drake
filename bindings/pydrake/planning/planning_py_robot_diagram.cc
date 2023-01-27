@@ -24,7 +24,8 @@ void DefinePlanningRobotDiagram(py::module m) {
     {
       using Class = RobotDiagram<T>;
       constexpr auto& cls_doc = doc.RobotDiagram;
-      auto cls = DefineTemplateClassWithDefault<Class, systems::Diagram<T>>(
+      auto cls = DefineTemplateClassWithDefault<Class, systems::Diagram<T>,
+          std::shared_ptr<Class>>(
           m, "RobotDiagram", GetPyParam<T>(), cls_doc.doc);
       cls  // BR
           .def("plant", &Class::plant, py_rvp::reference_internal,

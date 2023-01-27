@@ -164,7 +164,7 @@ class CollisionChecker {
 
   virtual ~CollisionChecker();
 
-  std::unique_ptr<CollisionChecker> Clone() const { return DoClone(); }
+  std::unique_ptr<CollisionChecker> Clone() const;
 
   /** @name Robot Model
 
