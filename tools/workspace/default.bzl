@@ -23,6 +23,7 @@ load("@drake//tools/workspace/doxygen:repository.bzl", "doxygen_repository")
 load("@drake//tools/workspace/dm_control_internal:repository.bzl", "dm_control_internal_repository")  # noqa
 load("@drake//tools/workspace/drake_visualizer:repository.bzl", "drake_visualizer_repository")  # noqa
 load("@drake//tools/workspace/eigen:repository.bzl", "eigen_repository")
+load("@drake//tools/workspace/eigen_internal:repository.bzl", "eigen_internal_repository")  # noqa
 load("@drake//tools/workspace/expat:repository.bzl", "expat_repository")
 load("@drake//tools/workspace/fcl:repository.bzl", "fcl_repository")  # noqa
 load("@drake//tools/workspace/fcl_internal:repository.bzl", "fcl_internal_repository")  # noqa
@@ -156,6 +157,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         drake_visualizer_repository(name = "drake_visualizer", mirrors = mirrors)  # noqa
     if "eigen" not in excludes:
         eigen_repository(name = "eigen")
+    if "eigen_internal" not in excludes:
+        eigen_internal_repository(name = "eigen_internal")
     if "expat" not in excludes:
         expat_repository(name = "expat")
     if "fcl" not in excludes:

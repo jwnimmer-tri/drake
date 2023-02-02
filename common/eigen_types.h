@@ -146,6 +146,16 @@ using MatrixLikewise = Eigen::Matrix<Scalar,
     Derived::IsRowMajor ? Eigen::RowMajor : Eigen::ColMajor,
     Derived::MaxRowsAtCompileTime, Derived::MaxColsAtCompileTime>;
 
+/// A column vector of dynamic size, templated on scalar type, that opts-out
+/// of any memory-alignment guarantees.
+template <typename Scalar>
+using UnalignedVectorX = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::DontAlign>;
+
+/// A matrix of dynamic size, templated on scalar type, that opts-out of any
+/// memory-alignment guarantees.
+template <typename Scalar>
+using UnalignedMatrixX = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::DontAlign>;
+
 /// A quaternion templated on scalar type.
 template <typename Scalar>
 using Quaternion = Eigen::Quaternion<Scalar>;

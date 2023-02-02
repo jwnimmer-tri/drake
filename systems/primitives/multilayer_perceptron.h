@@ -4,16 +4,10 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/systems/framework/leaf_system.h"
+#include "drake/systems/primitives/multilayer_perceptron_activation_type.h"
 
 namespace drake {
 namespace systems {
-
-/** Specifies one of the common activation functions in a neural network. */
-enum PerceptronActivationType {
-  kIdentity,
-  kReLU,
-  kTanh,
-};
 
 // Forward declarations.
 namespace internal {

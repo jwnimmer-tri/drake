@@ -1,0 +1,32 @@
+# -*- mode: python -*-
+
+load("@rules_python//python:defs.bzl", "py_binary")
+load(":amalgamator.bzl", "amalgamate")
+
+licenses([
+    "notice",  # BSD-3-Clause
+    "reciprocal",  # MPL-2.0
+    "unencumbered",  # Public-Domain
+])
+
+package(default_visibility = ["//visibility:private"])
+
+py_binary(
+    name = "amalgamator",
+    srcs = ["amalgamator.py"],
+)
+
+amalgamate(
+    name = "amalgamate",
+    out = "include/drake_vendor/eigen_amalgamation.h",
+    roots = ["Eigen/Core"],
+    deps = ["@eigen"],
+)
+
+cc_library(
+    name = "amalgamation",
+    hdrs = ["include/drake_vendor/eigen_amalgamation.h"],
+    strip_include_prefix = "include",
+    defines = ["EIGEN_MPL2_ONLY"],
+    visibility = ["//visibility:public"],
+)
