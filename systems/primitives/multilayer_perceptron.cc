@@ -4,6 +4,7 @@
 
 #include "drake/common/default_scalars.h"
 #include "drake/systems/framework/basic_vector.h"
+#include "drake/systems/primitives/multilayer_perceptron_impl.h"
 
 namespace drake {
 namespace systems {
@@ -11,21 +12,24 @@ namespace systems {
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-namespace internal {
-
-template <typename T>
-struct CalcLayersData {
-  explicit CalcLayersData(int n) : Wx(n), Wx_plus_b(n), Xn(n) {}
-
-  MatrixX<T> input_features;
-  std::vector<VectorX<T>> Wx;
-  std::vector<VectorX<T>> Wx_plus_b;
-  std::vector<VectorX<T>> Xn;
-};
-
-}  // namespace internal
-
 namespace {
+
+/* XXX */
+template <typename T>
+struct NetworkScratch {
+  /* Creates scratch storage for a network.
+  The `num_neurons` provides the number of neurons in each layer.
+  The num_layers is `num_neurons.size()`. */
+  explicit NetworkScratch(const std::vector<int>& layer_sizes) {
+    const size_t num_layers = num_neurons.size();
+    layers.reserve(num_layers);
+    for (int layer_size : layer_sizes) {
+      layers.push_back(Layer<T>(layer_size));
+    }
+  }
+
+  std::vector<internal::Layer<T>> layers;
+};
 
 std::vector<PerceptronActivationType> MakeDefaultActivations(
     int num, PerceptronActivationType activation_type) {
@@ -41,59 +45,6 @@ const std::vector<int>& RejectEmpty(const std::vector<int>& arg) {
         "elements.");
   }
   return arg;
-}
-
-template <typename T>
-struct BackPropData {
-  explicit BackPropData(int n)
-      : Wx(n),
-        Wx_plus_b(n),
-        Xn(n),
-        dXn_dWx_plus_b(n),
-        dloss_dXn(n),
-        dloss_dWx_plus_b(n),
-        dloss_dW(n),
-        dloss_db(n) {}
-
-  std::vector<MatrixX<T>> Wx;
-  std::vector<MatrixX<T>> Wx_plus_b;
-  std::vector<MatrixX<T>> Xn;
-  std::vector<MatrixX<T>> dXn_dWx_plus_b;
-  std::vector<MatrixX<T>> dloss_dXn;
-  std::vector<MatrixX<T>> dloss_dWx_plus_b;
-  std::vector<MatrixX<T>> dloss_dW;
-  std::vector<VectorX<T>> dloss_db;
-  MatrixX<T> input_features;
-  MatrixX<T> dloss_dinput_features;
-};
-
-template <typename T, int cols>
-void Activation(
-    PerceptronActivationType type,
-    const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, cols>>& X,
-    Eigen::Matrix<T, Eigen::Dynamic, cols>* Y,
-    Eigen::Matrix<T, Eigen::Dynamic, cols>* dYdX = nullptr) {
-  Y->resize(X.rows(), X.cols());
-  if (dYdX) {
-    dYdX->resize(X.rows(), X.cols());
-  }
-  if (type == kTanh) {
-    *Y = X.array().tanh().matrix();
-    if (dYdX) {
-      dYdX->noalias() = (1.0 - X.array().tanh().square()).matrix();
-    }
-  } else if (type == kReLU) {
-    *Y = X.array().max(0.0).matrix();
-    if (dYdX) {
-      dYdX->noalias() = (X.array() <= 0).select(0 * X, 1);
-    }
-  } else {
-    DRAKE_DEMAND(type == kIdentity);
-    *Y = X;
-    if (dYdX) {
-      dYdX->setConstant(1.0);
-    }
-  }
 }
 
 }  // namespace
@@ -156,20 +107,10 @@ MultilayerPerceptron<T>::MultilayerPerceptron(
   this->DeclareNumericParameter(
       BasicVector<T>(VectorX<T>::Zero(num_parameters_)));
 
-  // Declare cache entry for CalcOutput.
-  internal::CalcLayersData<T> calc_layers_data(num_weights_);
-  for (int i = 0; i < num_weights_; ++i) {
-    calc_layers_data.Wx[i] = VectorX<T>::Zero(layers_[i + 1]);
-    calc_layers_data.Wx_plus_b[i] = VectorX<T>::Zero(layers_[i + 1]);
-    calc_layers_data.Xn[i] = VectorX<T>::Zero(layers_[i + 1]);
-  }
-  calc_layers_cache_ = &this->DeclareCacheEntry(
-      "calc_layers", calc_layers_data, &MultilayerPerceptron<T>::CalcLayers);
-
-  // Declare cache entry for Backpropagation:
-  BackPropData<T> backprop_data(num_weights_);
-  backprop_cache_ = &this->DeclareCacheEntry(
-      "backprop", ValueProducer(backprop_data, &ValueProducer::NoopCalc));
+  // Allocate storage for this network's intermediate calculations.
+  network_scratch_ = &this->DeclareCacheEntry(
+      "network_scratch",
+      ValueProducer(NetworkScratch<T>(layers_), &ValueProducer::NoopCalc));
 }
 
 template <typename T>
@@ -306,24 +247,30 @@ T MultilayerPerceptron<T>::Backpropagation(
   this->ValidateContext(context);
   DRAKE_DEMAND(X.rows() == this->get_input_port().size());
   DRAKE_DEMAND(dloss_dparams->rows() == num_parameters_);
+#if 1
+  (void)(loss);
+  return 0;
+#else
   BackPropData<T>& data =
       backprop_cache_->get_mutable_cache_entry_value(context)
           .template GetMutableValueOrThrow<BackPropData<T>>();
   // Forward pass:
   if (has_input_features_) {
-    CalcInputFeatures(X, &data.input_features);
+    CalcInputFeatures(X, layers_[0], &data.input_features);
     data.Wx[0].noalias() = GetWeights(context, 0) * data.input_features;
   } else {
     data.Wx[0].noalias() = GetWeights(context, 0) * X;
   }
   data.Wx_plus_b[0].noalias() = data.Wx[0].colwise() + GetBiases(context, 0);
-  Activation<T, Eigen::Dynamic>(activation_types_[0], data.Wx_plus_b[0],
-                                &data.Xn[0], &data.dXn_dWx_plus_b[0]);
+  internal::CalcActivation<T, Eigen::Dynamic>(
+      activation_types_[0], data.Wx_plus_b[0],
+      &data.Xn[0], &data.dXn_dWx_plus_b[0]);
   for (int i = 1; i < num_weights_; ++i) {
     data.Wx[i].noalias() = GetWeights(context, i) * data.Xn[i - 1];
     data.Wx_plus_b[i].noalias() = data.Wx[i].colwise() + GetBiases(context, i);
-    Activation<T, Eigen::Dynamic>(activation_types_[i], data.Wx_plus_b[i],
-                                  &data.Xn[i], &data.dXn_dWx_plus_b[i]);
+    internal::CalcActivation<T, Eigen::Dynamic>(
+        activation_types_[i], data.Wx_plus_b[i],
+        &data.Xn[i], &data.dXn_dWx_plus_b[i]);
   }
   data.dloss_dXn[num_weights_ - 1].resize(layers_[num_weights_], X.cols());
   data.dloss_dXn[num_weights_ - 1].setConstant(
@@ -357,6 +304,7 @@ T MultilayerPerceptron<T>::Backpropagation(
     }
   }
   return l;
+#endif
 }
 
 template <typename T>
@@ -392,107 +340,55 @@ void MultilayerPerceptron<T>::BatchOutput(const Context<T>& context,
         "when the output layer has size 1.");
   }
 
-  BackPropData<T>& data =
-      backprop_cache_->get_mutable_cache_entry_value(context)
-          .template GetMutableValueOrThrow<BackPropData<T>>();
-  // Forward pass:
-  if (has_input_features_) {
-    CalcInputFeatures(X, &data.input_features);
-    data.Wx[0].noalias() = GetWeights(context, 0) * data.input_features;
-  } else {
-    data.Wx[0].noalias() = GetWeights(context, 0) * X;
+  // Grab what we need from the Context.
+  const VectorX<T>& params = GetParameters(context);
+  auto& scratch = network_scratch_->get_mutable_cache_entry_value(context)
+                      .template GetMutableValueOrThrow<NetworkScratch<T>>();
+  std::vector<internal::Layer<T>>& layers = scratch.layers;
+  const bool calc_gradient = (dYdX != nullptr);
+
+  // Calculate the forward pass.
+  layers[0].CalcInputFeatures(
+      X, layers_[0], has_input_features_ ? &use_sin_cos_for_input_ : nullptr);
+  for (int i = 0; i < num_weights_; ++i) {
+    layers[i + 1].CalcForward(layers[i], GetWeights(params, i),
+                              GetBiases(params, i), activation_types_[i],
+                              calc_gradient);
   }
-  data.Wx_plus_b[0].noalias() = data.Wx[0].colwise() + GetBiases(context, 0);
-  Activation<T, Eigen::Dynamic>(activation_types_[0], data.Wx_plus_b[0],
-                                &data.Xn[0],
-                                gradients ? &data.dXn_dWx_plus_b[0] : nullptr);
-  for (int i = 1; i < num_weights_; ++i) {
-    data.Wx[i].noalias() = GetWeights(context, i) * data.Xn[i - 1];
-    data.Wx_plus_b[i].noalias() = data.Wx[i].colwise() + GetBiases(context, i);
-    Activation<T, Eigen::Dynamic>(
-        activation_types_[i], data.Wx_plus_b[i], &data.Xn[i],
-        gradients ? &data.dXn_dWx_plus_b[i] : nullptr);
+  *Y = layers.back().get_output();
+
+  // Calculate the backward pass (if requested).
+  if (!calc_gradient) {
+    return;
   }
-  *Y = data.Xn[num_weights_ - 1];
-  if (gradients) {
-    // Backward pass:
-    // In order to reuse the cache from Backprop, we take loss ≡ Y.
-    data.dloss_dXn[num_weights_ - 1] = RowVectorX<T>::Constant(X.cols(), 1.0);
-    for (int i = num_weights_ - 1; i >= 0; --i) {
-      data.dloss_dWx_plus_b[i] =
-          (data.dloss_dXn[i].array() * data.dXn_dWx_plus_b[i].array()).matrix();
-      if (i > 0) {
-        data.dloss_dXn[i - 1].noalias() =
-            GetWeights(context, i).transpose() * data.dloss_dWx_plus_b[i];
-      } else if (has_input_features_) {
-        data.dloss_dinput_features.noalias() =
-            GetWeights(context, 0).transpose() * data.dloss_dWx_plus_b[0];
-        int feature_row = 0, input_row = 0;
-        for (bool use_sin_cos : use_sin_cos_for_input_) {
-          if (use_sin_cos) {
-            dYdX->row(input_row) =
-                data.dloss_dinput_features.row(feature_row).array() *
-                    X.row(input_row).array().cos() -
-                data.dloss_dinput_features.row(feature_row + 1).array() *
-                    X.row(input_row).array().sin();
-            feature_row += 2;
-            ++input_row;
-          } else {
-            dYdX->row(input_row++) =
-                data.dloss_dinput_features.row(feature_row++);
-          }
-        }
-      } else {
-        dYdX->noalias() =
-            GetWeights(context, 0).transpose() * data.dloss_dWx_plus_b[i];
-      }
-    }
+  // The naming convention for the scratch storage uses "loss" as a more general
+  // name for what is being back-propagated. For BatchOutput, we can just define
+  // loss ≡ Y; there is not actually any loss function in scope here.
+  layers.back().set_dloss_dXn(RowVectorX<T>::Constant(X.cols(), 1.0));
+  for (int i = num_weights_ - 1; i >= 0; --i) {
+    layers[i + 1].CalcBackward(GetWeights(params, i), &layers[i]);
   }
+  dYdX->noalias() = layers.front().get_dloss_dXn();
 }
 
 template <typename T>
 void MultilayerPerceptron<T>::CalcOutput(const Context<T>& context,
                                          BasicVector<T>* y) const {
-  this->ValidateContext(context);
-  y->get_mutable_value() =
-      calc_layers_cache_->Eval<internal::CalcLayersData<T>>(context)
-          .Xn[num_weights_ - 1];
-}
-
-template <typename T>
-void MultilayerPerceptron<T>::CalcLayers(
-    const Context<T>& context, internal::CalcLayersData<T>* data) const {
-  if (has_input_features_) {
-    CalcInputFeatures(this->get_input_port().Eval(context),
-                      &data->input_features);
-    data->Wx[0].noalias() = GetWeights(context, 0) * data->input_features;
-  } else {
-    data->Wx[0].noalias() =
-        GetWeights(context, 0) * this->get_input_port().Eval(context);
+  const VectorX<T>& params = GetParameters(context);
+  auto& scratch = network_scratch_->get_mutable_cache_entry_value(context)
+                      .template GetMutableValueOrThrow<NetworkScratch<T>>();
+  std::vector<internal::Layer<T>>& layers = scratch.layers;
+  const bool calc_gradient = false;
+  layers[0].CalcInputFeatures(
+      this->get_input_port().Eval(context),
+      layers_[0],
+      has_input_features_ ? &use_sin_cos_for_input_ : nullptr);
+  for (int i = 0; i < num_weights_; ++i) {
+    layers[i + 1].CalcForward(layers[i], GetWeights(params, i),
+                              GetBiases(params, i), activation_types_[i],
+                              calc_gradient);
   }
-  data->Wx_plus_b[0].noalias() = data->Wx[0].colwise() + GetBiases(context, 0);
-  Activation<T, 1>(activation_types_[0], data->Wx_plus_b[0], &(data->Xn[0]));
-  for (int i = 1; i < num_weights_; ++i) {
-    data->Wx[i].noalias() = GetWeights(context, i) * data->Xn[i - 1];
-    data->Wx_plus_b[i].noalias() =
-        data->Wx[i].colwise() + GetBiases(context, i);
-    Activation<T, 1>(activation_types_[i], data->Wx_plus_b[i], &(data->Xn[i]));
-  }
-}
-
-template <typename T>
-void MultilayerPerceptron<T>::CalcInputFeatures(
-    const Eigen::Ref<const MatrixX<T>>& X, MatrixX<T>* input_features) const {
-  input_features->resize(layers_[0], X.cols());
-  int feature_row = 0, input_row = 0;
-  for (bool use_sin_cos : use_sin_cos_for_input_) {
-    if (use_sin_cos) {
-      input_features->row(feature_row++) = X.row(input_row).array().sin();
-      input_features->row(feature_row++) = X.row(input_row++).array().cos();
-    } else {
-      input_features->row(feature_row++) = X.row(input_row++);
-    }
-  }
+  y->get_mutable_value() = layers.back().get_output();
 }
 
 }  // namespace systems

@@ -4,26 +4,10 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/systems/framework/leaf_system.h"
+#include "drake/systems/primitives/perceptron_activation_type.h"
 
 namespace drake {
 namespace systems {
-
-/** Specifies one of the common activation functions in a neural network. */
-enum PerceptronActivationType {
-  kIdentity,
-  kReLU,
-  kTanh,
-};
-
-// Forward declarations.
-namespace internal {
-
-// Note: This struct is defined outside the class to avoid the ReportZeroHash
-// warning in AbstractValue.
-template <typename T>
-struct CalcLayersData;
-
-}  // namespace internal
 
 /** The MultilayerPerceptron (MLP) is one of the most common forms of neural
  networks used in reinforcement learning (RL) today. This implementation
@@ -273,18 +257,8 @@ class MultilayerPerceptron final : public LeafSystem<T> {
   // Calculates y = f(x) for the entire network.
   void CalcOutput(const Context<T>& context, BasicVector<T>* y) const;
 
-  // Calculates the cache entries for the hidden units in the network.
-  void CalcLayers(const Context<T>& context,
-                  internal::CalcLayersData<T>* data) const;
-
-  // Calculates the (potentially batch) feature vector values.  When `X` is
-  // size `num_inputs`-by-`N`, then `Features` is set to size
-  // `layers()[0]`-by-`N`.
-  void CalcInputFeatures(const Eigen::Ref<const MatrixX<T>>& X,
-                         MatrixX<T>* input_features) const;
-
-  int num_weights_;     // The number of weight matrices (number of layers -1 ).
-  int num_parameters_;  // Total number of parameters.
+  int num_weights_{};     // The number of weight matrices (num_layers - 1).
+  int num_parameters_{};  // Total number of parameters.
   std::vector<int> layers_;  // The number of neurons in each layer.
   std::vector<PerceptronActivationType> activation_types_;
   std::vector<bool> use_sin_cos_for_input_{};
@@ -295,8 +269,7 @@ class MultilayerPerceptron final : public LeafSystem<T> {
   std::vector<int> weight_indices_;
   std::vector<int> bias_indices_;
 
-  CacheEntry* calc_layers_cache_{};
-  CacheEntry* backprop_cache_{};
+  CacheEntry* network_scratch_{};
 
   template <typename>
   friend class MultilayerPerceptron;

@@ -31,6 +31,7 @@ drake_cc_package_library(
         ":multilayer_perceptron",
         ":multiplexer",
         ":pass_through",
+        ":perceptron_activation_type",
         ":port_switch",
         ":random_source",
         ":saturation",
@@ -200,11 +201,39 @@ drake_cc_library(
 )
 
 drake_cc_library(
+    name = "multilayer_perceptron_impl",
+    srcs = ["multilayer_perceptron_impl.cc"],
+    hdrs = ["multilayer_perceptron_impl.h"],
+    copts = [
+        # Enable AVX instructions.
+        # XXX "-march=broadwell",
+    ],
+    internal = True,
+    visibility = ["//visibility:private"],
+    deps = [
+        # Be extremely careful when adding any new dependencies here.  No
+        # transitive dependencies are allowed to reference @eigen in their
+        # object code mangled names.
+        ":perceptron_activation_type",
+        "//common:drake_export",
+        "@eigen",
+        # XXX assert only!
+        "//common:essential",
+        # XXX need two TUs
+        "//common:default_scalars",
+    ],
+)
+
+drake_cc_library(
     name = "multilayer_perceptron",
     srcs = ["multilayer_perceptron.cc"],
     hdrs = ["multilayer_perceptron.h"],
+    interface_deps = [
+        ":perceptron_activation_type",
+        "//systems/framework:leaf_system",
+    ],
     deps = [
-        "//systems/framework",
+        ":multilayer_perceptron_impl",
     ],
 )
 
@@ -224,6 +253,11 @@ drake_cc_library(
     deps = [
         "//systems/framework",
     ],
+)
+
+drake_cc_library(
+    name = "perceptron_activation_type",
+    hdrs = ["perceptron_activation_type.h"],
 )
 
 drake_cc_library(
