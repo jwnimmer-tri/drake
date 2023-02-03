@@ -455,6 +455,7 @@ void MultilayerPerceptron<T>::CalcLayers(
   internal::CalcActivation<T, 1>(
       activation_types_[0], data->Wx_plus_b[0], &(data->Xn[0]));
   for (int i = 1; i < num_weights_; ++i) {
+    // XXX Wx+b helper
     data->Wx[i].noalias() = GetWeights(context, i) * data->Xn[i - 1];
     data->Wx_plus_b[i].noalias() =
         data->Wx[i].colwise() + GetBiases(context, i);
