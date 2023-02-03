@@ -215,16 +215,12 @@ drake_cc_library(
     ],
     internal = True,
     visibility = ["//visibility:private"],
-    interface_deps = [
+    deps = [
         # Be extremely careful when adding any new dependencies here.
         # No transitive dependencies are allowed to reference @eigen.
         ":multilayer_perceptron_activation_type",
         "//common:drake_export",
-    ],
-    deps = [
-        # Be extremely careful when adding any new dependencies here.
-        # No transitive dependencies are allowed to reference @eigen.
-        "@eigen_internal//:amalgamation",
+        "@eigen",
     ],
 )
 

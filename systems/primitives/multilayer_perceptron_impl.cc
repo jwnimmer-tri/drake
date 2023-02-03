@@ -1,8 +1,10 @@
 // clang-format off
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#include "drake_vendor/eigen_amalgamation.h"
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wold-style-cast"
+// #include "drake_vendor/eigen_amalgamation.h"
+// #pragma GCC diagnostic pop
+#define Eigen drake_vendor::Eigen
+#include <Eigen/Core>
 using namespace drake_vendor;  // NOLINT
 // clang-format on
 
