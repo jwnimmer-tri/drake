@@ -472,10 +472,11 @@ void MultilayerPerceptron<T>::CalcInputFeatures(
   for (bool use_sin_cos : use_sin_cos_for_input_) {
     if (use_sin_cos) {
       input_features->row(feature_row++) = X.row(input_row).array().sin();
-      input_features->row(feature_row++) = X.row(input_row++).array().cos();
+      input_features->row(feature_row++) = X.row(input_row).array().cos();
     } else {
-      input_features->row(feature_row++) = X.row(input_row++);
+      input_features->row(feature_row++) = X.row(input_row);
     }
+    ++input_row;
   }
 }
 
