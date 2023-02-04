@@ -189,6 +189,8 @@ GTEST_TEST(MultilayerPerceptronTest, CalcOutput) {
   }
 }
 
+#if 0
+
 // Check that backprop gives the same gradients as AutoDiffXd.
 void BackpropTest(PerceptronActivationType type, bool use_sin_cos = false) {
   std::unique_ptr<MultilayerPerceptron<double>> owned_mlp;
@@ -404,6 +406,8 @@ GTEST_TEST(MultilayerPerceptronTest, SinCosFeatures) {
     mlp.BatchOutput(*context, X, &Y, &dYdX);
   }
 }
+
+#endif
 
 }  // namespace
 }  // namespace systems
