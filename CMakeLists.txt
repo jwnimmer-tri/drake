@@ -152,14 +152,15 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
 else()
   # Check flag added in tools/cc_toolchain/bazel.rc is supported.
   include(CheckCXXCompilerFlag)
-  set(FLAG_STD_CXX17 -std=c++17)
-  check_cxx_compiler_flag(${FLAG_STD_CXX17}
-    CXX_COMPILER_SUPPORTS_FLAG_STD_CXX17
+  set(FLAG_STD_CXX20 -std=c++20)
+  check_cxx_compiler_flag(${FLAG_STD_CXX20}
+    CXX_COMPILER_SUPPORTS_FLAG_STD_CXX20
   )
-  if(NOT CXX_COMPILER_SUPPORTS_FLAG_STD_CXX17)
+  if(NOT CXX_COMPILER_SUPPORTS_FLAG_STD_CXX20)
+    # XXXXXXXXXXXXX try 2a here?
     message(FATAL_ERROR
       "Compilation with ${CMAKE_CXX_COMPILER_ID} is NOT supported because it "
-      "does not accept the ${FLAG_STD_CXX17} flag"
+      "does not accept the ${FLAG_STD_CXX20} flag"
     )
   endif()
   message(WARNING

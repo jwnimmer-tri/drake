@@ -20,10 +20,10 @@ using std::bit_cast;
 namespace drake {
 namespace internal {
 
-/** Implements C++20 https://en.cppreference.com/w/cpp/numeric/bit_cast (but
+/** Implements C++ https://en.cppreference.com/w/cpp/numeric/bit_cast (but
 without the overload resolution guards, which are not necessary in our case.)
-(Once all of Drake's supported platforms offer std::bit_cast, we can remove
-this function in lieu of the std one.) */
+(Once Drake requires GCC >= 11, i.e., once we drop support for
+Ubuntu 20.04 Focal, then we can remove this function in lieu of the std one.) */
 template <class To, class From>
 To bit_cast(const From& from) noexcept {
   static_assert(std::is_trivially_constructible_v<To>);

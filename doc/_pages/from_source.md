@@ -27,7 +27,7 @@ require a working display server.  Most personal computers will have this
 already built in, but some cloud or docker environments may require extra
 setup steps.
 
-⁽³⁾ Drake requires a compiler running in C++17 or C++20 mode.
+⁽³⁾ Drake requires a compiler running in C++20 or newer mode.
 
 # Getting Drake
 

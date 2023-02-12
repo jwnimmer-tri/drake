@@ -161,7 +161,7 @@ def write_to_file(arr, file_name):
 
 
 def get_tokens(filename):
-    tu = cindex.TranslationUnit.from_source(filename, ["-std=c++17"])
+    tu = cindex.TranslationUnit.from_source(filename, ["-std=c++2a"])
     FILE = tu.get_file(bytes(filename, 'utf8'))
 
     with open(filename, "r") as f:

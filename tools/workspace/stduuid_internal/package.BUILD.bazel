@@ -9,7 +9,7 @@ licenses(["notice"])  # MIT
 
 package(default_visibility = ["//visibility:public"])
 
-# TODO(jwnimmer-tri) Once we require >= C++20, i.e., once we drop support for
+# TODO(jwnimmer-tri) Once we have GCC >= 10, i.e., once we drop support for
 # Ubuntu 20.04 Focal, then we should remove the thus-unused gsl cc_library.
 cc_library(
     name = "gsl",

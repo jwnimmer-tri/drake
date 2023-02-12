@@ -290,9 +290,7 @@ std::shared_ptr<DrakeSubscriptionInterface> DrakeLcm::SubscribeAllChannels(
   if (!suffix.empty()) {
     handler = [&suffix, handler](std::string_view channel, const void* data,
                                  int length) {
-      // TODO(ggould-tri) Use string_view::ends_with() once we have C++20.
-      if (channel.length() >= suffix.length() &&
-          channel.substr(channel.length() - suffix.length()) == suffix) {
+      if (channel.ends_with(suffix)) {
         channel.remove_suffix(suffix.length());
         handler(channel, data, length);
       } else {

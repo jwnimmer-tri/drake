@@ -225,7 +225,7 @@ class RigidTransform {
   /// @endcode
   template <typename Derived>
   explicit RigidTransform(const Eigen::MatrixBase<Derived>& pose) {
-    // TODO(Mitiguy) Consider C++ 17 if(constexpr) to specialize for each type.
+    // TODO(Mitiguy) Consider `if constexpr (...)` to specialize for each type.
     const int num_rows = pose.rows(), num_cols = pose.cols();
     if (num_rows == 3 && num_cols == 1) {
       // The next line cannot use set_translation(pose.cols(0)) since this

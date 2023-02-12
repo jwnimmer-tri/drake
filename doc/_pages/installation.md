@@ -39,7 +39,7 @@ compiler as our releases:
 
 | Operating System                   | C/C++ Compiler           | Std   |
 |------------------------------------|--------------------------|-------|
-| Ubuntu 20.04 LTS (Focal Fossa)     | GCC 9                    | C++17 |
+| Ubuntu 20.04 LTS (Focal Fossa)     | GCC 9                    | C++2a |
 | Ubuntu 22.04 LTS (Jammy Jellyfish) | GCC 11                   | C++20 |
 | macOS Monterey (12)                | Apple LLVM 14 (Xcode 14) | C++20 |
 
