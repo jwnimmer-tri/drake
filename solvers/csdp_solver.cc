@@ -449,7 +449,7 @@ std::string MaybeWriteCsdpParams(const SolverOptions& options) {
 
 void CsdpSolver::DoSolve(const MathematicalProgram& prog,
                          const Eigen::VectorXd&,
-                         const SolverOptions& merged_options,
+                         const SolverOptions& options,
                          MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -459,7 +459,7 @@ void CsdpSolver::DoSolve(const MathematicalProgram& prog,
   // If necessary, write the custom CSDP parameters to a temporary file, which
   // we should remove when this function returns.
   const std::string csdp_params_pathname =
-      internal::MaybeWriteCsdpParams(merged_options);
+      internal::MaybeWriteCsdpParams(options);
   ScopeExit guard([&csdp_params_pathname]() {
     if (!csdp_params_pathname.empty()) {
       ::unlink(csdp_params_pathname.c_str());
@@ -472,35 +472,29 @@ void CsdpSolver::DoSolve(const MathematicalProgram& prog,
     internal::SolveProgramWithNoFreeVariables(
         prog, sdpa_free_format, csdp_params_pathname, result);
   } else {
-    const auto int_options = merged_options.GetOptionsInt(CsdpSolver::id());
-    const auto it_method = int_options.find("drake::RemoveFreeVariableMethod");
-    RemoveFreeVariableMethod method = RemoveFreeVariableMethod::kNullspace;
-    if (it_method != int_options.end()) {
-      if (it_method->second >= 1 && it_method->second <= 3) {
-        method = static_cast<RemoveFreeVariableMethod>(it_method->second);
-      } else {
-        throw std::runtime_error(
-            "CsdpSolver::sol(), unknown value for "
-            "drake::RemoveFreeVariableMethod");
-      }
-    }
-    switch (method) {
-      case RemoveFreeVariableMethod::kNullspace: {
+    const int method_int =
+        options
+            .GetOption<int>(CsdpSolver::id(), "drake::RemoveFreeVariableMethod")
+            .value_or(static_cast<int>(RemoveFreeVariableMethod::kNullspace));
+    switch (method_int) {
+      case static_cast<int>(RemoveFreeVariableMethod::kNullspace): {
         internal::SolveProgramThroughNullspaceApproach(
             prog, sdpa_free_format, csdp_params_pathname, result);
-        break;
+        return;
       }
-      case RemoveFreeVariableMethod::kTwoSlackVariables: {
+      case static_cast<int>(RemoveFreeVariableMethod::kTwoSlackVariables): {
         internal::SolveProgramThroughTwoSlackVariablesApproach(
             prog, sdpa_free_format, csdp_params_pathname, result);
-        break;
+        return;
       }
-      case RemoveFreeVariableMethod::kLorentzConeSlack: {
+      case static_cast<int>(RemoveFreeVariableMethod::kLorentzConeSlack): {
         internal::SolveProgramThroughLorentzConeSlackApproach(
             prog, sdpa_free_format, csdp_params_pathname, result);
-        break;
+        return;
       }
     }
+    throw std::runtime_error(
+        "CsdpSolver: unknown value for drake::RemoveFreeVariableMethod");
   }
 }
 

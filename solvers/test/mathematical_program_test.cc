@@ -71,6 +71,7 @@ using std::set;
 using std::shared_ptr;
 using std::static_pointer_cast;
 using std::string;
+using std::string_view;
 using std::unique_ptr;
 using std::vector;
 
@@ -3268,6 +3269,34 @@ GTEST_TEST(TestMathematicalProgram, TestAddVisualizationCallback) {
 
 GTEST_TEST(TestMathematicalProgram, TestSolverOptions) {
   MathematicalProgram prog;
+  const SolverOptions& options = prog.solver_options();
+
+  const SolverId id("id");
+  prog.SetSolverOption(id, "double_name", 1.0);
+  EXPECT_EQ(options.GetOption<double>(id, "double_name"), 1.0);
+  prog.SetSolverOption(id, "int_name", 2);
+  EXPECT_EQ(options.GetOption<int>(id, "int_name"), 2);
+  prog.SetSolverOption(id, "string_name", "3");
+  EXPECT_EQ(options.GetOption<string_view>(id, "string_name"), "3");
+
+  const SolverId new_id("new_id");
+  SolverOptions new_options;
+  new_options.SetOption(new_id, "double_name", 10.0);
+  new_options.SetOption(new_id, "int_name", 20);
+  new_options.SetOption(new_id, "string_name", "30");
+  prog.SetSolverOptions(new_options);
+  EXPECT_EQ(options.GetOption<double>(new_id, "double_name"), 10.0);
+  EXPECT_EQ(options.GetOption<int>(new_id, "int_name"), 20);
+  EXPECT_EQ(options.GetOption<string_view>(new_id, "string_name"), "30");
+  EXPECT_EQ(options.GetOption<double>(id, "double_name"), std::nullopt);
+  EXPECT_EQ(options.GetOption<int>(id, "int_name"), std::nullopt);
+  EXPECT_EQ(options.GetOption<string_view>(id, "string_name"), std::nullopt);
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+GTEST_TEST(TestMathematicalProgram, TestSolverOptionsDeprecated) {
+  MathematicalProgram prog;
   const SolverId solver_id("solver_id");
   const SolverId wrong_solver_id("wrong_solver_id");
 
@@ -3296,6 +3325,7 @@ GTEST_TEST(TestMathematicalProgram, TestSolverOptions) {
   EXPECT_EQ(prog.GetSolverOptionsStr(dummy_id).at("string_name"), "30.0");
   EXPECT_EQ(prog.GetSolverOptionsStr(solver_id).size(), 0);
 }
+#pragma GCC diagnostic pop
 
 void CheckNewSosPolynomial(MathematicalProgram::NonnegativePolynomial type) {
   // Check if the newly created nonnegative polynomial can be computed as m' * Q

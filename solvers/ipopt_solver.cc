@@ -761,7 +761,7 @@ void SetAppOptions(const SolverOptions& options, Ipopt::IpoptApplication* app) {
   const int verbose_level = 4;
   const int print_level = options.get_print_to_console() ? verbose_level : 0;
   app->Options()->SetIntegerValue("print_level", print_level);
-  const std::string& output_file = options.get_print_file_name();
+  const std::string output_file{options.get_print_file_name()};
   if (!output_file.empty()) {
     app->Options()->SetStringValue("output_file", output_file);
     app->Options()->SetIntegerValue("file_print_level", verbose_level);
@@ -769,14 +769,14 @@ void SetAppOptions(const SolverOptions& options, Ipopt::IpoptApplication* app) {
 
   // The solver-specific options will trump our defaults.
   const SolverId self = IpoptSolver::id();
-  for (const auto& [name, value] : options.GetOptionsDouble(self)) {
-    app->Options()->SetNumericValue(name, value);
+  for (const auto& [name, value] : options.GetRange<double>(self)) {
+    app->Options()->SetNumericValue(std::string{name}, value);
   }
-  for (const auto& [name, value] : options.GetOptionsInt(self)) {
-    app->Options()->SetIntegerValue(name, value);
+  for (const auto& [name, value] : options.GetRange<int>(self)) {
+    app->Options()->SetIntegerValue(std::string{name}, value);
   }
-  for (const auto& [name, value] : options.GetOptionsStr(self)) {
-    app->Options()->SetStringValue(name, value);
+  for (const auto& [name, value] : options.GetRange<std::string_view>(self)) {
+    app->Options()->SetStringValue(std::string{name}, std::string{value});
   }
 }
 
@@ -844,7 +844,7 @@ bool IpoptSolver::is_available() { return true; }
 void IpoptSolver::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -854,7 +854,7 @@ void IpoptSolver::DoSolve(
   Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   app->RethrowNonIpoptException(true);
 
-  SetAppOptions(merged_options, &(*app));
+  SetAppOptions(options, &(*app));
 
   Ipopt::ApplicationReturnStatus status = app->Initialize();
   if (status != Ipopt::Solve_Succeeded) {

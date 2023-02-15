@@ -236,69 +236,46 @@ csc* EigenSparseToCSC(const Eigen::SparseMatrix<c_float>& mat) {
                     inner_indices, outer_indices);
 }
 
-template <typename T1, typename T2>
-void SetOsqpSolverSetting(const std::unordered_map<std::string, T1>& options,
-                          const std::string& option_name,
-                          T2* osqp_setting_field) {
-  const auto it = options.find(option_name);
-  if (it != options.end()) {
-    *osqp_setting_field = it->second;
+template <typename T>
+void UpdateSetting(const SolverOptions& options, std::string_view option_name,
+                   T* osqp_setting_field,
+                   std::optional<T> default_value = std::nullopt) {
+  std::optional<T> value = options.GetOption<T>(OsqpSolver::id(), option_name);
+  if (value.has_value()) {
+    *osqp_setting_field = *value;
+  } else if (default_value.has_value()) {
+    *osqp_setting_field = *default_value;
   }
 }
 
-template <typename T1, typename T2>
-void SetOsqpSolverSettingWithDefaultValue(
-    const std::unordered_map<std::string, T1>& options,
-    const std::string& option_name, T2* osqp_setting_field,
-    const T1& default_field_value) {
-  const auto it = options.find(option_name);
-  if (it != options.end()) {
-    *osqp_setting_field = it->second;
-  } else {
-    *osqp_setting_field = default_field_value;
-  }
-}
-
-void SetOsqpSolverSettings(const SolverOptions& solver_options,
-                           OSQPSettings* settings) {
-  const std::unordered_map<std::string, double>& options_double =
-      solver_options.GetOptionsDouble(OsqpSolver::id());
-  const std::unordered_map<std::string, int>& options_int =
-      solver_options.GetOptionsInt(OsqpSolver::id());
-  SetOsqpSolverSetting(options_double, "rho", &(settings->rho));
-  SetOsqpSolverSetting(options_double, "sigma", &(settings->sigma));
-  SetOsqpSolverSetting(options_int, "max_iter", &(settings->max_iter));
-  SetOsqpSolverSetting(options_double, "eps_abs", &(settings->eps_abs));
-  SetOsqpSolverSetting(options_double, "eps_rel", &(settings->eps_rel));
-  SetOsqpSolverSetting(options_double, "eps_prim_inf",
-                       &(settings->eps_prim_inf));
-  SetOsqpSolverSetting(options_double, "eps_dual_inf",
-                       &(settings->eps_dual_inf));
-  SetOsqpSolverSetting(options_double, "alpha", &(settings->alpha));
-  SetOsqpSolverSetting(options_double, "delta", &(settings->delta));
+void UpdateSettings(const SolverOptions& options, OSQPSettings* settings) {
+  UpdateSetting(options, "rho", &(settings->rho));
+  UpdateSetting(options, "sigma", &(settings->sigma));
+  UpdateSetting(options, "max_iter", &(settings->max_iter));
+  UpdateSetting(options, "eps_abs", &(settings->eps_abs));
+  UpdateSetting(options, "eps_rel", &(settings->eps_rel));
+  UpdateSetting(options, "eps_prim_inf", &(settings->eps_prim_inf));
+  UpdateSetting(options, "eps_dual_inf", &(settings->eps_dual_inf));
+  UpdateSetting(options, "alpha", &(settings->alpha));
+  UpdateSetting(options, "delta", &(settings->delta));
   // Default polish to true, to get an accurate solution.
-  SetOsqpSolverSettingWithDefaultValue(options_int, "polish",
-                                       &(settings->polish), 1);
-  SetOsqpSolverSetting(options_int, "polish_refine_iter",
-                       &(settings->polish_refine_iter));
+  UpdateSetting(options, "polish", &(settings->polish), {1});
+  UpdateSetting(options, "polish_refine_iter", &(settings->polish_refine_iter));
   // The fallback value for console verbosity is the value set by drake options.
-  int verbose_console = solver_options.get_print_to_console() != 0;
-  SetOsqpSolverSettingWithDefaultValue(options_int, "verbose",
-                                       &(settings->verbose), verbose_console);
-  SetOsqpSolverSetting(options_int, "scaled_termination",
-                       &(settings->scaled_termination));
-  SetOsqpSolverSetting(options_int, "check_termination",
-                       &(settings->check_termination));
-  SetOsqpSolverSetting(options_int, "warm_start", &(settings->warm_start));
-  SetOsqpSolverSetting(options_int, "scaling", &(settings->scaling));
-  SetOsqpSolverSetting(options_int, "adaptive_rho", &(settings->adaptive_rho));
-  SetOsqpSolverSetting(options_double, "adaptive_rho_interval",
-                       &(settings->adaptive_rho_interval));
-  SetOsqpSolverSetting(options_double, "adaptive_rho_tolerance",
-                       &(settings->adaptive_rho_tolerance));
-  SetOsqpSolverSetting(options_double, "adaptive_rho_fraction",
-                       &(settings->adaptive_rho_fraction));
-  SetOsqpSolverSetting(options_double, "time_limit", &(settings->time_limit));
+  const int verbose_console = options.get_print_to_console() != 0;
+  UpdateSetting(options, "verbose", &(settings->verbose), {verbose_console});
+  UpdateSetting(options, "scaled_termination", &(settings->scaled_termination));
+  UpdateSetting(options, "check_termination", &(settings->check_termination));
+  UpdateSetting(options, "warm_start", &(settings->warm_start));
+  UpdateSetting(options, "scaling", &(settings->scaling));
+  UpdateSetting(options, "adaptive_rho", &(settings->adaptive_rho));
+  UpdateSetting(options, "adaptive_rho_interval",
+                &(settings->adaptive_rho_interval));
+  UpdateSetting(options, "adaptive_rho_tolerance",
+                &(settings->adaptive_rho_tolerance));
+  UpdateSetting(options, "adaptive_rho_fraction",
+                &(settings->adaptive_rho_fraction));
+  UpdateSetting(options, "time_limit", &(settings->time_limit));
 }
 
 template <typename C>
@@ -326,7 +303,7 @@ bool OsqpSolver::is_available() { return true; }
 void OsqpSolver::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   OsqpSolverDetails& solver_details =
       result->SetSolverDetailsType<OsqpSolverDetails>();
@@ -376,7 +353,7 @@ void OsqpSolver::DoSolve(
       static_cast<OSQPSettings*>(c_malloc(sizeof(OSQPSettings)));
   osqp_set_default_settings(settings);
 
-  SetOsqpSolverSettings(merged_options, settings);
+  UpdateSettings(options, settings);
 
   // If any step fails, it will set the solution_result and skip other steps.
   std::optional<SolutionResult> solution_result;

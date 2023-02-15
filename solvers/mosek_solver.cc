@@ -79,7 +79,7 @@ bool MosekSolver::is_available() { return true; }
 
 void MosekSolver::DoSolve(const MathematicalProgram& prog,
                           const Eigen::VectorXd& initial_guess,
-                          const SolverOptions& merged_options,
+                          const SolverOptions& options,
                           MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -105,9 +105,9 @@ void MosekSolver::DoSolve(const MathematicalProgram& prog,
   // Set the options (parameters).
   bool print_to_console{false};
   std::string print_file_name{};
-  std::optional<std::string> msk_writedata;
+  std::optional<const char*> msk_writedata;
   if (rescode == MSK_RES_OK) {
-    rescode = impl.UpdateOptions(merged_options, id(), &print_to_console,
+    rescode = impl.UpdateOptions(options, id(), &print_to_console,
                                  &print_file_name, &msk_writedata);
   }
 
@@ -252,7 +252,7 @@ void MosekSolver::DoSolve(const MathematicalProgram& prog,
   }
 
   if (rescode == MSK_RES_OK && msk_writedata.has_value()) {
-    rescode = MSK_writedata(impl.task(), msk_writedata.value().c_str());
+    rescode = MSK_writedata(impl.task(), msk_writedata.value());
   }
 
   MSKsolstae solution_status{MSK_SOL_STA_UNKNOWN};

@@ -842,34 +842,34 @@ void AddSecondOrderConeVariables(
 }
 
 template <typename T>
-void SetOptionOrThrow(GRBenv* model_env, const std::string& option,
-                      const T& val) {
+void SetOptionOrThrow(GRBenv* model_env, std::string_view name,
+                      const T& value) {
   static_assert(std::is_same_v<T, int> || std::is_same_v<T, double> ||
-                    std::is_same_v<T, std::string>,
-                "Option values must be int, double, or string");
+                    std::is_same_v<T, std::string_view>,
+                "Option values must be int, double, or string_view");
 
   // Set the parameter as requested, returning immediately in case of success.
   const char* actual_type;
   int error = 0;
   if constexpr (std::is_same_v<T, int>) {
     actual_type = "integer";
-    error = GRBsetintparam(model_env, option.c_str(), val);
+    error = GRBsetintparam(model_env, name.data(), value);
   } else if constexpr (std::is_same_v<T, double>) {
     actual_type = "floating-point";
-    error = GRBsetdblparam(model_env, option.c_str(), val);
-  } else if constexpr (std::is_same_v<T, std::string>) {
+    error = GRBsetdblparam(model_env, name.data(), value);
+  } else {
     actual_type = "string";
-    error = GRBsetstrparam(model_env, option.c_str(), val.c_str());
+    error = GRBsetstrparam(model_env, name.data(), value.data());
   }
   if (!error) {
     return;
   }
 
-  // Report range errors (i.e., the parameter name is known, but `val` is bad).
+  // Report range errors (i.e., the parameter name is known, but value is bad).
   if (error == GRB_ERROR_VALUE_OUT_OF_RANGE) {
     throw std::runtime_error(fmt::format(
-        "GurobiSolver(): '{}' is outside the parameter {}'s valid range", val,
-        option));
+        "GurobiSolver(): '{}' is outside the parameter {}'s valid range", value,
+        name));
   }
 
   // In case of "unknown", it could either be truly unknown or else just the
@@ -879,13 +879,13 @@ void SetOptionOrThrow(GRBenv* model_env, const std::string& option,
     //   1: INT param
     //   2: DBL param
     //   3: STR param
-    const int param_type = GRBgetparamtype(model_env, option.c_str());
+    const int param_type = GRBgetparamtype(model_env, name.data());
 
     // If the user provided an int for a double param, treat it as a double
     // without any complaint. This is especially helpful for Python users.
     if constexpr (std::is_same_v<T, int>) {
       if (param_type == 2) {
-        SetOptionOrThrow<double>(model_env, option, val);
+        SetOptionOrThrow<double>(model_env, name, value);
         return;
       }
     }
@@ -900,14 +900,14 @@ void SetOptionOrThrow(GRBenv* model_env, const std::string& option,
     if (expected_type != nullptr) {
       throw std::runtime_error(fmt::format(
           "GurobiSolver(): parameter {} should be a {} not a {}",
-          option, expected_type, actual_type));
+          name, expected_type, actual_type));
     }
 
     // Otherwise, it was truly unknown not just wrongly-typed.
     throw std::runtime_error(fmt::format(
         "GurobiSolver(): '{}' is an unknown parameter in Gurobi, check "
         "{}/parameters.html for allowable parameters",
-        option, refman()));
+        name, refman()));
   }
 
   // The error code should always be UNKNOWN_PARAMETER or VALUE_OUT_OF_RANGE,
@@ -916,7 +916,7 @@ void SetOptionOrThrow(GRBenv* model_env, const std::string& option,
   throw std::runtime_error(fmt::format(
       "GurobiSolver(): error code {}, cannot set option '{}' to value '{}', "
       "check {}/parameters.html for all allowable options and values.",
-      error, option, val, refman()));
+      error, name, value, refman()));
 }
 
 void SetSolution(
@@ -1082,7 +1082,7 @@ std::shared_ptr<GurobiSolver::License> GurobiSolver::AcquireLicense() {
 void GurobiSolver::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -1257,25 +1257,23 @@ void GurobiSolver::DoSolve(
   DRAKE_DEMAND(model_env != nullptr);
 
   // Handle common solver options before gurobi-specific options stored in
-  // merged_options, so that gurobi-specific options can overwrite common solver
-  // options.
+  // options, so that gurobi-specific options can overwrite common options.
   // Gurobi creates a new log file every time we set "LogFile" parameter through
   // GRBsetstrparam(). So in order to avoid creating log files repeatedly, we
   // store the log file name in @p log_file variable, and only call
-  // GRBsetstrparam(model_env, "LogFile", log_file) for once.
-  std::string log_file = merged_options.get_print_file_name();
+  // GRBsetstrparam(model_env, "LogFile", log_file) once at the end.
   if (!error) {
-    SetOptionOrThrow(model_env, "LogToConsole",
-                     static_cast<int>(merged_options.get_print_to_console()));
+    SetOptionOrThrow(model_env, std::string{"LogToConsole"},
+                     options.get_print_to_console() ? 1 : 0);
   }
-
   // Default the option for number of threads based on an environment variable
   // (but only if the user hasn't set the option directly already).
-  if (merged_options.GetOptionsInt(id()).count("Threads") == 0) {
+  const SolverId self_id = id();
+  if (!options.GetOption<int>(self_id, "Threads").has_value()) {
     if (char* num_threads_str = std::getenv("GUROBI_NUM_THREADS")) {
       const std::optional<int> num_threads = ParseInt(num_threads_str);
       if (num_threads.has_value()) {
-        SetOptionOrThrow(model_env, "Threads", *num_threads);
+        SetOptionOrThrow(model_env, std::string{"Threads"}, *num_threads);
         log()->debug("Using GUROBI_NUM_THREADS={}", *num_threads);
       } else {
         static const logging::Warn log_once(
@@ -1284,45 +1282,45 @@ void GurobiSolver::DoSolve(
       }
     }
   }
-
-  for (const auto& it : merged_options.GetOptionsDouble(id())) {
+  for (const auto& [name, value] : options.GetRange<double>(self_id)) {
     if (!error) {
-      SetOptionOrThrow(model_env, it.first, it.second);
+      SetOptionOrThrow(model_env, name, value);
     }
   }
   bool compute_iis = false;
-  for (const auto& it : merged_options.GetOptionsInt(id())) {
+  for (const auto& [name, value] : options.GetRange<int>(self_id)) {
     if (!error) {
-      if (it.first == "GRBcomputeIIS") {
-        compute_iis = static_cast<bool>(it.second);
-        if (!(it.second == 0 || it.second == 1)) {
+      if (name == "GRBcomputeIIS") {
+        if (!(value == 0 || value == 1)) {
           throw std::runtime_error(fmt::format(
               "GurobiSolver(): option GRBcomputeIIS should be either "
               "0 or 1, but is incorrectly set to {}",
-              it.second));
+              value));
         }
+        compute_iis = static_cast<bool>(value);
       } else {
-        SetOptionOrThrow(model_env, it.first, it.second);
+        SetOptionOrThrow(model_env, name, value);
       }
     }
   }
-  std::optional<std::string> grb_write;
-  for (const auto& it : merged_options.GetOptionsStr(id())) {
+  std::string_view log_file = options.get_print_file_name();
+  std::optional<std::string_view> grb_write;
+  for (const auto& [name, value] :
+       options.GetRange<std::string_view>(self_id)) {
     if (!error) {
-      if (it.first == "GRBwrite") {
-        if (it.second != "") {
-          grb_write = it.second;
+      if (name == "GRBwrite") {
+        if (!value.empty()) {
+          grb_write = value;
         }
-      } else if (it.first == "LogFile") {
-        log_file = it.second;
+      } else if (name == "LogFile") {
+        log_file = value;
       } else {
-        SetOptionOrThrow(model_env, it.first, it.second);
+        SetOptionOrThrow(model_env, name, value);
       }
     }
   }
-  SetOptionOrThrow(model_env, "LogFile", log_file);
-
-  for (int i = 0; i < static_cast<int>(prog.num_vars()); ++i) {
+  SetOptionOrThrow(model_env, std::string{"LogFile"}, log_file);
+  for (int i = 0; i < prog.num_vars(); ++i) {
     if (!error && !std::isnan(initial_guess(i))) {
       error = GRBsetdblattrelement(model, "Start", i, initial_guess(i));
     }
@@ -1372,7 +1370,7 @@ void GurobiSolver::DoSolve(
   }
   if (!error) {
     if (grb_write.has_value()) {
-      error = GRBwrite(model, grb_write.value().c_str());
+      error = GRBwrite(model, grb_write.value().data());
       if (error) {
         const std::string gurobi_version =
             fmt::format("{}.{}", GRB_VERSION_MAJOR, GRB_VERSION_MINOR);

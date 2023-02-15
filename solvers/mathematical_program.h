@@ -2746,7 +2746,7 @@ class MathematicalProgram {
    * @pydrake_mkdoc_identifier{double_option}
    */
   void SetSolverOption(const SolverId& solver_id,
-                       const std::string& solver_option, double option_value) {
+                       std::string_view solver_option, double option_value) {
     solver_options_.SetOption(solver_id, solver_option, option_value);
   }
 
@@ -2756,7 +2756,7 @@ class MathematicalProgram {
    * @pydrake_mkdoc_identifier{int_option}
    */
   void SetSolverOption(const SolverId& solver_id,
-                       const std::string& solver_option, int option_value) {
+                       std::string_view solver_option, int option_value) {
     solver_options_.SetOption(solver_id, solver_option, option_value);
   }
 
@@ -2766,8 +2766,8 @@ class MathematicalProgram {
    * @pydrake_mkdoc_identifier{string_option}
    */
   void SetSolverOption(const SolverId& solver_id,
-                       const std::string& solver_option,
-                       const std::string& option_value) {
+                       std::string_view solver_option,
+                       std::string_view option_value) {
     solver_options_.SetOption(solver_id, solver_option, option_value);
   }
 
@@ -2785,20 +2785,17 @@ class MathematicalProgram {
    */
   const SolverOptions& solver_options() const { return solver_options_; }
 
-  const std::unordered_map<std::string, double>& GetSolverOptionsDouble(
-      const SolverId& solver_id) const {
-    return solver_options_.GetOptionsDouble(solver_id);
-  }
+  DRAKE_DEPRECATED("2023-06-01", "")
+  std::unordered_map<std::string, double> GetSolverOptionsDouble(
+      const SolverId& solver_id) const;
 
-  const std::unordered_map<std::string, int>& GetSolverOptionsInt(
-      const SolverId& solver_id) const {
-    return solver_options_.GetOptionsInt(solver_id);
-  }
+  DRAKE_DEPRECATED("2023-06-01", "")
+  std::unordered_map<std::string, int> GetSolverOptionsInt(
+      const SolverId& solver_id) const;
 
-  const std::unordered_map<std::string, std::string>& GetSolverOptionsStr(
-      const SolverId& solver_id) const {
-    return solver_options_.GetOptionsStr(solver_id);
-  }
+  DRAKE_DEPRECATED("2023-06-01", "")
+  std::unordered_map<std::string, std::string> GetSolverOptionsStr(
+      const SolverId& solver_id) const;
 
   /**
    * Getter for all callbacks.

@@ -21,7 +21,7 @@ class StubSolverBase final : public SolverBase {
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(StubSolverBase)
   StubSolverBase() : SolverBase(
-      &id,
+      id(),
       [this](){ return available_; },
       [this](){ return enabled_; },
       [this](const auto& prog){ return satisfied_; }) {}
@@ -47,12 +47,13 @@ class StubSolverBase final : public SolverBase {
     result->set_solution_result(kSolutionFound);
     result->set_optimal_cost(1.0);
     Eigen::VectorXd x_val = x_init;
-    const auto& options_double = options.GetOptionsDouble(id());
-    if (options_double.count("x0_solution")) {
-      x_val[0] = options_double.find("x0_solution")->second;
+    auto x0_solution = options.GetOption<double>(id(), "x0_solution");
+    if (x0_solution.has_value()) {
+      x_val[0] = *x0_solution;
     }
-    if (options_double.count("x1_solution")) {
-      x_val[1] = options_double.find("x1_solution")->second;
+    auto x1_solution = options.GetOption<double>(id(), "x1_solution");
+    if (x1_solution.has_value()) {
+      x_val[1] = *x1_solution;
     }
     result->set_x_val(x_val);
   }

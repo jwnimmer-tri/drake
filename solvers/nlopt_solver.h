@@ -29,19 +29,19 @@ class NloptSolver final : public SolverBase {
   ~NloptSolver() final;
 
   /** The key name for the double-valued constraint tolerance.*/
-  static std::string ConstraintToleranceName();
+  static std::string_view ConstraintToleranceName();
 
   /** The key name for double-valued x relative tolerance.*/
-  static std::string XRelativeToleranceName();
+  static std::string_view XRelativeToleranceName();
 
   /** The key name for double-valued x absolute tolerance.*/
-  static std::string XAbsoluteToleranceName();
+  static std::string_view XAbsoluteToleranceName();
 
   /** The key name for int-valued maximum number of evaluations. */
-  static std::string MaxEvalName();
+  static std::string_view MaxEvalName();
 
   /** The key name for the string-valued algorithm. */
-  static std::string AlgorithmName();
+  static std::string_view AlgorithmName();
 
   /// @name Static versions of the instance methods with similar names.
   //@{

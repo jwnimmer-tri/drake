@@ -345,7 +345,7 @@ class MosekSolverProgram {
   MSKrescodee UpdateOptions(const SolverOptions& solver_options,
                             SolverId mosek_id, bool* print_to_console,
                             std::string* print_file_name,
-                            std::optional<std::string>* msk_writedata);
+                            std::optional<const char*>* msk_writedata);
 
   MSKtask_t task() const { return task_; }
 

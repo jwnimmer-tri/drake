@@ -170,7 +170,7 @@ template <typename T>
 void MobyLCPSolver<T>::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -179,7 +179,7 @@ void MobyLCPSolver<T>::DoSolve(
 
   // Moby doesn't use initial guess or the solver options.
   unused(initial_guess);
-  unused(merged_options);
+  unused(options);
 
   // Solve each individual LCP, writing the result back to the decision
   // variables through the binding and returning true iff all LCPs are

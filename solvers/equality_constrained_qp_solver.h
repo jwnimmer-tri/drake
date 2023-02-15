@@ -27,7 +27,7 @@ class EqualityConstrainedQPSolver final : public SolverBase {
   ~EqualityConstrainedQPSolver() final;
 
   /// @returns string key for SolverOptions to set the feasibility tolerance.
-  static std::string FeasibilityTolOptionName();
+  static std::string_view FeasibilityTolOptionName();
 
   /// @name Static versions of the instance methods with similar names.
   //@{

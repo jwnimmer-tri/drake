@@ -1234,13 +1234,13 @@ MSKrescodee MosekSolverProgram::SetPositiveSemidefiniteConstraintDualSolution(
 namespace {
 // Throws a runtime error if the mosek option is set incorrectly.
 template <typename T>
-void ThrowForInvalidOption(MSKrescodee rescode, const std::string& option,
+void ThrowForInvalidOption(MSKrescodee rescode, std::string_view name,
                            const T& val) {
   if (rescode != MSK_RES_OK) {
     const std::string mosek_version =
         fmt::format("{}.{}", MSK_VERSION_MAJOR, MSK_VERSION_MINOR);
     throw std::runtime_error(fmt::format(
-        "MosekSolver(): cannot set Mosek option '{option}' to value '{value}', "
+        "MosekSolver(): cannot set Mosek option '{name}' to value '{value}', "
         "response code {code}, check "
         "https://docs.mosek.com/{version}/capi/response-codes.html for the "
         "meaning of the response code, check "
@@ -1248,7 +1248,7 @@ void ThrowForInvalidOption(MSKrescodee rescode, const std::string& option,
         "values in C++, or "
         "https://docs.mosek.com/{version}/pythonapi/param-groups.html "
         "for allowable values in python.",
-        fmt::arg("option", option), fmt::arg("value", val),
+        fmt::arg("option", name), fmt::arg("value", val),
         fmt::arg("code", rescode), fmt::arg("version", mosek_version)));
   }
 }
@@ -1262,41 +1262,38 @@ void MSKAPI printstr(void*, const char str[]) { printf("%s", str); }
 }  // namespace
 
 MSKrescodee MosekSolverProgram::UpdateOptions(
-    const SolverOptions& merged_options, const SolverId mosek_id,
+    const SolverOptions& options, const SolverId mosek_id,
     bool* print_to_console, std::string* print_file_name,
-    std::optional<std::string>* msk_writedata) {
+    std::optional<const char*>* msk_writedata) {
   MSKrescodee rescode{MSK_RES_OK};
-  for (const auto& double_options : merged_options.GetOptionsDouble(mosek_id)) {
+  for (const auto& [name, value] : options.GetRange<double>(mosek_id)) {
     if (rescode == MSK_RES_OK) {
-      rescode = MSK_putnadouparam(task_, double_options.first.c_str(),
-                                  double_options.second);
-      ThrowForInvalidOption(rescode, double_options.first,
-                            double_options.second);
+      rescode = MSK_putnadouparam(task_, name.data(), value);
+      ThrowForInvalidOption(rescode, name, value);
     }
   }
-  for (const auto& int_options : merged_options.GetOptionsInt(mosek_id)) {
+  for (const auto& [name, value] : options.GetRange<int>(mosek_id)) {
     if (rescode == MSK_RES_OK) {
-      rescode = MSK_putnaintparam(task_, int_options.first.c_str(),
-                                  int_options.second);
-      ThrowForInvalidOption(rescode, int_options.first, int_options.second);
+      rescode = MSK_putnaintparam(task_, name.data(), value);
+      ThrowForInvalidOption(rescode, name, value);
     }
   }
-  for (const auto& str_options : merged_options.GetOptionsStr(mosek_id)) {
+  for (const auto& [name, value] :
+       options.GetRange<std::string_view>(mosek_id)) {
     if (rescode == MSK_RES_OK) {
-      if (str_options.first == "writedata") {
-        if (str_options.second != "") {
-          msk_writedata->emplace(str_options.second);
+      if (name == "writedata") {
+        if (!value.empty()) {
+          msk_writedata->emplace(value.data());
         }
       } else {
-        rescode = MSK_putnastrparam(task_, str_options.first.c_str(),
-                                    str_options.second.c_str());
-        ThrowForInvalidOption(rescode, str_options.first, str_options.second);
+        rescode = MSK_putnastrparam(task_, name.data(), value.data());
+        ThrowForInvalidOption(rescode, name, value);
       }
     }
   }
   // log file.
-  *print_to_console = merged_options.get_print_to_console();
-  *print_file_name = merged_options.get_print_file_name();
+  *print_to_console = options.get_print_to_console();
+  *print_file_name = options.get_print_file_name();
   // Refer to https://docs.mosek.com/10.0/capi/solver-io.html#stream-logging
   // for Mosek stream logging.
   // First we check if the user wants to print to both the console and the file.

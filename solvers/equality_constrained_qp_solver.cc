@@ -71,17 +71,20 @@ struct EqualityConstrainedQPSolverOptions {
 void GetEqualityConstrainedQPSolverOptions(
     const SolverOptions& solver_options,
     EqualityConstrainedQPSolverOptions* equality_qp_solver_options) {
+  const SolverId& self = EqualityConstrainedQPSolver::id();
+
+#if 0  // XXX
   DRAKE_ASSERT_VOID(solver_options.CheckOptionKeysForSolver(
       EqualityConstrainedQPSolver::id(),
       {EqualityConstrainedQPSolver::FeasibilityTolOptionName()}, {}, {}));
+#endif
 
-  const auto& options_double =
-      solver_options.GetOptionsDouble(EqualityConstrainedQPSolver::id());
-  auto it = options_double.find(
-      EqualityConstrainedQPSolver::FeasibilityTolOptionName());
-  if (it != options_double.end()) {
-    if (it->second >= 0) {
-      equality_qp_solver_options->feasibility_tol = it->second;
+  const std::optional<double> feasibility_tol =
+      solver_options.GetOption<double>(
+          self, EqualityConstrainedQPSolver::FeasibilityTolOptionName());
+  if (feasibility_tol.has_value()) {
+    if (*feasibility_tol >= 0.0) {
+      equality_qp_solver_options->feasibility_tol = *feasibility_tol;
     } else {
       throw std::invalid_argument(
           "FeasibilityTol should be a non-negative number.");
@@ -111,7 +114,7 @@ EqualityConstrainedQPSolver::~EqualityConstrainedQPSolver() = default;
 void EqualityConstrainedQPSolver::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -149,7 +152,7 @@ void EqualityConstrainedQPSolver::DoSolve(
   // - J. Nocedal and S. Wright. Numerical Optimization. Springer, 1999.
 
   EqualityConstrainedQPSolverOptions solver_options_struct{};
-  GetEqualityConstrainedQPSolverOptions(merged_options, &solver_options_struct);
+  GetEqualityConstrainedQPSolverOptions(options, &solver_options_struct);
 
   size_t num_constraints = 0;
   for (auto const& binding : prog.linear_equality_constraints()) {
@@ -318,7 +321,7 @@ void EqualityConstrainedQPSolver::DoSolve(
   result->set_optimal_cost(optimal_cost);
 }
 
-std::string EqualityConstrainedQPSolver::FeasibilityTolOptionName() {
+std::string_view EqualityConstrainedQPSolver::FeasibilityTolOptionName() {
   return "FeasibilityTol";
 }
 

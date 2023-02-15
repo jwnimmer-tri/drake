@@ -27,7 +27,7 @@ bool LinearSystemSolver::is_enabled() { return true; }
 void LinearSystemSolver::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -35,7 +35,7 @@ void LinearSystemSolver::DoSolve(
   }
 
   // The initial guess doesn't help us, and we don't offer any tuning options.
-  unused(initial_guess, merged_options);
+  unused(initial_guess, options);
   size_t num_constraints = 0;
   for (auto const& binding : prog.linear_equality_constraints()) {
     num_constraints += binding.evaluator()->get_sparse_A().rows();

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <list>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -323,36 +324,23 @@ bool IsVectorOfConstraintsSatisfiedAtSolution(
   return true;
 }
 
-template <typename T>
-T GetOptionValueWithDefault(const std::unordered_map<std::string, T>& options,
-                            const std::string& key, const T& default_value) {
-  auto it = options.find(key);
-  if (it == options.end()) {
-    return default_value;
-  }
-  return it->second;
-}
-
-nlopt::algorithm GetNloptAlgorithm(const SolverOptions& merged_options) {
-  const auto& options_str = merged_options.GetOptionsStr(NloptSolver::id());
-  auto it = options_str.find(NloptSolver::AlgorithmName());
-  if (it == options_str.end()) {
+nlopt::algorithm GetNloptAlgorithm(
+    std::optional<std::string_view> requested_algorithm) {
+  if (!requested_algorithm.has_value()) {
     // Use SLSQP for default;
     return nlopt::algorithm::LD_SLSQP;
   } else {
-    const std::string& requested_algorithm = it->second;
     for (int i = 0; i < nlopt::algorithm::NUM_ALGORITHMS; ++i) {
-      if (requested_algorithm ==
+      if (*requested_algorithm ==
           nlopt_algorithm_to_string(static_cast<nlopt_algorithm>(i))) {
         return static_cast<nlopt::algorithm>(i);
       }
     }
     throw std::runtime_error(fmt::format(
-        "Unknown NLopt algorithm {}, please check "
-        "nlopt_algorithm_to_string() function "
-        "github.com/stevengj/nlopt/blob/master/src/api/general.c for "
+        "Unknown NLopt algorithm {}, please check nlopt_algorithm_to_string() "
+        "function github.com/stevengj/nlopt/blob/master/src/api/general.c for "
         "all supported algorithm names",
-        it->second));
+        *requested_algorithm));
   }
 }
 }  // anonymous namespace
@@ -362,7 +350,7 @@ bool NloptSolver::is_available() { return true; }
 void NloptSolver::DoSolve(
     const MathematicalProgram& prog,
     const Eigen::VectorXd& initial_guess,
-    const SolverOptions& merged_options,
+    const SolverOptions& options,
     MathematicalProgramResult* result) const {
   if (!prog.GetVariableScaling().empty()) {
     static const logging::Warn log_once(
@@ -372,7 +360,9 @@ void NloptSolver::DoSolve(
   const int nx = prog.num_vars();
 
   // Load the algo to use and the size.
-  const nlopt::algorithm algorithm = GetNloptAlgorithm(merged_options);
+  const SolverId& self_id = id();
+  const nlopt::algorithm algorithm = GetNloptAlgorithm(
+      options.GetOption<std::string_view>(self_id, AlgorithmName()));
   nlopt::opt opt(algorithm, nx);
 
   std::vector<double> x(initial_guess.size());
@@ -410,16 +400,17 @@ void NloptSolver::DoSolve(
 
   opt.set_min_objective(EvaluateCosts, const_cast<MathematicalProgram*>(&prog));
 
-  const auto& nlopt_options_double = merged_options.GetOptionsDouble(id());
-  const auto& nlopt_options_int = merged_options.GetOptionsInt(id());
-  const double constraint_tol = GetOptionValueWithDefault(
-      nlopt_options_double, ConstraintToleranceName(), 1e-6);
-  const double xtol_rel = GetOptionValueWithDefault(
-      nlopt_options_double, XRelativeToleranceName(), 1e-6);
-  const double xtol_abs = GetOptionValueWithDefault(
-      nlopt_options_double, XAbsoluteToleranceName(), 1e-6);
+  const double constraint_tol =
+      options.GetOption<double>(self_id, ConstraintToleranceName())
+          .value_or(1e-6);
+  const double xtol_rel =
+      options.GetOption<double>(self_id, XRelativeToleranceName())
+          .value_or(1e-6);
+  const double xtol_abs =
+      options.GetOption<double>(self_id, XAbsoluteToleranceName())
+          .value_or(1e-6);
   const int max_eval =
-      GetOptionValueWithDefault(nlopt_options_int, MaxEvalName(), 1000);
+      options.GetOption<int>(self_id, MaxEvalName()).value_or(1000);
 
   std::list<WrappedConstraint> wrapped_vector;
 

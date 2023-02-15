@@ -74,7 +74,8 @@ void SolverBase::Solve(const MathematicalProgram& prog,
   if (!AreProgramAttributesSatisfied(prog)) {
     throw std::invalid_argument(ExplainUnsatisfiedProgramAttributes(prog));
   }
-  result->set_solver_id(solver_id());
+  const SolverId id = solver_id();
+  result->set_solver_id(id);
   result->set_decision_variable_index(prog.decision_variable_index());
   const Eigen::VectorXd& x_init =
       initial_guess ? *initial_guess : prog.initial_guess();
@@ -83,12 +84,18 @@ void SolverBase::Solve(const MathematicalProgram& prog,
         fmt::format("Solve expects initial guess of size {}, got {}.",
                     prog.num_vars(), x_init.rows()));
   }
-  if (!solver_options) {
+  if (!solver_options.has_value() || solver_options->empty()) {
+    // The extra options are empty, so we can just use the prog options.
     DoSolve(prog, x_init, prog.solver_options(), result);
+  } else if (prog.solver_options().empty()) {
+    // The prog options are empty, so we can just use the extra options.
+    DoSolve(prog, x_init, *solver_options, result);
   } else {
-    SolverOptions merged_options = *solver_options;
-    merged_options.Merge(prog.solver_options());
-    DoSolve(prog, x_init, merged_options, result);
+    // Both sets of options are non-empty, so we need to merge them.
+    SolverOptions merged(prog.solver_options());
+    merged.Update(*solver_options, internal::GetCommonOptionPseudoSolverId());
+    merged.Update(*solver_options, id);
+    DoSolve(prog, x_init, merged, result);
   }
 }
 

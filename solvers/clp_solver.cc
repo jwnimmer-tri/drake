@@ -307,14 +307,8 @@ int ChooseLogLevel(const SolverOptions& options) {
 }
 
 int ChooseScaling(const SolverOptions& options) {
-  const auto& clp_options = options.GetOptionsInt(ClpSolver::id());
-  auto it = clp_options.find("scaling");
-  if (it == clp_options.end()) {
-    // Default scaling is 1.
-    return 1;
-  } else {
-    return it->second;
-  }
+  // Default scaling is 1.
+  return options.GetOption<int>(ClpSolver::id(), "scaling").value_or(1);
 }
 }  // namespace
 
@@ -322,12 +316,12 @@ bool ClpSolver::is_available() { return true; }
 
 void ClpSolver::DoSolve(const MathematicalProgram& prog,
                         const Eigen::VectorXd& initial_guess,
-                        const SolverOptions& merged_options,
+                        const SolverOptions& options,
                         MathematicalProgramResult* result) const {
   // TODO(hongkai.dai): use initial guess and more of the merged options.
   unused(initial_guess);
   ClpSimplex model;
-  model.setLogLevel(ChooseLogLevel(merged_options));
+  model.setLogLevel(ChooseLogLevel(options));
   Eigen::VectorXd xlow(prog.num_vars());
   Eigen::VectorXd xupp(prog.num_vars());
   Eigen::VectorXd objective_coeff = Eigen::VectorXd::Zero(prog.num_vars());
@@ -359,7 +353,7 @@ void ClpSolver::DoSolve(const MathematicalProgram& prog,
   // As suggested by the CLP author, we should call scaling() to handle tiny (or
   // huge) number in program data. See https://github.com/coin-or/Clp/issues/217
   // for the discussion.
-  model.scaling(ChooseScaling(merged_options));
+  model.scaling(ChooseScaling(options));
 
   // Solve
   model.primal();

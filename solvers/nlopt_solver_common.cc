@@ -36,15 +36,25 @@ bool NloptSolver::ProgramAttributesSatisfied(const MathematicalProgram& prog) {
                                         solver_capabilities.access());
 }
 
-std::string NloptSolver::ConstraintToleranceName() { return "constraint_tol"; }
+std::string_view NloptSolver::ConstraintToleranceName() {
+  return "constraint_tol";
+}
 
-std::string NloptSolver::XRelativeToleranceName() { return "xtol_rel"; }
+std::string_view NloptSolver::XRelativeToleranceName() {
+  return "xtol_rel";
+}
 
-std::string NloptSolver::XAbsoluteToleranceName() { return "xtol_abs"; }
+std::string_view NloptSolver::XAbsoluteToleranceName() {
+  return "xtol_abs";
+}
 
-std::string NloptSolver::MaxEvalName() { return "max_eval"; }
+std::string_view NloptSolver::MaxEvalName() {
+  return "max_eval";
+}
 
-std::string NloptSolver::AlgorithmName() { return "algorithm"; }
+std::string_view NloptSolver::AlgorithmName() {
+  return "algorithm";
+}
 
 }  // namespace solvers
 }  // namespace drake

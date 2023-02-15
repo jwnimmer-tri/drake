@@ -1805,6 +1805,35 @@ std::ostream& operator<<(std::ostream& os, const MathematicalProgram& prog) {
   return os;
 }
 
+std::unordered_map<std::string, double>
+MathematicalProgram::GetSolverOptionsDouble(const SolverId& solver_id) const {
+  std::unordered_map<std::string, double> result;
+  for (const auto& [name, value] :
+       solver_options_.GetRange<double>(solver_id)) {
+    result.emplace(name, value);
+  }
+  return result;
+}
+
+std::unordered_map<std::string, int> MathematicalProgram::GetSolverOptionsInt(
+    const SolverId& solver_id) const {
+  std::unordered_map<std::string, int> result;
+  for (const auto& [name, value] :
+       solver_options_.GetRange<int>(solver_id)) {
+    result.emplace(name, value);
+  }
+  return result;
+}
+
+std::unordered_map<std::string, std::string>
+MathematicalProgram::GetSolverOptionsStr(const SolverId& solver_id) const {
+  std::unordered_map<std::string, std::string> result;
+  for (const auto& [name, value] :
+       solver_options_.GetRange<std::string_view>(solver_id)) {
+    result.emplace(name, value);
+  }
+  return result;
+}
 
 }  // namespace solvers
 }  // namespace drake

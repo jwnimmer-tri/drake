@@ -76,7 +76,7 @@ class SolverBase : public SolverInterface {
   virtual void DoSolve(
       const MathematicalProgram& prog,
       const Eigen::VectorXd& initial_guess,
-      const SolverOptions& merged_options,
+      const SolverOptions& options,
       MathematicalProgramResult* result) const = 0;
 
  private:
