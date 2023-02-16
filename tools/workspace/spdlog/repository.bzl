@@ -14,9 +14,7 @@ def _impl(repo_ctx):
     os_result = determine_os(repo_ctx)
     if os_result.error != None:
         fail(os_result.error)
-    elif True:
-        error = setup_github_repository(repo_ctx).error
-    elif os_result.is_macos:
+    if os_result.is_macos:
         # On macOS, we use spdlog from homebrew via pkg-config.
         error = setup_pkg_config_repository(repo_ctx).error
     elif os_result.is_manylinux or os_result.is_macos_wheel:
@@ -57,14 +55,14 @@ install(name = "install")
             # Here, we elect to use the same version as Ubuntu 20.04, even
             # though it is not the newest revision.  Sticking with a single,
             # older revision helps reduce spurious CI failures.
-            default = "v1.10.0",
+            default = "v1.5.0",
         ),
         "commit_pin": attr.int(
             # Per the comment on "commit", above.
             default = 1,
         ),
         "sha256": attr.string(
-            default = "697f91700237dbae2326b90469be32b876b2b44888302afbc7aceb68bcfe8224",  # noqa
+            default = "b38e0bbef7faac2b82fed550a0c19b0d4e7f6737d5321d4fd8f216b80f8aee8a",  # noqa
         ),
         "build_file": attr.label(
             default = "@drake//tools/workspace/spdlog:package.BUILD.bazel",

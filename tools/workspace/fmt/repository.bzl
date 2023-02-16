@@ -14,9 +14,7 @@ def _impl(repo_ctx):
     os_result = determine_os(repo_ctx)
     if os_result.error != None:
         fail(os_result.error)
-    elif True:
-        error = setup_github_repository(repo_ctx).error
-    elif os_result.is_macos:
+    if os_result.is_macos:
         # On macOS, we use fmt from homebrew via pkg-config.
         error = setup_pkg_config_repository(repo_ctx).error
     elif os_result.is_manylinux or os_result.is_macos_wheel:
@@ -63,14 +61,14 @@ install(name = "install")
             # Per https://github.com/gabime/spdlog/releases/tag/v1.5.0 this is
             # the bundled version we should pin, in cases where we're building
             # from source instead of using the host version.
-            default = "9.0.0",
+            default = "6.1.2",
         ),
         "commit_pin": attr.int(
             # Per the comment on "commit", above.
             default = 1,
         ),
         "sha256": attr.string(
-            default = "9a1e0e9e843a356d65c7604e2c8bf9402b50fe294c355de0095ebd42fb9bd2c5",  # noqa
+            default = "1cafc80701b746085dddf41bd9193e6d35089e1c6ec1940e037fcb9c98f62365",  # noqa
         ),
         "build_file": attr.label(
             default = "@drake//tools/workspace/fmt:package.BUILD.bazel",
