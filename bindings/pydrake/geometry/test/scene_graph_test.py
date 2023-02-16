@@ -499,7 +499,7 @@ class TestGeometrySceneGraph(unittest.TestCase):
         # response to invalid ids as evidence of correct binding.
         with self.assertRaisesRegex(
                 RuntimeError,
-                "Referenced geometry .+ has not been registered."):
+                "Referenced GeometryId.* is not registered."):
             query_object.ComputeSignedDistancePairClosestPoints(
                 geometry_id_A=mut.GeometryId.get_new_id(),
                 geometry_id_B=mut.GeometryId.get_new_id())

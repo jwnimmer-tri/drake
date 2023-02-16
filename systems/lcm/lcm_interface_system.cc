@@ -3,8 +3,6 @@
 #include <limits>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "drake/lcm/drake_lcm.h"
 
 namespace drake {

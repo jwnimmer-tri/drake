@@ -5,7 +5,6 @@
 
 #include <cmath>
 #include <initializer_list>
-#include <ostream>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -20,7 +19,6 @@ namespace symbolic {
 using std::endl;
 using std::initializer_list;
 using std::move;
-using std::ostream;
 using std::ostringstream;
 using std::runtime_error;
 using std::string;
@@ -28,18 +26,16 @@ using std::string;
 namespace {
 void throw_if_dummy(const Variable& var) {
   if (var.is_dummy()) {
-    ostringstream oss;
-    oss << "Dummy variable (ID = 0) is detected"
-        << "in the initialization of an environment.";
-    throw runtime_error(oss.str());
+    throw runtime_error(
+        "Dummy variable (ID = 0) is detected in the initialization of an "
+        "environment.");
   }
 }
 
 void throw_if_nan(const double v) {
   if (std::isnan(v)) {
-    ostringstream oss;
-    oss << "NaN is detected in the initialization of an environment.";
-    throw runtime_error(oss.str());
+    throw runtime_error(
+        "NaN is detected in the initialization of an environment.");
   }
 }
 
@@ -100,16 +96,17 @@ Variables Environment::domain() const {
 }
 
 string Environment::to_string() const {
-  ostringstream oss;
-  oss << *this;
-  return oss.str();
+  ostringstream result;
+  for (const auto& [var, value] : *this) {
+    result << fmt::format("{} -> {}\n", var, value);
+  }
+  return result.str();
 }
 
 Environment::mapped_type& Environment::operator[](const key_type& key) {
   if (key.is_dummy()) {
-    ostringstream oss;
-    oss << "Environment::operator[] is called with a dummy variable.";
-    throw runtime_error(oss.str());
+    throw runtime_error(
+        "Environment::operator[] is called with a dummy variable.");
   }
   return map_[key];
 }
@@ -117,24 +114,16 @@ Environment::mapped_type& Environment::operator[](const key_type& key) {
 const Environment::mapped_type& Environment::operator[](
     const key_type& key) const {
   if (key.is_dummy()) {
-    ostringstream oss;
-    oss << "Environment::operator[] is called with a dummy variable.";
-    throw runtime_error(oss.str());
+    throw runtime_error(
+        "Environment::operator[] is called with a dummy variable.");
   }
   if (map_.count(key) == 0) {
-    ostringstream oss;
-    oss << "Environment::operator[] was called on a const Environment "
-        << "with a missing key \"" << key << "\".";
-    throw runtime_error(oss.str());
+    throw runtime_error(fmt::format(
+        "Environment::operator[] was called on a const Environment with a "
+        "missing key \"{}\".",
+        key));
   }
   return map_.at(key);
-}
-
-ostream& operator<<(ostream& os, const Environment& env) {
-  for (const auto& p : env) {
-    os << p.first << " -> " << p.second << endl;
-  }
-  return os;
 }
 
 Environment PopulateRandomVariables(Environment env, const Variables& variables,

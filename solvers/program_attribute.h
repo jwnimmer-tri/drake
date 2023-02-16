@@ -4,7 +4,8 @@
 #include <string>
 #include <unordered_set>
 
-#include "drake/common/fmt_ostream.h"
+#include "drake/common/drake_deprecated.h"
+#include "drake/common/fmt.h"
 #include "drake/common/hash.h"
 
 namespace drake {
@@ -53,9 +54,7 @@ bool AreRequiredAttributesSupported(const ProgramAttributes& required,
                                     std::string* unsupported_message = nullptr);
 
 std::string to_string(const ProgramAttribute&);
-std::ostream& operator<<(std::ostream&, const ProgramAttribute&);
 std::string to_string(const ProgramAttributes&);
-std::ostream& operator<<(std::ostream&, const ProgramAttributes&);
 
 /**
  * A coarse categorization of the optimization problem based on the type of
@@ -95,19 +94,38 @@ enum class ProgramType {
 };
 
 std::string to_string(const ProgramType&);
+
+DRAKE_DEPRECATED("2023-06-01", "Use fmt or spdlog for logging, not operator<<.")
+std::ostream& operator<<(std::ostream&, const ProgramAttribute&);
+DRAKE_DEPRECATED("2023-06-01", "Use fmt or spdlog for logging, not operator<<.")
+std::ostream& operator<<(std::ostream&, const ProgramAttributes&);
+DRAKE_DEPRECATED("2023-06-01", "Use fmt or spdlog for logging, not operator<<.")
 std::ostream& operator<<(std::ostream&, const ProgramType&);
 }  // namespace solvers
 }  // namespace drake
 
-// TODO(jwnimmer-tri) Add a real formatter and deprecate the operator<<.
+namespace drake::internal {
+// XXX rewrite without this
+/* A formatter class that uses to_string (via ADL) to format its argument. */
+class to_string_formatter : public fmt::formatter<std::string_view> {
+ public:
+  template <typename T, typename FormatContext>
+  auto format(const T& x,
+              // NOLINTNEXTLINE(runtime/references) To match fmt API.
+              FormatContext& ctx) DRAKE_FMT8_CONST {
+    return fmt::formatter<std::string_view>::format(to_string(x), ctx);
+  }
+};
+}  // namespace drake::internal
+
 namespace fmt {
 template <>
 struct formatter<drake::solvers::ProgramAttribute>
-    : drake::ostream_formatter {};
+    : public drake::internal::to_string_formatter {};
 template <>
 struct formatter<drake::solvers::ProgramAttributes>
-    : drake::ostream_formatter {};
+    : public drake::internal::to_string_formatter {};
 template <>
 struct formatter<drake::solvers::ProgramType>
-    : drake::ostream_formatter {};
+    : public drake::internal::to_string_formatter {};
 }  // namespace fmt

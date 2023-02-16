@@ -25,6 +25,7 @@
 #include "drake/common/cond.h"
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/drake_throw.h"
 #include "drake/common/dummy_value.h"
 #include "drake/common/eigen_types.h"
@@ -676,7 +677,12 @@ Expression uninterpreted_function(std::string name,
                                   std::vector<Expression> arguments);
 void swap(Expression& a, Expression& b);
 
-std::ostream& operator<<(std::ostream& os, const Expression& e);
+DRAKE_DEPRECATED("2023-06-01",
+    "Use fmt or spdlog for logging, not operator<<. "
+    "Alternatively, call e.to_string() directly.")
+inline std::ostream& operator<<(std::ostream& os, const Expression& e) {
+  return os << e.to_string();
+}
 
 /** Checks if @p e is a constant expression. */
 inline bool is_constant(const Expression& e) {
@@ -1033,7 +1039,7 @@ inline bool operator!=(
 inline std::ostream& operator<<(
     std::ostream& os,
     const uniform_real_distribution<drake::symbolic::Expression>& d) {
-  return os << d.a() << " " << d.b();
+  return os << d.a().to_string() << " " << d.b().to_string();
 }
 
 /// Provides std::normal_distribution, N(μ, σ), for symbolic expressions.
@@ -1175,7 +1181,7 @@ inline bool operator!=(
 inline std::ostream& operator<<(
     std::ostream& os,
     const normal_distribution<drake::symbolic::Expression>& d) {
-  return os << d.mean() << " " << d.stddev();
+  return os << d.mean().to_string() << " " << d.stddev().to_string();
 }
 
 /// Provides std::exponential_distribution, Exp(λ), for symbolic expressions.
@@ -1274,7 +1280,7 @@ inline bool operator!=(
 inline std::ostream& operator<<(
     std::ostream& os,
     const exponential_distribution<drake::symbolic::Expression>& d) {
-  return os << d.lambda();
+  return os << d.lambda().to_string();
 }
 
 }  // namespace std

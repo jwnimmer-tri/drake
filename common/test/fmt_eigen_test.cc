@@ -6,6 +6,7 @@
 namespace drake {
 namespace {
 
+// XXX
 // TODO(jwnimer-tri) The expected values below are what Eigen prints for us by
 // default. In the future, we might decide to use some different formatting.
 // In that case, it's fine to update the test goals here to reflect those
@@ -13,17 +14,22 @@ namespace {
 
 GTEST_TEST(FmtEigenTest, RowVector3d) {
   const Eigen::RowVector3d value{1.1, 2.2, 3.3};
-  EXPECT_EQ(fmt::format("{}", fmt_eigen(value)), "1.1 2.2 3.3");
+  EXPECT_EQ(fmt::format("{}", fmt_eigen(value)), "[1.1, 2.2, 3.3]");
 }
 
 GTEST_TEST(FmtEigenTest, Vector3d) {
   const Eigen::Vector3d value{1.1, 2.2, 3.3};
-  EXPECT_EQ(fmt::format("{}", fmt_eigen(value)), "1.1\n2.2\n3.3");
+  EXPECT_EQ(fmt::format("{}", fmt_eigen(value)), "[1.1, 2.2, 3.3]ᵀ");
+}
+
+GTEST_TEST(FmtEigenTest, Vector3dFormatSpec) {
+  const Eigen::Vector3d value{1.1, 2.2, 3.3};
+  EXPECT_EQ(fmt::format("{:+}", fmt_eigen(value)), "[+1.1, +2.2, +3.3]ᵀ");
 }
 
 GTEST_TEST(FmtEigenTest, EmptyMatrix) {
   const Eigen::MatrixXd value;
-  EXPECT_EQ(fmt::format("{}", fmt_eigen(value)), "");
+  EXPECT_EQ(fmt::format("{}", fmt_eigen(value)), "[]");
 }
 
 GTEST_TEST(FmtEigenTest, Matrix3d) {
@@ -32,9 +38,9 @@ GTEST_TEST(FmtEigenTest, Matrix3d) {
            2.1, 2.2, 2.3,
            3.1, 3.2, 3.3;
   EXPECT_EQ(fmt::format("{}", fmt_eigen(value)),
-            "1.1 1.2 1.3\n"
-            "2.1 2.2 2.3\n"
-            "3.1 3.2 3.3");
+            "[[1.1, 1.2, 1.3],\n"
+            " [2.1, 2.2, 2.3],\n"
+            " [3.1, 3.2, 3.3]]");
 }
 
 GTEST_TEST(FmtEigenTest, Matrix3dNeedsPadding) {
@@ -43,9 +49,20 @@ GTEST_TEST(FmtEigenTest, Matrix3dNeedsPadding) {
            2.1, 2.2, 2.3,
            3.1, 3.2, 3.3;
   EXPECT_EQ(fmt::format("{}", fmt_eigen(value)),
-            "10.1  1.2  1.3\n"
-            " 2.1  2.2  2.3\n"
-            " 3.1  3.2  3.3");
+            "[[10.1,  1.2,  1.3],\n"
+            " [ 2.1,  2.2,  2.3],\n"
+            " [ 3.1,  3.2,  3.3]]");
+}
+
+GTEST_TEST(FmtEigenTest, Matrix3dFormatSpecNeedsPadding) {
+  Eigen::Matrix3d value;
+  value << 10.1, 1.2, 1.3,
+           2.1, 2.2e10, 2.3,
+           3.1, 3.2, 3.3;
+  EXPECT_EQ(fmt::format("{:G}", fmt_eigen(value)),
+            "[[   10.1,     1.2,     1.3],\n"
+            " [    2.1, 2.2E+10,     2.3],\n"
+            " [    3.1,     3.2,     3.3]]");
 }
 
 GTEST_TEST(FmtEigenTest, Matrix3i) {
@@ -54,9 +71,9 @@ GTEST_TEST(FmtEigenTest, Matrix3i) {
            21, 22, 23,
            31, 32, 33;
   EXPECT_EQ(fmt::format("{}", fmt_eigen(value)),
-            "11 12 13\n"
-            "21 22 23\n"
-            "31 32 33");
+            "[[11, 12, 13],\n"
+            " [21, 22, 23],\n"
+            " [31, 32, 33]]");
 }
 
 }  // namespace

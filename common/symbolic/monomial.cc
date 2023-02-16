@@ -23,7 +23,6 @@ using std::logic_error;
 using std::make_pair;
 using std::map;
 using std::ostream;
-using std::ostringstream;
 using std::pair;
 using std::runtime_error;
 
@@ -185,13 +184,10 @@ double Monomial::Evaluate(const Environment& env) const {
         const Variable& var{p.first};
         const auto it = env.find(var);
         if (it == env.end()) {
-          ostringstream oss;
-          oss << "Monomial " << *this
-              << " cannot be evaluated with the given "
-                 "environment which does not provide an entry "
-                 "for variable = "
-              << var << ".";
-          throw runtime_error(oss.str());
+          throw runtime_error(fmt::format(
+              "Monomial {} cannot be evaluated with the given environment "
+              "which does not provide an entry for variable = {}.",
+              *this, var));
         } else {
           const double base{it->second};
           const int exponent{p.second};
@@ -263,9 +259,8 @@ Monomial& Monomial::operator*=(const Monomial& m) {
 
 Monomial& Monomial::pow_in_place(const int p) {
   if (p < 0) {
-    ostringstream oss;
-    oss << "Monomial::pow(int p) is called with a negative p = " << p;
-    throw runtime_error(oss.str());
+    throw runtime_error(fmt::format(
+        "Monomial::pow(int p) is called with a negative p = {}", p));
   }
   if (p == 0) {
     total_degree_ = 0;
@@ -285,13 +280,13 @@ ostream& operator<<(ostream& out, const Monomial& m) {
     return out << 1;
   }
   auto it = m.powers_.begin();
-  out << it->first;
+  out << it->first.to_string();
   if (it->second > 1) {
     out << "^" << it->second;
   }
   for (++it; it != m.powers_.end(); ++it) {
     out << " * ";
-    out << it->first;
+    out << it->first.to_string();
     if (it->second > 1) {
       out << "^" << it->second;
     }

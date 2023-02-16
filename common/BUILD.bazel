@@ -219,9 +219,12 @@ drake_cc_library(
     name = "identifier",
     srcs = ["identifier.cc"],
     hdrs = ["identifier.h"],
-    deps = [
+    interface_deps = [
         ":essential",
         ":hash",
+    ],
+    deps = [
+        ":nice_type_name",
     ],
 )
 
@@ -450,9 +453,11 @@ drake_cc_library(
     name = "type_safe_index",
     srcs = ["type_safe_index.cc"],
     hdrs = ["type_safe_index.h"],
-    deps = [
+    interface_deps = [
         ":essential",
         ":hash",
+    ],
+    deps = [
         ":nice_type_name",
     ],
 )
@@ -1018,6 +1023,7 @@ drake_cc_googletest(
     srcs = [
         "drake_copyable.h",
         "fmt.h",
+        "fmt_ostream.h",
         "never_destroyed.h",
         "test/text_logging_test.cc",
         "text_logging.cc",

@@ -21,5 +21,25 @@ void ThrowTypeSafeIndexAssertNoOverflowFailed(const std::type_info& type,
                                      NiceTypeName::Get(type)));
 }
 
+std::string FormatIndex(const std::type_info* type, int value) {
+  std::string result;
+  if (type != nullptr) {
+    std::string full_name = NiceTypeName::Get(*type);
+    std::string short_name = NiceTypeName::RemoveNamespaces(full_name);
+    if (value >= 0) {
+      result = fmt::format("{}({})", short_name, value);
+    } else {
+      result = fmt::format("{}()", short_name);
+    }
+  } else {
+    if (value >= 0) {
+      result = fmt::to_string(value);
+    } else {
+      result = "default";
+    }
+  }
+  return result;
+}
+
 }  // namespace internal
 }  // namespace drake

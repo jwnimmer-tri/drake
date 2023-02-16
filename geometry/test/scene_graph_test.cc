@@ -179,7 +179,7 @@ TEST_F(SceneGraphTest, RegisterSourcePostContext) {
   // Not found in allocated context.
   DRAKE_EXPECT_THROWS_MESSAGE(
       query_object().inspector().GetName(new_source),
-      "Querying source name for an invalid source id.*");
+      "Querying source name for invalid SourceId.*");
 }
 
 // Tests ability to report if a source is registered or not.
@@ -198,10 +198,10 @@ TEST_F(SceneGraphTest, InputPortsForInvalidSource) {
   SourceId fake_source = SourceId::get_new_id();
   DRAKE_EXPECT_THROWS_MESSAGE(
       scene_graph_.get_source_pose_port(fake_source),
-      "Can't acquire pose port for unknown source id: \\d+.");
+      "Can't acquire pose port for unknown SourceId\\(\\d+\\).");
   DRAKE_EXPECT_THROWS_MESSAGE(
       scene_graph_.get_source_configuration_port(fake_source),
-      "Can't acquire configuration port for unknown source id: \\d+.");
+      "Can't acquire configuration port for unknown SourceId\\(\\d+\\).");
 }
 
 // Confirms that attempting to acquire input ports for valid sources for the
@@ -862,7 +862,7 @@ GTEST_TEST(SceneGraphContextModifier, RegisterGeometry) {
   EXPECT_EQ(1, inspector.NumGeometriesForFrame(frame_id));
   DRAKE_EXPECT_THROWS_MESSAGE(
       inspector.GetFrameId(sphere_id_2),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId\\(\\d+\\) is not registered.");
 }
 
 // A limited test -- the majority of this functionality is encoded in and tested

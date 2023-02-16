@@ -5,7 +5,7 @@
 #include <typeinfo>
 
 #include "drake/common/drake_assert.h"
-#include "drake/common/fmt_ostream.h"
+#include "drake/common/fmt.h"
 #include "drake/common/hash.h"
 
 namespace drake {
@@ -15,6 +15,7 @@ namespace internal {
     const std::type_info& type, const char* source);
 [[noreturn]] void ThrowTypeSafeIndexAssertNoOverflowFailed(
     const std::type_info& type, const char* source);
+std::string FormatIndex(const std::type_info*, int value);
 }  // namespace internal
 
 /// A type-safe non-negative index class.
@@ -587,9 +588,16 @@ template <typename Tag>
 struct hash<drake::TypeSafeIndex<Tag>> : public drake::DefaultHash {};
 }  // namespace std
 
-// TODO(jwnimmer-tri) Add a real formatter and deprecate the operator<<.
 namespace fmt {
 template <typename Tag>
-struct formatter<drake::TypeSafeIndex<Tag>>
-    : drake::ostream_formatter {};
+struct formatter<drake::TypeSafeIndex<Tag>> : drake::repr_formatter {
+  template <typename FormatContext>
+  auto format(drake::TypeSafeIndex<Tag> index,
+              // NOLINTNEXTLINE(runtime/references) To match fmt API.
+              FormatContext& ctx) DRAKE_FMT8_CONST {
+    const std::type_info* const type = use_repr() ? &typeid(index) : nullptr;
+    const int value = index.is_valid() ? int{index} : -1;
+    return Base::format(drake::internal::FormatIndex(type, value), ctx);
+  }
+};
 }  // namespace fmt

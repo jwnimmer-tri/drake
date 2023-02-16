@@ -40,7 +40,6 @@ using std::move;
 using std::set;
 using std::string;
 using std::swap;
-using std::to_string;
 using std::unordered_set;
 using systems::sensors::ImageDepth32F;
 using systems::sensors::ImageLabel16I;
@@ -67,8 +66,7 @@ void FindOrThrow(const Key& key, const Findable& source,
 // Definition of error message for a missing key lookup.
 template <class Key>
 std::string get_missing_id_message(const Key& key) {
-  // TODO(SeanCurtis-TRI): Use NiceTypeName to get the key name.
-  return "Error in map look up of unexpected key type";
+  return fmt::format("Referenced {:!r} is not registered.", key);
 }
 
 // The look up and error-throwing method for const values.
@@ -91,28 +89,6 @@ Value& GetMutableValueOrThrow(const Key& key,
     return itr->second;
   }
   throw std::logic_error(get_missing_id_message(key));
-}
-
-// Specializations for missing key based on key types.
-template <>
-std::string get_missing_id_message<SourceId>(const SourceId& key) {
-  std::stringstream ss;
-  ss << "Referenced geometry source " << key << " is not registered.";
-  return ss.str();
-}
-
-template <>
-std::string get_missing_id_message<FrameId>(const FrameId& key) {
-  std::stringstream ss;
-  ss << "Referenced frame " << key << " has not been registered.";
-  return ss.str();
-}
-
-template <>
-std::string get_missing_id_message<GeometryId>(const GeometryId& key) {
-  std::stringstream ss;
-  ss << "Referenced geometry " << key << " has not been registered.";
-  return ss.str();
 }
 
 //-----------------------------------------------------------------------------
@@ -320,7 +296,7 @@ const std::string& GeometryState<T>::GetName(SourceId id) const {
   auto itr = source_names_.find(id);
   if (itr != source_names_.end()) return itr->second;
   throw std::logic_error(
-      "Querying source name for an invalid source id: " + to_string(id) + ".");
+      fmt::format("Querying source name for invalid {:!r}.", id));
 }
 
 template <typename T>
@@ -354,8 +330,7 @@ const std::string& GeometryState<T>::GetOwningSourceName(FrameId id) const {
 template <typename T>
 const std::string& GeometryState<T>::GetName(FrameId frame_id) const {
   FindOrThrow(frame_id, frames_, [frame_id]() {
-    return "No frame name available for invalid frame id: " +
-        to_string(frame_id);
+    return fmt::format("No frame name available for invalid {:!r}", frame_id);
   });
   return frames_.at(frame_id).name();
 }
@@ -363,8 +338,7 @@ const std::string& GeometryState<T>::GetName(FrameId frame_id) const {
 template <typename T>
 FrameId GeometryState<T>::GetParentFrame(FrameId frame_id) const {
   FindOrThrow(frame_id, frames_, [frame_id]() {
-    return "No frame name available for invalid frame id: " +
-        to_string(frame_id);
+    return fmt::format("No frame name available for invalid {:!r}", frame_id);
   });
   const FrameId parent_frame_id = frames_.at(frame_id).parent_frame_id();
   if (parent_frame_id == frame_id) {
@@ -377,8 +351,7 @@ FrameId GeometryState<T>::GetParentFrame(FrameId frame_id) const {
 template <typename T>
 int GeometryState<T>::GetFrameGroup(FrameId frame_id) const {
   FindOrThrow(frame_id, frames_, [frame_id]() {
-    return "No frame group available for invalid frame id: " +
-        to_string(frame_id);
+    return fmt::format("No frame group available for invalid {:!r}", frame_id);
   });
   return frames_.at(frame_id).frame_group();
 }
@@ -404,8 +377,9 @@ template <typename T>
 int GeometryState<T>::NumGeometriesWithRole(FrameId frame_id, Role role) const {
   int count = 0;
   FindOrThrow(frame_id, frames_, [frame_id, role]() {
-    return "Cannot report number of geometries with the " + to_string(role) +
-        " role for invalid frame id: " + to_string(frame_id);
+    return fmt::format(
+        "Cannot report number of geometries with the {} role for invalid {:!r}",
+        role, frame_id);
   });
   const InternalFrame& frame = frames_.at(frame_id);
   for (GeometryId id : frame.child_geometries()) {
@@ -457,17 +431,19 @@ GeometryId GeometryState<T>::GetGeometryIdByName(
 
   if (count == 1) return result;
   if (count < 1) {
-    throw std::logic_error("The frame '" + frame_name + "' (" +
-        to_string(frame_id) + ") has no geometry with the role '" +
-        to_string(role) + "' and the canonical name '" + canonical_name + "'");
+    throw std::logic_error(
+        fmt::format("The frame '{}' ({:!r}) has no geometry with the role '{}' "
+                    "and the canonical name '{}'",
+                    frame_name, frame_id, role, canonical_name));
   }
   // This case should only be possible for unassigned geometries - internal
   // invariants require unique names for actual geometries with the _same_
   // role on the same frame.
   DRAKE_DEMAND(role == Role::kUnassigned);
-  throw std::logic_error("The frame '" + frame_name + "' (" +
-      to_string(frame_id) + ") has multiple geometries with the role '" +
-      to_string(role) + "' and the canonical name '" + canonical_name + "'");
+  throw std::logic_error(
+      fmt::format("The frame '{}' ({:!r}) has multiple geometries with the role "
+                  "'{}' and the canonical name '{}'",
+                  frame_name, frame_id, role, canonical_name));
 }
 
 template <typename T>
@@ -499,8 +475,8 @@ const std::string& GeometryState<T>::GetName(GeometryId geometry_id) const {
   const InternalGeometry* geometry = GetGeometry(geometry_id);
   if (geometry != nullptr) return geometry->name();
 
-  throw std::logic_error("No geometry available for invalid geometry id: " +
-      to_string(geometry_id));
+  throw std::logic_error(
+      fmt::format("No geometry available for invalid {:!r}", geometry_id));
 }
 
 template <typename T>
@@ -508,8 +484,8 @@ const Shape& GeometryState<T>::GetShape(GeometryId id) const {
   const InternalGeometry* geometry = GetGeometry(id);
   if (geometry != nullptr) return geometry->shape();
 
-  throw std::logic_error("No geometry available for invalid geometry id: " +
-      to_string(id));
+  throw std::logic_error(
+      fmt::format("No geometry available for invalid {:!r}", id));
 }
 
 template <typename T>
@@ -608,43 +584,38 @@ std::vector<GeometryId> GeometryState<T>::GetAllDeformableGeometryIds() const {
 
 template <typename T>
 bool GeometryState<T>::CollisionFiltered(GeometryId id1, GeometryId id2) const {
-  std::string base_message =
-      "Can't report collision filter status between geometries " +
-          to_string(id1) + " and " + to_string(id2) + "; ";
+  // Check if the arguments are valid and then calculate the result.
   const internal::InternalGeometry* geometry1 = GetGeometry(id1);
   const internal::InternalGeometry* geometry2 = GetGeometry(id2);
-  if (geometry1 != nullptr && geometry2 != nullptr) {
-    if (geometry1->has_proximity_role() && geometry2->has_proximity_role()) {
-      return !geometry_engine_->collision_filter().CanCollideWith(
-          geometry1->id(), geometry2->id());
-    }
-    if (geometry1->has_proximity_role()) {
-      throw std::logic_error(base_message + to_string(id2) +
-          " does not have a proximity role");
-    } else if (geometry2->has_proximity_role()) {
-      throw std::logic_error(base_message + to_string(id1) +
-          " does not have a proximity role");
-    } else {
-      throw std::logic_error(base_message + " neither id has a proximity role");
-    }
+  if (geometry1 != nullptr && geometry2 != nullptr &&
+      geometry1->has_proximity_role() && geometry2->has_proximity_role()) {
+    return !geometry_engine_->collision_filter().CanCollideWith(
+        geometry1->id(), geometry2->id());
   }
-  if (geometry1 != nullptr) {
-    throw std::logic_error(base_message + to_string(id2) +
-        " is not a valid geometry");
-  } else if (geometry2 != nullptr) {
-    throw std::logic_error(base_message + to_string(id1) +
-        " is not a valid geometry");
-  } else {
-    throw std::logic_error(base_message + "neither id is a valid geometry");
+
+  // The arguments were invalid somehow; diagnose why.
+  std::string message = fmt::format(
+      "Can't report collision filter status between {:!r} and {:!r}", id1, id2);
+  if (geometry1 == nullptr) {
+    message = fmt::format("{}; {:!r} is not a valid geometry", message, id1);
+  } else if (!geometry1->has_proximity_role()) {
+    message =
+        fmt::format("{}; {:!r} does not have a proximity role", message, id1);
   }
+  if (geometry2 == nullptr) {
+    message = fmt::format("{}; {:!r} is not a valid geometry", message, id2);
+  } else if (!geometry2->has_proximity_role()) {
+    message =
+        fmt::format("{}; {:!r} does not have a proximity role", message, id2);
+  }
+  throw std::logic_error(std::move(message));
 }
 
 template <typename T>
 const math::RigidTransform<T>& GeometryState<T>::get_pose_in_world(
     FrameId frame_id) const {
   FindOrThrow(frame_id, frames_, [frame_id]() {
-    return "No world pose available for invalid frame id: " +
-           to_string(frame_id);
+    return fmt::format("No world pose available for invalid {:!r}", frame_id);
   });
   return kinematics_data_.X_WFs[frames_.at(frame_id).index()];
 }
@@ -653,8 +624,7 @@ template <typename T>
 const math::RigidTransform<T>& GeometryState<T>::get_pose_in_world(
     GeometryId geometry_id) const {
   FindOrThrow(geometry_id, geometries_, [geometry_id]() {
-    return "No world pose available for invalid geometry id: " +
-           to_string(geometry_id);
+    return fmt::format("No world pose available for invalid {:!r}", geometry_id);
   });
   const auto& geometry = GetValueOrThrow(geometry_id, geometries_);
   if (geometry.is_deformable()) {
@@ -669,7 +639,7 @@ template <typename T>
 const math::RigidTransform<T>& GeometryState<T>::get_pose_in_parent(
     FrameId frame_id) const {
   FindOrThrow(frame_id, frames_, [frame_id]() {
-    return "No pose available for invalid frame id: " + to_string(frame_id);
+    return fmt::format("No pose available for invalid {:!r}", frame_id);
   });
   return kinematics_data_.X_PFs[frames_.at(frame_id).index()];
 }
@@ -678,8 +648,8 @@ template <typename T>
 const VectorX<T>& GeometryState<T>::get_configurations_in_world(
     GeometryId geometry_id) const {
   FindOrThrow(geometry_id, geometries_, [geometry_id]() {
-    return "No world configurations available for invalid geometry id: " +
-           to_string(geometry_id);
+    return fmt::format("No world configurations available for invalid {:!r}",
+                       geometry_id);
   });
   const auto& geometry = GetValueOrThrow(geometry_id, geometries_);
   if (!geometry.is_deformable()) {
@@ -694,7 +664,7 @@ template <typename T>
 SourceId GeometryState<T>::RegisterNewSource(const std::string& name) {
   SourceId source_id = SourceId::get_new_id();
   const std::string final_name =
-      name != "" ? name : "Source_" + to_string(source_id);
+      name != "" ? name : fmt::format("Source_{}", source_id);
 
   // The user can provide bad names, _always_ test.
   for (const auto& pair : source_names_) {
@@ -725,16 +695,17 @@ FrameId GeometryState<T>::RegisterFrame(SourceId source_id, FrameId parent_id,
   FrameId frame_id = frame.id();
 
   if (frames_.count(frame_id) > 0) {
-    throw std::logic_error(
-        "Registering frame with an id that has already been registered: " +
-            to_string(frame_id));
+    throw std::logic_error(fmt::format(
+        "Registering frame with an id that has already been registered: {:!r}",
+        frame_id));
   }
 
   FrameIdSet& f_set = GetMutableValueOrThrow(source_id, &source_frame_id_map_);
   if (parent_id != InternalFrame::world_frame_id()) {
     FindOrThrow(parent_id, f_set, [parent_id, source_id]() {
-      return "Indicated parent id " + to_string(parent_id) + " does not belong "
-          "to the indicated source id " + to_string(source_id) + ".";
+      return fmt::format(
+          "Indicated parent id {:!r} does not belong to the indicated {:!r}.",
+          parent_id, source_id);
     });
     frames_[parent_id].add_child(frame_id);
   } else {
@@ -767,9 +738,8 @@ GeometryId GeometryState<T>::RegisterGeometry(
     SourceId source_id, FrameId frame_id,
     std::unique_ptr<GeometryInstance> geometry) {
   if (geometry == nullptr) {
-    throw std::logic_error(
-        "Registering null geometry to frame " + to_string(frame_id) +
-            ", on source " + to_string(source_id) + ".");
+    throw std::logic_error(fmt::format(
+        "Registering null geometry to {:!r}, on {:!r}.", frame_id, source_id));
   }
   const GeometryId geometry_id = geometry->id();
   ValidateRegistrationAndSetTopology(source_id, frame_id, geometry_id);
@@ -794,15 +764,15 @@ GeometryId GeometryState<T>::RegisterDeformableGeometry(
     SourceId source_id, FrameId frame_id,
     std::unique_ptr<GeometryInstance> geometry, double resolution_hint) {
   if (geometry == nullptr) {
-    throw std::logic_error("Registering null geometry to frame " +
-                           to_string(frame_id) + ", on source " +
-                           to_string(source_id) + ".");
+    throw std::logic_error(fmt::format(
+        "Registering null geometry to {:!r}, on {:!r}.", frame_id, source_id));
   }
 
   const GeometryId geometry_id = geometry->id();
   if (frame_id != InternalFrame::world_frame_id()) {
-    throw std::logic_error("Registering deformable geometry with id " +
-                           to_string(geometry_id) + " to a non-world frame");
+    throw std::logic_error(fmt::format(
+        "Registering deformable geometry with {:!r} to a non-world frame",
+        geometry_id));
   }
 
   ValidateRegistrationAndSetTopology(source_id, frame_id, geometry_id);
@@ -835,9 +805,9 @@ void GeometryState<T>::ChangeShape(SourceId source_id, GeometryId geometry_id,
                                    const Shape& shape,
                                    std::optional<RigidTransformd> X_FG) {
   if (!BelongsToSource(geometry_id, source_id)) {
-    throw std::logic_error("Given geometry id " + to_string(geometry_id) +
-                           " does not belong to the given source id " +
-                           to_string(source_id));
+    throw std::logic_error(
+        fmt::format("Given {:!r} does not belong to the given {:!r}", geometry_id,
+                    source_id));
   }
   InternalGeometry* geometry = GetMutableGeometry(geometry_id);
   // Must be non-null, otherwise, we never would've gotten past the
@@ -897,9 +867,8 @@ GeometryId GeometryState<T>::RegisterGeometryWithParent(
   // of registering the geometry.
 
   if (geometry == nullptr) {
-    throw std::logic_error(
-        "Registering null geometry to geometry " + to_string(parent_id) +
-            ", on source " + to_string(source_id) + ".");
+    throw std::logic_error(fmt::format(
+        "Registering null geometry to {:!r} on {:!r}.", parent_id, source_id));
   }
 
   // This confirms that parent_id exists at all.
@@ -942,9 +911,9 @@ void GeometryState<T>::RemoveGeometry(SourceId source_id,
                                       GeometryId geometry_id) {
   if (!BelongsToSource(geometry_id, source_id)) {
     throw std::logic_error(
-        "Trying to remove geometry " + to_string(geometry_id) + " from "
-            "source " + to_string(source_id) + ", but the geometry doesn't "
-            "belong to that source.");
+        fmt::format("Trying to remove {:!r} from {:!r}, but the geometry doesn't "
+                    "belong to that source.",
+                    geometry_id, source_id));
   }
   RemoveGeometryUnchecked(geometry_id, RemoveGeometryOrigin::kGeometry);
 }
@@ -953,7 +922,7 @@ template <typename T>
 bool GeometryState<T>::IsValidGeometryName(
     FrameId frame_id, Role role, const std::string& candidate_name) const {
   FindOrThrow(frame_id, frames_, [frame_id]() {
-    return "Given frame id is not valid: " + to_string(frame_id);
+    return fmt::format("Given {:!r} is not valid", frame_id);
   });
   const std::string name = internal::CanonicalizeStringName(candidate_name);
   if (name.empty()) return false;
@@ -1110,9 +1079,9 @@ int GeometryState<T>::RemoveRole(SourceId source_id, GeometryId geometry_id,
                                  Role role) {
   if (!BelongsToSource(geometry_id, source_id)) {
     throw std::logic_error(
-        "Trying to remove the role " + to_string(role) + " from the geometry " +
-            to_string(geometry_id) + " from source " + to_string(source_id) +
-            ", but the geometry doesn't belong to that source.");
+        fmt::format("Trying to remove the role {} from {:!r} of {:!r}, but the "
+                    "geometry doesn't belong to that source.",
+                    role, geometry_id, source_id));
   }
 
   // One can't "remove" the unassigned role state.
@@ -1145,10 +1114,10 @@ int GeometryState<T>::RemoveFromRenderer(const std::string& renderer_name,
                                          SourceId source_id,
                                          GeometryId geometry_id) {
   if (!BelongsToSource(geometry_id, source_id)) {
-    throw std::logic_error(
-        "Trying to remove geometry " + to_string(geometry_id) + " from the "
-        "renderer '" + renderer_name + "', but the geometry doesn't belong to "
-        "given source " + to_string(source_id) + ".");
+    throw std::logic_error(fmt::format(
+        "Trying to remove {:!r} from the renderer '{}', but the geometry "
+        "doesn't belong to given {:!r}.",
+        geometry_id, renderer_name, source_id));
   }
 
   return RemoveFromRendererUnchecked(renderer_name, geometry_id) ? 1 : 0;
@@ -1292,10 +1261,10 @@ unordered_set<GeometryId> GeometryState<T>::CollectIds(
   for (auto geometry_id : geometry_set.geometries()) {
     const InternalGeometry* geometry = GetGeometry(geometry_id);
     if (geometry == nullptr) {
-      throw std::logic_error(
+      throw std::logic_error(fmt::format(
           "Geometry set includes a geometry id that doesn't belong to the "
-          "SceneGraph: " +
-          to_string(geometry_id));
+          "SceneGraph: {:!r}",
+          geometry_id));
     }
     if (!role.has_value() || geometry->has_role(*role)) {
       resultant_ids.insert(geometry_id);
@@ -1340,16 +1309,16 @@ void GeometryState<T>::ValidateFrameIds(
     // TODO(SeanCurtis-TRI): Determine if more specific information is required.
     // e.g., which frames are missing/added.
     throw std::runtime_error(
-        "Disagreement in expected number of frames (" +
-        to_string(frames.size()) + ") and the given number of frames (" +
-        to_string(kinematics_data.size()) + ").");
+        fmt::format("Disagreement in expected number of frames ({}) and the "
+                    "given number of frames ({}).",
+                    frames.size(), kinematics_data.size()));
   }
   for (auto id : frames) {
     if (!kinematics_data.has_id(id)) {
       throw std::runtime_error(
-          "Registered frame id (" + to_string(id) + ") belonging to source " +
-          to_string(source_id) +
-          " was not found in the provided kinematics data.");
+          fmt::format("Registered {:!r} belonging to {:!r} was not found in the "
+                      "provided kinematics data.",
+                      id, source_id));
     }
   }
 }
@@ -1358,9 +1327,9 @@ template <typename T>
 void GeometryState<T>::ValidateRegistrationAndSetTopology(
     SourceId source_id, FrameId frame_id, GeometryId geometry_id) {
   if (geometries_.count(geometry_id) > 0) {
-    throw std::logic_error(
-        "Registering geometry with an id that has already been registered: " +
-        to_string(geometry_id));
+    throw std::logic_error(fmt::format(
+        "Registering geometry with an id that has already been registered: {}",
+        geometry_id));
   }
 
   SourceId frame_source_id = source_id;
@@ -1376,9 +1345,9 @@ void GeometryState<T>::ValidateRegistrationAndSetTopology(
       GetMutableValueOrThrow(frame_source_id, &source_frame_id_map_);
 
   FindOrThrow(frame_id, set, [frame_id, frame_source_id]() {
-    return "Referenced frame " + to_string(frame_id) + " for source " +
-           to_string(frame_source_id) +
-           ", but the frame doesn't belong to the source.";
+    return fmt::format(
+        "Referenced {:!r} for {:!r}, but the frame doesn't belong to the source.",
+        frame_id, frame_source_id);
   });
 
   // Configure topology.
@@ -1418,8 +1387,8 @@ template <typename T>
 SourceId GeometryState<T>::get_source_id(GeometryId id) const {
   const InternalGeometry* geometry = GetGeometry(id);
   if (geometry == nullptr) {
-    throw std::logic_error("Geometry id " + to_string(id) +
-                           " does not map to a registered geometry");
+    throw std::logic_error(
+        fmt::format("{:!r} does not map to a registered geometry", id));
   }
   return geometry->source_id();
 }
@@ -1528,8 +1497,9 @@ template <typename T>
 void GeometryState<T>::ThrowIfNameExistsInRole(FrameId id, Role role,
                                                const std::string& name) const {
   if (!NameIsUnique(id, role, name)) {
-    throw std::logic_error("The name '" + name + "' has already been used by "
-        "a geometry with the '" + to_string(role) + "' role.");
+    throw std::logic_error(fmt::format(
+        "The name '{}' has already been used by a geometry with the '{}' role.",
+        name, role));
   }
 }
 
@@ -1563,9 +1533,9 @@ InternalGeometry& GeometryState<T>::ValidateRoleAssign(SourceId source_id,
                                                        Role role,
                                                        RoleAssign assign) {
   if (!BelongsToSource(geometry_id, source_id)) {
-    throw std::logic_error("Given geometry id " + to_string(geometry_id) +
-        " does not belong to the given source id " +
-        to_string(source_id));
+    throw std::logic_error(
+        fmt::format("Given {:!r} does not belong to the given {:!r}", geometry_id,
+                    source_id));
   }
   InternalGeometry* geometry = GetMutableGeometry(geometry_id);
   // Must be non-null, otherwise, we never would've gotten past the
@@ -1577,14 +1547,14 @@ InternalGeometry& GeometryState<T>::ValidateRoleAssign(SourceId source_id,
   const bool has_role = geometry->has_role(role);
   if (has_role && assign == RoleAssign::kNew) {
     throw std::logic_error(
-        "Trying to assign the '" + to_string(role)
-        + "' role to geometry id " + to_string(geometry_id)
-        + " for the first time; it already has the role assigned");
+        fmt::format("Trying to assign the '{}' role to {:!r} for the first "
+                    "time; it already has the role assigned",
+                    role, geometry_id));
   } else if (!has_role && assign == RoleAssign::kReplace) {
     throw std::logic_error(
-        "Trying to replace the properties on geometry id "
-        + to_string(geometry_id) + " for the '" + to_string(role)
-        + "' role; it has not had the role initially assigned");
+        fmt::format("Trying to replace the properties on {:!r} for the '{}' "
+                    "role; it has not had the role initially assigned",
+                    geometry_id, role));
   }
 
   if (!has_role && assign == RoleAssign::kNew) {
@@ -1755,9 +1725,10 @@ const InternalFrame& GeometryState<T>::ValidateAndGetFrame(
     const FrameIdSet& set =
         GetValueOrThrow(source_id, source_frame_id_map_);
     FindOrThrow(frame_id, set, [frame_id, source_id]() {
-      return "Referenced frame " + to_string(frame_id) + " for source " +
-          to_string(source_id) +
-          ", but the frame doesn't belong to the source.";
+      return fmt::format(
+          "Referenced frame {:!r} for source {:!r} but the frame doesn't belong "
+          "to the source.",
+          frame_id, source_id);
     });
   }
   return frames_.at(frame_id);

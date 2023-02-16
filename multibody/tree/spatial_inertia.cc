@@ -199,9 +199,9 @@ void SpatialInertia<T>::ThrowNotPhysicallyValid() const {
           "Spatial inertia fails SpatialInertia::IsPhysicallyValid().");
   const T& mass = get_mass();
   if (mass < T(0)) {
-      error_message += fmt::format("\nmass = {} is negative.\n", mass);
+    error_message += fmt::format("\nmass = {} is negative.\n", mass);
   } else {
-    error_message += fmt::format("{}", *this);
+    error_message += fmt::to_string(*this);
     WriteExtraCentralInertiaProperties(&error_message);
   }
   throw std::runtime_error(error_message);

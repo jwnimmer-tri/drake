@@ -16,6 +16,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_bool.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/fmt.h"
 #include "drake/common/hash.h"
@@ -425,7 +426,13 @@ positive_semidefinite(const Eigen::TriangularView<Derived, Eigen::Upper>& u) {
   return positive_semidefinite(u, Eigen::Upper);
 }
 
-std::ostream& operator<<(std::ostream& os, const Formula& f);
+// TODO(jwnimmer-tri) On 2023-06-01 also remove the <ostream> include.
+DRAKE_DEPRECATED("2023-06-01",
+    "Use fmt or spdlog for logging, not operator<<. "
+    "Alternatively, call f.to_string() directly.")
+inline std::ostream& operator<<(std::ostream& os, const Formula& f) {
+  return os << f.to_string();
+}
 
 /** Checks if @p f is structurally equal to False formula. */
 bool is_false(const Formula& f);

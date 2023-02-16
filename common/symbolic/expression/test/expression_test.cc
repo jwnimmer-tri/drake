@@ -1925,7 +1925,7 @@ TEST_F(SymbolicExpressionTest, ToString) {
   EXPECT_EQ(e1.to_string(), "sin((x + (y * z)))");
   EXPECT_EQ(e2.to_string(), "cos(((pow(y, 2) * z) + pow(x, 2)))");
   EXPECT_EQ(e3.to_string(),
-            "(3.1415926535897931 * x * pow(y, 2.7182818284590451))");
+            "(3.1415926535897931 * x * pow(y, 2.718281828459045))");
   EXPECT_EQ(e4.to_string(),
             "(2.7182818284590451 + x + 3.1415926535897931 * y)");
   EXPECT_EQ(e_uf_.to_string(), "uf(x, y)");

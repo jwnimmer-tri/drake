@@ -157,8 +157,8 @@ void DeformableModel<T>::BuildLinearVolumetricModel(
     DeformableBodyId id, const geometry::VolumeMesh<double>& mesh,
     const fem::DeformableBodyConfig<T>& config) {
   if (fem_models_.find(id) != fem_models_.end()) {
-    throw std::logic_error("An FEM model with id: " + to_string(id) +
-                           " already exists.");
+    throw std::logic_error(
+        fmt::format("An FEM model with id: {} already exists.", id));
   }
   switch (config.material_model()) {
     case MaterialModel::kLinear:
@@ -275,9 +275,9 @@ template <typename T>
 void DeformableModel<T>::ThrowUnlessRegistered(const char* source_method,
                                                DeformableBodyId id) const {
   if (fem_models_.find(id) == fem_models_.end()) {
-    throw std::logic_error(std::string(source_method) +
-                           "(): No deformable body with id " + to_string(id) +
-                           " has been registered.");
+    throw std::logic_error(fmt::format(
+        "{}(): No deformable body with {:!r} has been registered.",
+        source_method, id));
   }
 }
 

@@ -109,9 +109,10 @@ Formula Formula::Substitute(const Substitution& s) const {
 }
 
 string Formula::to_string() const {
-  ostringstream oss;
-  oss << *this;
-  return oss.str();
+  ostringstream result;
+  DRAKE_ASSERT(ptr_ != nullptr);
+  ptr_->Display(result);
+  return result.str();
 }
 
 Formula Formula::True() {
@@ -237,11 +238,6 @@ Formula operator!(const Formula& f) {
 }
 
 Formula operator!(const Variable& v) { return !Formula(v); }
-
-ostream& operator<<(ostream& os, const Formula& f) {
-  DRAKE_ASSERT(f.ptr_ != nullptr);
-  return f.ptr_->Display(os);
-}
 
 Formula operator==(const Expression& e1, const Expression& e2) {
   // Simplification: E1 - E2 == 0  =>  True

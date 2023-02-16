@@ -6,10 +6,6 @@
 #include "drake/common/ad/auto_diff.h"
 /* clang-format on */
 
-#include <ostream>
-
-#include <fmt/format.h>
-
 namespace drake {
 namespace ad {
 
@@ -296,10 +292,6 @@ AutoDiff nexttoward(AutoDiff from, long double to) {
   from.value() = std::nexttoward(from.value(), to);
   from.partials().SetZero();
   return from;
-}
-
-std::ostream& operator<<(std::ostream& s, const AutoDiff& x) {
-  return s << fmt::format("{}", x.value());
 }
 
 }  // namespace ad

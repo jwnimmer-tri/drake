@@ -169,7 +169,7 @@ void Summarize(const SolverId& id,
            std::map<std::string, std::string>* pairs) {
   for (const auto& keyval : keyvals) {
     (*pairs)[fmt::format("{}:{}", id.name(), keyval.first)] =
-        fmt::format("{}", keyval.second);
+        fmt::to_string(keyval.second);
   }
 }
 
@@ -194,7 +194,7 @@ std::ostream& operator<<(std::ostream& os, const SolverOptions& x) {
       std::visit(
           [key, &pairs](auto& val_x) {
             pairs[fmt::format("CommonSolverOption::{}", key)] =
-                fmt::format("{}", val_x);
+                fmt::to_string(val_x);
           },
           val);
     }

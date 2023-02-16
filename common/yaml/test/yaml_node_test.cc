@@ -273,7 +273,7 @@ TEST_P(YamlNodeParamaterizedTest, Visiting) {
   DRAKE_UNREACHABLE();
 }
 
-// Check debug printing using operator<<.
+// Check debug printing.
 TEST_P(YamlNodeParamaterizedTest, ToString) {
   Node dut = MakeNonEmptyDut();
 
@@ -285,11 +285,11 @@ TEST_P(YamlNodeParamaterizedTest, ToString) {
     case NodeType::kSequence: { needle = "item"; break; }
     case NodeType::kMapping:  { needle = "key";  break; }
   }
-  EXPECT_THAT(fmt::format("{}", dut), testing::HasSubstr(needle));
+  EXPECT_THAT(dut.ToString(), testing::HasSubstr(needle));
 
   // Confirm that tags are represented somehow.
   dut.SetTag("MyTag");
-  EXPECT_THAT(fmt::format("{}", dut), testing::HasSubstr("MyTag"));
+  EXPECT_THAT(dut.ToString(), testing::HasSubstr("MyTag"));
 }
 
 INSTANTIATE_TEST_SUITE_P(Suite, YamlNodeParamaterizedTest, testing::Values(

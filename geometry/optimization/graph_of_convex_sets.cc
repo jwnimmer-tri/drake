@@ -272,7 +272,7 @@ std::string GraphOfConvexSets::GetGraphvizString(
   graphviz << "digraph GraphOfConvexSets {\n";
   graphviz << "labelloc=t;\n";
   for (const auto& [v_id, v] : vertices_) {
-    graphviz << "v" << v_id << " [label=\"" << v->name();
+    graphviz << "v" << v_id.get_value() << " [label=\"" << v->name();
     if (result) {
       graphviz << "\n x = [" << result->GetSolution(v->x()).transpose() << "]";
     }
@@ -280,7 +280,8 @@ std::string GraphOfConvexSets::GetGraphvizString(
   }
   for (const auto& [e_id, e] : edges_) {
     unused(e_id);
-    graphviz << "v" << e->u().id() << " -> v" << e->v().id();
+    graphviz << "v" << e->u().id().get_value()
+             << " -> v" << e->v().id().get_value();
     graphviz << " [label=\"" << e->name();
     if (result) {
       graphviz << "\n";

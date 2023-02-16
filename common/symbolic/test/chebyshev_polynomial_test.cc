@@ -191,11 +191,11 @@ GTEST_TEST(ChebyshevPolynomial, OperatorOut) {
   const Variable x("x");
   std::ostringstream os1;
   os1 << ChebyshevPolynomial(x, 0);
-  EXPECT_EQ(fmt::format("{}", os1.str()), "T0()");
+  EXPECT_EQ(fmt::to_string(os1.str()), "T0()");
 
   std::ostringstream os2;
   os2 << ChebyshevPolynomial(x, 2);
-  EXPECT_EQ(fmt::format("{}", os2.str()), "T2(x)");
+  EXPECT_EQ(fmt::to_string(os2.str()), "T2(x)");
 }
 
 GTEST_TEST(ChebyshevPolynomialTest, ChebyshevPolynomialLess) {

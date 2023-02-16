@@ -182,18 +182,41 @@ TEST_F(IdentifierTests, PutInSet) {
   EXPECT_EQ(ids.count(a1), 1u);
 }
 
+// Tests the formatting behavior.
+TEST_F(IdentifierTests, Formatting) {
+  EXPECT_EQ(fmt::format("{}", a2_), "2");
+  EXPECT_EQ(fmt::format("{}", AId{}), "null");
+
+  EXPECT_EQ(fmt::format("{:!r}", a2_), "AId(2)");
+  EXPECT_EQ(fmt::format("{:!r}", AId{}), "AId()");
+
+  EXPECT_EQ(fmt::format("{:8}", a2_), "2       ");
+  EXPECT_EQ(fmt::format("{:8}", AId{}), "null    ");
+
+  EXPECT_EQ(fmt::format("{:!r8}", a2_), "AId(2)  ");
+  EXPECT_EQ(fmt::format("{:!r8}", AId{}), "AId()   ");
+
+  EXPECT_EQ(fmt::format("{:!r>8}", AId{}), "   AId()");
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Tests the streaming behavior.
-TEST_F(IdentifierTests, StreamOperator) {
+TEST_F(IdentifierTests, DeprecatedStreamOperator) {
   stringstream ss;
   ss << a2_;
   EXPECT_EQ(ss.str(), "2");
 }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Tests the ability to convert the id to string via std::to_string.
-TEST_F(IdentifierTests, ToString) {
+TEST_F(IdentifierTests, DeprecatedToString) {
   using std::to_string;
   EXPECT_EQ(to_string(a2_), to_string(a2_.get_value()));
 }
+#pragma GCC diagnostic pop
 
 // These tests confirm that behavior that *shouldn't* be compilable isn't.
 
@@ -288,13 +311,16 @@ TEST_F(IdentifierTests, InvalidHash) {
   DRAKE_EXPECT_NO_THROW(ids.insert(invalid));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Streaming an invalid id is an error.
-TEST_F(IdentifierTests, InvalidStream) {
+TEST_F(IdentifierTests, DeprecatedInvalidStream) {
   if (kDrakeAssertIsDisarmed) { return; }
   AId invalid;
   std::stringstream ss;
   DRAKE_EXPECT_THROWS_MESSAGE(ss << invalid, ".*is_valid.*failed.*");
 }
+#pragma GCC diagnostic pop
 
 }  // namespace
 }  // namespace drake

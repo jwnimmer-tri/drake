@@ -58,13 +58,13 @@ void RationalFunction::CheckIndeterminates() const {
       oss << "The following variable(s) "
              "are used as indeterminates in the numerator and decision "
              "variables in the denominator at the same time:\n"
-          << vars1 << ".\n";
+          << vars1.to_string() << ".\n";
     }
     if (!vars2.empty()) {
       oss << "The following variable(s) "
              "are used as decision variables in the numerator and "
              "indeterminates variables in the denominator at the same time:\n"
-          << vars2 << ".\n";
+          << vars2.to_string() << ".\n";
     }
     throw std::logic_error(oss.str());
   }

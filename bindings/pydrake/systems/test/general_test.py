@@ -486,14 +486,14 @@ class TestGeneral(unittest.TestCase):
         # N.B. This is only to show behavior of C++ string formatting in
         # Python. It is OK to update this when the upstream C++ code changes.
         self.assertEqual(
-            str(context),
+            str(context).replace("0.0", "0"),
             dedent("""\
             ::integrator Context
             ---------------------
             Time: 0
             States:
               3 continuous states
-                0 0 0
+                [0, 0, 0]ᵀ
 
             """),
         )

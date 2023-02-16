@@ -1071,7 +1071,7 @@ TEST_F(SymbolicPolynomialTest, EvaluateWithAffineCoefficients) {
     DRAKE_EXPECT_THROWS_MESSAGE(
         p.EvaluateWithAffineCoefficients(indeterminates, indeterminates_values,
                                          &A, &decision_variables, &b),
-        ".*is not a polynomial.\n");
+        ".*is not a polynomial.");
   }
   // Test exception, when p(x)'s coefficient is not an affine expression of
   // decision variables.

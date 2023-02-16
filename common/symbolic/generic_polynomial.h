@@ -510,9 +510,9 @@ std::ostream& operator<<(std::ostream& os,
     return os << 0;
   }
   auto it = map.begin();
-  os << it->second << "*" << it->first;
+  os << it->second.to_string() << "*" << it->first;
   for (++it; it != map.end(); ++it) {
-    os << " + " << it->second << "*" << it->first;
+    os << " + " << it->second.to_string() << "*" << it->first;
   }
   return os;
 }

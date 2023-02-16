@@ -61,7 +61,7 @@ TEST_F(TestBinding, TestPrinting) {
       "0 <= x3 <= 1\n"
       "0 <= x1 <= 1\n"
       "0 <= x2 <= 1\n";
-  EXPECT_EQ(fmt::format("{}", binding1), str_expected1);
+  EXPECT_EQ(fmt::to_string(binding1), str_expected1);
 
   // Test to_string() for LinearEqualityConstraint binding.
   Eigen::Matrix2d Aeq;
@@ -72,7 +72,7 @@ TEST_F(TestBinding, TestPrinting) {
       linear_eq_constraint, VectorDecisionVariable<2>(x1_, x2_));
   const std::string str_expected2 =
       "LinearEqualityConstraint\n(x1 + 2 * x2) == 1\n(3 * x1 + 4 * x2) == 2\n";
-  EXPECT_EQ(fmt::format("{}", linear_eq_binding), str_expected2);
+  EXPECT_EQ(fmt::to_string(linear_eq_binding), str_expected2);
   EXPECT_EQ(linear_eq_binding.to_string(), str_expected2);
 
   const Eigen::Matrix2d Ain = Aeq;
@@ -83,7 +83,7 @@ TEST_F(TestBinding, TestPrinting) {
   const std::string str_expected3 =
       "LinearConstraint\n1 <= (x1 + 2 * x2) <= 2\n2 <= (3 * x1 + 4 * x2) <= "
       "3\n";
-  EXPECT_EQ(fmt::format("{}", linear_binding), str_expected3);
+  EXPECT_EQ(fmt::to_string(linear_binding), str_expected3);
   EXPECT_EQ(linear_binding.to_string(), str_expected3);
 }
 
@@ -144,14 +144,14 @@ TEST_F(TestBinding, TestCost) {
   for (int i = 0; i < 3; ++i) {
     EXPECT_PRED2(VarEqual, binding1.variables()(i), x(i));
   }
-  EXPECT_EQ(fmt::format("{}", binding1),
+  EXPECT_EQ(fmt::to_string(binding1),
             "LinearCost (1 + x1 + 2 * x2 + 3 * x3)");
 
   // Test a quadratic cost binding.
   auto cost2 = std::make_shared<QuadraticCost>(Eigen::Matrix2d::Identity(),
                                                Eigen::Vector2d(2, 3), 1);
   Binding<QuadraticCost> binding2(cost2, x.head<2>());
-  EXPECT_EQ(fmt::format("{}", binding2),
+  EXPECT_EQ(fmt::to_string(binding2),
             "QuadraticCost (1 + 2 * x1 + 3 * x2 + 0.5 * pow(x1, 2) + 0.5 * "
             "pow(x2, 2))");
 }
@@ -194,7 +194,7 @@ TEST_F(TestBinding, TestEvaluator) {
   EXPECT_EQ(binding.evaluator().get(), evaluator.get());
   EXPECT_EQ(binding.evaluator()->num_outputs(), 2);
   EXPECT_EQ(binding.GetNumElements(), 3);
-  EXPECT_EQ(fmt::format("{}", binding),
+  EXPECT_EQ(fmt::to_string(binding),
             "DummyEvaluator described as 'dummy' with 3 decision variables "
             "x1 x2 x3\n");
   for (int i = 0; i < 3; ++i) {

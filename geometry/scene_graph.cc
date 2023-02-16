@@ -156,15 +156,14 @@ bool SceneGraph<T>::SourceIsRegistered(SourceId id) const {
 template <typename T>
 const InputPort<T>& SceneGraph<T>::get_source_pose_port(
     SourceId id) const {
-  ThrowUnlessRegistered(id, "Can't acquire pose port for unknown source id: ");
+  ThrowUnlessRegistered(id, "Can't acquire pose port for unknown");
   return this->get_input_port(input_source_ids_.at(id).pose_port);
 }
 
 template <typename T>
 const InputPort<T>& SceneGraph<T>::get_source_configuration_port(
     SourceId id) const {
-  ThrowUnlessRegistered(
-      id, "Can't acquire configuration port for unknown source id: ");
+  ThrowUnlessRegistered(id, "Can't acquire configuration port for unknown");
   return this->get_input_port(input_source_ids_.at(id).configuration_port);
 }
 
@@ -459,8 +458,6 @@ void SceneGraph<T>::CalcPoseUpdate(const Context<T>& context,
   // cached entities to do the query work. For now, we have to const cast the
   // thing so that we can update the geometry engine contained.
 
-  using std::to_string;
-
   const GeometryState<T>& state = geometry_state(context);
   // See KinematicsData class documentation for why this caching violation is
   // needed and is correct.
@@ -539,9 +536,8 @@ void SceneGraph<T>::CalcConfigurationUpdate(const Context<T>& context,
 template <typename T>
 void SceneGraph<T>::ThrowUnlessRegistered(SourceId source_id,
                                           const char* message) const {
-  using std::to_string;
   if (input_source_ids_.find(source_id) == input_source_ids_.end()) {
-    throw std::logic_error(message + to_string(source_id) + ".");
+    throw std::logic_error(fmt::format("{} {:!r}.", message, source_id));
   }
 }
 

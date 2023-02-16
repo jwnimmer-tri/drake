@@ -111,24 +111,24 @@ std::ostream& operator<<(std::ostream& os, const ProgramAttribute& attr) {
 
 std::string to_string(const ProgramAttributes& attrs) {
   std::ostringstream result;
-  result << attrs;
+  std::deque<ProgramAttribute> sorted(attrs.begin(), attrs.end());
+  std::sort(sorted.begin(), sorted.end());
+  result << "{ProgramAttributes: ";
+  if (sorted.empty()) {
+    result << "empty";
+  } else {
+    result << to_string(sorted.front());
+    sorted.pop_front();
+    for (const auto& attr : sorted) {
+      result << ", " << to_string(attr);
+    }
+  }
+  result << "}";
   return result.str();
 }
 
 std::ostream& operator<<(std::ostream& os, const ProgramAttributes& attrs) {
-  std::deque<ProgramAttribute> sorted(attrs.begin(), attrs.end());
-  std::sort(sorted.begin(), sorted.end());
-  os << "{ProgramAttributes: ";
-  if (sorted.empty()) {
-    os << "empty";
-  } else {
-    os << sorted.front();
-    sorted.pop_front();
-    for (const auto& attr : sorted) {
-      os << ", " << attr;
-    }
-  }
-  os << "}";
+  os << to_string(attrs);
   return os;
 }
 

@@ -1,6 +1,10 @@
 #pragma once
 
+#include "drake/common/drake_deprecated.h"
+
+// TODO(jwnimmer-tri) On 2023-06-01 also remove the <ostream> include.
 #include <ostream>
+#include <string>
 
 #include "drake/common/fmt_ostream.h"
 
@@ -10,8 +14,6 @@ namespace yaml {
 /** Configuration for LoadYamlFile() and LoadYamlString() to govern when certain
 conditions are errors or not. Refer to the member fields for details. */
 struct LoadYamlOptions {
-  friend std::ostream& operator<<(std::ostream&, const LoadYamlOptions&);
-
   /** Allows yaml Maps to have extra key-value pairs that are not Visited by the
   Serializable being parsed into. In other words, the Serializable types provide
   an incomplete schema for the YAML data. This allows for parsing only a subset
@@ -28,7 +30,14 @@ struct LoadYamlOptions {
   entirely. In other words, a visited std::map can have default values that are
   left intact unless the YAML data provides a value *for that specific key*. */
   bool retain_map_defaults{false};
+
+  std::string ToString() const;
 };
+
+DRAKE_DEPRECATED("2023-06-01", "Use fmt or spdlog for logging, not operator<<.")
+inline std::ostream& operator<<(std::ostream& os, const LoadYamlOptions& self) {
+  return os << self.ToString();
+}
 
 }  // namespace yaml
 }  // namespace drake

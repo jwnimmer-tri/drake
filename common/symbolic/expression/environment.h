@@ -151,7 +151,12 @@ class Environment {
    * (throwing a runtime error instead) if the key does not exist. */
   const mapped_type& operator[](const key_type& key) const;
 
-  friend std::ostream& operator<<(std::ostream& os, const Environment& env);
+  DRAKE_DEPRECATED("2023-06-01",
+      "Use fmt or spdlog for logging, not operator<<. "
+      "Alternatively, call env.to_string() directly.")
+  friend std::ostream& operator<<(std::ostream& os, const Environment& env) {
+    return os << env.to_string();
+  }
 
  private:
   map map_;

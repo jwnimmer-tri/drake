@@ -218,19 +218,19 @@ TEST_F(SymbolicChebyshevBasisElementTest, Integrate) {
 TEST_F(SymbolicChebyshevBasisElementTest, StringOutput) {
   std::ostringstream os1;
   os1 << ChebyshevBasisElement();
-  EXPECT_EQ(fmt::format("{}", os1.str()), "T0()");
+  EXPECT_EQ(fmt::to_string(os1.str()), "T0()");
 
   std::ostringstream os2;
   os2 << ChebyshevBasisElement({{x_, 1}});
-  EXPECT_EQ(fmt::format("{}", os2.str()), "T1(x)");
+  EXPECT_EQ(fmt::to_string(os2.str()), "T1(x)");
 
   std::ostringstream os3;
   os3 << ChebyshevBasisElement({{x_, 0}});
-  EXPECT_EQ(fmt::format("{}", os3.str()), "T0()");
+  EXPECT_EQ(fmt::to_string(os3.str()), "T0()");
 
   std::ostringstream os4;
   os4 << ChebyshevBasisElement({{x_, 1}, {y_, 2}});
-  EXPECT_EQ(fmt::format("{}", os4.str()), "T1(x)T2(y)");
+  EXPECT_EQ(fmt::to_string(os4.str()), "T1(x)T2(y)");
 }
 
 TEST_F(SymbolicChebyshevBasisElementTest, ToExpression) {

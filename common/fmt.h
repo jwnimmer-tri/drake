@@ -162,3 +162,41 @@ Drake drops support for earlier version of fmt. */
   struct formatter<NAMESPACE::TYPE>                                           \
       : drake::internal::formatter_as::Formatter<NAMESPACE::TYPE> {};         \
   } /* namespace fmt */
+
+namespace drake {
+
+/** An abstract base class that allows for a "repr" toggle in the format
+string, i.e., {:!r8} indicates repr mode, with a width of 8. The '!' char
+must always appear immediately after the format spec colon.
+
+The valid characters after the '!' are:
+ 'r': use repr mode (if pydrake is loaded, the repr will be the Python repr;
+      otherwise, it will be the C++ repr). */
+class repr_formatter : public fmt::formatter<std::string_view> {
+ public:
+  using Base = fmt::formatter<std::string_view>;
+
+  // NOLINTNEXTLINE(runtime/references) To match fmt API.
+  constexpr auto parse(fmt::format_parse_context& ctx) {
+    auto iter = ctx.begin();
+    if ((iter != ctx.end()) && (*iter == '!')) {
+      ctx.advance_to(++iter);
+      if ((iter != ctx.end()) && (*iter == 'r')) {
+        repr_ = true;
+      } else {
+        throw fmt::format_error("Invalid conversion specifier");
+      }
+    }
+    return Base::parse(ctx);
+  }
+
+  bool use_repr() const { return use_repr_; }
+  void set_use_repr(bool x) { use_repr_ = x; }
+
+  bool use_python() const { return false; }
+
+ private:
+  bool use_repr_{false};
+};
+
+}  // namespace drake

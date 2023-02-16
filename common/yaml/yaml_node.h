@@ -1,7 +1,6 @@
 #pragma once
 
 #include <map>
-#include <ostream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -230,7 +229,7 @@ class Node final {
 
   /* Displays the given node using flow style.  Intended only for debugging,
   not serialization. */
-  friend std::ostream& operator<<(std::ostream&, const Node&);
+  std::string ToString() const;
 
  private:
   /* No-op for use only by the public "Make..." functions. */

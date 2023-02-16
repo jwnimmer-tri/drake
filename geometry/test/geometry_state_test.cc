@@ -480,8 +480,6 @@ class GeometryStateTestBase {
   // be assigned to *all* registered geometries by indicating the type of role
   // to assign (via `roles_to_assign`).
   SourceId SetUpSingleSourceTree(Assign roles_to_assign = Assign::kNone) {
-    using std::to_string;
-
     source_id_ = NewSource();
 
     // Create f0.
@@ -519,7 +517,7 @@ class GeometryStateTestBase {
         pose = RigidTransformd(AngleAxis<double>(g_count * M_PI_2, x_axis),
                                Vector3d{g_count + 1.0, 0, 0});
         // Have the name reflect the frame and the index in the geometry.
-        const string& name = to_string(frame_id) + "_g" + to_string(i);
+        const string name = fmt::format("{}_g{}", frame_id, i);
         geometry_names_[g_count] = name;
         geometries_[g_count] = geometry_state_.RegisterGeometry(
             source_id_, frame_id,
@@ -839,7 +837,7 @@ TEST_F(GeometryStateTest, IntrospectShapes) {
   // Test invalid id.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetShape(GeometryId::get_new_id()),
-      "No geometry available for invalid geometry id: .+");
+      "No geometry available for invalid GeometryId.*");
 }
 
 // Confirms semantics of user-specified source name.
@@ -847,8 +845,6 @@ TEST_F(GeometryStateTest, IntrospectShapes) {
 //    - duplicate names are detected and considered errors, and
 //    - unrecognized source ids do not produce names.
 TEST_F(GeometryStateTest, SourceRegistrationWithNames) {
-  using std::to_string;
-
   // Case: Successful registration of unique source id and name.
   SourceId s_id;
   const string name = "Unique";
@@ -864,7 +860,7 @@ TEST_F(GeometryStateTest, SourceRegistrationWithNames) {
   // Case: query with invalid source id.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetName(SourceId::get_new_id()),
-      "Querying source name for an invalid source id: \\d+.");
+      "Querying source name for invalid SourceId.\\d+.*");
 }
 
 // Tests the geometry statistics values. It uses the single-source tree to
@@ -881,7 +877,7 @@ TEST_F(GeometryStateTest, GeometryStatistics) {
             single_tree_frame_count() - 1);  // subtract the world frame.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.NumFramesForSource(SourceId::get_new_id()),
-      "Referenced geometry source .* is not registered.");
+      "Referenced SourceId.* is not registered.");
   EXPECT_EQ(geometry_state_.NumDynamicGeometries(),
             single_tree_dynamic_geometry_count());
   EXPECT_EQ(geometry_state_.NumAnchoredGeometries(),
@@ -905,11 +901,11 @@ TEST_F(GeometryStateTest, GetOwningSourceName) {
 
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetOwningSourceName(FrameId::get_new_id()),
-      "Referenced frame .* has not been registered.");
+      "Referenced FrameId.* is not registered.");
 
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetOwningSourceName(GeometryId::get_new_id()),
-      "Geometry id .* does not map to a registered geometry");
+      "GeometryId.* does not map to a registered geometry");
 }
 
 // Compares the transmogrified geometry state (embedded in its tester) against
@@ -1103,7 +1099,6 @@ TEST_F(GeometryStateTest, ValidateSingleSourceTree) {
 
   // The internal frames are what and where they should be.
   {
-    using std::to_string;
     const auto& internal_frames = gs_tester_.get_frames();
     // The world frame + the frames added by s_id.
     EXPECT_EQ(internal_frames.size(), kFrameCount + 1);
@@ -1113,7 +1108,7 @@ TEST_F(GeometryStateTest, ValidateSingleSourceTree) {
       const auto& frame = internal_frames.at(frames_[i]);
       EXPECT_EQ(frame.source_id(), s_id);
       EXPECT_EQ(frame.id(), frames_[i]);
-      EXPECT_EQ(frame.name(), "f" + to_string(i));
+      EXPECT_EQ(frame.name(), fmt::format("f{}", i));
       EXPECT_EQ(frame.frame_group(), 0);  // Defaults to zero.
       EXPECT_EQ(frame.index(), i + 1);   // ith frame added.
       EXPECT_EQ(frame.parent_frame_id(), parent_id);
@@ -1354,7 +1349,7 @@ TEST_F(GeometryStateTest, AddFrameToInvalidSource) {
   const SourceId s_id = SourceId::get_new_id();  // Not a registered source.
   DRAKE_ASSERT_THROWS_MESSAGE(
       geometry_state_.RegisterFrame(s_id, *frame_),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 }
 
 // Tests that a duplicate-named frame added to a valid source throws an
@@ -1457,10 +1452,12 @@ TEST_F(GeometryStateTest, AddFrameWithDuplicateId) {
   const FrameId f_id = geometry_state_.RegisterFrame(s_id, *frame_);
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterFrame(s_id, *frame_),
-      "Registering frame with an id that has already been registered: \\d+");
+      "Registering frame with an id that has already been registered: "
+      "FrameId.\\d+.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterFrame(s_id, f_id, *frame_),
-      "Registering frame with an id that has already been registered: \\d+");
+      "Registering frame with an id that has already been registered: "
+      "FrameId.\\d+.");
 }
 
 // Tests the frame iterator, confirming that it iterates through all frames.
@@ -1548,7 +1545,7 @@ TEST_F(GeometryStateTest, RegisterGeometryMissingSource) {
   const FrameId f_id = FrameId::get_new_id();
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterGeometry(s_id, f_id, move(instance_)),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 }
 
 // Tests registration of geometry on valid source and non-existent frame.
@@ -1557,7 +1554,7 @@ TEST_F(GeometryStateTest, RegisterGeometryMissingFrame) {
   const FrameId f_id = FrameId::get_new_id();
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterGeometry(s_id, f_id, move(instance_)),
-      "Referenced frame \\d+ for source \\d+\\,"
+      "Referenced FrameId.\\d+. for SourceId.\\d+.,"
       " but the frame doesn't belong to the source.");
 }
 
@@ -1568,7 +1565,7 @@ TEST_F(GeometryStateTest, RegisterNullGeometry) {
   unique_ptr<GeometryInstance> null_geometry;
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterGeometry(s_id, f_id, move(null_geometry)),
-      "Registering null geometry to frame \\d+, on source \\d+.");
+      "Registering null geometry to FrameId.\\d+., on SourceId.\\d+.*");
 }
 
 // 2023-04-01 Simply remove all of the RegisterGeometryOn*Geometry tests.
@@ -1632,7 +1629,7 @@ TEST_F(GeometryStateTest, RegisterGeometryonInvalidGeometry) {
   const GeometryId junk_id = GeometryId::get_new_id();
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterGeometryWithParent(s_id, junk_id, move(instance)),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 }
 
 // Tests the response to passing a null pointer as a GeometryInstance.
@@ -1642,7 +1639,7 @@ TEST_F(GeometryStateTest, RegisterNullGeometryonGeometry) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterGeometryWithParent(s_id, geometries_[0],
                                                  move(instance)),
-      "Registering null geometry to geometry \\d+, on source \\d+.");
+      "Registering null geometry to GeometryId.\\d+. on SourceId.\\d+.*");
 }
 #pragma GCC diagnostic pop
 
@@ -1716,7 +1713,7 @@ TEST_F(GeometryStateTest, RegisterAnchoredGeometryInvalidSource) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterAnchoredGeometry(SourceId::get_new_id(),
                                                move(instance)),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 }
 
 // Tests the response of attempting to register a null pointer GeometryInstance
@@ -1726,7 +1723,7 @@ TEST_F(GeometryStateTest, RegisterAnchoredNullGeometry) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RegisterAnchoredGeometry(SourceId::get_new_id(),
                                                move(instance)),
-      "Registering null geometry to frame \\d+, on source \\d+.");
+      "Registering null geometry to FrameId.\\d+., on SourceId.\\d+.*");
 }
 
 // Tests registering a deformable geometry.
@@ -2234,12 +2231,12 @@ TEST_F(GeometryStateTest, RemoveGeometryInvalid) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveGeometry(SourceId::get_new_id(),
                                      geometries_[0]),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 
   // Case: Invalid geometry id, valid source id.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveGeometry(s_id, GeometryId::get_new_id()),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 
   // Case: Valid geometry and source, but geometry belongs to different source.
   const SourceId s_id2 = geometry_state_.RegisterNewSource("new_source");
@@ -2253,7 +2250,7 @@ TEST_F(GeometryStateTest, RemoveGeometryInvalid) {
             single_tree_total_geometry_count() + 1);
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveGeometry(s_id, g_id),
-      "Trying to remove geometry \\d+ from source \\d+.+geometry doesn't "
+      "Trying to remove GeometryId.\\d+. from SourceId.\\d+.+geometry doesn't "
           "belong.+");
 }
 
@@ -2332,13 +2329,13 @@ TEST_F(GeometryStateTest, RemoveGeometryWithCollisionFilters) {
 TEST_F(GeometryStateTest, GetPoseForBadGeometryId) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetPoseInFrame(GeometryId::get_new_id()),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   // 2023-04-01 Deprecation removal.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetPoseInParent(GeometryId::get_new_id()),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 #pragma GCC diagnostic pop
 }
 
@@ -2351,10 +2348,10 @@ TEST_F(GeometryStateTest, SourceOwnershipInvalidSource) {
   // Invalid frame/geometry ids.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(FrameId::get_new_id(), source_id),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(GeometryId::get_new_id(), source_id),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
   SetUpSingleSourceTree();
   const GeometryId anchored_id = geometry_state_.RegisterAnchoredGeometry(
       source_id_,
@@ -2364,13 +2361,13 @@ TEST_F(GeometryStateTest, SourceOwnershipInvalidSource) {
   // Valid frame/geometry ids.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(frames_[0], source_id),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(geometries_[0], source_id),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(anchored_id, source_id),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 }
 
 // This tests the source ownership functionality for frames - a function which
@@ -2380,7 +2377,7 @@ TEST_F(GeometryStateTest, SourceOwnershipFrameId) {
   // Test for invalid frame.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(FrameId::get_new_id(), s_id),
-      "Referenced frame \\d+ has not been registered.");
+      "Referenced FrameId.\\d+. is not registered.");
   // Test for valid frame.
   EXPECT_TRUE(geometry_state_.BelongsToSource(frames_[0], s_id));
 }
@@ -2397,7 +2394,7 @@ TEST_F(GeometryStateTest, SourceOwnershipGeometryId) {
   // Test for invalid geometry.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.BelongsToSource(GeometryId::get_new_id(), s_id),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
   // Test for valid geometry.
   EXPECT_TRUE(geometry_state_.BelongsToSource(geometries_[0], s_id));
   EXPECT_TRUE(geometry_state_.BelongsToSource(anchored_id, s_id));
@@ -2408,7 +2405,7 @@ TEST_F(GeometryStateTest, SourceOwnershipGeometryId) {
 TEST_F(GeometryStateTest, GetFrameIdFromBadId) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetFrameId(GeometryId::get_new_id()),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 }
 
 // Tests the validation of the ids provided in a frame kinematics vector.
@@ -2428,8 +2425,8 @@ TEST_F(GeometryStateTest, ValidateFrameIds) {
   }
   DRAKE_EXPECT_THROWS_MESSAGE(
       gs_tester_.ValidateFrameIds(s_id, frame_set_2),
-      "Registered frame id \\(\\d+\\) belonging to source \\d+ was not found "
-          "in the provided kinematics data.");
+      "Registered FrameId.\\d+. belonging to SourceId.\\d+. was not found "
+      "in the provided kinematics data.");
 
   // Case: Too few frames.
   FramePoseVector<double> frame_set_3;
@@ -2525,14 +2522,14 @@ TEST_F(GeometryStateTest, QueryFrameProperties) {
             InternalFrame::world_frame_group());
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetFrameGroup(FrameId::get_new_id()),
-      "No frame group available for invalid frame id: \\d+");
+      "No frame group available for invalid FrameId.\\d+.*");
 
   // Query frame name.
   EXPECT_EQ(geometry_state_.GetName(frames_[0]), "f0");
   EXPECT_EQ(geometry_state_.GetName(world), "world");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetName(FrameId::get_new_id()),
-      "No frame name available for invalid frame id: \\d+");
+      "No frame name available for invalid FrameId.\\d+.*");
 
   // Set the frame poses to query geometry and frame poses.
   FramePoseVector<double> poses;
@@ -2547,7 +2544,7 @@ TEST_F(GeometryStateTest, QueryFrameProperties) {
                       RigidTransformd::Identity().GetAsMatrix34()));
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.get_pose_in_world(FrameId::get_new_id()),
-      "No world pose available for invalid frame id: \\d+");
+      "No world pose available for invalid FrameId.\\d+.*");
 
   // This assumes that geometry parent belongs to frame 0.
   const RigidTransformd X_WG = X_WFs_[0] * X_FGs_[0];
@@ -2556,7 +2553,7 @@ TEST_F(GeometryStateTest, QueryFrameProperties) {
       X_WG.GetAsMatrix34()));
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.get_pose_in_world(GeometryId::get_new_id()),
-      "No world pose available for invalid geometry id: \\d+");
+      "No world pose available for invalid GeometryId.\\d+.*");
   EXPECT_TRUE(CompareMatrices(
       geometry_state_.get_pose_in_world(anchored_geometry_).GetAsMatrix34(),
       X_WA_.GetAsMatrix34()));
@@ -2569,7 +2566,7 @@ TEST_F(GeometryStateTest, QueryFrameProperties) {
                       RigidTransformd::Identity().GetAsMatrix34()));
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.get_pose_in_parent(FrameId::get_new_id()),
-      "No pose available for invalid frame id: \\d+");
+      "No pose available for invalid FrameId.\\d+.*");
 }
 
 TEST_F(GeometryStateTest, TestCollisionCandidates) {
@@ -2723,17 +2720,20 @@ TEST_F(GeometryStateTest, CollisionFilteredExceptions) {
   // Case: First argument does not have a proximity role.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.CollisionFiltered(geometries_[1], geometries_[0]),
-      ".* " + to_string(geometries_[1]) + " does not have a proximity role");
+      fmt::format(".* GeometryId\\({}\\) does not have a proximity role",
+                  geometries_[1].get_value()));
 
   // Case: Second argument does not have a proximity role.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.CollisionFiltered(geometries_[0], geometries_[1]),
-      ".* " + to_string(geometries_[1]) + " does not have a proximity role");
+      fmt::format(".* GeometryId\\({}\\) does not have a proximity role",
+                  geometries_[1].get_value()));
 
   // Case: Neither argument has a proximity role.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.CollisionFiltered(geometries_[1], geometries_[2]),
-      ".* neither id has a proximity role");
+      ".* does not have a proximity role;"
+      ".* does not have a proximity role");
 
   // Assign proximity to the *other* geometry on frame 1 -- triggering collision
   // filtering between them.
@@ -2748,19 +2748,22 @@ TEST_F(GeometryStateTest, CollisionFilteredExceptions) {
   // Case: First argument is bad.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.CollisionFiltered(bad_id, geometries_[0]),
-      "Can't report collision filter status between geometries .* " +
-          to_string(bad_id) + " is not a valid geometry");
+      fmt::format(
+          "Can't report collision filter status between .* "
+          "GeometryId.{}. is not a valid geometry", bad_id.get_value()));
 
   // Case: Second argument is bad.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.CollisionFiltered(geometries_[0], bad_id),
-      "Can't report collision filter status between geometries .* " +
-          to_string(bad_id) + " is not a valid geometry");
+      fmt::format("Can't report collision filter status between .* "
+                  "GeometryId.{}. is not a valid geometry",
+                  bad_id.get_value()));
 
   // Case: Both arguments are bad.
   DRAKE_EXPECT_THROWS_MESSAGE(geometry_state_.CollisionFiltered(bad_id, bad_id),
                               "Can't report collision filter status between "
-                              "geometries .* neither id is a valid geometry");
+                              ".*is not a valid geometry;"
+                              ".*is not a valid geometry");
 }
 
 // Tests the ability to query for a geometry from the name of a geometry.
@@ -2796,21 +2799,21 @@ TEST_F(GeometryStateTest, GetGeometryIdFromName) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetGeometryIdByName(FrameId::get_new_id(),
                                           Role::kUnassigned, "irrelevant"),
-      "Referenced frame \\d+ has not been registered.");
+      "Referenced FrameId.\\d+. is not registered.");
 
   // Bad *anchored* geometry name.
   const FrameId world_id = gs_tester_.get_world_frame();
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetGeometryIdByName(world_id, Role::kUnassigned, "bad"),
-      "The frame 'world' .\\d+. has no geometry with the role 'unassigned' "
-      "and the canonical name '.+'");
+      "The frame 'world'.*FrameId.\\d+.* has no geometry with the role "
+      "'unassigned' and the canonical name '.+'");
 
   // Bad *dynamic* geometry name.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetGeometryIdByName(frames_[0], Role::kUnassigned,
                                           "bad_name"),
-      "The frame '.+?' .\\d+. has no geometry with the role 'unassigned' and "
-      "the canonical name '.+'");
+      "The frame '.+?'.*FrameId.\\d+.* has no geometry with the role "
+      "'unassigned' and the canonical name '.+'");
 
   // Multiple unassigned geometries with the same name.
 
@@ -2824,7 +2827,7 @@ TEST_F(GeometryStateTest, GetGeometryIdFromName) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.GetGeometryIdByName(frames_[0], Role::kUnassigned,
                                           dummy_name),
-      "The frame '.+?' .\\d+. has multiple geometries with the role "
+      "The frame '.+?'.*FrameId.\\d+.* has multiple geometries with the role "
       "'unassigned' and the canonical name '.+'");
 }
 
@@ -2886,7 +2889,7 @@ TEST_F(GeometryStateTest, GeometryNameValidation) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.IsValidGeometryName(FrameId::get_new_id(),
                                           Role::kProximity, ""),
-      "Given frame id is not valid: \\d+");
+      "Given FrameId.\\d+. is not valid");
 
   auto expect_bad_name = [this](const string& name,
                                 const string& exception_message,
@@ -2958,7 +2961,7 @@ TEST_F(GeometryStateTest, AssignRolesToGeometry) {
   // geometries until we're there.
   const RigidTransformd pose = RigidTransformd::Identity();
   for (int i = 0; i < 8 - single_tree_dynamic_geometry_count(); ++i) {
-    const string name = "new_geom" + std::to_string(i);
+    const string name = fmt::format("new_geom{}", i);
     geometries_.push_back(geometry_state_.RegisterGeometry(
         source_id_, frames_[0],
         make_unique<GeometryInstance>(pose, make_unique<Sphere>(1), name)));
@@ -3055,7 +3058,7 @@ TEST_F(GeometryStateTest, ModifyProximityProperties) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(source_id_, geometries_[0], empty_props,
                                  RoleAssign::kReplace),
-      "Trying to replace the properties on geometry id \\d+ for the 'proximity'"
+      "Trying to replace the properties on GeometryId.\\d+. for the 'proximity'"
       " role.*");
 
   // Case: Try reassigning the properties.
@@ -3347,20 +3350,20 @@ TEST_F(GeometryStateTest, RoleAssignExceptions) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(SourceId::get_new_id(), geometries_[0],
                                  ProximityProperties()),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 
   // Invalid geometry id.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(source_id_, GeometryId::get_new_id(),
                                  ProximityProperties()),
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 
   // Geometry not owned by source.
   const SourceId other_source = geometry_state_.RegisterNewSource("alt_source");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(other_source, geometries_[0],
                                  ProximityProperties()),
-      "Given geometry id \\d+ does not belong to the given source .*");
+      "Given GeometryId.\\d+. does not belong to the given SourceId.*");
 
   // Redefinition of role - test each role individually to make sure it has
   // the right error message.
@@ -3369,14 +3372,14 @@ TEST_F(GeometryStateTest, RoleAssignExceptions) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(source_id_, geometries_[0],
                                  ProximityProperties()),
-      "Trying to assign the 'proximity' role to geometry id \\d+ for the first "
+      "Trying to assign the 'proximity' role to GeometryId.\\d+. for the first "
       "time.*");
 
   DRAKE_EXPECT_NO_THROW(
       geometry_state_.AssignRole(source_id_, geometries_[0], perception_props));
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(source_id_, geometries_[0], perception_props),
-      "Trying to assign the 'perception' role to geometry id \\d+ for the "
+      "Trying to assign the 'perception' role to GeometryId.\\d+. for the "
       "first time.*");
 
   DRAKE_EXPECT_NO_THROW(geometry_state_.AssignRole(source_id_, geometries_[0],
@@ -3384,7 +3387,7 @@ TEST_F(GeometryStateTest, RoleAssignExceptions) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.AssignRole(source_id_, geometries_[0],
                                  IllustrationProperties()),
-      "Trying to assign the 'illustration' role to geometry id \\d+ for the "
+      "Trying to assign the 'illustration' role to GeometryId.\\d+. for the "
       "first time.*");
 
   // Addition of geometry with duplicate name -- no problem. Assigning it a
@@ -3583,13 +3586,13 @@ TEST_F(GeometryStateTest, RemoveGeometryFromRenderer) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveFromRenderer(other_renderer_name,
                                          SourceId::get_new_id(), remove_id),
-      "Referenced geometry source .* is not registered.");
+      "Referenced SourceId.* is not registered.");
 
   // Case: GeometryId does not map to a registered geometry.
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveFromRenderer(other_renderer_name, source_id_,
                                          GeometryId::get_new_id()),
-      "Referenced geometry .* has not been registered.");
+      "Referenced GeometryId.* is not registered.");
 
   // Case: GeometryId does not belong to SourceId.
   const SourceId source_id_2 =
@@ -3597,8 +3600,8 @@ TEST_F(GeometryStateTest, RemoveGeometryFromRenderer) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveFromRenderer(other_renderer_name, source_id_2,
                                          remove_id),
-      "Trying to remove geometry \\d+ from the renderer '.+', but the geometry "
-      "doesn't belong to given source .+");
+      "Trying to remove GeometryId.\\d+. from the renderer '.+', but the "
+      "geometry doesn't belong to given SourceId.+");
 }
 
 // The frame-centric version of the RemoveGeometryFromRenderer test.
@@ -3687,7 +3690,7 @@ TEST_F(GeometryStateTest, RemoveFrameFromRenderer) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveFromRenderer(other_renderer_name,
                                          SourceId::get_new_id(), frames_[0]),
-      "Referenced geometry source .* is not registered.");
+      "Referenced SourceId.* is not registered.");
 
   // Case: Frame does not map to a registered frame.
   DRAKE_EXPECT_THROWS_MESSAGE(
@@ -4244,11 +4247,11 @@ TEST_F(GeometryStateTest, ComputeSignedDistancePairClosestPointsError) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.ComputeSignedDistancePairClosestPoints(proximity1,
                                                              bad_id),
-      ".*has not been registered.");
+      ".*is not registered.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.ComputeSignedDistancePairClosestPoints(bad_id,
                                                              proximity1),
-      ".*has not been registered.");
+      ".*is not registered.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.ComputeSignedDistancePairClosestPoints(no_role,
                                                              proximity1),
@@ -4505,11 +4508,11 @@ TEST_F(RemoveRoleTests, RemoveRoleExceptions) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveRole(invalid_source_id, invalid_frame_id,
                                  Role::kUnassigned),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveRole(invalid_source_id, invalid_geometry_id,
                                  Role::kUnassigned),
-      "Referenced geometry source \\d+ is not registered.");
+      "Referenced SourceId.\\d+. is not registered.");
 
   // Case: valid source id, but invalid frame/geometry id.
   DRAKE_EXPECT_THROWS_MESSAGE(
@@ -4519,8 +4522,7 @@ TEST_F(RemoveRoleTests, RemoveRoleExceptions) {
   DRAKE_EXPECT_THROWS_MESSAGE(
       geometry_state_.RemoveRole(source_id_, invalid_geometry_id,
                                  Role::kUnassigned),
-
-      "Referenced geometry \\d+ has not been registered.");
+      "Referenced GeometryId.\\d+. is not registered.");
 
   // Case: frame/geometry id belongs to a different source.
   const SourceId source_id_2 =

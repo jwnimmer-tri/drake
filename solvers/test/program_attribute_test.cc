@@ -19,6 +19,14 @@ GTEST_TEST(ProgramAttributeTest, ToString) {
   EXPECT_EQ(to_string(ProgramAttribute::kGenericCost), "GenericCost");
   EXPECT_EQ(to_string(attrs),
             "{ProgramAttributes: GenericCost, GenericConstraint}");
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+GTEST_TEST(ProgramAttributeTest, DeprecatedStream) {
+  const ProgramAttributes attrs{
+      ProgramAttribute::kGenericCost,
+      ProgramAttribute::kGenericConstraint};
 
   std::ostringstream os;
   os << ProgramAttribute::kGenericCost;
@@ -27,6 +35,7 @@ GTEST_TEST(ProgramAttributeTest, ToString) {
   os << attrs;
   EXPECT_EQ(os.str(), "{ProgramAttributes: GenericCost, GenericConstraint}");
 }
+#pragma GCC diagnostic pop
 
 GTEST_TEST(ProgramAttributeTest, Supported) {
   // Define some helpful abbreviations.

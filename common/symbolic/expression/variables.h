@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/fmt.h"
 #include "drake/common/hash.h"
@@ -133,7 +134,13 @@ class Variables {
 
   friend bool operator<(const Variables& vars1, const Variables& vars2);
 
-  friend std::ostream& operator<<(std::ostream&, const Variables& vars);
+  // TODO(jwnimmer-tri) On 2023-06-01 also remove the <ostream> include.
+  DRAKE_DEPRECATED("2023-06-01",
+      "Use fmt or spdlog for logging, not operator<<. "
+      "Alternatively, call vars.to_string() directly.")
+  friend std::ostream& operator<<(std::ostream& os, const Variables& vars) {
+    return os << vars.to_string();
+  }
 
   friend Variables intersect(const Variables& vars1, const Variables& vars2);
 

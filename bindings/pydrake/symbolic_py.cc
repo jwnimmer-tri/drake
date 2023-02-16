@@ -13,6 +13,7 @@
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/bindings/pydrake/symbolic_py_unapply.h"
 #include "drake/bindings/pydrake/symbolic_types_pybind.h"
+#include "drake/common/fmt_ostream.h"
 #include "drake/common/symbolic/decompose.h"
 #include "drake/common/symbolic/latex.h"
 #include "drake/common/symbolic/monomial_util.h"
@@ -850,10 +851,13 @@ PYBIND11_MODULE(symbolic, m) {
       .def("__hash__",
           [](const Polynomial& self) { return std::hash<Polynomial>{}(self); })
       .def("__str__",
-          [](const Polynomial& self) { return fmt::format("{}", self); })
+          [](const Polynomial& self) {
+            // XXX
+            return fmt::format("{}", fmt_streamed(self));
+          })
       .def("__repr__",
           [](const Polynomial& self) {
-            return fmt::format("<Polynomial \"{}\">", self);
+            return fmt::format("<Polynomial \"{}\">", fmt_streamed(self));
           })
       .def("__pow__",
           [](const Polynomial& self, const int n) { return pow(self, n); })
@@ -963,10 +967,13 @@ PYBIND11_MODULE(symbolic, m) {
           py::arg("new_indeterminates"),
           doc.RationalFunction.SetIndeterminates.doc)
       .def("__str__",
-          [](const RationalFunction& self) { return fmt::format("{}", self); })
+          [](const RationalFunction& self) {
+            // XXX
+            return fmt::format("{}", fmt_streamed(self));
+          })
       .def("__repr__",
           [](const RationalFunction& self) {
-            return fmt::format("<RationalFunction \"{}\">", self);
+            return fmt::format("<RationalFunction \"{}\">", fmt_streamed(self));
           })
       .def(
           "Evaluate",

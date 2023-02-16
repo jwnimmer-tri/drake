@@ -160,10 +160,9 @@ class DecomposePolynomialVisitor {
         // expression to be a polynomial. For example, aˣ is not a
         // polynomial. That is, vars(exponentᵢ) ∩ indeterminates = ∅ should
         // hold.
-        ostringstream oss;
-        oss << "Exponent " << exponent << " includes an indeterminates "
-            << indeterminates << ".";
-        throw runtime_error(oss.str());
+        throw runtime_error(
+            fmt::format("Exponent {} includes an indeterminates {}.", exponent,
+                        indeterminates));
       }
       return make_pair(Monomial{}, pow(base, exponent));
     } else {
@@ -171,10 +170,10 @@ class DecomposePolynomialVisitor {
       // exponentᵢ should be a positive integer.
       if (!is_constant(exponent) ||
           !is_positive_integer(get_constant_value(exponent))) {
-        ostringstream oss;
-        oss << "Given the base " << base << ", the Exponent " << exponent
-            << " should be a positive integer but it is not the case.";
-        throw runtime_error(oss.str());
+        throw runtime_error(fmt::format(
+            "Given the base {}, the Exponent {} should be a positive integer "
+            "but it is not the case.",
+            base, exponent));
       }
 
       const int n{static_cast<int>(get_constant_value(exponent))};
@@ -183,10 +182,9 @@ class DecomposePolynomialVisitor {
       // `base` should be a product of indeterminates because `e` is a
       // pre-expanded term.
       if (!is_variable(base) && !is_multiplication(base)) {
-        ostringstream oss;
-        oss << "Base " << base << " is not a product of indeterminates, "
-            << indeterminates;
-        throw runtime_error(oss.str());
+        throw runtime_error(
+            fmt::format("Base {} is not a product of indeterminates, {}", base,
+                        indeterminates));
       }
       for (const Variable& var : base.GetVariables()) {
         if (indeterminates.include(var)) {
@@ -222,10 +220,10 @@ class DecomposePolynomialVisitor {
 
     // vars(e₂) ∩ indeterminates = ∅.
     if (!intersect(e2.GetVariables(), indeterminates).empty()) {
-      ostringstream oss;
-      oss << "In " << e1 << " / " << e2 << ", the denominator " << e2
-          << " should be free of the indeterminates, " << indeterminates << ".";
-      throw runtime_error(oss.str());
+      throw runtime_error(fmt::format(
+          "In {} / {}, the denominator {} should be free of the indeterminates,"
+          " {}.",
+          e1, e2, e2, indeterminates));
     }
 
     // Since e₁ is already expanded, we have:
@@ -253,10 +251,9 @@ class DecomposePolynomialVisitor {
       const Expression& e, const Variables& indeterminates) const {
     // vars(e) ∩ indeterminates = ∅.
     if (!intersect(e.GetVariables(), indeterminates).empty()) {
-      ostringstream oss;
-      oss << "The non-polynomial term " << e
-          << " should be free of the indeterminates " << indeterminates << ".";
-      throw runtime_error(oss.str());
+      throw runtime_error(fmt::format(
+          "The non-polynomial term {} should be free of the indeterminates {}.",
+          e, indeterminates));
     }
     return {{Monomial{}, e}};  // = {1 ↦ e}.
   }
@@ -518,11 +515,10 @@ Polynomial Polynomial::Differentiate(const Variable& x) const {
 
 Polynomial Polynomial::Integrate(const Variable& x) const {
   if (decision_variables().include(x)) {
-    ostringstream oss;
-    oss << x << " is a decision variable of polynomial " << *this
-        << ".  Integration with respect to decision variables is not "
-        << "supported yet.";
-    throw runtime_error(oss.str());
+    throw runtime_error(fmt::format(
+        "{} is a decision variable of polynomial {}.  Integration with respect "
+        "to decision variables is not supported yet.",
+        x, *this));
   }
 
   // Case: x is an indeterminate (or does not appear).
@@ -1051,23 +1047,19 @@ void Polynomial::CheckInvariant() const {
   // https://github.com/RobotLocomotion/drake/issues/10229
   Variables vars{intersect(decision_variables(), indeterminates())};
   if (!vars.empty()) {
-    ostringstream oss;
-    oss << "Polynomial " << *this
-        << " does not satisfy the invariant because the following variable(s) "
-           "are used as decision variables and indeterminates at the same "
-           "time:\n"
-        << vars << ".";
-    throw runtime_error(oss.str());
+    throw runtime_error(fmt::format(
+        "Polynomial {} does not satisfy the invariant because the following "
+        "variable(s) are used as decision variables and indeterminates at the "
+        "same time:\n{}",
+        *this, vars));
   }
   // Check if any [monomial, coeff] pair has symbolic::is_zero(coeff)
   for (const auto& [monomial, coeff] : monomial_to_coefficient_map_) {
     if (symbolic::is_zero(coeff)) {
-      ostringstream oss;
-      oss << "Polynomial " << *this
-          << " does not satisfy the invariant because the coefficient of the "
-             "monomial "
-          << monomial << " is 0.\n";
-      throw runtime_error(oss.str());
+      throw runtime_error(fmt::format(
+          "Polynomial {} does not satisfy the invariant because the "
+          "coefficient of the monomial {} is 0.",
+          *this, monomial));
     }
   }
 }
@@ -1153,9 +1145,9 @@ ostream& operator<<(ostream& os, const Polynomial& p) {
     return os << 0;
   }
   auto it = map.begin();
-  os << it->second << "*" << it->first;
+  os << it->second.to_string() << "*" << it->first;
   for (++it; it != map.end(); ++it) {
-    os << " + " << it->second << "*" << it->first;
+    os << " + " << it->second.to_string() << "*" << it->first;
   }
   return os;
 }

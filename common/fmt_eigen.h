@@ -1,7 +1,9 @@
 #pragma once
 
+#include <iterator>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <Eigen/Core>
 
@@ -17,12 +19,11 @@ struct fmt_eigen_ref {
   const Eigen::MatrixBase<Derived>& matrix;
 };
 
-/* Returns the string formatting of the given matrix.
-@tparam T must be either double, float, or string */
-template <typename T>
-std::string FormatEigenMatrix(
-    const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>>&
-        matrix);
+/* Given the already string-formatted elements of a (rows x cols)-sized matrix,
+layout the elements with brackets and commas. The elements are stored in the
+given buffer, separated by '\0' characters. */
+std::string FormatEigenMatrix(const std::vector<char>& buffer,
+                              Eigen::Index rows, Eigen::Index cols);
 
 }  // namespace internal
 
@@ -62,25 +63,32 @@ internal::fmt_eigen_ref<Derived> fmt_eigen(
 namespace fmt {
 template <typename Derived>
 struct formatter<drake::internal::fmt_eigen_ref<Derived>>
-    : formatter<std::string_view> {
+    : formatter<typename Derived::Scalar> {
+  using Base = formatter<typename Derived::Scalar>;
+
   template <typename FormatContext>
   auto format(const drake::internal::fmt_eigen_ref<Derived>& ref,
               // NOLINTNEXTLINE(runtime/references) To match fmt API.
               FormatContext& ctx) DRAKE_FMT8_CONST -> decltype(ctx.out()) {
     using Scalar = typename Derived::Scalar;
     const auto& matrix = ref.matrix;
-    if constexpr (std::is_same_v<Scalar, double> ||
-                  std::is_same_v<Scalar, float>) {
-      return formatter<std::string_view>{}.format(
-          drake::internal::FormatEigenMatrix<Scalar>(matrix), ctx);
-    } else {
-      return formatter<std::string_view>{}.format(
-          drake::internal::FormatEigenMatrix<std::string>(
-              matrix.unaryExpr([](const auto& element) -> std::string {
-                return fmt::to_string(element);
-              })),
-          ctx);
+    // Format every matrix element in turn, separated by '\0' characters. Use
+    // the Scalar's formatter specialization so its format_spec will be used.
+    std::vector<char> formatted_elements;
+    formatted_elements.reserve(matrix.size() * 20);
+    for (Eigen::Index row = 0; row < matrix.rows(); ++row) {
+      for (Eigen::Index col = 0; col < matrix.cols(); ++col) {
+        using OutputIt = std::back_insert_iterator<std::vector<char>>;
+        using OutputContext = fmt::basic_format_context<OutputIt, char>;
+        OutputContext element_ctx{OutputIt(formatted_elements), {}};
+        Base::format(matrix(row, col), element_ctx);
+        formatted_elements.push_back(0);
+      }
     }
+    // Layout the matrix data with brackets, commas, whitespace, etc.
+    const std::string content = drake::internal::FormatMatrix(
+        formatted_elements, matrix.rows(), matrix.cols());
+    return formatter<std::string_view>{}.format(content, ctx);
   }
 };
 }  // namespace fmt

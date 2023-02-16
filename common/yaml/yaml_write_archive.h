@@ -224,7 +224,7 @@ class YamlWriteArchive final {
       return;
     }
     root_.Add(nvp.name(), internal::Node::MakeScalar(
-        fmt::format("{}", value)));
+        fmt::to_string(value)));
   }
 
   // This is used for std::optional or similar.

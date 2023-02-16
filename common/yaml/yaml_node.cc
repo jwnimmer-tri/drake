@@ -1,5 +1,6 @@
 #include "drake/common/yaml/yaml_node.h"
 
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 
@@ -218,7 +219,9 @@ void Node::Remove(std::string_view key) {
   }, data_);
 }
 
-std::ostream& operator<<(std::ostream& os, const Node& node) {
+std::string Node::ToString() const {
+  const Node& node = *this;
+  std::ostringstream os;
   if (!node.GetTag().empty()) {
     os << "!<" << node.GetTag() << "> ";
   }
@@ -234,7 +237,7 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
           os << ", ";
         }
         first = false;
-        os << child;
+        os << child.ToString();
       }
       os << "]";
     },
@@ -246,12 +249,12 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
           os << ", ";
         }
         first = false;
-        os << '"' << key << '"' << ": " << child;
+        os << '"' << key << '"' << ": " << child.ToString();
       }
       os << "}";
     },
   });
-  return os;
+  return os.str();
 }
 
 }  // namespace internal

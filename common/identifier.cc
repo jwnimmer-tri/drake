@@ -2,6 +2,8 @@
 
 #include <atomic>
 
+#include "drake/common/nice_type_name.h"
+
 namespace drake {
 namespace internal {
 
@@ -21,6 +23,26 @@ int64_t get_new_identifier()  {
   // default constructor, so we have an invariant that get_new_identifier() > 0.
   // Overflowing an int64_t is not a hazard we need to worry about.
   return ++g_prior_identifier;
+}
+
+std::string FormatIdentifier(const std::type_info* type, int64_t value) {
+  std::string result;
+  if (type != nullptr) {
+    std::string full_name = NiceTypeName::Get(*type);
+    std::string short_name = NiceTypeName::RemoveNamespaces(full_name);
+    if (value > 0) {
+      result = fmt::format("{}({})", short_name, value);
+    } else {
+      result = fmt::format("{}()", short_name);
+    }
+  } else {
+    if (value > 0) {
+      result = fmt::to_string(value);
+    } else {
+      result = "default";
+    }
+  }
+  return result;
 }
 
 }  // namespace internal

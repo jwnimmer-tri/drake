@@ -280,8 +280,8 @@ class ContactResultMaker final : public LeafSystem<double> {
       // TODO(SeanCurtis-TRI): This currently skips the full naming and doesn't
       //  report any dynamics (e.g., force, moment, or quadrature data).
 
-      surface_message.body1_name = "Id_" + to_string(surface.id_M());
-      surface_message.body2_name = "Id_" + to_string(surface.id_N());
+      surface_message.body1_name = fmt::format("Id_{}", surface.id_M());
+      surface_message.body2_name = fmt::format("Id_{}", surface.id_N());
 
       const int num_vertices = surface.num_vertices();
       surface_message.num_vertices = num_vertices;

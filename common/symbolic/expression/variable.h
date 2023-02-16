@@ -13,6 +13,7 @@
 #include <Eigen/Core>
 
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/fmt_ostream.h"
 #include "drake/common/hash.h"
@@ -100,7 +101,13 @@ class Variable {
     // matching id_ will always have identical type_ and name_.
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const Variable& var);
+  // TODO(jwnimmer-tri) On 2023-06-01 also remove the <ostream> include.
+  DRAKE_DEPRECATED("2023-06-01",
+      "Use fmt or spdlog for logging, not operator<<. "
+      "Alternatively, call var.to_string() directly.")
+  friend std::ostream& operator<<(std::ostream& os, const Variable& var) {
+    return os << var.to_string();
+  }
 
  private:
   // Produces a unique ID for a variable.
@@ -115,7 +122,15 @@ class Variable {
   std::shared_ptr<const std::string> name_;  // Name of variable.
 };
 
-std::ostream& operator<<(std::ostream& os, Variable::Type type);
+std::string_view to_string(Variable::Type type);
+
+// TODO(jwnimmer-tri) On 2023-06-01 also remove the <ostream> include.
+DRAKE_DEPRECATED("2023-06-01",
+    "Use fmt or spdlog for logging, not operator<<."
+    "Alternatively, call to_string(var_type) directly.")
+inline std::ostream& operator<<(std::ostream& os, Variable::Type type) {
+  return os << to_string(type);
+}
 
 /// Creates a dynamically-sized Eigen matrix of symbolic variables.
 /// @param rows The number of rows in the new matrix.
@@ -368,12 +383,10 @@ CheckStructuralEquality(const DerivedA& m1, const DerivedB& m2) {
 }  // namespace symbolic
 }  // namespace drake
 
+DRAKE_FORMATTER_AS(, drake::symbolic, Variable, v, v.to_string())
+
 // TODO(jwnimmer-tri) Add a real formatter and deprecate the operator<<.
 namespace fmt {
-template <>
-struct formatter<drake::symbolic::Variable>
-    : drake::ostream_formatter {};
-template <>
 struct formatter<drake::symbolic::Variable::Type>
     : drake::ostream_formatter {};
 }  // namespace fmt

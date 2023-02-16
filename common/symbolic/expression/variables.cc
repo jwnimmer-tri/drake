@@ -7,7 +7,6 @@
 #include <functional>
 #include <iterator>
 #include <numeric>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -19,8 +18,6 @@ using std::initializer_list;
 using std::inserter;
 using std::less;
 using std::move;
-using std::ostream;
-using std::ostream_iterator;
 using std::ostringstream;
 using std::set;
 using std::set_intersection;
@@ -35,9 +32,20 @@ Variables::Variables(const Eigen::Ref<const VectorX<Variable>>& vec)
     : vars_{vec.data(), vec.data() + vec.size()} {}
 
 string Variables::to_string() const {
-  ostringstream oss;
-  oss << *this;
-  return oss.str();
+  // TODO(jwnimmer-tri) Why doesn't fmt::join work on a std::set?
+  ostringstream result;
+  result << "{";
+  bool first = true;
+  for (auto iter = vars_.begin(); iter != vars_.end(); ++iter) {
+    if (first) {
+      first = false;
+    } else {
+      result << ", ";
+    }
+    result << iter->to_string();
+  }
+  result << "}";
+  return result.str();
 }
 
 Variables::size_type Variables::erase(const Variables& vars) {
@@ -138,18 +146,6 @@ Variables intersect(const Variables& vars1, const Variables& vars2) {
                    inserter(intersection, intersection.begin()),
                    less<Variable>{});
   return Variables{move(intersection)};
-}
-
-ostream& operator<<(ostream& os, const Variables& vars) {
-  os << "{";
-  if (!vars.vars_.empty()) {
-    // output 1st ... N-1th elements by adding ", " at the end
-    copy(vars.begin(), prev(vars.end()), ostream_iterator<Variable>(os, ", "));
-    // output the last one (without ",").
-    os << *(vars.rbegin());
-  }
-  os << "}";
-  return os;
 }
 
 }  // namespace symbolic

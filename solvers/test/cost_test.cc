@@ -140,7 +140,7 @@ GTEST_TEST(testCost, testLinearCost) {
 
   new_cost->set_description("simple linear cost");
   EXPECT_EQ(
-      fmt::format("{}", *new_cost),
+      fmt::to_string(*new_cost),
       "LinearCost (100 + $(0) + 2 * $(1)) described as 'simple linear cost'");
 }
 
@@ -433,8 +433,7 @@ GTEST_TEST(TestL1NormCost, Display) {
   L1NormCost cost(Matrix2d::Identity(), Vector2d::Ones());
   std::ostringstream os;
   cost.Display(os, symbolic::MakeVectorContinuousVariable(2, "x"));
-  EXPECT_EQ(fmt::format("{}", os.str()),
-            "L1NormCost (abs((1 + x(0))) + abs((1 + x(1))))");
+  EXPECT_EQ(os.str(), "L1NormCost (abs((1 + x(0))) + abs((1 + x(1))))");
 }
 
 GTEST_TEST(TestL2NormCost, Eval) {
@@ -504,7 +503,7 @@ GTEST_TEST(TestL2NormCost, Display) {
   L2NormCost cost(Matrix2d::Identity(), Vector2d::Ones());
   std::ostringstream os;
   cost.Display(os, symbolic::MakeVectorContinuousVariable(2, "x"));
-  EXPECT_EQ(fmt::format("{}", os.str()),
+  EXPECT_EQ(os.str(),
             "L2NormCost sqrt((pow((1 + x(0)), 2) + pow((1 + x(1)), 2)))");
 }
 
@@ -575,8 +574,7 @@ GTEST_TEST(TestLInfNormCost, Display) {
   LInfNormCost cost(Matrix2d::Identity(), Vector2d::Ones());
   std::ostringstream os;
   cost.Display(os, symbolic::MakeVectorContinuousVariable(2, "x"));
-  EXPECT_EQ(fmt::format("{}", os.str()),
-            "LInfNormCost max(abs((1 + x(0))), abs((1 + x(1))))");
+  EXPECT_EQ(os.str(), "LInfNormCost max(abs((1 + x(0))), abs((1 + x(1))))");
 }
 
 GTEST_TEST(TestPerspectiveQuadraticCost, Eval) {
@@ -644,7 +642,7 @@ GTEST_TEST(TestPerspectiveQuadraticCost, Display) {
   PerspectiveQuadraticCost cost(Matrix2d::Identity(), Vector2d::Ones());
   std::ostringstream os;
   cost.Display(os, symbolic::MakeVectorContinuousVariable(2, "x"));
-  EXPECT_EQ(fmt::format("{}", os.str()),
+  EXPECT_EQ(os.str(),
             "PerspectiveQuadraticCost (pow((1 + x(1)), 2) / (1 + x(0)))");
 }
 

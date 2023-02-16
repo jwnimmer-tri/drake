@@ -70,9 +70,7 @@ const KinematicsValue& KinematicsVector<Id, KinematicsValue>::value(
       return *map_value;
     }
   }
-  throw std::runtime_error(fmt::format(
-      "No such {}: {}.",
-      NiceTypeName::RemoveNamespaces(NiceTypeName::Get<Id>()), to_string(id)));
+  throw std::runtime_error(fmt::format("No such {:!r}.", id));
 }
 
 template <typename Id, typename KinematicsValue>

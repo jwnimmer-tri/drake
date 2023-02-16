@@ -16,11 +16,24 @@ struct FmtFormatPrinter {
   static constexpr bool is_directly_formattable =
       std::is_constructible_v<fmt::formatter<T, char>>;
 
+  template <typename T, typename = void>
+  struct is_repr_formatter : public std::false_type {};
+
+  template <typename T>
+  struct is_repr_formatter<
+      T, typename std::enable_if_t<
+             std::is_same_v<decltype(fmt::formatter<T>{}.use_repr()), bool>>>
+      : public std::true_type {};
+
   // SFINAE on whether the type directly supports formatting.
   // If not, gtest has a suite of other kinds of printers is will fall back on.
   template <typename T, typename = std::enable_if_t<is_directly_formattable<T>>>
   static void PrintValue(const T& value, std::ostream* os) {
-    *os << fmt::to_string(value);
+    if constexpr (is_repr_formatter<T>::value) {
+      *os << fmt::format("{:!r}", value);
+    } else {
+      *os << fmt::to_string(value);
+    }
   }
 };
 

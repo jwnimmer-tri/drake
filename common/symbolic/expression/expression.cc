@@ -231,9 +231,25 @@ RowVectorX<Expression> Expression::Jacobian(
 }
 
 string Expression::to_string() const {
-  ostringstream oss;
-  oss << *this;
-  return oss.str();
+  if (is_constant(*this)) {
+    const double value = get_constant_value(*this);
+    // Different versions of fmt disagree on whether to omit the trailing ".0"
+    // when formatting integer-valued floating-point numbers. For compactness,
+    // we really want small integers to not have any extra baggage so we'll do
+    // some special-casing here. Once we have fmt >= 7.1 as a minimum supported
+    // version, then we can drop this.
+    using Limits = std::numeric_limits<int64_t>;
+    if (value >= Limits::min() && value <= Limits::max() &&
+        std::trunc(value) == value) {
+      return fmt::to_string(static_cast<int64_t>(value));
+    } else {
+      return fmt::to_string(value);
+    }
+  }
+  ostringstream result;
+  result.precision(numeric_limits<double>::max_digits10);
+  cell().Display(result);
+  return result.str();
 }
 
 void Expression::AddImpl(const Expression& rhs) {
@@ -499,9 +515,7 @@ void Expression::DivImpl(const Expression& rhs) {
   // really is NaN.
   if (is_constant(lhs) && is_constant(rhs)) {
     if (is_zero(rhs)) {
-      ostringstream oss{};
-      oss << "Division by zero: " << lhs << "/0";
-      throw runtime_error(oss.str());
+      throw runtime_error(fmt::format("Division by zero: {}/0", lhs));
     }
     ConstructExpressionCellNaN();
     return;
@@ -534,17 +548,6 @@ class PrecisionGuard {
   const streamsize original_precision_;
 };
 }  // namespace
-
-ostream& operator<<(ostream& os, const Expression& e) {
-  const PrecisionGuard precision_guard{&os,
-                                       numeric_limits<double>::max_digits10};
-  if (is_constant(e)) {
-    os << get_constant_value(e);
-  } else {
-    e.cell().Display(os);
-  }
-  return os;
-}
 
 Expression log(const Expression& e) {
   // Simplification: constant folding.

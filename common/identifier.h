@@ -3,17 +3,22 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <typeinfo>
 #include <utility>
 
+#include <fmt/format.h>
+
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/drake_throw.h"
-#include "drake/common/fmt_ostream.h"
+#include "drake/common/fmt.h"
 #include "drake/common/hash.h"
 
 namespace drake {
 
 namespace internal {
 int64_t get_new_identifier();
+std::string FormatIdentifier(const std::type_info* type, int64_t value);
 }  // namespace internal
 
 /**
@@ -227,20 +232,17 @@ class Identifier {
   int64_t value_{};
 };
 
-/** Streaming output operator.   This is considered invalid for invalid ids and
- is strictly enforced in Debug builds.
- @relates Identifier
- */
+// TODO(jwnimmer-tri) On 2023-06-01 also remove the <ostream> include.
 template <typename Tag>
+DRAKE_DEPRECATED("2023-06-01", "Use fmt or spdlog for logging, not operator<<.")
 std::ostream& operator<<(std::ostream& out, const Identifier<Tag>& id) {
   out << id.get_value();
   return out;
 }
 
-/** Enables use of identifiers with to_string. It requires ADL to work. So,
- it should be invoked as: `to_string(id);` and should be preceded by
- `using std::to_string`.*/
 template <typename Tag>
+DRAKE_DEPRECATED("2023-06-01",
+    "Use fmt::to_string(id), not drake::to_string(id).")
 std::string to_string(const drake::Identifier<Tag>& id) {
   return std::to_string(id.get_value());
 }
@@ -257,9 +259,16 @@ struct hash<drake::Identifier<Tag>> : public drake::DefaultHash {};
 
 }  // namespace std
 
-// TODO(jwnimmer-tri) Add a real formatter and deprecate the operator<<.
 namespace fmt {
 template <typename Tag>
-struct formatter<drake::Identifier<Tag>>
-    : drake::ostream_formatter {};
+struct formatter<drake::Identifier<Tag>> : public drake::repr_formatter {
+  template <typename FormatContext>
+  auto format(drake::Identifier<Tag> id,
+              // NOLINTNEXTLINE(runtime/references) To match fmt API.
+              FormatContext& ctx) DRAKE_FMT8_CONST {
+    const std::type_info* const type = use_repr() ? &typeid(id) : nullptr;
+    const int64_t value = id.is_valid() ? id.get_value() : 0;
+    return Base::format(drake::internal::FormatIdentifier(type, value), ctx);
+  }
+};
 }  // namespace fmt
