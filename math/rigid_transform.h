@@ -105,20 +105,20 @@ class RigidTransform {
   /// expressed in frame A.  In monogram notation p is denoted `p_AoBo_A`.
   /// @throws std::exception in debug builds if the rotation matrix
   /// that is built from `quaternion` is invalid.
-  /// @see RotationMatrix::RotationMatrix(const Eigen::Quaternion<T>&)
-  RigidTransform(const Eigen::Quaternion<T>& quaternion, const Vector3<T>& p)
+  /// @see RotationMatrix::RotationMatrix(const Quaternion<T>&)
+  RigidTransform(const Quaternion<T>& quaternion, const Vector3<T>& p)
       : RigidTransform(RotationMatrix<T>(quaternion), p) {}
 
   /// Constructs a %RigidTransform from an AngleAxis and a position vector.
-  /// @param[in] theta_lambda an Eigen::AngleAxis whose associated axis (vector
+  /// @param[in] theta_lambda an AngleAxis whose associated axis (vector
   /// direction herein called `lambda`) is non-zero and finite, but which may or
   /// may not have unit length [i.e., `lambda.norm()` does not have to be 1].
   /// @param[in] p position vector from frame A's origin to frame B's origin,
   /// expressed in frame A.  In monogram notation p is denoted `p_AoBo_A
   /// @throws std::exception in debug builds if the rotation matrix
   /// that is built from `theta_lambda` is invalid.
-  /// @see RotationMatrix::RotationMatrix(const Eigen::AngleAxis<T>&)
-  RigidTransform(const Eigen::AngleAxis<T>& theta_lambda, const Vector3<T>& p)
+  /// @see RotationMatrix::RotationMatrix(const AngleAxis<T>&)
+  RigidTransform(const AngleAxis<T>& theta_lambda, const Vector3<T>& p)
       : RigidTransform(RotationMatrix<T>(theta_lambda), p) {}
 
   /// Constructs a %RigidTransform with a given RotationMatrix and a zero
@@ -321,17 +321,17 @@ class RigidTransform {
 
   /// Sets the rotation part of `this` %RigidTransform from a Quaternion.
   /// @param[in] quaternion a quaternion which may or may not have unit length.
-  /// @see RotationMatrix::RotationMatrix(const Eigen::Quaternion<T>&) which
+  /// @see RotationMatrix::RotationMatrix(const Quaternion<T>&) which
   /// describes the parameter, preconditions, exception conditions, etc.
-  void set_rotation(const Eigen::Quaternion<T>& quaternion) {
+  void set_rotation(const Quaternion<T>& quaternion) {
     set_rotation(RotationMatrix<T>(quaternion));
   }
 
   /// Sets the rotation part of `this` %RigidTransform from an AngleAxis.
   /// @param[in] theta_lambda an angle `theta` (in radians) and vector `lambda`.
-  /// @see RotationMatrix::RotationMatrix(const Eigen::AngleAxis<T>&) which
+  /// @see RotationMatrix::RotationMatrix(const AngleAxis<T>&) which
   /// describes the parameter, preconditions, exception conditions, etc.
-  void set_rotation(const Eigen::AngleAxis<T>& theta_lambda) {
+  void set_rotation(const AngleAxis<T>& theta_lambda) {
     set_rotation(RotationMatrix<T>(theta_lambda));
   }
 

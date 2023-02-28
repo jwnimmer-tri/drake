@@ -7,8 +7,6 @@
 #include "drake/common/eigen_types.h"
 
 using Eigen::Isometry3d;
-using Eigen::Quaterniond;
-using Eigen::Translation3d;
 
 namespace drake {
 namespace pydrake {

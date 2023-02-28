@@ -17,8 +17,8 @@ namespace {
 //     z₂ • (Δz⊗z₁) = 1
 // where Δz = [cos(|ω|h/2), ω/(|ω|)sin(|ω|h/2)]
 template <typename T>
-Vector1<T> EvalQuaternionIntegration(const Eigen::Quaternion<T>& quat1,
-                                     const Eigen::Quaternion<T>& quat2,
+Vector1<T> EvalQuaternionIntegration(const Quaternion<T>& quat1,
+                                     const Quaternion<T>& quat2,
                                      const Vector3<T>& angular_vel, const T& h,
                                      bool allow_quaternion_negation) {
   Vector1<T> ret;
@@ -38,9 +38,9 @@ Vector1<T> EvalQuaternionIntegration(const Eigen::Quaternion<T>& quat1,
         angular_vel * sin(angular_vel_norm * h / 2) / angular_vel_norm;
   }
   const T delta_z_w = cos(angular_vel_norm * h / 2);
-  const Eigen::Quaternion<T> delta_z(delta_z_w, delta_z_vec(0), delta_z_vec(1),
-                                     delta_z_vec(2));
-  const Eigen::Quaternion<T> delta_z_times_quat1 = delta_z * quat1;
+  const Quaternion<T> delta_z(delta_z_w, delta_z_vec(0), delta_z_vec(1),
+                              delta_z_vec(2));
+  const Quaternion<T> delta_z_times_quat1 = delta_z * quat1;
   if (allow_quaternion_negation) {
     using std::pow;
     ret(0) = pow(quat2.dot(delta_z_times_quat1), 2);
@@ -54,8 +54,8 @@ template <typename T>
 void EulerIntegrationEvalGeneric(bool allow_quaternion_negation,
                                  const Eigen::Ref<const VectorX<T>>& x,
                                  VectorX<T>* y) {
-  const Eigen::Quaternion<T> quat1(x(0), x(1), x(2), x(3));
-  const Eigen::Quaternion<T> quat2(x(4), x(5), x(6), x(7));
+  const Quaternion<T> quat1(x(0), x(1), x(2), x(3));
+  const Quaternion<T> quat2(x(4), x(5), x(6), x(7));
   const Vector3<T> angular_vel(x.template segment<3>(8));
   *y = EvalQuaternionIntegration<T>(quat1, quat2, angular_vel, x(11),
                                     allow_quaternion_negation);

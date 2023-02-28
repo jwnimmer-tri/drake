@@ -67,7 +67,7 @@ Quaternion<T> QuaternionFloatingMobilizer<T>::get_quaternion(
   // a plain vector in the order: (qs, qv₁, qv₂, qv₃), where qs corresponds to
   // the "scalar" component of the quaternion and qv corresponds to the "vector"
   // component.
-  // Eigen::Quaternion's constructor takes the scalar component first followed
+  // Quaternion's constructor takes the scalar component first followed
   // by the vector components.
   return Quaternion<T>(q[0], q[1], q[2], q[3]);
 }
@@ -144,7 +144,7 @@ void QuaternionFloatingMobilizer<T>::set_random_position_distribution(
 template <typename T>
 void QuaternionFloatingMobilizer<
     T>::set_random_quaternion_distribution(
-        const Eigen::Quaternion<symbolic::Expression>& q_FM) {
+        const Quaternion<symbolic::Expression>& q_FM) {
   Vector<symbolic::Expression, kNq> positions;
   if (this->get_random_state_distribution()) {
     positions = this->get_random_state_distribution()->template head<kNq>();
@@ -232,7 +232,7 @@ QuaternionFloatingMobilizer<T>::CalcAcrossMobilizerTransform(
   // The last 3 elements in q contain position from Fo to Mo.
   const Vector4<T> wxyz(q.template head<4>());
   const Vector3<T> p_FM = q.template tail<3>();  // position from Fo to Mo.
-  const Eigen::Quaternion<T> quaternion_FM(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
+  const Quaternion<T> quaternion_FM(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
   const math::RigidTransform<T> X_FM(quaternion_FM, p_FM);
   return X_FM;
 }

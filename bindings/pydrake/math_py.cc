@@ -63,10 +63,10 @@ void DoScalarDependentDefinitions(py::module m, T) {
             py::arg("R"), py::arg("p"), cls_doc.ctor.doc_2args_R_p)
         .def(py::init<const RollPitchYaw<T>&, const Vector3<T>&>(),
             py::arg("rpy"), py::arg("p"), cls_doc.ctor.doc_2args_rpy_p)
-        .def(py::init<const Eigen::Quaternion<T>&, const Vector3<T>&>(),
+        .def(py::init<const Quaternion<T>&, const Vector3<T>&>(),
             py::arg("quaternion"), py::arg("p"),
             cls_doc.ctor.doc_2args_quaternion_p)
-        .def(py::init<const Eigen::AngleAxis<T>&, const Vector3<T>&>(),
+        .def(py::init<const AngleAxis<T>&, const Vector3<T>&>(),
             py::arg("theta_lambda"), py::arg("p"),
             cls_doc.ctor.doc_2args_theta_lambda_p)
         .def(py::init<const RotationMatrix<T>&>(), py::arg("R"),
@@ -90,11 +90,10 @@ void DoScalarDependentDefinitions(py::module m, T) {
             py::overload_cast<const RollPitchYaw<T>&>(&Class::set_rotation),
             py::arg("rpy"), cls_doc.set_rotation.doc_1args_rpy)
         .def("set_rotation",
-            py::overload_cast<const Eigen::Quaternion<T>&>(
-                &Class::set_rotation),
+            py::overload_cast<const Quaternion<T>&>(&Class::set_rotation),
             py::arg("quaternion"), cls_doc.set_rotation.doc_1args_quaternion)
         .def("set_rotation",
-            py::overload_cast<const Eigen::AngleAxis<T>&>(&Class::set_rotation),
+            py::overload_cast<const AngleAxis<T>&>(&Class::set_rotation),
             py::arg("theta_lambda"),
             cls_doc.set_rotation.doc_1args_theta_lambda)
         .def("translation", &Class::translation,
@@ -170,9 +169,9 @@ void DoScalarDependentDefinitions(py::module m, T) {
         .def(py::init<const Class&>(), py::arg("other"))
         .def(py::init<const Matrix3<T>&>(), py::arg("R"),
             cls_doc.ctor.doc_1args_R)
-        .def(py::init<Eigen::Quaternion<T>>(), py::arg("quaternion"),
+        .def(py::init<Quaternion<T>>(), py::arg("quaternion"),
             cls_doc.ctor.doc_1args_quaternion)
-        .def(py::init<const Eigen::AngleAxis<T>&>(), py::arg("theta_lambda"),
+        .def(py::init<const AngleAxis<T>&>(), py::arg("theta_lambda"),
             cls_doc.ctor.doc_1args_theta_lambda)
         .def(py::init<const RollPitchYaw<T>&>(), py::arg("rpy"),
             cls_doc.ctor.doc_1args_rpy)
@@ -226,7 +225,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
         .def("ToRollPitchYaw", &Class::ToRollPitchYaw,
             cls_doc.ToRollPitchYaw.doc)
         .def("ToQuaternion",
-            overload_cast_explicit<Eigen::Quaternion<T>>(&Class::ToQuaternion),
+            overload_cast_explicit<Quaternion<T>>(&Class::ToQuaternion),
             cls_doc.ToQuaternion.doc_0args)
         .def("ToAngleAxis", &Class::ToAngleAxis, cls_doc.ToAngleAxis.doc)
         .def(py::pickle([](const Class& self) { return self.matrix(); },
@@ -254,7 +253,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             cls_doc.ctor.doc_3args_roll_pitch_yaw)
         .def(py::init<const RotationMatrix<T>&>(), py::arg("R"),
             cls_doc.ctor.doc_1args_R)
-        .def(py::init<const Eigen::Quaternion<T>&>(), py::arg("quaternion"),
+        .def(py::init<const Quaternion<T>&>(), py::arg("quaternion"),
             cls_doc.ctor.doc_1args_quaternion)
         .def(py::init([](const Matrix3<T>& matrix) {
           return Class(RotationMatrix<T>(matrix));
@@ -426,11 +425,11 @@ void DoScalarIndependentDefinitions(py::module m) {
   // Random Rotations
   m  // BR
       .def("UniformlyRandomQuaternion",
-          overload_cast_explicit<Eigen::Quaternion<T>, RandomGenerator*>(
+          overload_cast_explicit<Quaternion<T>, RandomGenerator*>(
               &UniformlyRandomQuaternion),
           py::arg("generator"), doc.UniformlyRandomQuaternion.doc)
       .def("UniformlyRandomAngleAxis",
-          overload_cast_explicit<Eigen::AngleAxis<T>, RandomGenerator*>(
+          overload_cast_explicit<AngleAxis<T>, RandomGenerator*>(
               &UniformlyRandomAngleAxis),
           py::arg("generator"), doc.UniformlyRandomAngleAxis.doc)
       .def("UniformlyRandomRotationMatrix",

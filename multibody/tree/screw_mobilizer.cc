@@ -114,7 +114,7 @@ math::RigidTransform<T> ScrewMobilizer<T>::CalcAcrossMobilizerTransform(
   DRAKE_ASSERT(q.size() == kNq);
   const Vector3<T> p_FM(axis_ *
       get_screw_translation_from_rotation(q[0], screw_pitch_));
-  return math::RigidTransform<T>(Eigen::AngleAxis<T>(q[0], axis_), p_FM);
+  return math::RigidTransform<T>(AngleAxis<T>(q[0], axis_), p_FM);
 }
 
 template <typename T>

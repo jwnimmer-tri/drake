@@ -1095,7 +1095,7 @@ class MultibodyTree {
   // See MultibodyPlant::SetFreeBodyRandomRotationDistribution.
   void SetFreeBodyRandomRotationDistributionOrThrow(
       const Body<T>& body,
-      const Eigen::Quaternion<symbolic::Expression>& rotation);
+      const Quaternion<symbolic::Expression>& rotation);
 
   // @name Kinematic computations
   // Kinematics computations are concerned with the motion of bodies in the

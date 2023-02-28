@@ -101,7 +101,7 @@ class QuaternionFloatingMobilizer final : public MobilizerImpl<T, 7, 6> {
   // Sets the distribution governing the random samples of the rotation
   // component of the mobilizer state.
   void set_random_quaternion_distribution(
-      const Eigen::Quaternion<symbolic::Expression>& q_FM);
+      const Quaternion<symbolic::Expression>& q_FM);
 
   // Sets `context` to store the position `p_FM` of frame M's origin `Mo`
   // measured and expressed in frame F.
@@ -136,11 +136,11 @@ class QuaternionFloatingMobilizer final : public MobilizerImpl<T, 7, 6> {
   // from a non-orthonormal Matrix3<T> m (e.g., m is approximate data), use
   // R_FM = math::RotationMatrix<T>::ProjectToRotationMatrix( m ).
   // Alternatively, set this mobilizer's orientation with the two statements:
-  // const Eigen::Quaternion<T> q_FM = RotationMatrix<T>::ToQuaternion( m );
+  // const Quaternion<T> q_FM = RotationMatrix<T>::ToQuaternion( m );
   // set_quaternion(context, q_FM);
   const QuaternionFloatingMobilizer<T>& SetFromRotationMatrix(
       systems::Context<T>* context, const math::RotationMatrix<T>& R_FM) const {
-    const Eigen::Quaternion<T> q_FM = R_FM.ToQuaternion();
+    const Quaternion<T> q_FM = R_FM.ToQuaternion();
     return set_quaternion(context, q_FM);
   }
 

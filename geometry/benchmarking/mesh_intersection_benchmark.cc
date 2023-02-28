@@ -138,7 +138,6 @@ Resulting contact surface sizes:
  benchmark documentation](https://github.com/google/benchmark).
  */
 
-using Eigen::AngleAxis;
 using Eigen::Vector3d;
 using math::RigidTransformd;
 

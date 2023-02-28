@@ -13,7 +13,6 @@ namespace multibody {
 namespace math {
 namespace {
 
-using Eigen::AngleAxis;
 using symbolic::Expression;
 using symbolic::MakeVectorContinuousVariable;
 using symbolic::Variable;

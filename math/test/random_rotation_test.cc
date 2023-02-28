@@ -139,14 +139,14 @@ GTEST_TEST(RandomRotationTest, UniformlyRandomRotation) {
 GTEST_TEST(RandomRotationTest, Symbolic) {
   RandomGenerator generator;
 
-  const Eigen::AngleAxis<symbolic::Expression> axis_angle =
+  const AngleAxis<symbolic::Expression> axis_angle =
       UniformlyRandomAngleAxis<symbolic::Expression>(&generator);
   EXPECT_EQ(axis_angle.angle().GetVariables().size(), 3);
   for (int i = 0; i < 3; ++i) {
     EXPECT_EQ(axis_angle.axis()[i].GetVariables().size(), 3);
   }
 
-  const Eigen::Quaternion<symbolic::Expression> quaternion =
+  const Quaternion<symbolic::Expression> quaternion =
       UniformlyRandomQuaternion<symbolic::Expression>(&generator);
   EXPECT_EQ(quaternion.w().GetVariables().size(), 2);
   EXPECT_EQ(quaternion.x().GetVariables().size(), 2);

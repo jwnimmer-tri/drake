@@ -326,7 +326,7 @@ TEST_F(QuaternionFloatingJointTest, RandomState) {
 
   // Set position and quaternion distributions back to 0.
   mutable_joint_->set_random_quaternion_distribution(
-      Eigen::Quaternion<symbolic::Expression>::Identity());
+      Quaternion<symbolic::Expression>::Identity());
   mutable_joint_->set_random_position_distribution(
       Eigen::Matrix<symbolic::Expression, 3, 1>::Zero());
   tree().SetRandomState(*context_, &context_->get_mutable_state(),

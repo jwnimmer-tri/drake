@@ -260,7 +260,7 @@ An example of incorporating docstrings from `pydrake_doc`:
           ...
           .def(py::init<const RotationMatrix<T>&>(), py::arg("R"),
               doc.RigidTransform.ctor.doc_1args_R)
-          .def(py::init<const Eigen::Quaternion<T>&, const Vector3<T>&>(),
+          .def(py::init<const Quaternion<T>&, const Vector3<T>&>(),
               py::arg("quaternion"), py::arg("p"),
               doc.RigidTransform.ctor.doc_2args_quaternion_p)
           ...

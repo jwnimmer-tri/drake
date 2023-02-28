@@ -94,7 +94,7 @@ GTEST_TEST(CalculateQuaternionDtFromAngularVelocityExpressedInBTest, testA) {
   const AutoDiffXd wx(2.1,     7, 4);
   const AutoDiffXd wy(-3.4,    7, 5);
   const AutoDiffXd wz(5.3,     7, 6);
-  const Eigen::Quaternion<AutoDiffXd> quat(e0,  e1,  e2,  e3);
+  const Quaternion<AutoDiffXd> quat(e0,  e1,  e2,  e3);
   const drake::Vector3<AutoDiffXd> w_B(wx, wy, wz);
   const drake::Vector4<AutoDiffXd> quatDt =
       CalculateQuaternionDtFromAngularVelocityExpressedInB(quat, w_B);
@@ -153,7 +153,7 @@ GTEST_TEST(CalculateAngularVelocityExpressedInBFromQuaternionDtTest, testA) {
   const AutoDiffXd e1Dt(1.0,                 8, 5);
   const AutoDiffXd e2Dt(2.0,                 8, 6);
   const AutoDiffXd e3Dt(-2.623156949355562,  8, 7);
-  const Eigen::Quaternion<AutoDiffXd> quat(e0,  e1,  e2,  e3);
+  const Quaternion<AutoDiffXd> quat(e0,  e1,  e2,  e3);
   const drake::Vector4<AutoDiffXd> quatDt(e0Dt, e1Dt, e2Dt, e3Dt);
   const drake::Vector3<AutoDiffXd> w =
              CalculateAngularVelocityExpressedInBFromQuaternionDt(quat, quatDt);
@@ -257,7 +257,7 @@ GTEST_TEST(IsQuaternionAndQuaternionDtEqualAngularVelocityExpressedInB, testA) {
 }
 
 void CheckQuaternionToAngleAxis(double w, double x, double y, double z) {
-  const Eigen::Quaternion quaternion(w, x, y, z);
+  const Quaternion quaternion(w, x, y, z);
   const Eigen::AngleAxisd angle_axis =
       internal::QuaternionToAngleAxisLikeEigen(quaternion);
   const Eigen::AngleAxisd angle_axis_expected(quaternion);
@@ -294,8 +294,8 @@ GTEST_TEST(TestQuaternionToAngleAxisLikeEigen, TestSymbolic) {
   const symbolic::Variable y("y");
   const symbolic::Variable z("z");
 
-  const Eigen::Quaternion<symbolic::Expression> quaternion(w, x, y, z);
-  const Eigen::AngleAxis<symbolic::Expression> angle_axis =
+  const Quaternion<symbolic::Expression> quaternion(w, x, y, z);
+  const AngleAxis<symbolic::Expression> angle_axis =
       internal::QuaternionToAngleAxisLikeEigen(quaternion);
   EXPECT_EQ(angle_axis.angle().GetVariables().size(), 4);
   for (int i = 0; i < 3; ++i) {

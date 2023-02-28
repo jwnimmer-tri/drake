@@ -36,7 +36,7 @@ GTEST_TEST(OptitrackSenderTest, OptitrackLcmSenderTest) {
   // Sets up a test body with an arbitrarily chosen pose.
   Eigen::Vector3d axis(1 / sqrt(3), 1 / sqrt(3), 1 / sqrt(3));
   const geometry::FramePoseVector<double> pose_vector{
-      {frame_id, RigidTransformd(Eigen::AngleAxis<double>(0.2, axis),
+      {frame_id, RigidTransformd(AngleAxis<double>(0.2, axis),
                                  Eigen::Vector3d(tx, ty, tz))}};
 
   EXPECT_EQ(pose_vector.value(frame_id).translation()[0], tx);

@@ -57,7 +57,7 @@ GTEST_TEST(RotationTest, AngleAxis) {
   )""";
   const auto rotation = LoadYamlString<Rotation>(yaml_data);
   ASSERT_TRUE(rotation.IsDeterministic());
-  const Eigen::AngleAxis<double> actual =
+  const AngleAxis<double> actual =
       rotation.GetDeterministicValue().ToAngleAxis();
   EXPECT_EQ(actual.angle() * 180 / M_PI, 10.0);
   const Vector3d expected_axis(0.0, 1.0, 0.0);

@@ -13,7 +13,7 @@ namespace math {
 namespace {
 // Returns true if all the elements of a quaternion are zero, otherwise false.
 template <typename T>
-bool IsQuaternionZero(const Eigen::Quaternion<T>& quaternion) {
+bool IsQuaternionZero(const Quaternion<T>& quaternion) {
   // Note: This special-purpose function avoids memory allocation on the heap
   // that sometimes occurs in quaternion.coeffs().isZero().  Alternatively, the
   // pseudo-code below uses DiscardGradient to reduce memory allocations.
@@ -24,7 +24,7 @@ bool IsQuaternionZero(const Eigen::Quaternion<T>& quaternion) {
 
 template <typename T>
 void ThrowIfAllElementsInQuaternionAreZero(
-    const Eigen::Quaternion<T>& quaternion, const char* function_name) {
+    const Quaternion<T>& quaternion, const char* function_name) {
   if constexpr (scalar_predicate<T>::is_bool) {
     if (IsQuaternionZero(quaternion)) {
       std::string message = fmt::format("{}():"
@@ -38,7 +38,7 @@ void ThrowIfAllElementsInQuaternionAreZero(
 
 template <typename T>
 void ThrowIfAnyElementInQuaternionIsInfinityOrNaN(
-    const Eigen::Quaternion<T>& quaternion, const char* function_name) {
+    const Quaternion<T>& quaternion, const char* function_name) {
   if constexpr (scalar_predicate<T>::is_bool) {
     if (!quaternion.coeffs().allFinite()) {
       std::string message = fmt::format("{}():"
@@ -163,7 +163,7 @@ RotationMatrix<T> RotationMatrix<T>::MakeFromOneUnitVector(
 
 template <typename T>
 Matrix3<T> RotationMatrix<T>::QuaternionToRotationMatrix(
-    const Eigen::Quaternion<T>& quaternion, const T& two_over_norm_squared) {
+    const Quaternion<T>& quaternion, const T& two_over_norm_squared) {
   ThrowIfAllElementsInQuaternionAreZero(quaternion, __func__);
   DRAKE_ASSERT_VOID(
       ThrowIfAnyElementInQuaternionIsInfinityOrNaN(quaternion, __func__));

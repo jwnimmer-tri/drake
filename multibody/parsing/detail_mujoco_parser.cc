@@ -117,7 +117,7 @@ class MujocoParser {
     Vector4d quat;  // MuJoCo uses w,x,y,z order.
     if (ParseVectorAttribute(node, "quat", &quat)) {
       return RigidTransformd(
-          Eigen::Quaternion<double>(quat[0], quat[1], quat[2], quat[3]), pos);
+          Quaternion<double>(quat[0], quat[1], quat[2], quat[3]), pos);
     }
 
     Vector4d axisangle;
@@ -126,7 +126,7 @@ class MujocoParser {
         axisangle[3] *= (M_PI / 180.0);
       }
       return RigidTransformd(
-          Eigen::AngleAxis<double>(axisangle[3], axisangle.head<3>()), pos);
+          AngleAxis<double>(axisangle[3], axisangle.head<3>()), pos);
     }
 
     Vector3d euler;
@@ -152,7 +152,7 @@ class MujocoParser {
       // Minimal rotation that maps the vector (0,0,1) into the vector specified
       // here.
       return RigidTransformd(
-          Eigen::Quaternion<double>::FromTwoVectors(Vector3d{0, 0, 1}, zaxis),
+          Quaternion<double>::FromTwoVectors(Vector3d{0, 0, 1}, zaxis),
           pos);
     }
 
@@ -436,7 +436,7 @@ class MujocoParser {
       // ParseTransform.
       const Vector3d from = fromto.head<3>();
       const Vector3d to = fromto.tail<3>();
-      geom.X_BG = RigidTransformd(Eigen::Quaternion<double>::FromTwoVectors(
+      geom.X_BG = RigidTransformd(Quaternion<double>::FromTwoVectors(
                                       Vector3d{0, 0, 1}, to - from),
                                   (from + to) / 2);
     } else {

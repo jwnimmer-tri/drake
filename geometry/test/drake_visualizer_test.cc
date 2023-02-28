@@ -1006,7 +1006,7 @@ TYPED_TEST(DrakeVisualizerTest, VisualizeHydroGeometry) {
     const auto& p_PG = message.position;
     const auto& q_PG = message.quaternion;
     const RotationMatrixd R_PG(
-        Eigen::Quaternion<double>(q_PG[0], q_PG[1], q_PG[2], q_PG[3]));
+        Quaternion<double>(q_PG[0], q_PG[1], q_PG[2], q_PG[3]));
     const RigidTransformd X_PG_test(R_PG, {p_PG[0], p_PG[1], p_PG[2]});
     /* Tolerance due to conversion to float. */
     return CompareMatrices(X_PG_expected.GetAsMatrix34(),

@@ -209,7 +209,7 @@ class QuaternionFloatingJoint final : public Joint<T> {
   // from a non-orthonormal Matrix3<T> m (e.g., m is approximate data), use
   // R_FM = math::RotationMatrix<T>::ProjectToRotationMatrix( m ).
   // Alternatively, set this joint's orientation with the two statements:
-  // const Eigen::Quaternion<T> q_FM = RotationMatrix<T>::ToQuaternion( m );
+  // const Quaternion<T> q_FM = RotationMatrix<T>::ToQuaternion( m );
   // set_quaternion(context, q_FM);
   const QuaternionFloatingJoint<T>& SetFromRotationMatrix(
       systems::Context<T>* context, const math::RotationMatrix<T>& R_FM) const {
@@ -294,7 +294,7 @@ class QuaternionFloatingJoint final : public Joint<T> {
   /// sphere. See `set_random_quaternion_distribution_to_uniform()` for the most
   /// common case of uniformly sampling rotations.
   void set_random_quaternion_distribution(
-      const Eigen::Quaternion<symbolic::Expression>& q_FM) {
+      const Quaternion<symbolic::Expression>& q_FM) {
     get_mutable_mobilizer()->set_random_quaternion_distribution(q_FM);
   }
 

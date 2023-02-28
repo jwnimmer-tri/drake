@@ -219,10 +219,10 @@ template <typename T>
 T BoxSphereSignedDistance(const Eigen::Vector3d& box_size, double radius,
                           const VectorX<T>& x) {
   const math::RigidTransform<T> X_WB(
-      math::RotationMatrix<T>(Eigen::Quaternion<T>(x(0), x(1), x(2), x(3))),
+      math::RotationMatrix<T>(Quaternion<T>(x(0), x(1), x(2), x(3))),
       x.template segment<3>(4));
   const math::RigidTransform<T> X_WS(
-      math::RotationMatrix<T>(Eigen::Quaternion<T>(x(7), x(8), x(9), x(10))),
+      math::RotationMatrix<T>(Quaternion<T>(x(7), x(8), x(9), x(10))),
       x.template tail<3>());
   return BoxSphereSignedDistance(box_size, radius, X_WB, X_WS);
 }

@@ -206,7 +206,7 @@ TEST_F(ScrewMobilizerTest, CalcAcrossMobilizerTransform) {
   Vector3d X_FM_translation;
   X_FM_translation << kScrewAxis * angle / (2 * M_PI) * kScrewPitch;
   const RigidTransformd X_FM_expected(
-      Eigen::AngleAxis<double>(angle, kScrewAxis),
+      AngleAxis<double>(angle, kScrewAxis),
       X_FM_translation);
 
   EXPECT_TRUE(CompareMatrices(X_FM.GetAsMatrix34(),

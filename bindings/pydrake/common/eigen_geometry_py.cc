@@ -60,7 +60,7 @@ void CheckSe3(const Isometry3<T>& X) {
 }
 
 template <typename T>
-void CheckQuaternion(const Eigen::Quaternion<T>& q) {
+void CheckQuaternion(const Quaternion<T>& q) {
   const T norm_error = abs(q.coeffs().norm() - 1);
   if (norm_error >= kCheckTolerance) {
     throw std::logic_error("Quaternion is not normalized");
@@ -68,7 +68,7 @@ void CheckQuaternion(const Eigen::Quaternion<T>& q) {
 }
 
 template <typename T>
-void CheckAngleAxis(const Eigen::AngleAxis<T>& value) {
+void CheckAngleAxis(const AngleAxis<T>& value) {
   const T norm_error = abs(value.axis().norm() - 1);
   if (norm_error >= kCheckTolerance) {
     throw std::logic_error("Axis is not normalized");
@@ -83,9 +83,9 @@ void CheckRotMat(const Matrix3<Expression>&) {}
 
 void CheckSe3(const Isometry3<Expression>&) {}
 
-void CheckQuaternion(const Eigen::Quaternion<Expression>&) {}
+void CheckQuaternion(const Quaternion<Expression>&) {}
 
-void CheckAngleAxis(const Eigen::AngleAxis<Expression>&) {}
+void CheckAngleAxis(const AngleAxis<Expression>&) {}
 
 }  // namespace
 
@@ -121,14 +121,14 @@ void DoScalarDependentDefinitions(py::module m, T) {
                    return out;
                  }),
             py::arg("rotation"), py::arg("translation"))
-        .def(py::init([](const Eigen::Quaternion<T>& q,
-                          const Vector3<T>& translation) {
-          CheckQuaternion(q);
-          Class out = Class::Identity();
-          out.linear() = q.toRotationMatrix();
-          out.translation() = translation;
-          return out;
-        }),
+        .def(
+            py::init([](const Quaternion<T>& q, const Vector3<T>& translation) {
+              CheckQuaternion(q);
+              Class out = Class::Identity();
+              out.linear() = q.toRotationMatrix();
+              out.translation() = translation;
+              return out;
+            }),
             py::arg("quaternion"), py::arg("translation"))
         .def(py::init([](const Class& other) {
           CheckSe3(other);
@@ -157,11 +157,9 @@ void DoScalarDependentDefinitions(py::module m, T) {
               self->linear() = rotation;
             })
         .def("quaternion",
-            [](const Class* self) {
-              return Eigen::Quaternion<T>(self->linear());
-            })
+            [](const Class* self) { return Quaternion<T>(self->linear()); })
         .def("set_quaternion",
-            [](Class* self, const Eigen::Quaternion<T>& q) {
+            [](Class* self, const Quaternion<T>& q) {
               CheckQuaternion(q);
               self->linear() = q.toRotationMatrix();
             })
@@ -199,9 +197,9 @@ void DoScalarDependentDefinitions(py::module m, T) {
   // deviate some from the API to maintain clarity.
   // TODO(eric.cousineau): Should this not be restricted to a unit quaternion?
   {
-    using Class = Eigen::Quaternion<T>;
+    using Class = Quaternion<T>;
     auto cls = DefineTemplateClassWithDefault<Class>(m, "Quaternion", param,
-        "Provides a unit quaternion binding of Eigen::Quaternion<>.");
+        "Provides a unit quaternion binding of Quaternion<>.");
     py::object py_class_obj = cls;
     cls  // BR
         .def(py::init([]() { return Class::Identity(); }))
@@ -316,9 +314,9 @@ void DoScalarDependentDefinitions(py::module m, T) {
 
   // Angle-axis.
   {
-    using Class = Eigen::AngleAxis<T>;
+    using Class = AngleAxis<T>;
     auto cls = DefineTemplateClassWithDefault<Class>(
-        m, "AngleAxis", param, "Bindings for Eigen::AngleAxis<>.");
+        m, "AngleAxis", param, "Bindings for AngleAxis<>.");
     py::object py_class_obj = cls;
     cls  // BR
         .def(py::init([]() { return Class::Identity(); }))
@@ -329,7 +327,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
           return out;
         }),
             py::arg("angle"), py::arg("axis"))
-        .def(py::init([](const Eigen::Quaternion<T>& q) {
+        .def(py::init([](const Quaternion<T>& q) {
           Class out(q);
           CheckAngleAxis(out);
           return out;
@@ -375,10 +373,10 @@ void DoScalarDependentDefinitions(py::module m, T) {
             },
             py::arg("rotation"))
         .def("quaternion",
-            [](const Class* self) { return Eigen::Quaternion<T>(*self); })
+            [](const Class* self) { return Quaternion<T>(*self); })
         .def(
             "set_quaternion",
-            [](Class* self, const Eigen::Quaternion<T>& q) {
+            [](Class* self, const Quaternion<T>& q) {
               CheckQuaternion(q);
               Class update(q);
               CheckAngleAxis(update);

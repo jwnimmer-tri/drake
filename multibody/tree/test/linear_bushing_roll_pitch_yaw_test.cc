@@ -29,10 +29,10 @@ class BushingTester {
   // Verify the efficient half-angle axis formula in LinearBushingRollPitchYaw.
   static void VerifyHalfAngleAxisAlgorithm(double angle,
                                            const Vector3<double>& axis) {
-    RotationMatrixd R_AC(Eigen::AngleAxis<double>(angle, axis));
+    RotationMatrixd R_AC(AngleAxis<double>(angle, axis));
     RotationMatrixd R_AB = LinearBushingRollPitchYaw<double>::CalcR_AB(R_AC);
 
-    RotationMatrixd R_AB_expected(Eigen::AngleAxis<double>(angle / 2, axis));
+    RotationMatrixd R_AB_expected(AngleAxis<double>(angle / 2, axis));
     DRAKE_EXPECT_NO_THROW(
       LinearBushingRollPitchYaw<double>::ThrowIfInvalidHalfAngleAxis(
               R_AC, R_AB_expected));
@@ -41,7 +41,7 @@ class BushingTester {
     DRAKE_ASSERT(R_AB.IsNearlyEqualTo(R_AB_expected, 32 * kEpsilon));
 
     double bad_half_angle = angle / 2 + 128 * kEpsilon;
-    RotationMatrixd R_AB_bad(Eigen::AngleAxis<double>(bad_half_angle, axis));
+    RotationMatrixd R_AB_bad(AngleAxis<double>(bad_half_angle, axis));
     DRAKE_EXPECT_THROWS_MESSAGE(LinearBushingRollPitchYaw<double>::
           ThrowIfInvalidHalfAngleAxis(R_AC, R_AB_bad),
           "Error: Calculation of R_AB from quaternion differs from the "
@@ -165,10 +165,10 @@ class LinearBushingRollPitchYawTester : public ::testing::Test {
     // matrix that relates frames B and C.  This way of calculating R_AB differs
     // from the calculation in the class LinearBushingRollPitchYaw in that the
     // calculation here is relatively straightforward, the other more efficient.
-    const Eigen::AngleAxis<double> angleAxis_AC = R_AC.ToAngleAxis();
+    const AngleAxis<double> angleAxis_AC = R_AC.ToAngleAxis();
     const Vector3<double>& axis_AC = angleAxis_AC.axis();
     const double& angle_AC = angleAxis_AC.angle();
-    const Eigen::AngleAxis<double> angleAxis_AB(0.5 * angle_AC, axis_AC);
+    const AngleAxis<double> angleAxis_AB(0.5 * angle_AC, axis_AC);
     const RotationMatrixd R_AB(angleAxis_AB);
     const RotationMatrixd R_BA = R_AB.inverse();
     const RotationMatrixd R_CB = (R_BA * R_AC).inverse();

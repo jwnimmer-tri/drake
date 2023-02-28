@@ -161,7 +161,7 @@ GTEST_TEST(RigidTransform, ConstructorRollPitchYawPositionVector) {
 // Tests constructing a RigidTransform from a Quaterion and a position vector.
 GTEST_TEST(RigidTransform, ConstructorQuaternionPositionVector) {
   // Note: Constructor says that the quaternion does not need to be unit length.
-  const Eigen::Quaternion<double> quaternion(1, 2, 3, 4);
+  const Quaternion<double> quaternion(1, 2, 3, 4);
   const Vector3<double> position(4, 5, 6);
   const RigidTransform<double> X(quaternion, position);
   // The following test is not a RigidTransform verification.
@@ -176,7 +176,7 @@ GTEST_TEST(RigidTransform, ConstructorQuaternionPositionVector) {
 // Tests constructing a RigidTransform from an AngleAxis and a position vector.
 GTEST_TEST(RigidTransform, ConstructorAngleAxisPositionVector) {
   // Note: Constructor says that the axis does not need to be unit length.
-  const Eigen::AngleAxis<double> theta_lambda(0.3, Eigen::Vector3d(3, 2, 1));
+  const AngleAxis<double> theta_lambda(0.3, Eigen::Vector3d(3, 2, 1));
   const Vector3<double> position(4, 5, 6);
   const RigidTransform<double> X(theta_lambda, position);
   // The following test is not a RigidTransform verification.
@@ -641,7 +641,7 @@ GTEST_TEST(RigidTransform, SetRotationMethods) {
   // Choose a unit vector using a Pythagorean quadruple, i.e., a set of integers
   // a, b, c and d, such that a² + b² + c² = d².  One set is [1, 2, 2, 3].
   const Eigen::Vector3d axis(1.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0);
-  const Eigen::AngleAxis<double> angle_axis(0.234, axis);
+  const AngleAxis<double> angle_axis(0.234, axis);
   X_AB.set_rotation(angle_axis);
   EXPECT_TRUE(
       X_AB.rotation().IsExactlyEqualTo(RotationMatrix<double>(angle_axis)));

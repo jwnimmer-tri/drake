@@ -31,18 +31,17 @@ namespace math {
  * @param psi The ψ angle.
  */
 template <typename T>
-const Eigen::Quaternion<T> HopfCoordinateToQuaternion(const T& theta,
-                                                      const T& phi,
-                                                      const T& psi) {
+const Quaternion<T> HopfCoordinateToQuaternion(const T& theta, const T& phi,
+                                               const T& psi) {
   using std::cos;
   using std::sin;
   const T cos_half_theta = cos(theta / 2);
   const T sin_half_theta = sin(theta / 2);
   const T phi_plus_half_psi = phi + psi / 2;
-  return Eigen::Quaternion(cos_half_theta * cos(psi / 2),
-                           cos_half_theta * sin(psi / 2),
-                           sin_half_theta * cos(phi_plus_half_psi),
-                           sin_half_theta * sin(phi_plus_half_psi));
+  return Quaternion<T>(cos_half_theta * cos(psi / 2),
+                       cos_half_theta * sin(psi / 2),
+                       sin_half_theta * cos(phi_plus_half_psi),
+                       sin_half_theta * sin(phi_plus_half_psi));
 }
 
 /**
@@ -60,9 +59,9 @@ const Eigen::Quaternion<T> HopfCoordinateToQuaternion(const T& theta,
  * @return hopf_coordinate (θ, φ, ψ) as an Eigen vector.
  */
 template <typename T>
-Vector3<T> QuaternionToHopfCoordinate(const Eigen::Quaternion<T>& quaternion) {
+Vector3<T> QuaternionToHopfCoordinate(const Quaternion<T>& quaternion) {
   if (quaternion.w() < 0) {
-    return QuaternionToHopfCoordinate(Eigen::Quaternion<T>(
+    return QuaternionToHopfCoordinate(Quaternion<T>(
         -quaternion.w(), -quaternion.x(), -quaternion.y(), -quaternion.z()));
   }
   using std::atan2;

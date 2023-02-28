@@ -1317,7 +1317,7 @@ void MultibodyPlant<T>::SetDefaultPositions(
     const int pos = body.floating_positions_start();
     if (body.has_quaternion_dofs()) {
       X_WB = RigidTransform<double>(
-          Eigen::Quaternion<double>(q[pos], q[pos + 1], q[pos + 2], q[pos + 3]),
+          Quaternion<double>(q[pos], q[pos + 1], q[pos + 2], q[pos + 3]),
           q.segment(pos + 4, 3));
     } else {
       X_WB = RigidTransform<double>(
@@ -1348,7 +1348,7 @@ void MultibodyPlant<T>::SetDefaultPositions(ModelInstanceIndex model_instance,
     const int pos = body.floating_positions_start();
     if (body.has_quaternion_dofs()) {
       X_WB = RigidTransform<double>(
-          Eigen::Quaternion<double>(q[pos], q[pos + 1], q[pos + 2], q[pos + 3]),
+          Quaternion<double>(q[pos], q[pos + 1], q[pos + 2], q[pos + 3]),
           q.segment(pos + 4, 3));
     } else {
       X_WB = RigidTransform<double>(

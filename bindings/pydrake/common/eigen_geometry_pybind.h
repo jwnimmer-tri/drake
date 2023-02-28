@@ -38,7 +38,7 @@ struct wrapper_eigen_translation {
   static WrappedType wrap(const Type& arg) { return arg.vector(); }
 };
 
-// N.B. Since `Isometry3<>` and `Eigen::Quaternion<>` have more
+// N.B. Since `Isometry3<>` and `Quaternion<>` have more
 // complicated structures, they are registered as types in `eigen_geometry_py`.
 
 }  // namespace internal

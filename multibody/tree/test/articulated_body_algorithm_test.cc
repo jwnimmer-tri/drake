@@ -59,7 +59,7 @@ class FeatherstoneMobilizer final : public MobilizerImpl<T, 2, 2> {
     const Vector3<T> axis_rotation_F = rotation_axis();
     const T rotation = get_rotation(context);
     const math::RotationMatrix<T> R_FM(
-        Eigen::AngleAxis<T>(rotation, axis_rotation_F));
+        AngleAxis<T>(rotation, axis_rotation_F));
 
     const Vector3<T> axis_translation_F = translation_axis();
     const T translation = get_translation(context);

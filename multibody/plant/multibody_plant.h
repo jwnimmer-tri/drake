@@ -2594,7 +2594,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// @throws std::exception if called pre-finalize.
   void SetFreeBodyRandomRotationDistribution(
       const Body<T>& body,
-      const Eigen::Quaternion<symbolic::Expression>& rotation) {
+      const Quaternion<symbolic::Expression>& rotation) {
     this->mutable_tree().SetFreeBodyRandomRotationDistributionOrThrow(
         body, rotation);
   }

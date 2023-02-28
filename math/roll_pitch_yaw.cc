@@ -109,7 +109,7 @@ RotationMatrix<T> RollPitchYaw<T>::ToRotationMatrix() const {
 // @author Paul Mitiguy
 template <typename T>
 Vector3<T> CalcRollPitchYawFromQuaternionAndRotationMatrix(
-    const Eigen::Quaternion<T>& quaternion, const Matrix3<T>& R) {
+    const Quaternion<T>& quaternion, const Matrix3<T>& R) {
   // TODO(14927) This method needs testing with symbolic template type T.
   //  Check if it works or throw a nice exception message.
   using std::atan2;
@@ -158,13 +158,13 @@ void RollPitchYaw<T>::SetFromRotationMatrix(const RotationMatrix<T>& R) {
 
 template <typename T>
 void RollPitchYaw<T>::SetFromQuaternion(
-    const Eigen::Quaternion<T>& quaternion) {
+    const Quaternion<T>& quaternion) {
   SetFromQuaternionAndRotationMatrix(quaternion, RotationMatrix<T>(quaternion));
 }
 
 template <typename T>
 void RollPitchYaw<T>::SetFromQuaternionAndRotationMatrix(
-    const Eigen::Quaternion<T>& quaternion, const RotationMatrix<T>& R) {
+    const Quaternion<T>& quaternion, const RotationMatrix<T>& R) {
   const Vector3<T> rpy =
       CalcRollPitchYawFromQuaternionAndRotationMatrix(quaternion, R.matrix());
   SetOrThrowIfNotValidInDebugBuild(rpy);

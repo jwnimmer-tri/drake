@@ -66,7 +66,7 @@ class RotationMatrix {
   /// @throws std::exception in debug builds if R fails IsValid(R).
   explicit RotationMatrix(const Matrix3<T>& R) { set(R); }
 
-  /// Constructs a %RotationMatrix from an Eigen::Quaternion.
+  /// Constructs a %RotationMatrix from a Quaternion.
   /// @param[in] quaternion a non-zero, finite quaternion which may or may not
   /// have unit length [i.e., `quaternion.norm()` does not have to be 1].
   /// @throws std::exception in debug builds if the rotation matrix
@@ -74,7 +74,7 @@ class RotationMatrix {
   /// exception is thrown if `quaternion` is zero or contains a NaN or infinity.
   /// @note This method has the effect of normalizing its `quaternion` argument,
   /// without the inefficiency of the square-root associated with normalization.
-  explicit RotationMatrix(const Eigen::Quaternion<T>& quaternion) {
+  explicit RotationMatrix(const Quaternion<T>& quaternion) {
     // TODO(mitiguy) Although this method is fairly efficient, consider adding
     // an optional second argument if `quaternion` is known to be normalized
     // apriori or for some reason the calling site does not want `quaternion`
@@ -92,21 +92,21 @@ class RotationMatrix {
   // `lambda` to this method is different than the %RotationMatrix produced by
   // converting `lambda` to an un-normalized quaternion and calling the
   // %RotationMatrix constructor (above) with that un-normalized quaternion.
-  /// Constructs a %RotationMatrix from an Eigen::AngleAxis.
-  /// @param[in] theta_lambda an Eigen::AngleAxis whose associated axis (vector
+  /// Constructs a %RotationMatrix from an AngleAxis.
+  /// @param[in] theta_lambda an AngleAxis whose associated axis (vector
   /// direction herein called `lambda`) is non-zero and finite, but which may or
   /// may not have unit length [i.e., `lambda.norm()` does not have to be 1].
   /// @throws std::exception in debug builds if the rotation matrix
   /// R that is built from `theta_lambda` fails IsValid(R).  For example, an
   /// exception is thrown if `lambda` is zero or contains a NaN or infinity.
-  explicit RotationMatrix(const Eigen::AngleAxis<T>& theta_lambda) {
+  explicit RotationMatrix(const AngleAxis<T>& theta_lambda) {
     // TODO(mitiguy) Consider adding an optional second argument if `lambda` is
     // known to be normalized apriori or calling site does not want
     // normalization.
     const Vector3<T>& lambda = theta_lambda.axis();
     const T norm = lambda.norm();
     const T& theta = theta_lambda.angle();
-    set(Eigen::AngleAxis<T>(theta, lambda / norm).toRotationMatrix());
+    set(AngleAxis<T>(theta, lambda / norm).toRotationMatrix());
   }
 
   /// Constructs a %RotationMatrix from an %RollPitchYaw.  In other words,
@@ -209,7 +209,7 @@ class RotationMatrix {
   /// Makes the %RotationMatrix `R_AB` associated with rotating a frame B
   /// relative to a frame A by an angle `theta` about unit vector `Ax = Bx`.
   /// @param[in] theta radian measure of rotation angle about Ax.
-  /// @note Orientation is same as Eigen::AngleAxis<T>(theta, Vector3d::UnitX().
+  /// @note Orientation is same as AngleAxis<T>(theta, Vector3d::UnitX().
   /// @note `R_AB` relates two frames A and B having unit vectors Ax, Ay, Az and
   /// Bx, By, Bz.  Initially, `Bx = Ax`, `By = Ay`, `Bz = Az`, then B undergoes
   /// a right-handed rotation relative to A by an angle `theta` about `Ax = Bx`.
@@ -234,7 +234,7 @@ class RotationMatrix {
   /// Makes the %RotationMatrix `R_AB` associated with rotating a frame B
   /// relative to a frame A by an angle `theta` about unit vector `Ay = By`.
   /// @param[in] theta radian measure of rotation angle about Ay.
-  /// @note Orientation is same as Eigen::AngleAxis<T>(theta, Vector3d::UnitY().
+  /// @note Orientation is same as AngleAxis<T>(theta, Vector3d::UnitY().
   /// @note `R_AB` relates two frames A and B having unit vectors Ax, Ay, Az and
   /// Bx, By, Bz.  Initially, `Bx = Ax`, `By = Ay`, `Bz = Az`, then B undergoes
   /// a right-handed rotation relative to A by an angle `theta` about `Ay = By`.
@@ -259,7 +259,7 @@ class RotationMatrix {
   /// Makes the %RotationMatrix `R_AB` associated with rotating a frame B
   /// relative to a frame A by an angle `theta` about unit vector `Az = Bz`.
   /// @param[in] theta radian measure of rotation angle about Az.
-  /// @note Orientation is same as Eigen::AngleAxis<T>(theta, Vector3d::UnitZ().
+  /// @note Orientation is same as AngleAxis<T>(theta, Vector3d::UnitZ().
   /// @note `R_AB` relates two frames A and B having unit vectors Ax, Ay, Az and
   /// Bx, By, Bz.  Initially, `Bx = Ax`, `By = Ay`, `Bz = Az`, then B undergoes
   /// a right-handed rotation relative to A by an angle `theta` about `Az = Bz`.
@@ -659,7 +659,7 @@ class RotationMatrix {
   /// Returns a quaternion q that represents `this` %RotationMatrix.  Since the
   /// quaternion `q` and `-q` represent the same %RotationMatrix, this method
   /// chooses to return a canonical quaternion, i.e., with q(0) >= 0.
-  Eigen::Quaternion<T> ToQuaternion() const { return ToQuaternion(R_AB_); }
+  Quaternion<T> ToQuaternion() const { return ToQuaternion(R_AB_); }
 
   /// Returns a unit quaternion q associated with the 3x3 matrix M.  Since the
   /// quaternion `q` and `-q` represent the same %RotationMatrix, this method
@@ -669,9 +669,9 @@ class RotationMatrix {
   /// @throws std::exception in debug builds if the quaternion `q`
   /// returned by this method cannot construct a valid %RotationMatrix.
   /// For example, if `M` contains NaNs, `q` will not be a valid quaternion.
-  static Eigen::Quaternion<T> ToQuaternion(
+  static Quaternion<T> ToQuaternion(
       const Eigen::Ref<const Matrix3<T>>& M) {
-    Eigen::Quaternion<T> q = RotationMatrixToUnnormalizedQuaternion(M);
+    Quaternion<T> q = RotationMatrixToUnnormalizedQuaternion(M);
 
     // Since the quaternions q and -q correspond to the same rotation matrix,
     // choose to return a canonical quaternion, i.e., with q(0) >= 0.
@@ -698,7 +698,7 @@ class RotationMatrix {
   /// @param[in] M 3x3 matrix to be made into a quaternion.
   /// @see ToQuaternion().
   static Vector4<T> ToQuaternionAsVector4(const Matrix3<T>& M)  {
-    const Eigen::Quaternion<T> q = ToQuaternion(M);
+    const Quaternion<T> q = ToQuaternion(M);
     return Vector4<T>(q.w(), q.x(), q.y(), q.z());
   }
 
@@ -708,8 +708,8 @@ class RotationMatrix {
   /// is identical to that of `(-theta) * (-lambda)`.  The AngleAxis returned by
   /// this method chooses to have `0 <= theta <= pi`.
   /// @returns an AngleAxis with `0 <= theta <= pi` and a unit vector `lambda`.
-  Eigen::AngleAxis<T> ToAngleAxis() const {
-    const Eigen::AngleAxis<T> theta_lambda(this->matrix());
+  AngleAxis<T> ToAngleAxis() const {
+    const AngleAxis<T> theta_lambda(this->matrix());
     return theta_lambda;
   }
 
@@ -860,7 +860,7 @@ class RotationMatrix {
   // N.B. Keep the math in this method in sync with the other specialization,
   // immediately below.
   template <typename S = T>
-  static std::enable_if_t<scalar_predicate<S>::is_bool, Eigen::Quaternion<S>>
+  static std::enable_if_t<scalar_predicate<S>::is_bool, Quaternion<S>>
   RotationMatrixToUnnormalizedQuaternion(
       const Eigen::Ref<const Matrix3<S>>& M) {
     // This implementation is adapted from simbody at
@@ -894,7 +894,7 @@ class RotationMatrix {
     }
     // Create a quantity q (which is not yet a unit quaternion).
     // Note: Eigen's Quaternion constructor does not normalize.
-    return Eigen::Quaternion<T>(w, x, y, z);
+    return Quaternion<T>(w, x, y, z);
   }
 
   // Refer to the same-named method above for comments and details about the
@@ -905,7 +905,7 @@ class RotationMatrix {
   // N.B. Keep the math in this method in sync with the other specialization,
   // immediately above.
   template <typename S = T>
-  static std::enable_if_t<!scalar_predicate<S>::is_bool, Eigen::Quaternion<S>>
+  static std::enable_if_t<!scalar_predicate<S>::is_bool, Quaternion<S>>
   RotationMatrixToUnnormalizedQuaternion(
       const Eigen::Ref<const Matrix3<S>>& M) {
     const T M00 = M(0, 0); const T M01 = M(0, 1); const T M02 = M(0, 2);
@@ -934,7 +934,7 @@ class RotationMatrix {
           M12 + M21,
           T(1) - (trace - 2 * M22),
         })));
-    return Eigen::Quaternion<T>(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
+    return Quaternion<T>(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
   }
 
   // Constructs a 3x3 rotation matrix from a Quaternion.
@@ -952,7 +952,7 @@ class RotationMatrix {
   // Throws std::exception in debug builds if any of the elements in quaternion
   // are infinity or NaN.
   static Matrix3<T> QuaternionToRotationMatrix(
-      const Eigen::Quaternion<T>& quaternion, const T& two_over_norm_squared);
+      const Quaternion<T>& quaternion, const T& two_over_norm_squared);
 
   // Throws an exception if the vector v does not have a measurable magnitude
   // within 4ε of 1 (where machine epsilon ε ≈ 2.22E-16).

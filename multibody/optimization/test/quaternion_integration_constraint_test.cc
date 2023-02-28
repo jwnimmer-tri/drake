@@ -32,7 +32,7 @@ const double kEps = std::numeric_limits<double>::epsilon();
 // We can show that exp(Ah) = cos(|ω|h/2)* I + sin(|ω|h/2)/|ω| * A
 template <typename T>
 Vector1<T> EvalQuaternionIntegration(
-    const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2,
+    const Quaternion<T>& quat1, const Quaternion<T>& quat2,
     const Eigen::Ref<const Vector3<T>>& angular_vel, const T& h,
     bool allow_quaternion_negation) {
   Vector1<T> ret;
@@ -56,7 +56,7 @@ Vector1<T> EvalQuaternionIntegration(
   }
   const Vector4<T> delta_z_times_quat1_vec4 =
       exp_half_Ah * Vector4<T>(quat1.w(), quat1.x(), quat1.y(), quat1.z());
-  const Eigen::Quaternion<T> delta_z_times_quat1(
+  const Quaternion<T> delta_z_times_quat1(
       delta_z_times_quat1_vec4(0), delta_z_times_quat1_vec4(1),
       delta_z_times_quat1_vec4(2), delta_z_times_quat1_vec4(3));
   if (allow_quaternion_negation) {
@@ -92,8 +92,8 @@ void TestEval(const QuaternionEulerIntegrationConstraint& dut,
   AutoDiffVecXd y_ad;
   dut.Eval(x_ad, &y_ad);
   const auto y_ad_expected = EvalQuaternionIntegration<AutoDiffXd>(
-      Eigen::Quaternion<AutoDiffXd>(x_ad(0), x_ad(1), x_ad(2), x_ad(3)),
-      Eigen::Quaternion<AutoDiffXd>(x_ad(4), x_ad(5), x_ad(6), x_ad(7)),
+      Quaternion<AutoDiffXd>(x_ad(0), x_ad(1), x_ad(2), x_ad(3)),
+      Quaternion<AutoDiffXd>(x_ad(4), x_ad(5), x_ad(6), x_ad(7)),
       x_ad.segment<3>(8), x_ad(11), dut.allow_quaternion_negation());
   EXPECT_TRUE(CompareMatrices(
       math::ExtractValue(y_ad),

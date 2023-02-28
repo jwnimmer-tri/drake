@@ -142,7 +142,7 @@ void LinearBushingRollPitchYaw<T>::DoCalcAndAddForceContribution(
 template <typename T>
 math::RotationMatrix<T> LinearBushingRollPitchYaw<T>::CalcR_AB(
     math::RotationMatrix<T> R_AC) {
-  const Eigen::Quaternion<T> q_AC = R_AC.ToQuaternion();
+  const Quaternion<T> q_AC = R_AC.ToQuaternion();
   const T q0 = q_AC.w(), q1 = q_AC.x(), q2 = q_AC.y(), q3 = q_AC.z();
   // ----------------------------------------------------------------------
   // The algorithm below is usually more efficient than calculating the `θ λ`
@@ -185,7 +185,7 @@ math::RotationMatrix<T> LinearBushingRollPitchYaw<T>::CalcR_AB(
   const T e1 = q1 * oneOver2e0;
   const T e2 = q2 * oneOver2e0;
   const T e3 = q3 * oneOver2e0;
-  const Eigen::Quaternion<T> q_AB(e0, e1, e2, e3);
+  const Quaternion<T> q_AB(e0, e1, e2, e3);
   const math::RotationMatrix<T> R_AB(q_AB);
 
   // The next test is useful to verify the algorithm above because a generic
@@ -200,9 +200,9 @@ template <typename T>
 void LinearBushingRollPitchYaw<T>::ThrowIfInvalidHalfAngleAxis(
     const math::RotationMatrix<T>& R_AC, const math::RotationMatrix<T>& R_AB) {
   constexpr double kEpsilon = std::numeric_limits<double>::epsilon();
-  const Eigen::AngleAxis<T> angleAxis_AC = R_AC.ToAngleAxis();
+  const AngleAxis<T> angleAxis_AC = R_AC.ToAngleAxis();
   const T half_theta = 0.5 * angleAxis_AC.angle();
-  const Eigen::AngleAxis<T> angleAxis_AB(half_theta, angleAxis_AC.axis());
+  const AngleAxis<T> angleAxis_AB(half_theta, angleAxis_AC.axis());
   const math::RotationMatrix<T> R_AB_expected(angleAxis_AB);
   if (!R_AB.IsNearlyEqualTo(R_AB_expected, 64 * kEpsilon)) {
     throw std::runtime_error(

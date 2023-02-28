@@ -55,7 +55,7 @@ CompareAutoDiffVectors(const Eigen::MatrixBase<DerivedA>& a,
 }
 
 /**
- * Convert an Eigen::Quaternion to a vector 4d in the order (w, x, y, z).
+ * Convert a Quaternion to a vector 4d in the order (w, x, y, z).
  */
 Eigen::Vector4d QuaternionToVectorWxyz(const Eigen::Quaterniond& q);
 

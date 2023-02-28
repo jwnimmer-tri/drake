@@ -1017,7 +1017,7 @@ TEST_F(RotationMatrixConversionTests, RotationMatrixToQuaternionSymbolic) {
   for (const Eigen::Quaterniond& qi : quaternion_test_cases_) {
     const Matrix3<Expression> mi = qi.toRotationMatrix();
     const RotationMatrix<Expression> Ri(mi);
-    const Eigen::Quaternion<Expression> q_actual_expr = Ri.ToQuaternion();
+    const Quaternion<Expression> q_actual_expr = Ri.ToQuaternion();
     const Eigen::Quaterniond q_actual_double(q_actual_expr.coeffs().unaryExpr(
         [](const Expression& x) { return ExtractDoubleOrThrow(x); }));
     ASSERT_TRUE(AreQuaternionsEqualForOrientation(qi, q_actual_double, tol));
@@ -1035,7 +1035,7 @@ TEST_F(RotationMatrixConversionTests, RotationMatrixToQuaternionVariable) {
   const Matrix3<Variable> m_var =
       symbolic::MakeMatrixContinuousVariable<3, 3>("m");
   const RotationMatrix<Expression> R_expr(m_var);
-  const Eigen::Quaternion<Expression> q_expr = R_expr.ToQuaternion();
+  const Quaternion<Expression> q_expr = R_expr.ToQuaternion();
 
   // Evaluate the Quaterionion<Expression> for each Ri.
   for (const Eigen::Quaterniond& qi : quaternion_test_cases_) {
@@ -1091,8 +1091,8 @@ TEST_F(RotationMatrixConversionTests, AngleAxisToRotationMatrix) {
   for (const Eigen::Quaterniond& qi : quaternion_test_cases_) {
     // Compute the rotation matrix R using the quaternion argument.
     const RotationMatrix<double> R(qi);
-    // Compare R with the RotationMatrix constructor that uses Eigen::AngleAxis.
-    const Eigen::AngleAxisd angle_axis(qi);
+    // Compare R with the RotationMatrix constructor that uses AngleAxis.
+    const AngleAxis<double> angle_axis(qi);
     const RotationMatrix<double> R_expected(angle_axis);
     ASSERT_TRUE(R.IsNearlyEqualTo(R_expected, 200 * kEpsilon));
 
@@ -1101,7 +1101,7 @@ TEST_F(RotationMatrixConversionTests, AngleAxisToRotationMatrix) {
     // This check is done by comparing equivalent rotation matrices.
     // Note: We do not compare the angle-axes directly. This is because the
     // angle-axis has singularities for angles near 0 and 180 degree.
-    Eigen::AngleAxis<double> inverse_angle_axis;
+    AngleAxis<double> inverse_angle_axis;
     inverse_angle_axis.fromRotationMatrix(R_expected.matrix());
     const RotationMatrix<double> R_test(inverse_angle_axis);
     ASSERT_TRUE(R.IsNearlyEqualTo(R_test, 200 * kEpsilon));

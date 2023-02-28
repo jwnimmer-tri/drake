@@ -30,7 +30,7 @@ GTEST_TEST(GripperBrickHelperTest, Test) {
     const auto X_WLink2 = dut.plant().CalcRelativeTransform(
         *plant_mutable_context, dut.plant().world_frame(),
         dut.finger_link2_frame(finger));
-    const Eigen::AngleAxis<double> angle_axis =
+    const AngleAxis<double> angle_axis =
         X_WLink2.rotation().ToAngleAxis();
     const double theta = dut.CalcFingerLink2Orientation(
         finger, q(dut.finger_base_position_index(finger)),

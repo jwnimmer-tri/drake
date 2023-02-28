@@ -21,7 +21,7 @@ void CheckHopfToQuaternion(double theta, double phi, double psi) {
   DRAKE_DEMAND(theta >= 0 && theta <= M_PI);
   DRAKE_DEMAND(phi >= 0 && phi <= 2 * M_PI);
   DRAKE_DEMAND(psi >= -M_PI && psi <= M_PI);
-  const Eigen::Quaternion quat = HopfCoordinateToQuaternion(theta, phi, psi);
+  const Quaternion<double> quat = HopfCoordinateToQuaternion(theta, phi, psi);
   const double tol = 1E-14;
   EXPECT_NEAR(std::pow(quat.w(), 2) + std::pow(quat.x(), 2) +
                   std::pow(quat.y(), 2) + std::pow(quat.z(), 2),
@@ -59,10 +59,10 @@ GTEST_TEST(TestHopfCoordinate, TestQuaternion) {
 
   // This test case was reported in
   // https://stackoverflow.com/questions/75359480/quaterniontohopfcoordinate-origin-of-formula-in-drake
-  Eigen::Quaternion quat(-0.2698726, -0.0122792, 0.1635996, 0.94881672);
+  Eigen::Quaterniond quat(-0.2698726, -0.0122792, 0.1635996, 0.94881672);
   Eigen::Vector3d hopf = QuaternionToHopfCoordinate(quat);
   CheckHopfRange(hopf);
-  Eigen::Quaternion quat_reconstruct =
+  Eigen::Quaterniond quat_reconstruct =
       HopfCoordinateToQuaternion(hopf(0), hopf(1), hopf(2));
   EXPECT_TRUE(AreQuaternionsEqualForOrientation(quat, quat_reconstruct, 1E-8));
 }

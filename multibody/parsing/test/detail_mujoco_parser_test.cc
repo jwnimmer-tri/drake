@@ -260,10 +260,10 @@ TEST_F(MujocoParserTest, GeometryPose) {
 
   const Vector3d p{1, 2, 3};
   CheckPose("identity", RigidTransformd());
-  CheckPose("quat", RigidTransformd(Eigen::Quaternion<double>{0, 1, 0, 0}, p));
+  CheckPose("quat", RigidTransformd(Quaternion<double>{0, 1, 0, 0}, p));
   CheckPose("axisangle",
             RigidTransformd(
-                Eigen::AngleAxis<double>(M_PI / 6.0, Vector3d{4, 5, 6}), p));
+                AngleAxis<double>(M_PI / 6.0, Vector3d{4, 5, 6}), p));
   CheckPose("euler", RigidTransformd(
                          RollPitchYawd{M_PI / 6.0, M_PI / 4.0, M_PI / 3.0}, p));
   CheckPose("xyaxes",
@@ -275,15 +275,15 @@ TEST_F(MujocoParserTest, GeometryPose) {
   CheckPose("fromto_cylinder",
             RigidTransformd(RotationMatrixd::MakeXRotation(-M_PI / 2.0), -p));
   CheckPose("from_default",
-            RigidTransformd(Eigen::Quaternion<double>{0, 1, 0, 0}, p));
+            RigidTransformd(Quaternion<double>{0, 1, 0, 0}, p));
 
   CheckPose(
       "axisangle_rad",
-      RigidTransformd(Eigen::AngleAxis<double>(0.5, Vector3d{4, 5, 6}), p));
+      RigidTransformd(AngleAxis<double>(0.5, Vector3d{4, 5, 6}), p));
   CheckPose("euler_rad", RigidTransformd(RollPitchYawd{0.5, 0.7, 1.05}, p));
   CheckPose("axisangle_deg",
             RigidTransformd(
-                Eigen::AngleAxis<double>(M_PI / 6.0, Vector3d{4, 5, 6}), p));
+                AngleAxis<double>(M_PI / 6.0, Vector3d{4, 5, 6}), p));
   CheckPose(
       "euler_deg",
       RigidTransformd(RollPitchYawd{M_PI / 6.0, M_PI / 4.0, M_PI / 3.0}, p));
