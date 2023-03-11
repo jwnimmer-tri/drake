@@ -435,7 +435,7 @@ drake_pybind_library(
     package_info = PACKAGE_INFO,
     py_deps = [
         ":module_py",
-        "//bindings/pydrake:math_py",
+        "//bindings/pydrake/math",
     ],
 )
 

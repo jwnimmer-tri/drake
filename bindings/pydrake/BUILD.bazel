@@ -132,31 +132,6 @@ drake_pybind_library(
 )
 
 drake_pybind_library(
-    name = "math_py",
-    cc_deps = [
-        "//bindings/pydrake:autodiff_types_pybind",
-        "//bindings/pydrake:documentation_pybind",
-        "//bindings/pydrake:symbolic_types_pybind",
-        "//bindings/pydrake/common:cpp_template_pybind",
-        "//bindings/pydrake/common:default_scalars_pybind",
-        "//bindings/pydrake/common:deprecation_pybind",
-        "//bindings/pydrake/common:eigen_pybind",
-        "//bindings/pydrake/common:type_pack",
-        "//bindings/pydrake/common:value_pybind",
-    ],
-    cc_srcs = ["math_py.cc"],
-    package_info = PACKAGE_INFO,
-    py_deps = [
-        ":module_py",
-        "//bindings/pydrake:autodiffutils_py",
-        "//bindings/pydrake:symbolic_py",
-        "//bindings/pydrake/common:eigen_geometry_py",
-        "//bindings/pydrake/common:value_py",
-    ],
-    py_srcs = ["_math_extra.py"],
-)
-
-drake_pybind_library(
     name = "perception_py",
     cc_deps = [
         "//bindings/pydrake:documentation_pybind",
@@ -264,6 +239,7 @@ PYBIND_SUBPACKAGES_FOR_COVERAGE = [
     "//bindings/pydrake/common",
     "//bindings/pydrake/geometry",
     "//bindings/pydrake/manipulation",
+    "//bindings/pydrake/math",
     "//bindings/pydrake/multibody",
     "//bindings/pydrake/planning",
     "//bindings/pydrake/solvers",
@@ -274,7 +250,6 @@ PYBIND_SUBPACKAGES_FOR_COVERAGE = [
 PY_LIBRARIES_WITH_INSTALL = [
     ":autodiffutils_py",
     ":lcm_py",
-    ":math_py",
     ":perception_py",
     ":polynomial_py",
     ":symbolic_py",
@@ -374,7 +349,7 @@ drake_py_library(
         "test/algebra_test_util.py",
     ],
     visibility = ["//visibility:private"],
-    deps = [":math_py"],
+    deps = ["//bindings/pydrake/math"],
 )
 
 # Test ODR (One Definition Rule).
@@ -399,9 +374,9 @@ drake_py_unittest(
         ":algebra_test_util_py",
         ":autodiffutils_py",
         ":autodiffutils_test_util_py",
-        ":math_py",
         "//bindings/pydrake/common/test_utilities:numpy_compare_py",
         "//bindings/pydrake/common/test_utilities:pickle_compare_py",
+        "//bindings/pydrake/math",
     ],
 )
 
@@ -462,23 +437,6 @@ drake_py_unittest(
 )
 
 drake_py_unittest(
-    name = "math_test",
-    deps = [
-        ":math_py",
-        "//bindings/pydrake/common/test_utilities",
-    ],
-)
-
-drake_py_unittest(
-    name = "math_overloads_test",
-    deps = [
-        ":autodiffutils_py",
-        ":math_py",
-        ":symbolic_py",
-    ],
-)
-
-drake_py_unittest(
     name = "perception_test",
     deps = [
         ":perception_py",
@@ -507,21 +465,11 @@ drake_py_unittest(
 drake_py_unittest(
     name = "trajectories_test",
     deps = [
-        ":math_py",
         ":trajectories_py",
         "//bindings/pydrake/common:eigen_geometry_py",
         "//bindings/pydrake/common/test_utilities:numpy_compare_py",
         "//bindings/pydrake/common/test_utilities:pickle_compare_py",
-    ],
-)
-
-drake_py_binary(
-    name = "math_example",
-    srcs = ["math_example.py"],
-    add_test_rule = 1,
-    isolate = 1,
-    deps = [
-        ":math_py",
+        "//bindings/pydrake/math",
     ],
 )
 
@@ -592,7 +540,7 @@ PYI_FILES = [
     "pydrake/geometry/__init__.pyi",
     "pydrake/lcm.pyi",
     "pydrake/manipulation/__init__.pyi",
-    "pydrake/math.pyi",
+    "pydrake/math/__init__.pyi",
     "pydrake/multibody/__init__.pyi",
     "pydrake/multibody/all.pyi",
     "pydrake/multibody/benchmarks.pyi",
