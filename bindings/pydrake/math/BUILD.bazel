@@ -34,6 +34,7 @@ drake_pybind_library(
         "//bindings/pydrake/common:cpp_template_pybind",
         "//bindings/pydrake/common:default_scalars_pybind",
         "//bindings/pydrake/common:deprecation_pybind",
+        "//bindings/pydrake/common:eigen_geometry_pybind",
         "//bindings/pydrake/common:eigen_pybind",
         "//bindings/pydrake/common:type_pack",
         "//bindings/pydrake/common:value_pybind",
@@ -43,6 +44,7 @@ drake_pybind_library(
         "math_py.h",
         "math_py.cc",
         "math_py_bary_bspline.cc",
+        "math_py_eigen_geometry.cc",
         "math_py_equation.cc",
         "math_py_gradient.cc",
         "math_py_matrix_util.cc",
@@ -54,7 +56,6 @@ drake_pybind_library(
     py_deps = [
         "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:symbolic_py",
-        "//bindings/pydrake/common:eigen_geometry_py",
         "//bindings/pydrake/common:value_py",
     ],
     py_srcs = ["_math_extra.py"],
@@ -65,6 +66,26 @@ install(
     targets = [":math"],
     py_dest = PACKAGE_INFO.py_dest,
     deps = get_drake_py_installs([":math"]),
+)
+
+drake_pybind_library(
+    name = "eigen_geometry_test_util_py",
+    testonly = 1,
+    add_install = False,
+    cc_deps = ["//bindings/pydrake/common:eigen_geometry_pybind"],
+    cc_so_name = "test/eigen_geometry_test_util",
+    cc_srcs = ["test/eigen_geometry_test_util_py.cc"],
+    package_info = PACKAGE_INFO,
+    visibility = ["//visibility:private"],
+)
+
+drake_py_unittest(
+    name = "eigen_geometry_test",
+    deps = [
+        ":eigen_geometry_test_util_py",
+        ":math",
+        "//bindings/pydrake/common/test_utilities",
+    ],
 )
 
 drake_py_binary(

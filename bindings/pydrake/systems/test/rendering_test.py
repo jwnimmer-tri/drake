@@ -12,7 +12,7 @@ from pydrake.common import FindResourceOrThrow
 from pydrake.common.test_utilities.deprecation import catch_drake_warnings
 from pydrake.common.value import AbstractValue
 from pydrake.geometry import SceneGraph
-from pydrake.math import RigidTransform
+from pydrake.math import Quaternion, RigidTransform
 from pydrake.multibody.plant import MultibodyPlant
 from pydrake.multibody.math import (
     SpatialVelocity,
@@ -22,7 +22,6 @@ from pydrake.systems.framework import (
     BasicVector,
     PortDataType,
 )
-from pydrake.common.eigen_geometry import Quaternion
 
 
 def normalized(x):

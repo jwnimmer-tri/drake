@@ -466,7 +466,6 @@ drake_py_unittest(
     name = "trajectories_test",
     deps = [
         ":trajectories_py",
-        "//bindings/pydrake/common:eigen_geometry_py",
         "//bindings/pydrake/common/test_utilities:numpy_compare_py",
         "//bindings/pydrake/common/test_utilities:pickle_compare_py",
         "//bindings/pydrake/math",
@@ -517,7 +516,6 @@ PYI_FILES = [
     "pydrake/common/cpp_param.pyi",
     "pydrake/common/cpp_template.pyi",
     "pydrake/common/deprecation.pyi",
-    "pydrake/common/eigen_geometry.pyi",
     "pydrake/common/jupyter.pyi",
     "pydrake/common/pybind11_version.pyi",
     "pydrake/common/schema.pyi",

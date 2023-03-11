@@ -4,11 +4,16 @@ import pickle
 import unittest
 
 from pydrake.common import ToleranceType
-from pydrake.common.eigen_geometry import AngleAxis_, Quaternion_
 from pydrake.common.test_utilities import numpy_compare
 from pydrake.common.test_utilities.pickle_compare import assert_pickle
 from pydrake.common.value import AbstractValue
-from pydrake.math import BsplineBasis_, RigidTransform_, RotationMatrix_
+from pydrake.math import (
+    AngleAxis_,
+    Quaternion_,
+    BsplineBasis_,
+    RigidTransform_,
+    RotationMatrix_,
+)
 from pydrake.polynomial import Polynomial_
 from pydrake.trajectories import (
     BsplineTrajectory_,

@@ -9,8 +9,7 @@ import numpy as np
 
 import pydrake
 from pydrake.common import FindResourceOrThrow
-from pydrake.common.eigen_geometry import Quaternion
-from pydrake.math import RigidTransform, RotationMatrix
+from pydrake.math import Quaternion, RigidTransform, RotationMatrix
 from pydrake.multibody.parsing import Parser
 from pydrake.multibody.plant import (
     MultibodyPlant, AddMultibodyPlantSceneGraph)

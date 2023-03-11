@@ -15,9 +15,6 @@ from drake import (
 from pydrake.common import (
     configure_logging,
 )
-from pydrake.common.eigen_geometry import (
-    Quaternion,
-)
 from pydrake.geometry import (
     Box,
     Capsule,
@@ -33,6 +30,7 @@ from pydrake.lcm import (
     DrakeLcm,
 )
 from pydrake.math import (
+    Quaternion,
     RigidTransform,
     RotationMatrix,
 )

@@ -198,6 +198,7 @@ drake_cc_library(
     ],
 )
 
+# N.B. The unit test for this lives in `//pydrake/bindings/math`.
 drake_cc_library(
     name = "eigen_geometry_pybind",
     hdrs = ["eigen_geometry_pybind.h"],
@@ -210,26 +211,13 @@ drake_cc_library(
     ],
 )
 
-drake_pybind_library(
+drake_py_library(
     name = "eigen_geometry_py",
-    cc_deps = [
-        ":cpp_template_pybind",
-        ":default_scalars_pybind",
-        ":eigen_geometry_pybind",
-        ":eigen_pybind",
-        ":type_pack",
-        ":value_pybind",
-    ],
-    cc_srcs = ["eigen_geometry_py.cc"],
-    package_info = PACKAGE_INFO,
-    py_deps = [
+    srcs = ["eigen_geometry.py"],
+    deps = [
         ":module_py",
-        ":cpp_template_py",
-        ":value_py",
-        "//bindings/pydrake:autodiffutils_py",
-        "//bindings/pydrake:symbolic_py",
+        "//bindings/pydrake/math",
     ],
-    py_srcs = ["_eigen_geometry_extra.py"],
 )
 
 # ODR does not matter, because the singleton will be stored in Python.
@@ -449,7 +437,6 @@ drake_py_library(
 
 PY_LIBRARIES_WITH_INSTALL = [
     ":_init_py",
-    ":eigen_geometry_py",
     ":schema_py",
     ":value_py",
 ]
@@ -686,23 +673,11 @@ drake_pybind_cc_googletest(
     py_deps = [":cpp_template_py"],
 )
 
-drake_pybind_library(
-    name = "eigen_geometry_test_util_py",
-    testonly = 1,
-    add_install = False,
-    cc_deps = [":eigen_geometry_pybind"],
-    cc_so_name = "test/eigen_geometry_test_util",
-    cc_srcs = ["test/eigen_geometry_test_util_py.cc"],
-    package_info = PACKAGE_INFO,
-    visibility = ["//visibility:private"],
-)
-
 drake_py_unittest(
-    name = "eigen_geometry_test",
+    name = "eigen_geometry_legacy_test",
     deps = [
         ":eigen_geometry_py",
-        ":eigen_geometry_test_util_py",
-        "//bindings/pydrake/common/test_utilities",
+        "//bindings/pydrake/common/test_utilities:numpy_compare_py",
     ],
 )
 

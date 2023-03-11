@@ -16,6 +16,7 @@
 
 namespace drake {
 namespace pydrake {
+namespace internal {
 namespace {
 
 using std::abs;
@@ -87,10 +88,8 @@ void CheckQuaternion(const Eigen::Quaternion<Expression>&) {}
 
 void CheckAngleAxis(const Eigen::AngleAxis<Expression>&) {}
 
-}  // namespace
-
 template <typename T>
-void DoScalarDependentDefinitions(py::module m, T) {
+void DoBind(py::module m, T) {
   // Do not return references to matrices (e.g. `Eigen::Ref<>`) so that we have
   // tighter control over validation.
 
@@ -412,16 +411,12 @@ void DoScalarDependentDefinitions(py::module m, T) {
   }
 }
 
-PYBIND11_MODULE(eigen_geometry, m) {
-  m.doc() = "Bindings for Eigen geometric types.";
+}  // namespace
 
-  py::module::import("pydrake.autodiffutils");
-  py::module::import("pydrake.symbolic");
-  type_visit([m](auto dummy) { DoScalarDependentDefinitions(m, dummy); },
-      CommonScalarPack{});
-
-  ExecuteExtraPythonCode(m);
+void DefineMathEigenGeometry(py::module m) {
+  type_visit([m](auto dummy) { DoBind(m, dummy); }, CommonScalarPack{});
 }
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

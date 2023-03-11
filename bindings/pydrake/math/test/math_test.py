@@ -2,7 +2,6 @@ import pydrake.math as mut
 from pydrake.math import (BarycentricMesh, wrap_to)
 from pydrake.common import RandomGenerator
 from pydrake.common.cpp_param import List
-from pydrake.common.eigen_geometry import Isometry3_, Quaternion_, AngleAxis_
 from pydrake.common.value import Value
 from pydrake.autodiffutils import AutoDiffXd
 from pydrake.symbolic import Expression
@@ -112,9 +111,9 @@ class TestMath(unittest.TestCase):
         RigidTransform = mut.RigidTransform_[T]
         RotationMatrix = mut.RotationMatrix_[T]
         RollPitchYaw = mut.RollPitchYaw_[T]
-        Isometry3 = Isometry3_[T]
-        Quaternion = Quaternion_[T]
-        AngleAxis = AngleAxis_[T]
+        Isometry3 = mut.Isometry3_[T]
+        Quaternion = mut.Quaternion_[T]
+        AngleAxis = mut.AngleAxis_[T]
 
         def check_equality(X_actual, X_expected_matrix):
             self.assertIsInstance(X_actual, RigidTransform)
@@ -250,8 +249,8 @@ class TestMath(unittest.TestCase):
     def test_rotation_matrix(self, T):
         # - Constructors.
         RotationMatrix = mut.RotationMatrix_[T]
-        AngleAxis = AngleAxis_[T]
-        Quaternion = Quaternion_[T]
+        AngleAxis = mut.AngleAxis_[T]
+        Quaternion = mut.Quaternion_[T]
         RollPitchYaw = mut.RollPitchYaw_[T]
 
         R = RotationMatrix()
@@ -371,7 +370,7 @@ class TestMath(unittest.TestCase):
         # - Constructors.
         RollPitchYaw = mut.RollPitchYaw_[T]
         RotationMatrix = mut.RotationMatrix_[T]
-        Quaternion = Quaternion_[T]
+        Quaternion = mut.Quaternion_[T]
 
         rpy = RollPitchYaw(rpy=[0, 0, 0])
         numpy_compare.assert_float_equal(
@@ -464,9 +463,9 @@ class TestMath(unittest.TestCase):
     def test_random_rotations(self):
         g = RandomGenerator()
         quat = mut.UniformlyRandomQuaternion(g)
-        self.assertIsInstance(quat, Quaternion_[float])
+        self.assertIsInstance(quat, mut.Quaternion_[float])
         angle_axis = mut.UniformlyRandomAngleAxis(g)
-        self.assertIsInstance(angle_axis, AngleAxis_[float])
+        self.assertIsInstance(angle_axis, mut.AngleAxis_[float])
         rot_mat = mut.UniformlyRandomRotationMatrix(g)
         self.assertIsInstance(rot_mat, mut.RotationMatrix)
         rpy = mut.UniformlyRandomRPY(g)

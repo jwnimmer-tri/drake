@@ -1,14 +1,11 @@
 #pragma once
 
 /// @file
-/// Provides pybind11 `type_caster`s for Eigen geometric types.
+/// Provides a pybind11 `type_caster` for Eigen::Translation<>.
 /// N.B. This uses some of pybind's coding conventions.
 ///
 /// See http://pybind11.readthedocs.io/en/stable/advanced/cast/custom.html for
 /// more details on custom type casters.
-
-#include <string>
-#include <utility>
 
 #include "pybind11/eigen.h"
 #include <Eigen/Dense>
@@ -38,8 +35,8 @@ struct wrapper_eigen_translation {
   static WrappedType wrap(const Type& arg) { return arg.vector(); }
 };
 
-// N.B. Since `Isometry3<>` and `Eigen::Quaternion<>` have more
-// complicated structures, they are registered as types in `eigen_geometry_py`.
+// N.B. Since `Eigen::Isometry3<>` and `Eigen::Quaternion<>` have more
+// complicated structures, they are registered as types in `pydrake.math`.
 
 }  // namespace internal
 }  // namespace pydrake

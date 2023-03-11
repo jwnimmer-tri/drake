@@ -15,6 +15,9 @@ namespace internal {
 /* Defines bindings per math_py_bary_bspline.cc. */
 void DefineMathBaryBspline(py::module m);
 
+/* Defines bindings per math_py_eigen_geometry.cc. */
+void DefineMathEigenGeometry(py::module m);
+
 /* Defines bindings per math_py_equation.cc. */
 void DefineMathEquation(py::module m);
 

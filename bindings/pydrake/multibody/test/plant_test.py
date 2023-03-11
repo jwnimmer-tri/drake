@@ -93,7 +93,6 @@ from pydrake.multibody.benchmarks.acrobot import (
 from pydrake.common.cpp_param import List
 from pydrake.common import FindResourceOrThrow
 from pydrake.common.deprecation import install_numpy_warning_filters
-from pydrake.common.eigen_geometry import Quaternion_
 from pydrake.common.test_utilities import numpy_compare
 from pydrake.common.test_utilities.deprecation import catch_drake_warnings
 from pydrake.common.test_utilities.pickle_compare import assert_pickle
@@ -115,6 +114,7 @@ from pydrake.geometry import (
     TriangleSurfaceMesh,
 )
 from pydrake.math import (
+    Quaternion_,
     RigidTransform_,
     RollPitchYaw_,
     RotationMatrix_,

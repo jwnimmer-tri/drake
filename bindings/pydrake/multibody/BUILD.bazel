@@ -99,7 +99,6 @@ drake_pybind_library(
         "//bindings/pydrake/common:cpp_template_pybind",
         "//bindings/pydrake/common:default_scalars_pybind",
         "//bindings/pydrake/common:deprecation_pybind",
-        "//bindings/pydrake/common:eigen_geometry_pybind",
         "//bindings/pydrake/common:eigen_pybind",
         "//bindings/pydrake/common:serialize_pybind",
         "//bindings/pydrake/common:type_pack",
@@ -110,7 +109,6 @@ drake_pybind_library(
     py_deps = [
         ":math_py",
         ":module_py",
-        "//bindings/pydrake/common:eigen_geometry_py",
         "//bindings/pydrake/systems:framework_py",
     ],
     py_srcs = [
@@ -125,7 +123,6 @@ drake_pybind_library(
         "//bindings/pydrake/common:cpp_template_pybind",
         "//bindings/pydrake/common:default_scalars_pybind",
         "//bindings/pydrake/common:deprecation_pybind",
-        "//bindings/pydrake/common:eigen_geometry_pybind",
         "//bindings/pydrake/common:eigen_pybind",
         "//bindings/pydrake/common:identifier_pybind",
         "//bindings/pydrake/common:serialize_pybind",

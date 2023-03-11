@@ -100,9 +100,6 @@ class TestAll(unittest.TestCase):
             "maybe_patch_numpy_formatters",
             # - containers
             "EqualToDict",
-            # - eigen_geometry
-            "Isometry3",
-            "Quaternion",
             # forwarddiff
             "jacobian",
             "sin",
