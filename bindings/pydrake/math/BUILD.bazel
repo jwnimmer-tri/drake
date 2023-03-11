@@ -2,6 +2,10 @@
 
 load("@drake//tools/install:install.bzl", "install")
 load(
+    "@drake//tools/skylark:drake_cc.bzl",
+    "drake_cc_library",
+)
+load(
     "@drake//tools/skylark:drake_py.bzl",
     "drake_py_binary",
     "drake_py_unittest",
@@ -25,10 +29,18 @@ package(default_visibility = [
 # https://github.com/RobotLocomotion/drake/issues/12055
 PACKAGE_INFO = get_pybind_package_info("//bindings")
 
+drake_cc_library(
+    name = "auto_diff_types_pybind",
+    hdrs = ["auto_diff_types_pybind.h"],
+    declare_installed_headers = 0,
+    visibility = ["//visibility:private"],
+    deps = ["//:drake_shared_library"],
+)
+
 drake_pybind_library(
     name = "math",
     cc_deps = [
-        "//bindings/pydrake:autodiff_types_pybind",
+        ":auto_diff_types_pybind",
         "//bindings/pydrake:documentation_pybind",
         "//bindings/pydrake:symbolic_types_pybind",
         "//bindings/pydrake/common:cpp_template_pybind",
@@ -43,6 +55,7 @@ drake_pybind_library(
     cc_srcs = [
         "math_py.h",
         "math_py.cc",
+        "math_py_auto_diff.cc",
         "math_py_bary_bspline.cc",
         "math_py_eigen_geometry.cc",
         "math_py_equation.cc",
@@ -54,7 +67,6 @@ drake_pybind_library(
     ],
     package_info = PACKAGE_INFO,
     py_deps = [
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:symbolic_py",
         "//bindings/pydrake/common:value_py",
     ],
@@ -98,6 +110,33 @@ drake_py_binary(
     ],
 )
 
+# Test ODR (One Definition Rule).
+drake_pybind_library(
+    name = "auto_diff_test_util_py",
+    testonly = 1,
+    add_install = False,
+    cc_deps = [
+        ":auto_diff_types_pybind",
+        "//bindings/pydrake:documentation_pybind",
+    ],
+    cc_so_name = "test/auto_diff_test_util",
+    cc_srcs = ["test/auto_diff_test_util_py.cc"],
+    package_info = PACKAGE_INFO,
+    py_srcs = ["test/__init__.py"],
+    visibility = ["//visibility:private"],
+)
+
+drake_py_unittest(
+    name = "auto_diff_test",
+    deps = [
+        ":auto_diff_test_util_py",
+        ":math",
+        "//bindings/pydrake:algebra_test_util_py",
+        "//bindings/pydrake/common/test_utilities:numpy_compare_py",
+        "//bindings/pydrake/common/test_utilities:pickle_compare_py",
+    ],
+)
+
 drake_py_unittest(
     name = "math_test",
     deps = [
@@ -110,7 +149,6 @@ drake_py_unittest(
     name = "math_overloads_test",
     deps = [
         ":math",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:symbolic_py",
     ],
 )

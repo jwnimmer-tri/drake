@@ -65,7 +65,6 @@ drake_pybind_library(
     package_info = PACKAGE_INFO,
     py_deps = [
         ":module_py",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:symbolic_py",
         "//bindings/pydrake/common:cpp_template_py",
         "//bindings/pydrake/common:deprecation_py",

@@ -12,6 +12,9 @@ namespace drake {
 namespace pydrake {
 namespace internal {
 
+/* Defines bindings per math_py_auto_diff.cc. */
+void DefineMathAutoDiff(py::module m);
+
 /* Defines bindings per math_py_bary_bspline.cc. */
 void DefineMathBaryBspline(py::module m);
 

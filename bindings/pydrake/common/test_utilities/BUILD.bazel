@@ -53,9 +53,9 @@ drake_py_library(
     srcs = ["numpy_compare.py"],
     deps = [
         ":module_py",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:polynomial_py",
         "//bindings/pydrake:symbolic_py",
+        "//bindings/pydrake/math",
     ],
 )
 

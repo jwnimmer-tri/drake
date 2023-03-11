@@ -1,7 +1,7 @@
 #include "pybind11/eigen.h"
 #include "pybind11/pybind11.h"
 
-#include "drake/bindings/pydrake/autodiff_types_pybind.h"
+#include "drake/bindings/pydrake/math/auto_diff_types_pybind.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/math/roll_pitch_yaw.h"
 #include "drake/math/rotation_matrix.h"

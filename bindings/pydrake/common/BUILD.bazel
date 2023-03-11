@@ -45,7 +45,6 @@ drake_pybind_library(
     name = "_init_py",
     cc_deps = [
         ":value_pybind",
-        "//bindings/pydrake:autodiff_types_pybind",
         "//bindings/pydrake:documentation_pybind",
         "//common:nice_type_name_override_header",
     ],
@@ -145,7 +144,6 @@ drake_cc_library(
         ":cpp_template_pybind",
         ":type_pack",
         "//:drake_shared_library",
-        "//bindings/pydrake:autodiff_types_pybind",
         "//bindings/pydrake:pydrake_pybind",
         "//bindings/pydrake:symbolic_types_pybind",
     ],
@@ -479,8 +477,8 @@ drake_py_unittest(
     data = ["//examples/atlas:models"],
     deps = [
         ":module_py",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake/common/test_utilities:deprecation_py",
+        "//bindings/pydrake/math",
     ],
 )
 

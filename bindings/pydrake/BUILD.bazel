@@ -90,32 +90,6 @@ drake_cc_library(
     visibility = ["//visibility:public"],
 )
 
-drake_cc_library(
-    name = "autodiff_types_pybind",
-    hdrs = ["autodiff_types_pybind.h"],
-    declare_installed_headers = 0,
-    visibility = ["//visibility:public"],
-    deps = ["//:drake_shared_library"],
-)
-
-drake_pybind_library(
-    name = "autodiffutils_py",
-    cc_deps = [
-        ":autodiff_types_pybind",
-        "//bindings/pydrake:documentation_pybind",
-    ],
-    cc_srcs = ["autodiffutils_py.cc"],
-    package_info = PACKAGE_INFO,
-    py_deps = [
-        ":module_py",
-        "//bindings/pydrake/common:deprecation_py",
-    ],
-    py_srcs = [
-        "_autodiffutils_extra.py",
-        "forwarddiff.py",
-    ],
-)
-
 drake_pybind_library(
     name = "lcm_py",
     cc_deps = [
@@ -165,9 +139,9 @@ drake_pybind_library(
     package_info = PACKAGE_INFO,
     py_deps = [
         ":module_py",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:symbolic_py",
         "//bindings/pydrake/common:value_py",
+        "//bindings/pydrake/math",
     ],
 )
 
@@ -215,10 +189,10 @@ drake_pybind_library(
     package_info = PACKAGE_INFO,
     py_deps = [
         ":module_py",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:polynomial_py",
         "//bindings/pydrake:symbolic_py",
         "//bindings/pydrake/common:value_py",
+        "//bindings/pydrake/math",
     ],
     py_srcs = [
         "_trajectories_extra.py",
@@ -248,7 +222,8 @@ PYBIND_SUBPACKAGES_FOR_COVERAGE = [
 ]
 
 PY_LIBRARIES_WITH_INSTALL = [
-    ":autodiffutils_py",
+    # XXX deprecation shim
+    # ":autodiffutils_py",
     ":lcm_py",
     ":perception_py",
     ":polynomial_py",
@@ -348,36 +323,8 @@ drake_py_library(
         "test/__init__.py",
         "test/algebra_test_util.py",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//bindings/pydrake/math:__pkg__"],
     deps = ["//bindings/pydrake/math"],
-)
-
-# Test ODR (One Definition Rule).
-drake_pybind_library(
-    name = "autodiffutils_test_util_py",
-    testonly = 1,
-    add_install = False,
-    cc_deps = [
-        ":autodiff_types_pybind",
-        "//bindings/pydrake:documentation_pybind",
-    ],
-    cc_so_name = "test/autodiffutils_test_util",
-    cc_srcs = ["test/autodiffutils_test_util_py.cc"],
-    package_info = PACKAGE_INFO,
-    py_srcs = ["test/__init__.py"],
-    visibility = ["//visibility:private"],
-)
-
-drake_py_unittest(
-    name = "autodiffutils_test",
-    deps = [
-        ":algebra_test_util_py",
-        ":autodiffutils_py",
-        ":autodiffutils_test_util_py",
-        "//bindings/pydrake/common/test_utilities:numpy_compare_py",
-        "//bindings/pydrake/common/test_utilities:pickle_compare_py",
-        "//bindings/pydrake/math",
-    ],
 )
 
 # Test ODR (One Definition Rule).
@@ -422,8 +369,8 @@ drake_py_unittest(
 drake_py_unittest(
     name = "forward_diff_test",
     deps = [
-        ":autodiffutils_py",
         "//bindings/pydrake/common/test_utilities",
+        "//bindings/pydrake/math",
     ],
 )
 

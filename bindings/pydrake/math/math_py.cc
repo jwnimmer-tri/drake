@@ -13,6 +13,7 @@ PYBIND11_MODULE(math, m) {
   py::module::import("pydrake.symbolic");
 
   // The order of these calls matters. Some modules rely on prior definitions.
+  internal::DefineMathAutoDiff(m);
   internal::DefineMathOverloads(m);
   internal::DefineMathEigenGeometry(m);
   internal::DefineMathRotations(m);

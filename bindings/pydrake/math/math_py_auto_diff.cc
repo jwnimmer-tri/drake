@@ -4,8 +4,8 @@
 #include "pybind11/stl.h"
 #include <unsupported/Eigen/AutoDiff>
 
-#include "drake/bindings/pydrake/autodiff_types_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
+#include "drake/bindings/pydrake/math/auto_diff_types_pybind.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/common/drake_throw.h"
 #include "drake/math/autodiff.h"
@@ -18,17 +18,14 @@ using std::sin;
 
 namespace drake {
 namespace pydrake {
+namespace internal {
 
-PYBIND11_MODULE(autodiffutils, m) {
-  m.doc() = "Bindings for Eigen AutoDiff Scalars";
-
+void DefineMathAutoDiff(py::module m) {
   // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
   using namespace drake::math;
   constexpr auto& doc = pydrake_doc.drake.math;
 
-  py::module::import("pydrake.common");
-
-  // Install NumPy warning filtres.
+  // Install NumPy warning filters.
   // N.B. This may interfere with other code, but until that is a confirmed
   // issue, we should aggressively try to avoid these warnings.
   py::module::import("pydrake.common.deprecation")
@@ -138,9 +135,8 @@ PYBIND11_MODULE(autodiffutils, m) {
         return ExtractGradient(auto_diff_matrix);
       },
       py::arg("auto_diff_matrix"), doc.ExtractGradient.doc);
-
-  ExecuteExtraPythonCode(m);
 }
 
+}  // namespace internal
 }  // namespace pydrake
 }  // namespace drake

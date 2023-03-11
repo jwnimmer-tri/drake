@@ -39,7 +39,6 @@ PACKAGE_INFO = get_pybind_package_info("//bindings")
 drake_pybind_library(
     name = "solvers",
     cc_deps = [
-        "//bindings/pydrake:autodiff_types_pybind",
         "//bindings/pydrake:documentation_pybind",
         "//bindings/pydrake:symbolic_types_pybind",
         "//bindings/pydrake/common:cpp_param_pybind",
@@ -71,11 +70,11 @@ drake_pybind_library(
     ],
     package_info = PACKAGE_INFO,
     py_deps = [
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake:symbolic_py",
         "//bindings/pydrake/common:cpp_param_py",
         "//bindings/pydrake/common:cpp_template_py",
         "//bindings/pydrake/common:value_py",
+        "//bindings/pydrake/math",
     ],
     py_srcs = [
         "_extra.py",
@@ -108,7 +107,6 @@ drake_py_unittest(
     name = "augmented_lagrangian_test",
     deps = [
         ":solvers",
-        "//bindings/pydrake:autodiffutils_py",
         "//bindings/pydrake/common/test_utilities",
     ],
 )
