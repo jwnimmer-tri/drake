@@ -22,9 +22,6 @@
 namespace drake {
 namespace pydrake {
 
-using std::map;
-using std::string;
-
 // TODO(eric.cousineau): Use py::self for operator overloads?
 PYBIND11_MODULE(symbolic, m) {
   // NOLINTNEXTLINE(build/namespaces): Emulate placement in namespace.
@@ -64,7 +61,7 @@ PYBIND11_MODULE(symbolic, m) {
           var_doc.Type.RANDOM_EXPONENTIAL.doc);
 
   var_cls
-      .def(py::init<const string&, Variable::Type>(), py::arg("name"),
+      .def(py::init<const std::string&, Variable::Type>(), py::arg("name"),
           py::arg("type") = Variable::Type::CONTINUOUS, var_doc.ctor.doc_2args)
       .def("is_dummy", &Variable::is_dummy, var_doc.is_dummy.doc)
       .def("get_id", &Variable::get_id, var_doc.get_id.doc)
@@ -461,7 +458,6 @@ PYBIND11_MODULE(symbolic, m) {
           doc.Expression.Jacobian.doc);
   // TODO(eric.cousineau): Clean this overload stuff up (#15041).
   pydrake::internal::BindSymbolicMathOverloads<Expression>(&expr_cls);
-  pydrake::internal::BindSymbolicMathOverloads<Expression>(&m);
   DefCopyAndDeepCopy(&expr_cls);
 
   m.def("if_then_else", &symbolic::if_then_else, py::arg("f_cond"),
@@ -661,7 +657,6 @@ PYBIND11_MODULE(symbolic, m) {
           [](const Formula& a, const Formula& b) { return a || b; })
       .def("logical_not", [](const Formula& a) { return !a; });
 
-  m.def("isnan", &symbolic::isnan, py::arg("e"), doc.isnan.doc);
   m.def("forall", &symbolic::forall, py::arg("vars"), py::arg("f"),
       doc.forall.doc);
   m.def("positive_semidefinite",
@@ -677,7 +672,7 @@ PYBIND11_MODULE(symbolic, m) {
           doc.Monomial.ctor.doc_1args_var)
       .def(py::init<const Variable&, int>(), py::arg("var"),
           py::arg("exponent"), doc.Monomial.ctor.doc_2args_var_exponent)
-      .def(py::init<const map<Variable, int>&>(), py::arg("powers"),
+      .def(py::init<const std::map<Variable, int>&>(), py::arg("powers"),
           doc.Monomial.ctor.doc_1args_powers)
       .def(py::init<const Eigen::Ref<const VectorX<Variable>>&,
                const Eigen::Ref<const Eigen::VectorXi>&>(),
