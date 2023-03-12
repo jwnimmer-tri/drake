@@ -461,8 +461,16 @@ PYBIND11_MODULE(symbolic, m) {
           doc.Expression.Jacobian.doc);
   // TODO(eric.cousineau): Clean this overload stuff up (#15041).
   pydrake::internal::BindSymbolicMathOverloads<Expression>(&expr_cls);
-  pydrake::internal::BindSymbolicMathOverloads<Expression>(&m);
   DefCopyAndDeepCopy(&expr_cls);
+
+  {
+    // For backwards compatibility, we provide Expression-only math overloads in
+    // a private module. Our _symbolic_extra.py code will alias them to the user
+    // until the `pydrake.math` is imported, at which point they are replaced
+    // with overloads that accept all scalar types.
+    auto math_operators = m.def_submodule("_math_operators");
+    pydrake::internal::BindSymbolicMathOverloads<Expression>(&math_operators);
+  }
 
   m.def("if_then_else", &symbolic::if_then_else, py::arg("f_cond"),
       py::arg("e_then"), py::arg("e_else"), doc.if_then_else.doc);

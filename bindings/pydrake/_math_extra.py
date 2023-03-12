@@ -36,6 +36,18 @@ from pydrake.common import (
 )
 import pydrake.symbolic as _sym
 
+
+def _retrofit_symbolic_operators():
+    """Provides backward compatibility for `pydrake.symbolic.abs` and similar
+    operators, using the `pydrake.math` overloads. This helps us avoid having
+    two incompatible functions in pydrake.all with the same name.
+    """
+    for name in _sym._MATH_OPERATORS:
+        setattr(_sym, name, globals()[name])
+
+
+_retrofit_symbolic_operators()
+
 _sym_cls_list = (
     _sym.Expression,
     _sym.Variable,
