@@ -58,9 +58,10 @@ MathematicalProgramResult Solve(const MathematicalProgram& prog);
  * @param prog_list A vector containing the formulation of the programs each of
  * which may possibly contain solver options.
  * @param initial_guesses A vector containing the initial guesses for the
- * decision variables. In the case that, the user does not wish to provide a
+ * decision variables. In the case that the user does not wish to provide a
  * guess for the iᵗʰ program, the iᵗʰ entry of initial_guesses is allowed to be
- * optional.
+ * null. An empty vector is valid (and provides no guesses). A size-1 vector
+ * is valid and will use that guess for all programs.
  * @param solver_options The options in addition to those stored in each program
  * of @p prog_list. For each option entry (like print out), there are 4 ways to
  * set that option, and the priority given to the solver options is as follows
@@ -80,20 +81,10 @@ MathematicalProgramResult Solve(const MathematicalProgram& prog);
  * terminate_at_first_infeasible is true.
  */
 std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
-    const std::vector<MathematicalProgram>& prog_list,
-    const std::optional<std::vector<std::optional<Eigen::VectorXd>>>&
-        initial_guesses,
-    const std::optional<SolverOptions>& solver_options, int num_threads = -1,
-    bool terminate_at_first_infeasible = false);
-
-std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
-    const std::vector<MathematicalProgram>& prog_list,
-    const std::optional<std::vector<std::optional<Eigen::VectorXd>>>&
-        initial_guesses,
+    const std::vector<const MathematicalProgram*>& prog_list,
+    const std::vector<EigenPtr<const Eigen::VectorXd>>& initial_guess_list = {},
+    const std::vector<const SolverOptions*>& solver_options_list = {},
     int num_threads = -1, bool terminate_at_first_infeasible = false);
 
-std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
-    const std::vector<MathematicalProgram>& prog_list, int num_threads = -1,
-    bool terminate_at_first_infeasible = false);
 }  // namespace solvers
 }  // namespace drake

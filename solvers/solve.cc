@@ -52,38 +52,58 @@ bool IsFutureReady(const std::future<T>& future) {
 }  // namespace
 
 std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
-    const std::vector<MathematicalProgram>& prog_list,
-    const std::optional<std::vector<std::optional<Eigen::VectorXd>>>&
-        initial_guesses,
-    const std::optional<SolverOptions>& solver_options, int num_threads,
-    bool terminate_at_first_infeasible) {
-  std::vector<std::optional<MathematicalProgramResult>> ret(prog_list.size());
+    const std::vector<const MathematicalProgram*>& prog_list,
+    const std::vector<EigenPtr<const Eigen::VectorXd>>& initial_guess_list,
+    const std::vector<const SolverOptions*>& solver_options_list,
+    const int num_threads, const bool terminate_at_first_infeasible) {
+  const int num_prog = prog_list.size();
+  const int num_initial_guess = initial_guess_list.size();
+  const int num_solver_options = solver_options_list.size();
+  DRAKE_THROW_UNLESS(num_initial_guess == num_prog || num_initial_guess == 1 ||
+                     num_initial_guess == 0);
+  DRAKE_THROW_UNLESS(num_solver_options == num_prog ||
+                     num_solver_options == 1 || num_solver_options == 0);
+  std::vector<std::optional<MathematicalProgramResult>> ret(num_prog);
 
-  const int num_threads_actual =
-      num_threads > 0
-          ? num_threads
-          : std::min(static_cast<int>(std::thread::hardware_concurrency()),
-                     static_cast<int>(prog_list.size()));
+  auto solve_prog_i = [&](int i) {
+    const MathematicalProgram* const prog = prog_list.at(i);
+    const EigenPtr<const Eigen::VectorXd> initial_guess =
+        num_initial_guess == 0   ? nullptr
+        : num_initial_guess == 1 ? initial_guess_list.front()
+                                 : initial_guess_list.at(i);
+    const SolverOptions* const solver_options =
+        num_solver_options == 0   ? nullptr
+        : num_solver_options == 1 ? solver_options_list.front()
+                                  : solver_options_list.at(i);
+    DRAKE_THROW_UNLESS(prog != nullptr);
+    const SolverId solver_id = ChooseBestSolver(*prog);
+    drake::log()->debug("solvers::SolveInParallel will use {} for i={}",
+                        solver_id, i);
+    std::unique_ptr<SolverInterface> solver = MakeSolver(solver_id);
+    solver->Solve(*prog,
+                  initial_guess != nullptr
+                      ? std::optional<Eigen::VectorXd>(*initial_guess)
+                      : std::nullopt,
+                  solver_options != nullptr
+                      ? std::optional<SolverOptions>(*solver_options)
+                      : std::nullopt,
+                  &ret.at(i).emplace());
+    return i;
+  };
 
   // We implement the "thread pool" idea here, by following
   // MonteCarloSimulationParallel class. This implementation doesn't use openMP
   // library.
+  const int num_threads_actual =
+      num_threads > 0
+          ? num_threads
+          : std::min(static_cast<int>(std::thread::hardware_concurrency()),
+                     num_prog);
   std::list<std::future<int>> active_operations;
   // Keep track of how many progs have been dispatched already.
   int progs_dispatched = 0;
-
-  auto solve_prog_i = [&ret, &prog_list, &initial_guesses,
-                       &solver_options](int i) {
-    const std::optional<Eigen::VectorXd> initial_guess{
-        initial_guesses.has_value() ? initial_guesses.value().at(i)
-                                    : std::nullopt};
-    ret.at(i) = Solve(prog_list.at(i), initial_guess, solver_options);
-    return i;
-  };
-
   bool stop_dispatching = false;
-  while ((active_operations.size() > 0 ||
-          (progs_dispatched < static_cast<int>(prog_list.size()))) &&
+  while ((active_operations.size() > 0 || (progs_dispatched < num_prog)) &&
          !stop_dispatching) {
     // Check for completed operations.
     for (auto operation = active_operations.begin();
@@ -111,7 +131,7 @@ std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
 
     // Dispatch new prog.
     while (static_cast<int>(active_operations.size()) < num_threads_actual &&
-           progs_dispatched < static_cast<int>(prog_list.size())) {
+           progs_dispatched < num_prog) {
       active_operations.emplace_back(std::async(
           std::launch::async, std::move(solve_prog_i), progs_dispatched));
 
@@ -124,22 +144,6 @@ std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   return ret;
-}
-
-std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
-    const std::vector<MathematicalProgram>& prog_list,
-    const std::optional<std::vector<std::optional<Eigen::VectorXd>>>&
-        initial_guesses,
-    int num_threads, bool terminate_at_first_infeasible) {
-  return SolveInParallel(prog_list, initial_guesses, {}, num_threads,
-                         terminate_at_first_infeasible);
-}
-
-std::vector<std::optional<MathematicalProgramResult>> SolveInParallel(
-    const std::vector<MathematicalProgram>& prog_list, int num_threads,
-    bool terminate_at_first_infeasible) {
-  return SolveInParallel(prog_list, {}, {}, num_threads,
-                         terminate_at_first_infeasible);
 }
 
 }  // namespace solvers
