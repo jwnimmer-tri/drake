@@ -338,6 +338,10 @@ class TestPlant(unittest.TestCase):
             name="ShoulderJoint", model_instance=model_instance))
         self._test_joint_actuator_api(
             T, plant.GetJointActuatorByName(name="ElbowJoint"))
+        self.assertEqual(
+            plant.GetJointActuatorByName(name="ElbowJoint"),
+            plant.GetJointActuatorByName(name="ElbowJoint",
+                                         model_instance=model_instance))
         link1 = plant.GetBodyByName(name="Link1")
         self._test_body_api(T, link1)
         self.assertIs(
@@ -2148,26 +2152,13 @@ class TestPlant(unittest.TestCase):
         FixedOffsetFrame(name="name", P=P, X_PF=X, model_instance=None)
         FixedOffsetFrame(name="name", bodyB=B, X_BF=X)
 
-    @numpy_compare.check_all_types
-    def test_coupler_constraint_api(self, T):
-        MultibodyPlantConfig()
-        config = MultibodyPlantConfig(time_step=0.01,
-                                      discrete_contact_solver="sap")
-        self.assertEqual(config.time_step, 0.01)
-        self.assertEqual(config.discrete_contact_solver, "sap")
-
+    def test_coupler_constraint_api(self):
         # Create a MultibodyPlant with only a WSG gripper.
-        builder = DiagramBuilder_[float]()
-        plant, scene_graph = AddMultibodyPlant(config, builder)
-        self.assertIsNotNone(plant)
-        self.assertIsNotNone(scene_graph)
-
-        wsg50_sdf_path = FindResourceOrThrow(
-            "drake/manipulation/models/"
+        plant = MultibodyPlant_[float](0.01)
+        plant.set_discrete_contact_solver(DiscreteContactSolver.kSap)
+        Parser(plant).AddModelsFromUrl(
+            "package://drake/manipulation/models/"
             "wsg_50_description/sdf/schunk_wsg_50.sdf")
-
-        parser = Parser(plant)
-        gripper_model, = parser.AddModels(file_name=wsg50_sdf_path)
 
         # Add coupler constraint.
         left_slider = plant.GetJointByName("left_finger_sliding_joint")
@@ -2178,6 +2169,54 @@ class TestPlant(unittest.TestCase):
 
         # Constraint indexes are assigned in increasing order starting at zero.
         self.assertEqual(coupler_index, ConstraintIndex(0))
+
+        # We are done creating the model.
+        plant.Finalize()
+
+        # Verify the constraint was added.
+        self.assertEqual(plant.num_constraints(), 1)
+
+    @numpy_compare.check_all_types
+    def test_distance_constraint_api(self, T):
+        plant = MultibodyPlant_[T](0.01)
+        plant.set_discrete_contact_solver(DiscreteContactSolver.kSap)
+
+        # Add a distance constraint. Since we won't be performing dynamics
+        # computations, using garbage inertia is ok for this test.
+        M_BBo_B = SpatialInertia_[float]()
+        body_A = plant.AddRigidBody(name="A", M_BBo_B=M_BBo_B)
+        body_B = plant.AddRigidBody(name="B", M_BBo_B=M_BBo_B)
+        p_AP = [0.0, 0.0, 0.0]
+        p_BQ = [0.0, 0.0, 0.0]
+        index = plant.AddDistanceConstraint(
+            body_A=body_A, p_AP=p_AP, body_B=body_B, p_BQ=p_BQ, distance=0.01)
+
+        # Constraint indexes are assigned in increasing order starting at zero.
+        self.assertEqual(index, ConstraintIndex(0))
+
+        # We are done creating the model.
+        plant.Finalize()
+
+        # Verify the constraint was added.
+        self.assertEqual(plant.num_constraints(), 1)
+
+    @numpy_compare.check_all_types
+    def test_ball_constraint_api(self, T):
+        plant = MultibodyPlant_[T](0.01)
+        plant.set_discrete_contact_solver(DiscreteContactSolver.kSap)
+
+        # Add ball constraint. Since we won't be performing dynamics
+        # computations, using garbage inertia is ok for this test.
+        M_BBo_B = SpatialInertia_[float]()
+        body_A = plant.AddRigidBody(name="A", M_BBo_B=M_BBo_B)
+        body_B = plant.AddRigidBody(name="B", M_BBo_B=M_BBo_B)
+        p_AP = [0.0, 0.0, 0.0]
+        p_BQ = [0.0, 0.0, 0.0]
+        index = plant.AddBallConstraint(
+            body_A=body_A, p_AP=p_AP, body_B=body_B, p_BQ=p_BQ)
+
+        # Constraint indexes are assigned in increasing order starting at zero.
+        self.assertEqual(index, ConstraintIndex(0))
 
         # We are done creating the model.
         plant.Finalize()

@@ -74,6 +74,7 @@ GTEST_TEST(VisualizationConfigFunctionsTest, ParamConversionDefault) {
             config.delete_on_initialization_event);
   EXPECT_EQ(meshcat_params.at(0).enable_alpha_slider,
             config.enable_alpha_sliders);
+  EXPECT_EQ(meshcat_params.at(0).visible_by_default, true);
 
   EXPECT_EQ(meshcat_params.at(1).role, Role::kProximity);
   EXPECT_EQ(meshcat_params.at(1).publish_period, config.publish_period);
@@ -82,6 +83,7 @@ GTEST_TEST(VisualizationConfigFunctionsTest, ParamConversionDefault) {
             config.delete_on_initialization_event);
   EXPECT_EQ(meshcat_params.at(1).enable_alpha_slider,
             config.enable_alpha_sliders);
+  EXPECT_EQ(meshcat_params.at(1).visible_by_default, false);
 
   const ContactVisualizerParams contact_params =
       ConvertVisualizationConfigToMeshcatContactParams(config);
@@ -286,6 +288,21 @@ GTEST_TEST(VisualizationConfigFunctionsTest, AddDefault) {
   plant.Finalize();
   AddDefaultVisualization(&builder);
   Simulator<double> simulator(builder.Build());
+  simulator.AdvanceTo(0.25);
+}
+
+// The AddDefault... sugar should respect our passed-in Meshcat.
+GTEST_TEST(VisualizationConfigFunctionsTest, AddDefaultWithMeshcat) {
+  DiagramBuilder<double> builder;
+  auto [plant, scene_graph] = AddMultibodyPlantSceneGraph(&builder, 0.0);
+  plant.Finalize();
+  std::shared_ptr<Meshcat> meshcat = std::make_shared<Meshcat>();
+  EXPECT_EQ(meshcat.use_count(), 1);
+  AddDefaultVisualization(&builder, meshcat);
+  Simulator<double> simulator(builder.Build());
+  // Our meshcat was actually used.
+  EXPECT_GE(meshcat.use_count(), 2);
+  // Nothing crashes.
   simulator.AdvanceTo(0.25);
 }
 
