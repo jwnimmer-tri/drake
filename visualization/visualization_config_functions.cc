@@ -126,11 +126,11 @@ void ApplyVisualizationConfig(const VisualizationConfig& config,
 
 void AddDefaultVisualization(DiagramBuilder<double>* builder,
                              std::shared_ptr<geometry::Meshcat> meshcat) {
+  SceneGraph<double>* scene_graph = nullptr;
   ApplyVisualizationConfig(VisualizationConfig{}, builder,
                            nullptr,  // lcm_buses
                            nullptr,  // plant
-                           nullptr,  // scene_graph
-                           meshcat);
+                           scene_graph, meshcat);
 }
 
 namespace internal {
