@@ -22,6 +22,7 @@ struct MeshcatVisualizerParams {
     a->Visit(DRAKE_NVP(delete_on_initialization_event));
     a->Visit(DRAKE_NVP(enable_alpha_slider));
     a->Visit(DRAKE_NVP(visible_by_default));
+    a->Visit(DRAKE_NVP(publish_untagged_geometry));
   }
 
   /** The duration (in simulation seconds) between attempts to update poses in
@@ -54,6 +55,10 @@ struct MeshcatVisualizerParams {
 
   /** Determines whether our meshcat path should be default to being visible. */
   bool visible_by_default{true};
+
+  /** When true, only geometries explicitly tagged for this visualizer are
+  shown, and geometries with no tag are not shown. */
+  bool publish_untagged_geometry{true};
 };
 
 }  // namespace geometry

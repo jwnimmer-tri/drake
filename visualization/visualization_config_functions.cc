@@ -177,6 +177,20 @@ std::vector<MeshcatVisualizerParams> ConvertVisualizationConfigToMeshcatParams(
     result.push_back(illustration);
   }
 
+  if (config.publish_illustration) {
+    MeshcatVisualizerParams inertia;
+    inertia.role = Role::kIllustration;
+    inertia.publish_period = config.publish_period;
+    inertia.default_color = config.default_illustration_color;
+    inertia.prefix = std::string("inertia");
+    inertia.delete_on_initialization_event =
+        config.delete_on_initialization_event;
+    inertia.enable_alpha_slider = config.enable_alpha_sliders;
+    inertia.visible_by_default = false;
+    inertia.publish_untagged_geometry = false;
+    result.push_back(inertia);
+  }
+
   if (config.publish_proximity) {
     MeshcatVisualizerParams proximity;
     proximity.role = Role::kProximity;

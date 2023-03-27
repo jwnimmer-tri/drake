@@ -58,6 +58,7 @@ InertiaVisualizer<T>::InertiaVisualizer(
         RigidTransform<double>(), std::move(shape),
         fmt::format("$inertia({})", i));
     IllustrationProperties props;
+    props.AddProperty("meshcat", "accepting", "inertia");
     // FIXME Make this invisible by default.
     props.AddProperty("phong", "diffuse", Rgba{0.0, 0.0, 1.0, 0.2});
     geom->set_illustration_properties(std::move(props));

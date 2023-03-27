@@ -164,27 +164,41 @@ void MeshcatVisualizer<T>::SetObjects(
     while ((pos = frame_path.find("::", pos)) != std::string::npos) {
       frame_path.replace(pos++, 2, "/");
     }
-    if (frame_id != inspector.world_frame_id() &&
-        inspector.NumGeometriesForFrameWithRole(frame_id, params_.role) > 0) {
-      dynamic_frames_[frame_id] = frame_path;
-      frames_to_delete.erase(frame_id);  // Don't delete this one.
-    }
 
+    int num_geometries = 0;
     for (GeometryId geom_id : inspector.GetGeometries(frame_id, params_.role)) {
+      const GeometryProperties* properties =
+          inspector.GetProperties(geom_id, params_.role);
+      DRAKE_DEMAND(properties != nullptr);
+      if (!params_.publish_untagged_geometry &&
+          !properties->HasProperty("meshcat", "accepting")) {
+        continue;
+      }
+      if (properties->GetPropertyOrDefault("meshcat", "accepting",
+                                           params_.prefix) != params_.prefix) {
+        continue;
+      }
+
       // Note: We use the frame_path/id instead of instance.GetName(geom_id),
       // which is a garbled mess of :: and _ and a memory address by default
       // when coming from MultibodyPlant.
       // TODO(russt): Use the geometry names if/when they are cleaned up.
       const std::string path =
           fmt::format("{}/{}", frame_path, geom_id.get_value());
-      const Rgba rgba = inspector.GetProperties(geom_id, params_.role)
-          ->GetPropertyOrDefault("phong", "diffuse", params_.default_color);
+      const Rgba rgba = properties->GetPropertyOrDefault("phong", "diffuse",
+                                                         params_.default_color);
 
       meshcat_->SetObject(path, inspector.GetShape(geom_id), rgba);
       meshcat_->SetTransform(path, inspector.GetPoseInFrame(geom_id));
       geometries_[geom_id] = path;
       colors_[geom_id] = rgba;
       geometries_to_delete.erase(geom_id);  // Don't delete this one.
+      ++num_geometries;
+    }
+
+    if (frame_id != inspector.world_frame_id() && num_geometries > 0) {
+      dynamic_frames_[frame_id] = frame_path;
+      frames_to_delete.erase(frame_id);  // Don't delete this one.
     }
   }
 
