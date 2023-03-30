@@ -8,12 +8,14 @@ from webbrowser import open as _webbrowser_open
 import numpy as np
 
 from pydrake.common.deprecation import deprecated
+from pydrake.common.schema import Rotation
 from pydrake.geometry import (
     Box,
     Cylinder,
     GeometryInstance,
     MakePhongIllustrationProperties,
     MeshcatCone,
+    Role,
     Rgba,
     StartMeshcat,
 )
@@ -23,6 +25,10 @@ from pydrake.planning import RobotDiagramBuilder
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.planar_scenegraph_visualizer import (
     ConnectPlanarSceneGraphVisualizer,
+)
+from pydrake.systems.sensors import (
+    ApplyCameraConfig,
+    CameraConfig,
 )
 from pydrake.visualization import (
     VisualizationConfig,
@@ -67,6 +73,7 @@ class ModelVisualizer:
                  triad_radius=0.01,
                  triad_opacity=1,
                  publish_contacts=True,
+                 show_rgbd_sensor=False,
                  browser_new=False,
                  pyplot=False,
                  meshcat=None):
@@ -80,6 +87,10 @@ class ModelVisualizer:
           triad_radius: the radius of visualization triads.
           triad_opacity: the opacity of visualization triads.
           publish_contacts: a flag for VisualizationConfig.
+          show_rgbd_sensor: when True, adds an RgbdSensor to the scene and pops
+             up a local preview window of the rgb image. At the moment, the
+             image display uses a native window so will not work in a remote or
+             cloud runtime environment.
 
           browser_new: a flag that will open the MeshCat display in a new
             browser window during Run().
@@ -94,6 +105,7 @@ class ModelVisualizer:
         self._triad_radius = triad_radius
         self._triad_opacity = triad_opacity
         self._publish_contacts = publish_contacts
+        self._show_rgbd_sensor = show_rgbd_sensor
         self._browser_new = browser_new
         self._pyplot = pyplot
         self._meshcat = meshcat
@@ -157,6 +169,7 @@ class ModelVisualizer:
                 "triad_radius",
                 "triad_opacity",
                 "publish_contacts",
+                "show_rgbd_sensor",
                 "browser_new",
                 "pyplot"]:
             value = getattr(prototype, f"_{name}")
@@ -264,6 +277,22 @@ class ModelVisualizer:
                     opacity=self._triad_opacity,
                 )
 
+        if self._show_rgbd_sensor:
+            # Add a model that will provide rgbd pose sliders automatically
+            # when we add JointSliders later on.
+            camera_sliders, = self._builder.parser().AddModels(url=(
+                "package://drake/bindings/pydrake/visualization/"
+                "_rgbd_camera_sliders.dmd.yaml"))
+            # Remove the perception role from the new geometry; we don't want
+            # the RgbdSensor to render it. TODO(#13689) The file should itself
+            # opt-out of the perception role, so we don't need to mop up here.
+            inspect = self._builder.scene_graph().model_inspector()
+            for frame_id in inspect.GetAllFrameIds():
+                if inspect.GetFrameGroup(frame_id) == camera_sliders:
+                    self._builder.scene_graph().RemoveRole(
+                        role=Role.kPerception, frame_id=frame_id,
+                        source_id=self._builder.plant().get_source_id())
+
         self._builder.plant().Finalize()
 
         # (Re-)initialize the meshcat instance, creating one if needed.
@@ -288,6 +317,18 @@ class ModelVisualizer:
             scene_graph=self._builder.scene_graph(),
             builder=self._builder.builder(),
             meshcat=self._meshcat)
+
+        # Add a render camera so we can show role=perception still images.
+        if self._show_rgbd_sensor:
+            camera_config = CameraConfig(width=1440, height=1080)
+            camera_config.z_far = 3
+            camera_config.show_rgb = True  # Pop up a local window
+            camera_config.fps = 1.0  # Ignored -- we're not simulating.
+            camera_config.X_PB.base_frame = "_rgbd_camera_sliders::pinhole"
+            camera_config.X_PB.rotation.value = Rotation.Rpy(deg=[0, 0, 90])
+            ApplyCameraConfig(
+                config=camera_config,
+                builder=self._builder.builder())
 
         # Add joint sliders to meshcat.
         # TODO(trowell-tri) Restoring slider values depends on the slider
@@ -329,6 +370,35 @@ class ModelVisualizer:
         Simulator(self._diagram).Initialize()
         # Publish draw messages with current state.
         self._diagram.ForcedPublish(self._context)
+
+        # Add the camera frustum.
+        if self._show_rgbd_sensor:
+            frustum_distance = camera_config.z_far
+            frustum_width = 0.5 * camera_config.width * frustum_distance / camera_config.focal_x()
+            frustum_height = 0.5 * camera_config.height * frustum_distance / camera_config.focal_y()
+            vertices = np.array([
+                [0.0, 0.0, 0.0],
+                [+frustum_height, +frustum_width, frustum_distance],
+                [+frustum_height, -frustum_width, frustum_distance],
+                [-frustum_height, -frustum_width, frustum_distance],
+                [-frustum_height, +frustum_width, frustum_distance],
+            ]).T
+            faces = np.array([
+                [0, 1, 2],
+                [0, 2, 3],
+                [0, 3, 4],
+                [0, 4, 1],
+            ]).T
+            frustum_path = "/drake/illustration/_rgbd_camera_sliders/pinhole/frustum"
+            self._meshcat.SetTriangleMesh(
+                path=frustum_path,
+                vertices=vertices, faces=faces,
+                rgba=Rgba(1.0, 0.33, 0, 0.2))
+            self._meshcat.SetTriangleMesh(
+                path=f"{frustum_path}/wire",
+                vertices=vertices, faces=faces,
+                rgba=Rgba(0.5, 0.5, 0.5),
+                wireframe=True)
 
         self._check_rep(finalized=True)
 
