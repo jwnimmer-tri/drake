@@ -1,28 +1,21 @@
-#ifdef HAVE_SPDLOG
 #include "drake/bindings/pydrake/common/text_logging_pybind.h"
 
 #include <atomic>
 #include <memory>
 
-// clang-format off to disable clang-format-includes
-// N.B. text-logging.h must be included before spdlog headers
-// to avoid "SPDLOG_ACTIVE_LEVEL" redefined warning (#13771).
-#include "drake/common/text_logging.h"
-// clang-format on
-
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/dist_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/common/drake_assert.h"
-#endif
+#include "drake/common/text_logging.h"
 
 namespace drake {
 namespace pydrake {
 namespace internal {
 
-#ifdef HAVE_SPDLOG
 namespace {
 class pylogging_sink final
     // We use null_mutex below because we'll use the GIL as our *only* mutex.
@@ -169,9 +162,6 @@ void MaybeRedirectPythonLogging() {
 
   drake::log()->trace("Successfully redirected C++ logs to Python");
 }
-#else
-void MaybeRedirectPythonLogging() {}
-#endif
 
 }  // namespace internal
 }  // namespace pydrake

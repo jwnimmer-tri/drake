@@ -21,12 +21,12 @@ DEFINE_string(spdlog_pattern, "%+", drake::logging::kSetLogPatternHelpMessage);
 namespace {
 bool ValidateSpdlogLevel(const char* name, const std::string& value) {
   drake::unused(name);
-  drake::logging::set_log_level(value);
+  drake::log()->set_level(value);
   return true;
 }
 bool ValidateSpdlogPattern(const char* name, const std::string& value) {
   drake::unused(name);
-  drake::logging::set_log_pattern(value);
+  drake::log()->set_pattern(value);
   return true;
 }
 }  // namespace

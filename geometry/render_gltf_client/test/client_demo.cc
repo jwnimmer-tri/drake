@@ -185,7 +185,7 @@ int DoMain() {
       multibody::AddMultibodyPlantSceneGraph(&builder, 0.0);
 
   // Log debug messages and set `params.verbose` to true if `cleanup=false`.
-  if (!FLAGS_cleanup) logging::set_log_level("debug");
+  if (!FLAGS_cleanup) log()->set_level("debug");
 
   const std::string renderer_name("renderer");
   if (FLAGS_render_engine == "vtk") {

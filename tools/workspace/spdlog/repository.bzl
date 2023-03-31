@@ -31,9 +31,6 @@ spdlog_repository = repository_rule(
         "modname": attr.string(
             default = "spdlog",
         ),
-        "extra_defines": attr.string_list(
-            default = ["HAVE_SPDLOG"],
-        ),
         "extra_deps": attr.string_list(
             default = ["@fmt"],
         ),

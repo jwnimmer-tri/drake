@@ -14,7 +14,7 @@ namespace {
 // can't reinitialize it, we can only write a single unit test in this file and
 // we need to keep this case separate from the find_runfiles_test.cc cases.
 GTEST_TEST(FindRunfilesFailTest, ErrorMessageTest) {
-  drake::logging::set_log_level("trace");
+  drake::log()->set_level("trace");
   ASSERT_EQ(::setenv("TEST_SRCDIR", "/no_such_srcdir", 1), 0);
   ASSERT_EQ(::unsetenv("RUNFILES_DIR"), 0);
   ASSERT_EQ(::unsetenv("RUNFILES_MANIFEST_FILE"), 0);

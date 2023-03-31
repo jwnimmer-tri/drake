@@ -20,7 +20,6 @@ cc_library(
         ["include/spdlog/**"],
         allow_empty = False,
     ),
-    defines = _DEFINES + ["HAVE_SPDLOG"],
     includes = ["include"],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
