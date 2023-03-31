@@ -77,11 +77,10 @@ class StandardOperationsTest : public ::testing::Test {
       value_and_der_x.tail(3) = Eigen::Vector3d::Constant(NAN);
     }
 
-    return CompareMatrices(
-        value_and_der_x, value_and_der_3,
-        10 * std::numeric_limits<double>::epsilon(),
-        MatrixCompareType::relative)
-      << "\n(where xd.size() = " << e_xd.derivatives().size() << ")";
+    return CompareMatrices(value_and_der_x, value_and_der_3,
+                           10 * std::numeric_limits<double>::epsilon(),
+                           MatrixCompareType::relative)
+           << "\n(where xd.size() = " << e_xd.derivatives().size() << ")";
   }
 };
 
@@ -94,6 +93,8 @@ class StandardOperationsTest : public ::testing::Test {
               return expr;                                                  \
             }))                                                             \
       << #expr  // Print statement to locate it if it fails
+
+// clang-format off
 
 #define CHECK_BINARY_OP(bop, x, y, c) \
   CHECK_EXPR((x bop x)bop(y bop y));  \
@@ -124,8 +125,8 @@ class StandardOperationsTest : public ::testing::Test {
   CHECK_EXPR(f(c + x + 5.0) + y);        \
   CHECK_EXPR(f(c - x + 5.0) + y);        \
   CHECK_EXPR(f(c * x + 5.0) + y);        \
-  CHECK_EXPR(f(c / x  + 5.0) + y);       \
-  CHECK_EXPR(f(-x  + 5.0) + y);
+  CHECK_EXPR(f(c / x + 5.0) + y);        \
+  CHECK_EXPR(f(-x + 5.0) + y);
 
 #define CHECK_BINARY_FUNCTION_ADS_ADS(f, x, y, c) \
   CHECK_EXPR(f(x + x, y + y) + x);                \
@@ -175,6 +176,8 @@ class StandardOperationsTest : public ::testing::Test {
   CHECK_EXPR(f(c, x * c) + y);                       \
   CHECK_EXPR(f(c, c * x) + y);                       \
   CHECK_EXPR(f(c, -x) + y);
+
+// clang-format on
 
 }  // namespace test
 }  // namespace drake
