@@ -389,7 +389,7 @@ macro(override_repository NAME)
   set(repo "${CMAKE_CURRENT_BINARY_DIR}/external/workspace/${NAME}")
   string(APPEND BAZEL_WORKSPACE_EXTRA
     "local_repository(name = '${NAME}', path = '${repo}')\n")
-  string(APPEND BAZEL_WORKSPACE_EXCLUDES "${NAME} ")
+  list(APPEND BAZEL_WORKSPACE_EXCLUDES "${NAME}")
 endmacro()
 
 # For Python, always override Drake's default with the CMake selection instead.
@@ -399,53 +399,64 @@ configure_file(
   external/workspace/cmake_python/BUILD.bazel @ONLY)
 override_repository(cmake_python)
 
+# Allow the user to choose their own Eigen instead of Drake's default.
 option(WITH_USER_EIGEN "Use user-provided Eigen3" OFF)
-
 if(WITH_USER_EIGEN)
   find_package(Eigen3 CONFIG REQUIRED)
-
   symlink_external_repository_includes(eigen Eigen3::Eigen)
   generate_external_repository_file(eigen/WORKSPACE)
   generate_external_repository_file(
     eigen/BUILD.bazel
     eigen/BUILD.bazel.in)
-
   override_repository(eigen)
 endif()
 
+# Allow the user to choose their own fmt and spdlog instead of Drake's defaults,
+# or to opt-out of spdlog entirely. When spdlog is enabled and the user provides
+# their own fmt or spdlog, they must provide them *both* since spdlog depends on
+# fmt.
 option(WITH_USER_FMT "Use user-provided fmt" OFF)
-
+option(WITH_SPDLOG "Enable Drake logging" ON)
+option(WITH_USER_SPDLOG "Use user-provided spdlog" OFF)
+if(WITH_USER_FMT AND WITH_SPDLOG AND NOT WITH_USER_SPDLOG)
+  message(FATAL_ERROR
+    "User-provided fmt (WITH_USER_FMT) "
+    "requires user-provided spdlog (WITH_USER_SPDLOG) "
+    "when WITH_SPDLOG is ON.")
+endif()
+if(WITH_USER_SPDLOG AND NOT WITH_USER_FMT)
+  message(FATAL_ERROR
+    "User-provided spdlog (WITH_USER_SPDLOG) "
+    "requires user-provided fmt (WITH_USER_FMT).")
+endif()
 if(WITH_USER_FMT)
   find_package(fmt CONFIG REQUIRED)
-
   symlink_external_repository_includes(fmt fmt::fmt)
   symlink_external_repository_libs(fmt fmt::fmt)
   generate_external_repository_file(fmt/WORKSPACE)
   generate_external_repository_file(
     fmt/BUILD.bazel
     fmt/BUILD.bazel.in)
-
   override_repository(fmt)
 endif()
-
-option(WITH_USER_SPDLOG "Use user-provided spdlog" OFF)
-
-if(WITH_USER_SPDLOG)
-  if(NOT WITH_USER_FMT)
-    message(FATAL_ERROR
-      "User-provided spdlog (WITH_USER_SPDLOG) "
-      "requires user-provided fmt (WITH_USER_FMT).")
+if(WITH_SPDLOG)
+  if(WITH_USER_SPDLOG)
+    find_package(spdlog CONFIG REQUIRED)
+    symlink_external_repository_includes(spdlog spdlog::spdlog)
+    symlink_external_repository_libs(spdlog spdlog::spdlog)
+    generate_external_repository_file(spdlog/WORKSPACE)
+    generate_external_repository_file(
+      spdlog/BUILD.bazel
+      spdlog/ON.BUILD.bazel.in)
+    override_repository(spdlog)
+  else()
+    # N.B. Here we leave Drake's default repository intact.
   endif()
-
-  find_package(spdlog CONFIG REQUIRED)
-
-  symlink_external_repository_includes(spdlog spdlog::spdlog)
-  symlink_external_repository_libs(spdlog spdlog::spdlog)
+else()
   generate_external_repository_file(spdlog/WORKSPACE)
   generate_external_repository_file(
     spdlog/BUILD.bazel
-    spdlog/BUILD.bazel.in)
-
+    spdlog/OFF.BUILD.bazel.in)
   override_repository(spdlog)
 endif()
 

@@ -1,0 +1,12 @@
+# -*- bazel -*-
+
+load("@drake//tools/install:install.bzl", "install")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "spdlog",
+    deps = ["@fmt"],
+)
+
+install(name = "install")
