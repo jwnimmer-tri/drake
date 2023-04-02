@@ -81,6 +81,8 @@ load("@drake//tools/workspace/scs_internal:repository.bzl", "scs_internal_reposi
 load("@drake//tools/workspace/sdformat_internal:repository.bzl", "sdformat_internal_repository")  # noqa
 load("@drake//tools/workspace/snopt:repository.bzl", "snopt_repository")
 load("@drake//tools/workspace/spdlog:repository.bzl", "spdlog_repository")
+load("@drake//tools/workspace/spdlog_host:repository.bzl", "spdlog_host_repository")  # noqa
+load("@drake//tools/workspace/spdlog_internal:repository.bzl", "spdlog_internal_repository")  # noqa
 load("@drake//tools/workspace/stable_baselines3_internal:repository.bzl", "stable_baselines3_internal_repository")  # noqa
 load("@drake//tools/workspace/statsjs:repository.bzl", "statsjs_repository")
 load("@drake//tools/workspace/stduuid:repository.bzl", "stduuid_repository")
@@ -299,7 +301,11 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "snopt" not in excludes:
         snopt_repository(name = "snopt")
     if "spdlog" not in excludes:
-        spdlog_repository(name = "spdlog", mirrors = mirrors)
+        spdlog_repository(name = "spdlog")
+    if "spdlog_host" not in excludes:
+        spdlog_host_repository(name = "spdlog_host")
+    if "spdlog_internal" not in excludes:
+        spdlog_internal_repository(name = "spdlog_internal", mirrors = mirrors)
     if "stable_baselines3_internal" not in excludes:
         stable_baselines3_internal_repository(name = "stable_baselines3_internal", mirrors = mirrors)  # noqa
     if "statsjs" not in excludes:

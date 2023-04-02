@@ -16,6 +16,7 @@ def lapack_repository(name):
         name = name,
         mapping = {
             "macOS default": ["lapack=@openblas"],
+            "macos_wheel": ["lapack=@openblas"],
             "Ubuntu default": ["lapack=@liblapack"],
             "manylinux": ["lapack=@liblapack"],
         },

@@ -54,6 +54,7 @@ drake_py_binary(
         "@nlopt_internal//:__pkg__",
         "@qhull_internal//:__pkg__",
         "@sdformat_internal//:__pkg__",
+        "@spdlog_internal//:__pkg__",
         "@yaml_cpp_internal//:__pkg__",
     ],
     deps = [":module_py"],

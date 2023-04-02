@@ -1,0 +1,55 @@
+# -*- bazel -*-
+
+# This file is only used in cases when we need to rebuild spdlog from source.
+# See repository.bzl for the logic to select when that occurs.
+
+load(
+    "@drake//tools/install:install.bzl",
+    "install",
+)
+load(
+    "@drake//tools/workspace:vendor_cxx.bzl",
+    "cc_library_vendored",
+)
+
+licenses(["notice"])  # MIT
+
+_HDRS = glob(
+    ["include/spdlog/**"],
+    exclude = ["include/spdlog/fmt/bundled/**"],
+)
+
+_SRCS = glob(["src/**"])
+
+cc_library_vendored(
+    name = "spdlog",
+    hdrs = _HDRS,
+    hdrs_vendored = [
+        x.replace("include/", "drake_src/include/")
+        for x in _HDRS
+    ],
+    srcs = _SRCS,
+    srcs_vendored = [
+        x.replace("src/", "drake_src/src/")
+        for x in _SRCS
+    ],
+    defines = [
+        "HAVE_SPDLOG",
+        # Use Drake's @fmt external, not the bundled version inside spdlog.
+        "SPDLOG_FMT_EXTERNAL",
+        # Use the compiled (not header-only) variant of spdlog for build speed
+        # and substantially (20%+) smaller binary sizes.
+        "SPDLOG_COMPILED_LIB",
+    ],
+    includes = ["drake_src/include"],
+    linkopts = ["-pthread"],
+    linkstatic = True,
+    deps = ["@fmt"],
+    visibility = ["//visibility:public"],
+)
+
+install(
+    name = "install",
+    docs = ["LICENSE"],
+    visibility = ["//visibility:public"],
+)

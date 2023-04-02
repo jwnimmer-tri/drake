@@ -266,13 +266,13 @@ def os_specific_alias(repository_ctx, mapping):
 
     # Find the best match in the mapping dict for our OS.
     keys = []
-    if os_result.ubuntu_release:
+    if os_result.is_ubuntu:
         keys = [
             "Ubuntu " + os_result.ubuntu_release,
             "Ubuntu default",
             "default",
         ]
-    elif os_result.macos_release:
+    elif os_result.is_macos:
         keys = [
             "macOS " + os_result.macos_release,
             "macOS default",
@@ -281,6 +281,12 @@ def os_specific_alias(repository_ctx, mapping):
     elif os_result.is_manylinux:
         keys = [
             "manylinux",
+            "wheel",
+        ]
+    elif os_result.is_macos_wheel:
+        keys = [
+            "macoos_wheel",
+            "wheel",
         ]
     found_items = None
     for key in keys:

@@ -1,0 +1,13 @@
+Use a drake-specific namespace when rebuilding fmt from source
+
+--- include/fmt/core.h
++++ include/fmt/core.h
+@@ -212,7 +212,7 @@
+ 
+ #ifndef FMT_BEGIN_NAMESPACE
+ #  define FMT_BEGIN_NAMESPACE \
+     namespace fmt {           \
+-    inline namespace v9 {
++    inline namespace drake_vendor {
+ #  define FMT_END_NAMESPACE \
+     }                       \

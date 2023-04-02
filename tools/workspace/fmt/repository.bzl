@@ -56,20 +56,18 @@ install(name = "install")
             default = "fmtlib/fmt",
         ),
         "commit": attr.string(
-            # Per https://github.com/gabime/spdlog/releases/tag/v1.5.0 this is
-            # the bundled version we should pin, in cases where we're building
-            # from source instead of using the host version.
-            default = "6.1.2",
-        ),
-        "commit_pin": attr.int(
-            # Per the comment on "commit", above.
-            default = 1,
+            default = "9.1.0",
         ),
         "sha256": attr.string(
-            default = "1cafc80701b746085dddf41bd9193e6d35089e1c6ec1940e037fcb9c98f62365",  # noqa
+            default = "5dea48d1fcddc3ec571ce2058e13910a0d4a6bab4cc09a809d8b1dd1c88ae6f2",  # noqa
         ),
         "build_file": attr.label(
             default = "@drake//tools/workspace/fmt:package.BUILD.bazel",
+        ),
+        "patches": attr.label_list(
+            default = [
+                "@drake//tools/workspace/fmt:patches/visibility.patch",
+            ],
         ),
         "extra_strip_prefix": attr.string(),
         "mirrors": attr.string_list_dict(),
