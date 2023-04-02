@@ -45,9 +45,11 @@ DRAKE_FORMATTER_AS(). Grep around in Drake's existing code to find examples. */
 #include <type_traits>
 #include <utility>
 
+#if 0
 // TODO(jwnimmer-tri) After deprecation date 2023-09-01 expires, remove this
 // backwards-compatibility include statement.
 #include <spdlog/spdlog.h>
+#endif
 
 #include "drake/common/drake_copyable.h"
 #include "drake/common/drake_deprecated.h"
@@ -167,8 +169,10 @@ class logger final {
   https://github.com/gabime/spdlog/wiki/3.-Custom-formatting */
   void set_pattern(std::string pattern);
 
+#if 0
   DRAKE_DEPRECATED("2023-09-01", "Use drake::logging::level not spdlog.")
   std::string set_level(spdlog::level::level_enum);
+#endif
 
   DRAKE_DEPRECATED("2023-09-01", "The logger no longe has a name.")
   std::string name() const {
@@ -305,9 +309,11 @@ extern const char* const kSetLogPatternHelpMessage;
 
 #endif  // !NDEBUG && !DRAKE_DOXYGEN_CXX
 
+#if 0
 // TODO(jwnimmer-tri) After deprecation date 2023-09-01 expires, remove this
 // backwards-compatibility include statement.
 #include "drake/common/text_logging_sink.h"
+#endif
 
 // TODO(jwnimmer-tri) After deprecation date 2023-09-01 expires, remove the
 // entire following namespace and contents.
@@ -317,8 +323,10 @@ namespace logging {
 DRAKE_DEPRECATED("2023-09-01", "This is always true now.")
 constexpr bool kHaveSpdlog = true;
 
+#if 0
 using sink DRAKE_DEPRECATED("2023-09-01", "Replace with spdlog::sinks::sink.") =
     spdlog::sinks::sink;
+#endif
 
 DRAKE_DEPRECATED("2023-09-01", "Use drake::log()->set_pattern() instead.")
 inline void set_log_pattern(const std::string& pattern) {

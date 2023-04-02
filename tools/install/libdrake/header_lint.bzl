@@ -11,7 +11,6 @@ _ALLOWED_EXTERNALS = [
     "fmt",
     "lcm",
     "optitrack",
-    "spdlog",
 
     # The entries that follow are defects; we should work to remove them.
     "zlib",
@@ -23,9 +22,6 @@ _ALLOWED_DEFINES = [
     "EIGEN_MPL2_ONLY",
     "FMT_HEADER_ONLY=1",
     "FMT_NO_FMT_STRING_ALIAS=1",
-    "SPDLOG_COMPILED_LIB",
-    "SPDLOG_FMT_EXTERNAL",
-    "SPDLOG_SHARED_LIB",
 ]
 
 def _cc_check_allowed_headers_impl(ctx):
