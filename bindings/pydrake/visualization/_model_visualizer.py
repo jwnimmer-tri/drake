@@ -277,9 +277,9 @@ class ModelVisualizer:
                     opacity=self._triad_opacity,
                 )
 
+        # Add a model that will provide rgbd pose sliders automatically when we
+        # add JointSliders later on.
         if self._show_rgbd_sensor:
-            # Add a model that will provide rgbd pose sliders automatically
-            # when we add JointSliders later on.
             camera_sliders, = self._builder.parser().AddModels(url=(
                 "package://drake/bindings/pydrake/visualization/"
                 "_rgbd_camera_sliders.dmd.yaml"))
@@ -318,7 +318,7 @@ class ModelVisualizer:
             builder=self._builder.builder(),
             meshcat=self._meshcat)
 
-        # Add a render camera so we can show role=perception still images.
+        # Add a render camera so we can show role=perception images.
         if self._show_rgbd_sensor:
             camera_config = CameraConfig(width=1440, height=1080)
             camera_config.z_far = 3
@@ -371,7 +371,7 @@ class ModelVisualizer:
         # Publish draw messages with current state.
         self._diagram.ForcedPublish(self._context)
 
-        # Add the camera frustum.
+        # Visualize the camera frustum.
         if self._show_rgbd_sensor:
             frustum_distance = camera_config.z_far
             frustum_width = 0.5 * camera_config.width * frustum_distance / camera_config.focal_x()
