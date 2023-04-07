@@ -15,12 +15,17 @@ from pydrake.geometry import (
     GeometryInstance,
     MakePhongIllustrationProperties,
     MeshcatCone,
+    MeshcatPointCloudVisualizer,
     Role,
     Rgba,
     StartMeshcat,
 )
 from pydrake.math import RigidTransform, RotationMatrix
 from pydrake.multibody.meshcat import JointSliders
+from pydrake.perception import (
+    DepthImageToPointCloud,
+    BaseField,
+)
 from pydrake.planning import RobotDiagramBuilder
 from pydrake.systems.analysis import Simulator
 from pydrake.systems.planar_scenegraph_visualizer import (
@@ -329,6 +334,26 @@ class ModelVisualizer:
             ApplyCameraConfig(
                 config=camera_config,
                 builder=self._builder.builder())
+            camera = self._builder.builder().GetSubsystemByName(
+                "rgbd_sensor_preview_camera")
+            image_to_cloud = DepthImageToPointCloud(
+                camera_info=camera.color_camera_info(),
+                fields=BaseField.kXYZs | BaseField.kRGBs)
+            self._builder.builder().AddNamedSystem(
+                "image_to_cloud", image_to_cloud)
+            self._builder.builder().Connect(
+                camera.GetOutputPort("color_image"),
+                image_to_cloud.GetInputPort("color_image"))
+            self._builder.builder().Connect(
+                camera.GetOutputPort("depth_image_32f"),
+                image_to_cloud.GetInputPort("depth_image"))
+            cloud_visualizer = MeshcatPointCloudVisualizer(
+                meshcat=self._meshcat, path="/drake/perception/point_cloud")
+            self._builder.builder().AddNamedSystem(
+                "cloud_visualizer", cloud_visualizer)
+            self._builder.builder().Connect(
+                image_to_cloud.GetOutputPort("point_cloud"),
+                cloud_visualizer.GetInputPort("cloud"))
 
         # Add joint sliders to meshcat.
         # TODO(trowell-tri) Restoring slider values depends on the slider
@@ -502,6 +527,9 @@ class ModelVisualizer:
                 self._diagram.plant().SetPositions(
                     self._diagram.plant().GetMyContextFromRoot(self._context),
                     q)
+                X = self._diagram.plant().EvalBodyPoseInWorld(
+                    self._diagram.plant().GetMyContextFromRoot(self._context),
+                    self._diagram.plant().GetBodyByName("pinhole"))
                 self._diagram.ForcedPublish(self._context)
                 if loop_once or has_clicks(stop_button_name):
                     break
