@@ -62,7 +62,7 @@ class PyRenderEngine : public py::wrapper<RenderEngine> {
   }
 
   std::unique_ptr<RenderEngine> DoClone() const override {
-    PYBIND11_OVERLOAD_PURE(std::unique_ptr<RenderEngine>, Base, DoClone);
+    DRAKE_OVERRIDE_PURE_CLONE(RenderEngine, DoClone);
   }
 
   void DoRenderColorImage(ColorRenderCamera const& camera,
@@ -208,12 +208,9 @@ void DoScalarIndependentDefinitions(py::module m) {
   {
     using Class = RenderEngine;
     const auto& cls_doc = doc.RenderEngine;
-    py::class_<Class, PyRenderEngine>(m, "RenderEngine")
+    py::class_<Class, PyRenderEngine, std::shared_ptr<Class>>(m, "RenderEngine")
         .def(py::init<>(), cls_doc.ctor.doc)
-        .def("Clone",
-            static_cast<::std::unique_ptr<Class> (Class::*)() const>(
-                &Class::Clone),
-            cls_doc.Clone.doc)
+        .def("Clone", &Class::Clone, cls_doc.Clone.doc)
         .def("RegisterVisual",
             static_cast<bool (Class::*)(GeometryId, Shape const&,
                 PerceptionProperties const&, RigidTransformd const&, bool)>(

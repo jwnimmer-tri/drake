@@ -54,6 +54,23 @@ bool CheckTypeConversionExample(const TypeConversionExample& obj) {
   return obj.value == "hello";
 }
 
+class CloneableBase {
+ public:
+  virtual ~CloneableBase() = default;
+  std::unique_ptr<CloneableBase> Clone() const { return DoClone(); }
+
+ protected:
+  CloneableBase() = default;
+  virtual std::unique_ptr<CloneableBase> DoClone() const = 0;
+};
+
+class PyCloneableBase : public py::wrapper<CloneableBase> {
+ public:
+  std::unique_ptr<CloneableBase> DoClone() const final {
+    DRAKE_OVERRIDE_PURE_CLONE(CloneableBase, DoClone);
+  }
+};
+
 }  // namespace
 }  // namespace pydrake
 }  // namespace drake
@@ -93,6 +110,11 @@ PYBIND11_MODULE(wrap_test_util, m) {
       py_rvp::reference);
   m.def("CheckTypeConversionExample", &CheckTypeConversionExample,
       py::arg("obj"));
+
+  py::class_<CloneableBase, PyCloneableBase, std::shared_ptr<CloneableBase>>
+      base(m, "CloneableBase");
+  base.def(py::init<>());
+  DefClone(&base);
 }
 }  // namespace pydrake
 }  // namespace drake

@@ -7,7 +7,9 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <variant>
 
+#include "fmt/format.h"
 #include "pybind11/pybind11.h"
 
 #include "drake/bindings/pydrake/common/wrap_function.h"
@@ -176,5 +178,50 @@ void DefReadUniquePtr(PyClass* cls, const char* name,
   cls->def_property_readonly(name, getter, doc);
 }
 
+/// Casts `x` to either a unique_ptr<Class> or shared_ptr<Class> depending on
+/// its ref_count. The Class's holder type must be shared_ptr, not unique_ptr.
+/// If `x` is None, returns nullptr as a unique_ptr.
+/// If `x` is the wrong type, throws the usual pybind11 cast error.
+template <typename Class>
+std::variant<std::unique_ptr<Class>, std::shared_ptr<Class>> TryCastUnique(
+    py::object&& x) {
+  if (x.is_none()) {
+    return std::unique_ptr<Class>{};
+  }
+  if (x.ref_count() == 1) {
+    Class* value = x.template cast<Class*>();
+    x.release();
+    return std::unique_ptr<Class>(value);
+  }
+  return x.template cast<std::shared_ptr<Class>>();
+}
+
 }  // namespace pydrake
 }  // namespace drake
+
+/// Provides a function body to allow Python to override DoClone.
+/// The Class is the base class (i.e., Clone returnu std::unique_ptr<Class>).
+/// The Func is the function being overridden, typically named Clone or DoClone.
+/// The Class's holder type must be shared_ptr, not unique_ptr.
+#define DRAKE_OVERRIDE_PURE_CLONE(Class, Func)                                 \
+  do {                                                                         \
+    pybind11::gil_scoped_acquire gil;                                          \
+    const Class& self = *this;                                                 \
+    pybind11::function py_override = pybind11::get_override(&self, #Func);     \
+    auto get_self_type = [&self]() -> std::string {                            \
+      return pybind11::str(pybind11::type::of(py::cast(self)));                \
+    };                                                                         \
+    if (!py_override) {                                                        \
+      pybind11::pybind11_fail(fmt::format(                                     \
+          "Class {} failed to provide the required Python override for {}.{}", \
+          get_self_type(), #Class, #Func));                                    \
+    }                                                                          \
+    std::variant<std::unique_ptr<Class>, std::shared_ptr<Class>> result =      \
+        TryCastUnique<Class>(py_override());                                   \
+    if (result.index() != 0) {                                                 \
+      throw std::runtime_error(fmt::format(                                    \
+          "Class {} override of {}.{} did not return a uniquely-owned object", \
+          get_self_type(), #Class, #Func));                                    \
+    }                                                                          \
+    return std::get<0>(std::move(result));                                     \
+  } while (false)

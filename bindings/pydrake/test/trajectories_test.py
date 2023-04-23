@@ -58,6 +58,9 @@ class CustomTrajectory(Trajectory):
         elif derivative_order == 0:
             return self.value(t)
 
+    def Clone(self):
+        return CustomTrajectory()
+
 
 class TestTrajectories(unittest.TestCase):
     @numpy_compare.check_all_types
@@ -68,6 +71,7 @@ class TestTrajectories(unittest.TestCase):
 
     def test_custom_trajectory(self):
         trajectory = CustomTrajectory()
+        copy.deepcopy(trajectory)
         self.assertEqual(trajectory.rows(), 1)
         self.assertEqual(trajectory.cols(), 2)
         self.assertEqual(trajectory.start_time(), 3.0)

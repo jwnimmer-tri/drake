@@ -225,8 +225,13 @@ void DoScalarDependentDefinitions(py::module m, T) {
             overload_cast_explicit<CollisionFilterManager>(
                 &Class::collision_filter_manager),
             cls_doc.collision_filter_manager.doc_0args)
-        .def("AddRenderer", &Class::AddRenderer, py::arg("name"),
-            py::arg("renderer"), cls_doc.AddRenderer.doc)
+        .def(
+            "AddRenderer",
+            [](Class& self, std::string name,
+                const render::RenderEngine& renderer) {
+              self.AddRenderer(std::move(name), renderer.Clone());
+            },
+            py::arg("name"), py::arg("renderer"), cls_doc.AddRenderer.doc)
         .def("HasRenderer", &Class::HasRenderer, py::arg("name"),
             cls_doc.HasRenderer.doc)
         .def("RendererCount", &Class::RendererCount, cls_doc.RendererCount.doc)

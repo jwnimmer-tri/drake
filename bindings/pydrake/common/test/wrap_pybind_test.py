@@ -3,12 +3,13 @@ import gc
 import unittest
 
 from pydrake.common.test.wrap_test_util import (
+    CloneableBase,
+    CheckTypeConversionExample,
+    MakeTypeConversionExample,
+    MakeTypeConversionExampleBadRvp,
     MyContainerRawPtr,
     MyContainerUniquePtr,
     MyValue,
-    MakeTypeConversionExample,
-    MakeTypeConversionExampleBadRvp,
-    CheckTypeConversionExample,
 )
 
 
@@ -57,3 +58,38 @@ class TestWrapPybind(unittest.TestCase):
             str(cm.exception),
             "Can only pass TypeConversionExample by value.")
         self.assertTrue(CheckTypeConversionExample(obj=value))
+
+    def test_clone_good(self):
+        class GoodCloneable(CloneableBase):
+            def __init__(self, *, x):
+                CloneableBase.__init__(self)
+                self.x = x
+
+            def DoClone(self):
+                return GoodCloneable(x=self.x)
+
+        dut = GoodCloneable(x=22)
+        self.assertEqual(dut.Clone().x, 22)
+
+    def test_clone_non_unique(self):
+        registry = []
+
+        class BadCloneable(CloneableBase):
+            def __init__(self):
+                CloneableBase.__init__(self)
+
+            def DoClone(self):
+                result = BadCloneable()
+                registry.append(result)
+                return result
+
+        with self.assertRaisesRegex(RuntimeError, "BadCloneable.*owned"):
+            BadCloneable().Clone()
+
+    def test_clone_undefined(self):
+        class BadCloneable(CloneableBase):
+            def __init__(self):
+                CloneableBase.__init__(self)
+
+        with self.assertRaisesRegex(RuntimeError, "BadCloneable.*override"):
+            BadCloneable().Clone()
