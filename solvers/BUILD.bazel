@@ -878,7 +878,7 @@ drake_cc_variant_library(
         ":mathematical_program",
     ],
     deps_enabled = [
-        "@ipopt",
+        "@ipopt_internal//:ipopt",
         "//common:unused",
         "//math:autodiff",
     ],
@@ -1275,7 +1275,7 @@ drake_cc_googletest(
         "//common/test_utilities:eigen_matrix_compare",
     ] + select({
         "//conditions:default": [
-            "@ipopt",
+            "@ipopt_internal//:ipopt",
         ],
         "//tools:no_ipopt": [
         ],

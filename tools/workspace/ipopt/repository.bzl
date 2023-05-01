@@ -18,5 +18,6 @@ def ipopt_repository(
         licenses = licenses,
         modname = modname,
         pkg_config_paths = pkg_config_paths,
+        extra_deprecation = "DRAKE DEPRECATED: The @ipopt external is deprecated. The deprecated code will be removed from Drake on or after 2023-06-01.",  # noqa
         **kwargs
     )

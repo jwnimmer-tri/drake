@@ -100,10 +100,3 @@ if(APPLE)
     set(mumps_dlname "mumps-${mumps_version}.tar.gz")
     list(APPEND ALL_PROJECTS mumps)
 endif()
-
-# ipopt
-set(ipopt_version 3.11.9)
-set(ipopt_url "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/${ipopt_version}.tar.gz")
-set(ipopt_md5 "55275c202072ad30db25d2b723ef9b7a")
-set(ipopt_dlname "ipopt-${ipopt_version}.tar.gz")
-list(APPEND ALL_PROJECTS ipopt)

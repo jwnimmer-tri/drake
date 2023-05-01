@@ -85,6 +85,7 @@ _DRAKE_EXTERNAL_PACKAGE_INSTALLS = ["@%s//:install" % p for p in [
     "fmt",
     "gz_math_internal",
     "gz_utils_internal",
+    "ipopt_internal",
     "lcm",
     "meshcat",
     "msgpack_internal",

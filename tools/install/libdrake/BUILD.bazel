@@ -137,17 +137,6 @@ cc_library(
     }),
 )
 
-# Depend on IPOPT's shared library iff IPOPT is enabled.
-cc_library(
-    name = "ipopt_deps",
-    deps = select({
-        "//conditions:default": [
-            "@ipopt",
-        ],
-        "//tools:no_ipopt": [],
-    }),
-)
-
 # Depend on Gurobi's shared library iff Gurobi is enabled.
 cc_library(
     name = "gurobi_deps",
@@ -229,7 +218,6 @@ cc_library(
     deps = [
         ":clp_deps",
         ":gurobi_deps",
-        ":ipopt_deps",
         ":mosek_deps",
         ":vtk_deps",
         ":x11_deps",

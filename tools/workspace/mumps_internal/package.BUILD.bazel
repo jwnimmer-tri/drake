@@ -1,0 +1,18 @@
+# -*- python -*-
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "dmumps_seq",
+    hdrs = glob([
+        "include/**",
+    ]),
+    includes = [
+        "include",
+        "include/mumps_seq",
+    ],
+    linkopts = [
+        "-ldmumps_seq",
+    ],
+    licenses = ["reciprocal"],  # XXXXXXXXXXXXXXXXXXXXXXXXXX
+)

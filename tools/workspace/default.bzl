@@ -37,6 +37,7 @@ load("@drake//tools/workspace/gz_math_internal:repository.bzl", "gz_math_interna
 load("@drake//tools/workspace/gz_utils_internal:repository.bzl", "gz_utils_internal_repository")  # noqa
 load("@drake//tools/workspace/intel_realsense_ros_internal:repository.bzl", "intel_realsense_ros_internal_repository")  # noqa
 load("@drake//tools/workspace/ipopt:repository.bzl", "ipopt_repository")
+load("@drake//tools/workspace/ipopt_internal:repository.bzl", "ipopt_internal_repository")  # noqa
 load("@drake//tools/workspace/lapack:repository.bzl", "lapack_repository")
 load("@drake//tools/workspace/lcm:repository.bzl", "lcm_repository")
 load("@drake//tools/workspace/libblas:repository.bzl", "libblas_repository")
@@ -51,6 +52,7 @@ load("@drake//tools/workspace/libtiff:repository.bzl", "libtiff_repository")
 load("@drake//tools/workspace/meshcat:repository.bzl", "meshcat_repository")
 load("@drake//tools/workspace/mosek:repository.bzl", "mosek_repository")
 load("@drake//tools/workspace/msgpack_internal:repository.bzl", "msgpack_internal_repository")  # noqa
+load("@drake//tools/workspace/mumps_internal:repository.bzl", "mumps_internal_repository")  # noqa
 load("@drake//tools/workspace/mypy_extensions_internal:repository.bzl", "mypy_extensions_internal_repository")  # noqa
 load("@drake//tools/workspace/mypy_internal:repository.bzl", "mypy_internal_repository")  # noqa
 load("@drake//tools/workspace/nanoflann_internal:repository.bzl", "nanoflann_internal_repository")  # noqa
@@ -181,7 +183,10 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "intel_realsense_ros_internal" not in excludes:
         intel_realsense_ros_internal_repository(name = "intel_realsense_ros_internal", mirrors = mirrors)  # noqa
     if "ipopt" not in excludes:
+        # N.B. This repository is deprecated for removal on 2023-06-01.
         ipopt_repository(name = "ipopt")
+    if "ipopt_internal" not in excludes:
+        ipopt_internal_repository(name = "ipopt_internal", mirrors = mirrors)
     if "lapack" not in excludes:
         lapack_repository(name = "lapack")
     if "lcm" not in excludes:
@@ -210,6 +215,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         mosek_repository(name = "mosek")
     if "msgpack_internal" not in excludes:
         msgpack_internal_repository(name = "msgpack_internal", mirrors = mirrors)  # noqa
+    if "mumps_internal" not in excludes:
+        mumps_internal_repository(name = "mumps_internal")
     if "mypy_extensions_internal" not in excludes:
         mypy_extensions_internal_repository(name = "mypy_extensions_internal", mirrors = mirrors)  # noqa
     if "mypy_internal" not in excludes:
