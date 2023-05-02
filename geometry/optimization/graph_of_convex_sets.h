@@ -175,6 +175,7 @@ class GraphOfConvexSets {
     /** Adds a constraint to this vertex, described by a symbolic::Formula @p f
     containing *only* elements of x() as variables.
     @throws std::exception if f.GetFreeVariables() is not a subset of x().
+    @throws std::exception if ambient_dimension() == 0.
     @pydrake_mkdoc_identifier{formula}
     */
     solvers::Binding<solvers::Constraint> AddConstraint(
@@ -183,6 +184,7 @@ class GraphOfConvexSets {
     /** Adds a constraint to this vertex.  @p binding must contain *only*
     elements of x() as variables.
     @throws std::exception if binding.variables() is not a subset of x().
+    @throws std::exception if ambient_dimension() == 0.
     @pydrake_mkdoc_identifier{binding}
     */
     solvers::Binding<solvers::Constraint> AddConstraint(
