@@ -1,6 +1,6 @@
 # -*- bazel -*-
 
-load(":fortran.bzl", "fortran_library")
+load("@gfortran//:rules.bzl", "fortran_library")
 
 licenses(["by_exception_only"])  # SNOPT
 

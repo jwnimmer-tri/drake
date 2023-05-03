@@ -37,6 +37,10 @@ def _gfortran_impl(repo_ctx):
 
     # The cc_library linking is different on Ubuntu vs macOS.
     if os_result.is_macos or os_result.is_macos_wheel:
+        repo_ctx.symlink(
+            Label("@drake//tools/workspace/gfortran:rules-macos.bzl"),
+            "rules.bzl",
+        )
         srcs = []
         linkopts = [
             "-L{}".format(repo_ctx.path(libgfortran_path).dirname),
@@ -46,6 +50,10 @@ def _gfortran_impl(repo_ctx):
         if os_result.macos_arch_result != "arm64":
             linkopts.append("-lquadmath")
     else:
+        repo_ctx.symlink(
+            Label("@drake//tools/workspace/gfortran:rules-linux.bzl"),
+            "rules.bzl",
+        )
         libquadmath = "libquadmath{}".format(suffix)
         libquadmath_path = _find_library(repo_ctx, compiler, libquadmath)
         repo_ctx.symlink(libgfortran_path, libgfortran)
