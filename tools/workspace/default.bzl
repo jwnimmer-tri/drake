@@ -216,7 +216,7 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "msgpack_internal" not in excludes:
         msgpack_internal_repository(name = "msgpack_internal", mirrors = mirrors)  # noqa
     if "mumps_internal" not in excludes:
-        mumps_internal_repository(name = "mumps_internal")
+        mumps_internal_repository(name = "mumps_internal", mirrors = mirrors)
     if "mypy_extensions_internal" not in excludes:
         mypy_extensions_internal_repository(name = "mypy_extensions_internal", mirrors = mirrors)  # noqa
     if "mypy_internal" not in excludes:

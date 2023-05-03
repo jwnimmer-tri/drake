@@ -89,14 +89,3 @@ set(clp_url "https://github.com/coin-or/Clp/archive/refs/tags/releases/${clp_ver
 set(clp_md5 "f7c25af22d2f03398cbbdf38c8b4f6fd")
 set(clp_dlname "clp-${clp_version}.tar.gz")
 list(APPEND ALL_PROJECTS clp)
-
-if(APPLE)
-    set(mumps_version 5.4.1)  # Latest available in Ubuntu.
-    set(mumps_url
-         "http://archive.ubuntu.com/ubuntu/pool/universe/m/mumps/mumps_${mumps_version}.orig.tar.gz"
-        "http://mumps.enseeiht.fr/MUMPS_${mumps_version}.tar.gz"
-    )
-    set(mumps_md5 "93be789bf9c6c341a78c16038da3241b")
-    set(mumps_dlname "mumps-${mumps_version}.tar.gz")
-    list(APPEND ALL_PROJECTS mumps)
-endif()

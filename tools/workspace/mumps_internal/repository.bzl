@@ -1,41 +1,26 @@
-# -*- mode: python -*-
+# -*- python -*-
 
-load(
-    "@drake//tools/workspace:os.bzl",
-    "determine_os",
-)
+def _impl(repository_ctx):
+    repository_ctx.download_and_extract(
+        url = [
+            x.format(archive = repository_ctx.attr.archive)
+            for x in repository_ctx.attr.mirrors.get("mumps")
+        ],
+        sha256 = repository_ctx.attr.sha256,
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
 
-def _impl(repo_ctx):
-    # Find the include path.
-    os_result = determine_os(repo_ctx)
-    if os_result.error != None:
-        fail(os_result.error)
-    if os_result.is_ubuntu:
-        include = "/usr/include"
-        libdir = "/usr/lib"
-    else:
-        fail("Unknown OS")
-
-    # Grab the relevant headers.
-    hdrs = [
-        "dmumps_c.h",
-        "mumps_c_types.h",
-        "mumps_compat.h",
-        "mumps_int_def.h",
-        "mumps_seq/elapse.h",
-        "mumps_seq/mpi.h",
-        "mumps_seq/mpif.h",
-    ]
-    for hdr in hdrs:
-        repo_ctx.symlink(include + "/" + hdr, "include/" + hdr)
-
-    # Add the BUILD file.
-    repo_ctx.symlink(
+    repository_ctx.symlink(
         Label("@drake//tools/workspace/mumps_internal:package.BUILD.bazel"),
         "BUILD.bazel",
     )
 
 mumps_internal_repository = repository_rule(
-    local = True,
+    attrs = {
+        "mirrors": attr.string_list_dict(),
+        "archive": attr.string(default = "MUMPS_5.5.1.tar.gz"),
+        "sha256": attr.string(default = "1abff294fa47ee4cfd50dfd5c595942b72ebfcedce08142a75a99ab35014fa15"),  # noqa
+        "strip_prefix": attr.string(default = "MUMPS_5.5.1"),
+    },
     implementation = _impl,
 )

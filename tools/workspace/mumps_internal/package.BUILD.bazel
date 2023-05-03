@@ -1,18 +1,298 @@
 # -*- python -*-
 
-package(default_visibility = ["//visibility:public"])
+load(
+    "@drake//tools/install:install.bzl",
+    "install",
+)
+load(
+    "@drake//tools/skylark:drake_cc.bzl",
+    "cc_linkonly_library",
+)
+load("@gfortran//:rules.bzl", "fortran_library")
+
+# TODO(jwnimmer-tri) Vendor this.
+# load(
+#     "@drake//tools/workspace:vendor_cxx.bzl",
+#     "cc_library_vendored",
+# )
+
+# XXX
+# load(
+#     "@drake//tools/workspace:check_lists_consistency.bzl",
+#     "check_lists_consistency",
+# )
+
+licenses(["reciprocal"])  # CECILL-C
+
+package(default_visibility = ["//visibility:private"])
+
+genrule(
+    name = "int_def",
+    srcs = ["src/mumps_int_def32_h.in"],
+    outs = ["include/mumps_int_def.h"],
+    cmd = "cp $< $@",
+)
+
+cc_library(
+    name = "common_headers",
+    hdrs = [
+        "include/mumps_compat.h",
+        "include/mumps_c_types.h",
+        ":include/mumps_int_def.h",
+    ],
+    strip_include_prefix = "include",
+    linkstatic = True,
+)
+
+# These are the "COMMON_MOD" Fortran sources per upstream.
+# We need to split them into two phases per "Dependencies between modules".
+_SRCS_COMMON_MOD_F_PHASE_1 = [
+    ("src/double_linked_list.F", "src/mumps_ddll.mod"),  # XXX "mumps_idll.mod"
+    ("src/omp_tps_common_m.F", "src/mumps_tps_m.mod"),
+    ("src/front_data_mgt_m.F", "src/mumps_front_data_mgt_m.mod"),
+    ("src/fac_future_niv2_mod.F", "src/mumps_future_niv2.mod"),
+    ("src/lr_common.F", "src/mumps_lr_common.mod"),
+]
+
+_SRCS_COMMON_MOD_F_PHASE_2 = [
+    ("src/ana_blk_m.F", "mumps_ana_blk_m"),
+    ("src/ana_omp_m.F", "mumps_ana_omp_m"),
+    ("src/ana_orderings_wrappers_m.F", "mumps_ana_ord_wrappers"),
+    ("src/fac_asm_build_sort_index_ELT_m.F", "mumps_build_sort_index_elt_m"),
+    ("src/fac_asm_build_sort_index_m.F", "module mumps_build_sort_index_m"),
+    ("src/fac_descband_data_m.F", "mumps_fac_descband_data_m"),
+    ("src/fac_ibct_data_m.F", "mumps_fac_ibct_data_m"),
+    ("src/fac_maprow_data_m.F", "mumps_fac_maprow_data_m"),
+    ("src/mumps_l0_omp_m.F", "mumps_l0_omp_m"),
+    ("src/mumps_memory_mod.F", "mumps_memory_mod"),
+    ("src/mumps_ooc_common.F", "mumps_ooc_common"),
+    ("src/mumps_static_mapping.F", "mumps_static_mapping"),
+]
+
+# These are the "COMMON_OTHER" Fortran sources per upstream.
+_SRCS_COMMON_OTHER_F = [
+    "src/ana_AMDMF.F",
+    "src/ana_blk.F",
+    "src/ana_orderings.F",
+    "src/ana_set_ordering.F",
+    "src/bcast_errors.F",
+    "src/estim_flops.F",
+    "src/mumps_print_defined.F",
+    "src/mumps_type2_blocking.F",
+    "src/mumps_type_size.F",
+    "src/mumps_version.F",
+    "src/sol_common.F",
+    "src/tools_common.F",
+    # XXX listed in modules, but not a module?
+    "src/mumps_comm_ibcast.F",
+    "src/mumps_mpitoomp_m.F",
+]
+
+# These are the "COMMON_OTHER" C sources per upstream.
+_SRCS_COMMON_OTHER_C = [
+    "src/mumps_common.c",
+    "src/mumps_config_file_C.c",
+    "src/mumps_io.c",
+    "src/mumps_io_basic.c",
+    "src/mumps_io_err.c",
+    "src/mumps_io_thread.c",
+    "src/mumps_metis.c",
+    "src/mumps_metis64.c",
+    "src/mumps_metis_int.c",
+    "src/mumps_numa.c",
+    "src/mumps_pord.c",
+    "src/mumps_register_thread.c",
+    "src/mumps_save_restore_C.c",
+    "src/mumps_scotch.c",
+    "src/mumps_scotch64.c",
+    "src/mumps_scotch_int.c",
+    "src/mumps_size.c",
+    "src/mumps_thread.c",
+    "src/mumps_thread_affinity.c",
+]
+
+fortran_library(
+    name = "common_mod",
+    srcs = [
+        src
+        for src, _ in _SRCS_COMMON_MOD_F_PHASE_1
+    ],
+    srcs_mods = [
+        mod
+        for _, mod in _SRCS_COMMON_MOD_F_PHASE_1
+    ],
+    linkstatic = 1,
+    deps = [
+        "@blas",
+    ],
+)
+
+cc_library(
+    name = "common",
+    hdrs = glob([
+        "src/*.h",
+    ], allow_empty = False),
+    srcs = _SRCS_COMMON_OTHER_C,
+    strip_include_prefix = "src",
+    deps = [
+        ":common_headers",
+        ":common_mod",
+    ],
+    linkstatic = True,
+)
+
+cc_library(
+    name = "seq",
+    hdrs = ["libseq/mpi.h"],
+    srcs = [
+        "libseq/elapse.h",
+        "libseq/elapse.c",
+        "libseq/mpic.c",
+    ],
+    strip_include_prefix = "libseq",
+    linkstatic = True,
+)
+
+# These are "OBJS_MOD" and "OBJS_OTHER".
+_SRCS_ARITH_C = [
+    "src/dmumps_gpu",
+]
+
+_SRCS_ARITH_F = [
+    "src/dana_LDLT_preprocess.F",
+    "src/dana_aux.F",
+    "src/dana_aux_ELT.F",
+    "src/dana_aux_par.F",
+    "src/dana_dist_m.F",
+    "src/dana_driver.F",
+    "src/dana_lr.F",
+    "src/dana_mtrans.F",
+    "src/dana_reordertree.F",
+    "src/darrowheads.F",
+    "src/dbcast_int.F",
+    "src/dend_driver.F",
+    "src/dfac_asm.F",
+    "src/dfac_asm_ELT.F",
+    "src/dfac_asm_master_ELT_m.F",
+    "src/dfac_asm_master_m.F",
+    "src/dfac_b.F",
+    "src/dfac_determinant.F",
+    "src/dfac_distrib_ELT.F",
+    "src/dfac_distrib_distentry.F",
+    "src/dfac_driver.F",
+    "src/dfac_front_LDLT_type1.F",
+    "src/dfac_front_LDLT_type2.F",
+    "src/dfac_front_LU_type1.F",
+    "src/dfac_front_LU_type2.F",
+    "src/dfac_front_aux.F",
+    "src/dfac_front_type2_aux.F",
+    "src/dfac_lastrtnelind.F",
+    "src/dfac_lr.F",
+    "src/dfac_mem_alloc_cb.F",
+    "src/dfac_mem_compress_cb.F",
+    "src/dfac_mem_dynamic.F",
+    "src/dfac_mem_free_block_cb.F",
+    "src/dfac_mem_stack.F",
+    "src/dfac_mem_stack_aux.F",
+    "src/dfac_omp_m.F",
+    "src/dfac_par_m.F",
+    "src/dfac_process_band.F",
+    "src/dfac_process_bf.F",
+    "src/dfac_process_blfac_slave.F",
+    "src/dfac_process_blocfacto.F",
+    "src/dfac_process_blocfacto_LDLT.F",
+    "src/dfac_process_contrib_type1.F",
+    "src/dfac_process_contrib_type2.F",
+    "src/dfac_process_contrib_type3.F",
+    "src/dfac_process_end_facto_slave.F",
+    "src/dfac_process_maprow.F",
+    "src/dfac_process_master2.F",
+    "src/dfac_process_message.F",
+    "src/dfac_process_root2slave.F",
+    "src/dfac_process_root2son.F",
+    "src/dfac_process_rtnelind.F",
+    "src/dfac_root_parallel.F",
+    "src/dfac_scalings.F",
+    "src/dfac_scalings_simScaleAbs.F",
+    "src/dfac_scalings_simScale_util.F",
+    "src/dfac_sispointers_m.F",
+    "src/dfac_sol_l0omp_m.F",
+    "src/dfac_sol_pool.F",
+    "src/dfac_type3_symmetrize.F",
+    "src/dini_defaults.F",
+    "src/dini_driver.F",
+    "src/dlr_core.F",
+    "src/dlr_stats.F",
+    "src/dlr_type.F",
+    "src/dmumps_c.F",
+    "src/dmumps_comm_buffer.F",
+    "src/dmumps_config_file.F",
+    "src/dmumps_driver.F",
+    "src/dmumps_f77.F",
+    "src/dmumps_iXamax.F",
+    "src/dmumps_load.F",
+    "src/dmumps_lr_data_m.F",
+    "src/dmumps_ooc.F",
+    "src/dmumps_ooc_buffer.F",
+    "src/dmumps_save_restore.F",
+    "src/dmumps_save_restore_files.F",
+    "src/dmumps_sol_es.F",
+    # "src/dmumps_struc_def.F",
+    "src/domp_tps_m.F",
+    "src/dooc_panel_piv.F",
+    "src/drank_revealing.F",
+    "src/dsol_aux.F",
+    "src/dsol_bwd.F",
+    "src/dsol_bwd_aux.F",
+    "src/dsol_c.F",
+    "src/dsol_distrhs.F",
+    "src/dsol_driver.F",
+    "src/dsol_fwd.F",
+    "src/dsol_fwd_aux.F",
+    "src/dsol_lr.F",
+    "src/dsol_matvec.F",
+    "src/dsol_omp_m.F",
+    "src/dsol_root_parallel.F",
+    "src/dstatic_ptr_m.F",
+    "src/dtools.F",
+    "src/dtype3_root.F",
+]
+
+True or fortran_library(
+    name = "fortran_arith_d",
+    srcs = _SRCS_ARITH_F,
+    hdrs = [
+        "src/mumps_headers.h",
+        "src/mumps_tags.h",
+        "libseq/mpif.h",
+    ],
+    linkstatic = 1,
+    deps = [
+        # XXX "@blas",
+    ],
+    # XXX Always link the entirety ???
+    # alwayslink = 1,
+)
 
 cc_library(
     name = "dmumps_seq",
-    hdrs = glob([
-        "include/**",
-    ]),
-    includes = [
-        "include",
-        "include/mumps_seq",
+    hdrs = ["include/dmumps_c.h"],
+    strip_include_prefix = "include",
+    deps = [
+        ":common",
+        # ":fortran_arith_d",
+        ":seq",
     ],
-    linkopts = [
-        "-ldmumps_seq",
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+)
+
+install(
+    name = "install",
+    docs = [
+        "CREDITS",
+        "LICENSE",
+        "doc/CeCILL-C_V1-en.txt",
     ],
-    licenses = ["reciprocal"],  # XXXXXXXXXXXXXXXXXXXXXXXXXX
+    visibility = ["//visibility:public"],
 )

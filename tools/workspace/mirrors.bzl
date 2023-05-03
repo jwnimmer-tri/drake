@@ -43,6 +43,14 @@ DEFAULT_MIRRORS = {
         # N.B. ibiblio doesn't offer https.
         "http://maven.ibiblio.org/maven2/{fulljar}",
     ],
+    "mumps": [
+        "http://coin-or-tools.github.io/ThirdParty-Mumps/{archive}",
+        "http://mumps-solver.org/{archive}",
+        "https://drake-packages.csail.mit.edu/mumps/{archive}",
+        "https://s3.amazonaws.com/drake-packages/mumps/{archive}",
+        # TODO
+        # "http://deb.debian.org/debian/pool/main/m/mumps/mumps_5.5.1.orig.tar.gz"
+    ],
     "pypi": [
         "https://files.pythonhosted.org/packages/source/{p}/{package}/{package}-{version}.tar.gz",  # noqa
         "https://drake-mirror.csail.mit.edu/pypi/{package}/{package}-{version}.tar.gz",  # noqa

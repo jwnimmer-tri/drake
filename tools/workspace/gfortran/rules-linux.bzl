@@ -1,6 +1,8 @@
 def fortran_library(
         name,
         srcs = [],
+        srcs_mods = [],
+        hdrs = [],
         linkopts = [],
         deps = [],
         **kwargs):
@@ -17,15 +19,28 @@ def fortran_library(
     # Compile *.f* files to *.pic.o files.
     compiler = "@gfortran//:compiler"
     objs = []
-    for src in srcs:
+    for i, src in enumerate(srcs):
         obj = src + ".pic.o"
         objs.append(obj)
+        outs = [obj]
+        if srcs_mods:
+            mod = srcs_mods[i]
+            outs.append(mod)
         native.genrule(
             name = obj + "_genrule",
-            srcs = [src],
-            outs = [obj],
+            srcs = [src] + hdrs,
+            outs = outs,
             tools = [compiler],
-            cmd = "$(location {}) -fopenmp -fPIC -c $< -o $@".format(compiler),
+            cmd = "$(location {}) -fopenmp -fPIC -c $(location {}) -o $(location {})".format(
+                compiler,
+                src,
+                obj,
+            ) + (
+                " -J$$(dirname $(location {}))".format(obj)
+            ) + " ".join([
+                "-I$$(dirname $(location {}))".format(hdr)
+                for hdr in hdrs
+            ]),
             visibility = ["//visibility:private"],
         )
 
