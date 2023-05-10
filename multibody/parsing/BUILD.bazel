@@ -210,14 +210,19 @@ drake_cc_library(
         "detail_urdf_geometry.h",
         "detail_urdf_parser.h",
     ],
+    data = [
+        "urdf_schema.xml",
+    ],
     internal = True,
     visibility = ["//visibility:private"],
     deps = [
         ":detail_make_model_name",
         ":detail_misc",
         ":detail_parsing_workspace",
+        ":detail_sdf_diagnostic",
         ":scoped_names",
         "@fmt",
+        "@sdformat_internal//:sdformat",
         "@tinyxml2_internal//:tinyxml2",
     ],
 )

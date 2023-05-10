@@ -13,13 +13,18 @@
 #include <vector>
 
 #include <Eigen/Dense>
+#include <drake_vendor/sdf/Element.hh>
+#include <drake_vendor/sdf/Error.hh>
+#include <drake_vendor/sdf/ParserConfig.hh>
 #include <drake_vendor/tinyxml2.h>
 #include <fmt/format.h>
 
+#include "drake/common/find_resource.h"
 #include "drake/common/sorted_pair.h"
 #include "drake/math/rotation_matrix.h"
 #include "drake/multibody/parsing/detail_make_model_name.h"
 #include "drake/multibody/parsing/detail_path_utils.h"
+#include "drake/multibody/parsing/detail_sdf_diagnostic.h"
 #include "drake/multibody/parsing/detail_tinyxml.h"
 #include "drake/multibody/parsing/detail_tinyxml2_diagnostic.h"
 #include "drake/multibody/parsing/detail_urdf_geometry.h"
@@ -35,6 +40,14 @@
 #include "drake/multibody/tree/universal_joint.h"
 #include "drake/multibody/tree/weld_joint.h"
 
+// Steal a function from sdformat/src/parser_private.hh.
+// TODO(jwnimmer-tri) Find a way to not need a re-declaration.
+namespace sdf {
+inline namespace SDF_VERSION_NAMESPACE {
+bool initDoc(tinyxml2::XMLDocument*, const ParserConfig&, ElementPtr);
+}
+}  // namespace sdf
+
 namespace drake {
 namespace multibody {
 namespace internal {
@@ -44,6 +57,7 @@ using Eigen::Vector3d;
 using Eigen::Vector4d;
 using math::RigidTransformd;
 using math::RotationMatrixd;
+using sdf::Element;
 using tinyxml2::XMLNode;
 using tinyxml2::XMLDocument;
 using tinyxml2::XMLElement;
@@ -51,6 +65,40 @@ using tinyxml2::XMLElement;
 namespace {
 
 using JointEffortLimits = std::map<std::string, double>;
+
+// Parses Drake's urdf_schema.xml into memory.
+std::shared_ptr<Element> LoadUrdfSchema() {
+  // Read the schema text into memory.
+  std::ifstream schema_stream(
+      FindResourceOrThrow("drake/multibody/parsing/urdf_schema.xml"));
+  DRAKE_DEMAND(schema_stream.is_open());
+  std::stringstream schema_buffer;
+  schema_buffer << schema_stream.rdbuf();
+
+  // Parse from string to XML.
+  tinyxml2::XMLDocument schema_doc(true, tinyxml2::COLLAPSE_WHITESPACE);
+  schema_doc.Parse(schema_buffer.str().c_str());
+  DRAKE_DEMAND(!schema_doc.ErrorID());
+
+  // Map from XML into a schema Element.
+  // TODO(jwnimmer-tri) Check that these errors actually go somewhere?
+  sdf::ParserConfig config;
+  config.SetWarningsPolicy(sdf::EnforcementPolicy::ERR);
+  config.SetDeprecatedElementsPolicy(sdf::EnforcementPolicy::ERR);
+  config.SetUnrecognizedElementsPolicy(sdf::EnforcementPolicy::ERR);
+  auto result = std::make_shared<sdf::Element>();
+  const bool init_ok = sdf::initDoc(&schema_doc, config, result);
+  DRAKE_DEMAND(init_ok);
+  return result;
+}
+
+// Latch-initializes the parsed urdf_schema.xml (on the first call), and then
+// returns a copy of the latched value.
+std::shared_ptr<Element> MakeUrdfSchema() {
+  static const never_destroyed<std::shared_ptr<Element>> result(
+      LoadUrdfSchema());
+  return result.access()->Clone();
+}
 
 // Helper class to share infrastructure among parsing methods.
 class UrdfParser {
@@ -70,10 +118,17 @@ class UrdfParser {
         root_dir_(root_dir),
         xml_doc_(xml_doc),
         w_(w),
-        diagnostic_(&w.diagnostic, data_source) {
+        diagnostic_(&w.diagnostic, data_source),
+        sdf_diagnostic_(&w.diagnostic, data_source) {
     DRAKE_DEMAND(data_source != nullptr);
     DRAKE_DEMAND(xml_doc != nullptr);
   }
+
+  // Loads the given XML data into an Element, checking for schema violations.
+  // (This is a non-shitty version of SDFormat's readXml function. The only
+  // thing we do here is map XML to Elements; we don't have a rabid pile of
+  // special-case if-else hacks injected into the middle of a parsing phase.)
+  void LoadElement(const XMLElement& xml, std::shared_ptr<Element> element);
 
   // @return a model instance index, if one was created during parsing.
   // @throw std::exception on parse error.
@@ -97,7 +152,7 @@ class UrdfParser {
                            std::string* child_link_name);
   void ParseScrewJointThreadPitch(XMLElement* node, double* screw_thread_pitch);
   void ParseCollisionFilterGroup(XMLElement* node);
-  void ParseBody(XMLElement* node, MaterialMap* materials);
+  void ParseBody(const Element& link, MaterialMap* materials);
   SpatialInertia<double> ExtractSpatialInertiaAboutBoExpressedInB(
       XMLElement* node);
 
@@ -139,6 +194,7 @@ class UrdfParser {
   XMLDocument* const xml_doc_;
   const ParsingWorkspace& w_;
   TinyXml2Diagnostic diagnostic_;
+  SDFormatDiagnostic sdf_diagnostic_;
 
   ModelInstanceIndex model_instance_{};
 };
@@ -240,22 +296,8 @@ SpatialInertia<double> UrdfParser::ExtractSpatialInertiaAboutBoExpressedInB(
   DRAKE_UNREACHABLE();
 }
 
-void UrdfParser::ParseBody(XMLElement* node, MaterialMap* materials) {
-  // TODO(rpoyner-tri): legacy undocumented tag: remove, fix?
-  std::string drake_ignore;
-  if (ParseStringAttribute(node, "drake_ignore", &drake_ignore) &&
-      drake_ignore == std::string("true")) {
-    return;
-  }
-  // Seen in the ROS urdfdom XSD Schema.
-  // See https://github.com/ros/urdfdom/blob/dbecca0/xsd/urdf.xsd
-  WarnUnsupportedAttribute(*node, "type");
-
-  std::string body_name;
-  if (!ParseStringAttribute(node, "name", &body_name)) {
-    Error(*node, "link tag is missing name attribute.");
-    return;
-  }
+void UrdfParser::ParseBody(const Element& link, MaterialMap* materials) {
+  const std::string body_name = link.GetAttribute("body")->GetAsString();
 
   const RigidBody<double>* body_pointer{};
   if (body_name == kWorldName) {
@@ -265,7 +307,7 @@ void UrdfParser::ParseBody(XMLElement* node, MaterialMap* materials) {
     //  namespace; where would the documentation go that supports this
     //  implementation?
     body_pointer = &w_.plant->world_body();
-    if (node->FirstChildElement("inertial") != nullptr) {
+    if (link.HasElement("inertial")) {
       Warning(*node, "A URDF file declared the \"world\" link and then"
               " attempted to assign mass properties (via the <inertial> tag)."
               " Only geometries, <collision> and <visual>, can be assigned to"
@@ -976,21 +1018,121 @@ void UrdfParser::ParseBushing(XMLElement* node) {
   ParseLinearBushingRollPitchYaw(read_vector, read_frame, w_.plant);
 }
 
+void UrdfParser::LoadElement(const XMLElement& xml,
+                             std::shared_ptr<Element> element) {
+  DRAKE_DEMAND(element != nullptr);
+
+  // Load the value.
+  std::string xml_value;
+  if (xml.GetText() != nullptr) {
+    xml_value = xml.GetText();
+  }
+  if (element->GetValue() != nullptr) {
+    sdf::Errors errors;
+    element->GetValue()->SetFromString(xml.GetText(), errors);
+    sdf_diagnostic_.PropagateErrors(errors);
+  } else if (!xml_value.empty()) {
+    Warning(xml, fmt::format("Ignored stray element text '{}'", xml_value));
+  }
+
+  // Load the attributes.
+  for (const tinyxml2::XMLAttribute* attribute = xml.FirstAttribute();
+       attribute != nullptr; attribute = attribute->Next()) {
+    const std::string attribute_name = attribute->Name();
+
+    // Skip namespaced attributes (other than "drake:").
+    if (attribute_name.find(':') != std::string::npos) {
+      if (attribute_name.substr(6) != "drake:") {
+        drake::log()->debug("Ignoring unknown URDF attribute '{}', name");
+        continue;
+      }
+    }
+
+    // Find the matching attribute in the schema.
+    std::optional<size_t> attribute_index;
+    for (size_t i = 0; i < element->GetAttributeCount(); ++i) {
+      std::shared_ptr<sdf::Param> item = element->GetAttribute(i);
+      if (item->GetKey() == attribute_name) {
+        attribute_index = i;
+        break;
+      }
+    }
+    if (!attribute_index.has_value()) {
+      Warning(xml,
+              fmt::format("Ignored unknown attribute '{}'", attribute_name));
+      continue;
+    }
+
+    // Load the attribute.
+    sdf::Errors errors;
+    element->GetAttribute(*attribute_index)->SetFromString(attribute->Value());
+    sdf_diagnostic_.PropagateErrors(errors);
+  }
+
+  // Identify any missing required attributes.
+  for (size_t i = 0; i < element->GetAttributeCount(); ++i) {
+    std::shared_ptr<sdf::Param> param = element->GetAttribute(i);
+    if (param->GetRequired() && !param->GetSet()) {
+      Error(xml,
+            fmt::format("Missing required attribute '{}'", param->GetKey()));
+    }
+  }
+
+  // Load the child elements.
+  for (const tinyxml2::XMLElement* child = xml.FirstChildElement();
+       child != nullptr; child = child->NextSiblingElement()) {
+    const std::string child_name = child->Name();
+
+    // Find the matching element in the schema.
+    std::optional<size_t> child_index;
+    for (size_t i = 0; i < element->GetElementDescriptionCount(); ++i) {
+      std::shared_ptr<sdf::Element> item = element->GetElementDescription(i);
+      if (item->GetName() == child_name) {
+        child_index = i;
+        break;
+      }
+    }
+    if (!child_index.has_value()) {
+      Warning(xml, fmt::format("Ignored unknown element '{}'", child_name));
+      continue;
+    }
+
+    // Load the element, recursively.
+    std::shared_ptr<Element> child_element =
+        element->GetElementDescription(*child_index)->Clone();
+    child_element->SetParent(element);
+    LoadElement(*child, child_element);
+  }
+
+  // Identify any missing required elements.
+  for (size_t i = 0; i < element->GetElementDescriptionCount(); ++i) {
+    std::shared_ptr<sdf::Element> item = element->GetElementDescription(i);
+    if (item->GetRequired() == "1" || item->GetRequired() == "+") {
+      if (!element->HasElement(item->GetName())) {
+        Warning(xml,
+                fmt::format("Missing required element '{}'", item->GetName()));
+      }
+    }
+  }
+}
+
 std::optional<ModelInstanceIndex> UrdfParser::Parse() {
   XMLElement* node = xml_doc_->FirstChildElement("robot");
   if (!node) {
     Error(*xml_doc_, "URDF does not contain a robot tag.");
     return {};
   }
-  // See https://github.com/ros/urdfdom/blob/dbecca0/urdf_parser/src/model.cpp#L124-L131
-  WarnUnsupportedAttribute(*node, "version");
-  // <gazebo> child tags are silently ignored.
+  auto robot = MakeUrdfSchema();
+  LoadElement(*node, robot);
 
   std::string model_name = model_name_;
-  if (model_name.empty() && !ParseStringAttribute(node, "name", &model_name)) {
-    Error(*node, "Your robot must have a name attribute or a model name "
-          "must be specified.");
-    return {};
+  if (model_name.empty()) {
+    model_name = robot->GetAttribute("name")->GetAsString();
+    if (model_name.empty()) {
+      Error(*node, "Your robot must have a name attribute or a model name "
+            "must be specified.");
+      return {};
+    }
   }
 
   model_name = MakeModelName(model_name, parent_model_name_, w_);
@@ -1008,10 +1150,9 @@ std::optional<ModelInstanceIndex> UrdfParser::Parse() {
   }
 
   // Parses the model's link elements.
-  for (XMLElement* link_node = node->FirstChildElement("link");
-       link_node;
-       link_node = link_node->NextSiblingElement("link")) {
-    ParseBody(link_node, &materials);
+  for (std::shared_ptr<Element> link = robot->FindElement("link");
+       link != nullptr; link = link->GetNextElement("link")) {
+    ParseBody(*link, &materials);
   }
 
   // Parses the collision filter groups only if the scene graph is registered.

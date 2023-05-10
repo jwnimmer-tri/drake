@@ -1657,7 +1657,7 @@ TEST_F(UrdfParserTest, UnsupportedVersionIgnored) {
     <robot name='robot' version='0.99'>
       <link name='a'/>
     </robot>)""", ""), std::nullopt);
-  EXPECT_THAT(TakeWarning(), MatchesRegex(".*version.*ignored.*"));
+  EXPECT_THAT(TakeWarning(), MatchesRegex(".*unknown.*version.*"));
 }
 
 TEST_F(UrdfParserTest, UnsupportedLinkTypeIgnored) {

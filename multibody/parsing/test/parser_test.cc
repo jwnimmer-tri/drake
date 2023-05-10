@@ -440,7 +440,7 @@ GTEST_TEST(FileParserTest, StrictParsing) {
     <robot name='robot' version='0.99'>
       <link name='a'/>
     </robot>)""";
-  std::string warning_pattern = ".*version.*ignored.*";
+  std::string warning_pattern = ".*Ignored unknown.*version.*";
 
   {
     // Lax parser does not throw on warnings.
