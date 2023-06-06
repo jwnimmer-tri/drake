@@ -4,6 +4,8 @@
 
 #include <fmt/format.h>
 
+#include "drake/common/fmt_eigen.h"
+
 namespace drake {
 namespace multibody {
 
@@ -126,37 +128,9 @@ void RotationalInertia<T>::ThrowNotPhysicallyValid(const char* func_name)
   throw std::logic_error(error_message);
 }
 
-// TODO(Mitiguy) Consider using this code (or code similar to this) to write
-//  most/all Drake matrices and consolidate other usages to use this.
-// TODO(jwnimmer-tri) Obeying the formatting choices from `out` (via `copyfmt`
-//  is a defect; we should always display full round-trip precision.  We should
-//  not re-use this pattern elsewhere.
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const RotationalInertia<T>& I) {
-  int width = 0;
-  // Computes largest width so that we can align columns for a prettier format.
-  // Idea taken from: Eigen::internal::print_matrix() in Eigen/src/Core/IO.h
-  for (int j = 0; j < I.cols(); ++j) {
-    for (int i = 0; i < I.rows(); ++i) {
-      std::stringstream sstr;
-      sstr.copyfmt(out);
-      sstr << I(i, j);
-      width = std::max<int>(width, static_cast<int>(sstr.str().length()));
-    }
-  }
-
-  // Outputs to stream.
-  for (int i = 0; i < I.rows(); ++i) {
-    out << "[";
-    if (width) out.width(width);
-    out << I(i, 0);
-    for (int j = 1; j < I.cols(); ++j) {
-      out << "  ";
-      if (width) out.width(width);
-      out << I(i, j);
-    }
-    out << "]\n";
-  }
+  fmt::print(out, "{}\n", fmt_eigen(I.CopyToFullMatrix3()));
   return out;
 }
 

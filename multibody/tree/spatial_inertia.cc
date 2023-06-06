@@ -480,20 +480,12 @@ std::ostream& operator<<(std::ostream& out, const SpatialInertia<T>& M) {
   // can be written via SpatialInertia::WriteExtraCentralInertiaProperties().
   const T& mass = M.get_mass();
   const Vector3<T>& p_PBcm = M.get_com();
-  const T& x = p_PBcm.x();
-  const T& y = p_PBcm.y();
-  const T& z = p_PBcm.z();
 
-  // TODO(jwnimmer-tri) Rewrite this to use fmt to our advantage.
-  if constexpr (scalar_predicate<T>::is_bool) {
-    out << "\n"
-        << fmt::format(" mass = {}\n", mass)
-        << fmt::format(" Center of mass = [{}  {}  {}]\n", x, y, z);
-  } else {
-    // Print symbolic results.
-    out << " mass = " << mass << "\n"
-        << fmt::format(" Center of mass = {}\n", fmt_eigen(p_PBcm.transpose()));
-  }
+  fmt::print(out,
+             "\n"
+             " mass = {}\n"
+             " Center of mass = {}\n",
+             mass, fmt_eigen(p_PBcm.transpose()));
 
   // Get G_BP (unit inertia about point P) and use it to calculate I_BP
   // (rotational inertia about P) without validity checks such as
@@ -503,7 +495,7 @@ std::ostream& operator<<(std::ostream& out, const SpatialInertia<T>& M) {
       G_BP.MultiplyByScalarSkipValidityCheck(mass);
 
   // Write B's rotational inertia about point P.
-  out << " Inertia about point P, I_BP =\n" << I_BP;
+  fmt::print(out, " Inertia about point P, I_BP =\n{}", I_BP);
 
   return out;
 }
