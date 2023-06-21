@@ -5,6 +5,7 @@ load(
 load("//tools/skylark:drake_data.bzl", "models_filegroup")
 load("//tools/install:install_data.bzl", "install_data")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+load("//tools/lint:model_lint.bzl", "model_lint_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -70,6 +71,11 @@ drake_cc_googletest(
         "//common/test_utilities:eigen_matrix_compare",
         "//multibody/parsing",
     ],
+)
+
+model_lint_test(
+    name = "model_lint",
+    data = [":models"],
 )
 
 add_lint_tests()
