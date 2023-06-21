@@ -11,22 +11,30 @@ package(default_visibility = ["//visibility:public"])
 
 models_filegroup(
     name = "glob_models",
-    extra_srcs = [
+    visibility = ["//visibility:private"],
+)
+
+filegroup(
+    name = "licenses",
+    srcs = [
         "LICENSE.TXT",
         "iiwa_stack.LICENSE.txt",
     ],
-    visibility = ["//visibility:private"],
 )
 
 install_data(
     name = "install_data",
-    data = [":glob_models"],
+    data = [
+        ":glob_models",
+        ":licenses",
+    ],
 )
 
 filegroup(
     name = "models",
     srcs = [
         ":glob_models",
+        ":licenses",
         "@drake_models//:iiwa_description/meshes/iiwa14/collision/link_0.obj",
         "@drake_models//:iiwa_description/meshes/iiwa14/collision/link_1.obj",
         "@drake_models//:iiwa_description/meshes/iiwa14/collision/link_2.obj",
@@ -75,6 +83,7 @@ drake_cc_googletest(
 
 model_lint_test(
     name = "model_lint",
+    srcs = [":glob_models"],
     data = [":models"],
 )
 
