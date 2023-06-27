@@ -13,7 +13,7 @@ namespace systems {
 namespace lcm {
 
 /** On any per-step event where the request message input port has changed its
-value, publishes the reply message.
+value from the prior step, publishes the reply message input port.
 
 @system
 name: LcmRequestReply
