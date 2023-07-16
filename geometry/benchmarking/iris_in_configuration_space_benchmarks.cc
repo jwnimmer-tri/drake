@@ -26,6 +26,7 @@ using math::RigidTransformd;
 using math::RollPitchYawd;
 using math::RotationMatrixd;
 using multibody::MultibodyPlant;
+using solvers::SnoptSolver;
 using systems::Context;
 
 DEFINE_bool(test, false, "Enable unit test mode.");
@@ -42,7 +43,14 @@ class IiwaWithShelvesAndBins : public benchmark::Fixture {
   // errors in g++. All of this is a consequence of the weird deprecation of
   // const-ref State versions of SetUp() and TearDown() in benchmark.h.
   using benchmark::Fixture::SetUp;
-  void SetUp(benchmark::State&) override {
+  void SetUp(benchmark::State& state) override {
+    if (!(SnoptSolver::is_enabled() && SnoptSolver::is_available())) {
+      state.SkipWithError(
+          "SNOPT is either not enabled or not available. This benchmark should "
+          "be evaluated with SNOPT.");
+      return;
+    }
+
     // Configure IRIS.
     if (FLAGS_test) {
       iris_options_.iteration_limit = 1;
@@ -251,18 +259,3 @@ BENCHMARK_REGISTER_F(IiwaWithShelvesAndBins, GenerateAllRegions)
 }  // namespace optimization
 }  // namespace geometry
 }  // namespace drake
-
-int main(int argc, char** argv) {
-  if (!drake::solvers::SnoptSolver::is_enabled() ||
-      !drake::solvers::SnoptSolver::is_available()) {
-    drake::log()->error(
-        "SNOPT is either not enabled or not available. This benchmark should "
-        "be evaluated with SNOPT.");
-    return 0;
-  }
-
-  benchmark::Initialize(&argc, argv);
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
-  benchmark::RunSpecifiedBenchmarks();
-  return 0;
-}
