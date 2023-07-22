@@ -174,6 +174,7 @@ int do_main() {
     meshcat->SetTransform("plot_surface",
                           RigidTransformd(Vector3d{++x, -0.25, 0}));
   }
+  drake::log()->set_level(spdlog::level::trace);
 
   std::cout << R"""(
 Open up your browser to the URL above.
@@ -197,6 +198,8 @@ Open up your browser to the URL above.
   - a blue mesh plot of the function z = y*sin(5*x).
 )""";
   MaybePauseForUser();
+
+  meshcat->CaptureImage(100, 100);
 
   std::cout << "Calling meshcat.Flush(), which will block until all clients "
                "have received all the data)...";
