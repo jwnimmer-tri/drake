@@ -1,24 +1,15 @@
 # -*- bazel -*-
 
-load("@drake//tools/install:install.bzl", "install", "install_files")
+load("@drake//tools/install:install.bzl", "install")
 
 licenses(["notice"])  # MIT
 
-VIEWER_FILES = [
-    "dist/index.html",
-    "dist/main.min.js",
-]
-
 exports_files(
-    VIEWER_FILES,
+    [
+        "dist/index.html",
+        "dist/main.min.js",
+    ],
     visibility = ["//visibility:public"],
-)
-
-# This installation is for meshcat-python.
-install_files(
-    name = "install_viewer",
-    dest = "@PYTHON_SITE_PACKAGES@/meshcat/viewer",
-    files = VIEWER_FILES,
 )
 
 install(
@@ -29,5 +20,4 @@ install(
     ],
     doc_strip_prefix = ["dist"],
     visibility = ["//visibility:public"],
-    deps = [":install_viewer"],
 )
