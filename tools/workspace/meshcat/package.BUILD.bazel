@@ -4,13 +4,10 @@ load("@drake//tools/install:install.bzl", "install")
 
 licenses(["notice"])  # MIT
 
-exports_files(
-    [
-        "dist/index.html",
-        "dist/main.min.js",
-    ],
-    visibility = ["//visibility:public"],
-)
+exports_files(glob(["**"]), visibility = ["//visibility:public"])
+
+# TODO(jwnimmer-tri) Use bazel to run webpack?
+# https://github.com/aspect-build/rules_webpack
 
 install(
     name = "install",
