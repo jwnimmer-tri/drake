@@ -66,12 +66,8 @@ LcmPublisherSystem::LcmPublisherSystem(
   }
 
   if (publish_triggers.find(TriggerType::kPerStep) != publish_triggers.end()) {
-    this->DeclarePerStepEvent(
-    systems::PublishEvent<double>([this](
-        const systems::Context<double>& context,
-        const systems::PublishEvent<double>&) {
-      this->PublishInputAsLcmMessage(context);
-    }));
+    this->DeclarePerStepPublishEvent(
+        &LcmPublisherSystem::PublishInputAsLcmMessage);
   }
 }
 
@@ -87,18 +83,18 @@ LcmPublisherSystem::LcmPublisherSystem(
 
 LcmPublisherSystem::~LcmPublisherSystem() {}
 
+EventStatus LcmPublisherSystem::Initialize(
+    const Context<double>& context) const {
+  DRAKE_THROW_UNLESS(initialization_publisher_ != nullptr);
+  initialization_publisher_(context, lcm_);
+  return EventStatus::Succeeded();
+}
+
 void LcmPublisherSystem::AddInitializationMessage(
     InitializationPublisher initialization_publisher) {
   DRAKE_THROW_UNLESS(initialization_publisher != nullptr);
-
   initialization_publisher_ = std::move(initialization_publisher);
-
-  DeclareInitializationEvent(systems::PublishEvent<double>(
-      TriggerType::kInitialization,
-      [this](const systems::Context<double>& context,
-             const systems::PublishEvent<double>&) {
-        this->initialization_publisher_(context, this->lcm_);
-      }));
+  DeclareInitializationPublishEvent(&LcmPublisherSystem::Initialize);
 }
 
 std::string LcmPublisherSystem::make_name(const std::string& channel) {

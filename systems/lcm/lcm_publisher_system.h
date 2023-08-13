@@ -255,6 +255,9 @@ class LcmPublisherSystem : public LeafSystem<double> {
   double get_publish_offset() const;
 
  private:
+  // This will be called if and only if an AddInitializationMessage() was set.
+  EventStatus Initialize(const Context<double>& context) const;
+
   EventStatus PublishInputAsLcmMessage(const Context<double>& context) const;
 
   // The channel on which to publish LCM messages.

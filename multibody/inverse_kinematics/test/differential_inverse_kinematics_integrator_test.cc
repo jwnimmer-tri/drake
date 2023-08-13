@@ -27,6 +27,16 @@ std::unique_ptr<multibody::MultibodyPlant<double>> MakeIiwa(void) {
   return robot;
 }
 
+void CalcDiscreteUpdates(const DifferentialInverseKinematicsIntegrator& diff_ik,
+                         const systems::Context<double>& diff_ik_context,
+                         systems::DiscreteValues<double>* result) {
+  for (const auto& [data, events] : diff_ik.MapPeriodicEventsByTiming()) {
+    unused(data);
+    DRAKE_DEMAND(events.size() == 1);
+    dynamic_cast<const systems::DiscreteUpdateEvent<double>&>(*events[0])
+        .handle(diff_ik, diff_ik_context, result);
+  }
+}
 
 // Tests that the LeafSystem behavior matches the function API.
 GTEST_TEST(DifferentialInverseKinematicsIntegratorTest, BasicTest) {
@@ -63,10 +73,7 @@ GTEST_TEST(DifferentialInverseKinematicsIntegratorTest, BasicTest) {
   math::RigidTransformd X_WE_desired(Eigen::Vector3d(0.2, 0.0, 0.2));
   diff_ik.get_input_port(0).FixValue(diff_ik_context.get(), X_WE_desired);
   auto discrete_state = diff_ik.AllocateDiscreteVariables();
-  for (const auto& [data, events] : diff_ik.MapPeriodicEventsByTiming()) {
-    dynamic_cast<const systems::DiscreteUpdateEvent<double>*>(events[0])
-        ->handle(diff_ik, *diff_ik_context, discrete_state.get());
-  }
+  CalcDiscreteUpdates(diff_ik, *diff_ik_context, discrete_state.get());
 
   // Confirm that the result status state was updated properly.
   EXPECT_EQ(
@@ -91,10 +98,7 @@ GTEST_TEST(DifferentialInverseKinematicsIntegratorTest, BasicTest) {
   diff_ik.get_mutable_parameters().AddLinearVelocityConstraint(
       std::make_shared<solvers::LinearConstraint>(A, b, b));
   Eigen::VectorXd last_q = robot->GetPositions(*robot_context);
-  for (const auto& [data, events] : diff_ik.MapPeriodicEventsByTiming()) {
-    dynamic_cast<const systems::DiscreteUpdateEvent<double>*>(events[0])
-        ->handle(diff_ik, *diff_ik_context, discrete_state.get());
-  }
+  CalcDiscreteUpdates(diff_ik, *diff_ik_context, discrete_state.get());
   EXPECT_EQ(discrete_state->get_vector(1).GetAtIndex(0),
             static_cast<double>(
                 DifferentialInverseKinematicsStatus::kStuck));
@@ -210,10 +214,7 @@ GTEST_TEST(DifferentialInverseKinematicsIntegratorTest,
   // initialization event.
 
   // use_robot_state port is unset.
-  for (const auto& [data, events] : diff_ik->MapPeriodicEventsByTiming()) {
-    dynamic_cast<const systems::DiscreteUpdateEvent<double>*>(events[0])
-        ->handle(*diff_ik, diff_ik_context, discrete_state.get());
-  }
+  CalcDiscreteUpdates(*diff_ik, diff_ik_context, discrete_state.get());
   EXPECT_FALSE(CompareMatrices(discrete_state->get_value(0),
                                robot->GetPositions(robot_context)));
 
@@ -221,10 +222,7 @@ GTEST_TEST(DifferentialInverseKinematicsIntegratorTest,
   diff_ik_context.FixInputPort(
       diff_ik->GetInputPort("use_robot_state").get_index(),
       Value<bool>{false});
-  for (const auto& [data, events] : diff_ik->MapPeriodicEventsByTiming()) {
-    dynamic_cast<const systems::DiscreteUpdateEvent<double>*>(events[0])
-        ->handle(*diff_ik, diff_ik_context, discrete_state.get());
-  }
+  CalcDiscreteUpdates(*diff_ik, diff_ik_context, discrete_state.get());
   EXPECT_FALSE(CompareMatrices(discrete_state->get_value(0),
                                robot->GetPositions(robot_context)));
 
@@ -232,10 +230,7 @@ GTEST_TEST(DifferentialInverseKinematicsIntegratorTest,
   diff_ik_context.FixInputPort(
       diff_ik->GetInputPort("use_robot_state").get_index(),
       Value<bool>{true});
-  for (const auto& [data, events] : diff_ik->MapPeriodicEventsByTiming()) {
-    dynamic_cast<const systems::DiscreteUpdateEvent<double>*>(events[0])
-        ->handle(*diff_ik, diff_ik_context, discrete_state.get());
-  }
+  CalcDiscreteUpdates(*diff_ik, diff_ik_context, discrete_state.get());
   // We set the desired pose to the current pose, so updating with true should
   // result in the integrator positions matching the robot positions.
   EXPECT_TRUE(CompareMatrices(discrete_state->get_value(0),

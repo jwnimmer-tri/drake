@@ -14,19 +14,19 @@ namespace systems {
 class InitializationTestSystem : public LeafSystem<double> {
  public:
   InitializationTestSystem() {
-    PublishEvent<double> pub_event(
-        TriggerType::kInitialization,
-        std::bind(&InitializationTestSystem::InitPublish, this,
-                  std::placeholders::_1, std::placeholders::_2));
+    PublishEvent<double> pub_event([](const System<double>& system,
+                                      const Context<double>& context,
+                                      const PublishEvent<double>& event) {
+      dynamic_cast<const InitializationTestSystem&>(system).InitPublish(
+          context, event);
+    });
     DeclareInitializationEvent(pub_event);
 
     DeclareDiscreteState(1);
     DeclareAbstractState(Value<bool>(false));
 
-    DeclareInitializationEvent(
-        DiscreteUpdateEvent<double>(TriggerType::kInitialization));
-    DeclareInitializationEvent(
-        UnrestrictedUpdateEvent<double>(TriggerType::kInitialization));
+    DeclareInitializationEvent(DiscreteUpdateEvent<double>{});
+    DeclareInitializationEvent(UnrestrictedUpdateEvent<double>{});
   }
 
   bool get_pub_init() const { return pub_init_; }
@@ -45,7 +45,7 @@ class InitializationTestSystem : public LeafSystem<double> {
       const std::vector<const DiscreteUpdateEvent<double>*>& events,
       DiscreteValues<double>* discrete_state) const final {
     EXPECT_EQ(events.size(), 1);
-    EXPECT_EQ(events.front()->get_trigger_type(), TriggerType::kInitialization);
+    EXPECT_EQ(events.at(0)->get_trigger_type(), TriggerType::kInitialization);
     dis_update_init_ = true;
     discrete_state->set_value(Vector1d(1.23));
   }
@@ -55,7 +55,7 @@ class InitializationTestSystem : public LeafSystem<double> {
       const std::vector<const UnrestrictedUpdateEvent<double>*>& events,
       State<double>* state) const final {
     EXPECT_EQ(events.size(), 1);
-    EXPECT_EQ(events.front()->get_trigger_type(), TriggerType::kInitialization);
+    EXPECT_EQ(events.at(0)->get_trigger_type(), TriggerType::kInitialization);
     unres_update_init_ = true;
     state->get_mutable_abstract_state<bool>(0) = true;
   }
