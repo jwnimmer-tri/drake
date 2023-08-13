@@ -33,8 +33,10 @@ void CalcDiscreteUpdates(const DifferentialInverseKinematicsIntegrator& diff_ik,
   for (const auto& [data, events] : diff_ik.MapPeriodicEventsByTiming()) {
     unused(data);
     DRAKE_DEMAND(events.size() == 1);
-    dynamic_cast<const systems::DiscreteUpdateEvent<double>&>(*events[0])
-        .handle(diff_ik, diff_ik_context, result);
+    const systems::EventStatus status =
+        dynamic_cast<const systems::DiscreteUpdateEvent<double>&>(*events[0])
+            .InvokeCallback(diff_ik, diff_ik_context, result);
+    unused(status);
   }
 }
 

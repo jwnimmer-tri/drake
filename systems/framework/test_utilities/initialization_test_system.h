@@ -14,11 +14,13 @@ namespace systems {
 class InitializationTestSystem : public LeafSystem<double> {
  public:
   InitializationTestSystem() {
-    PublishEvent<double> pub_event([](const System<double>& system,
-                                      const Context<double>& context,
-                                      const PublishEvent<double>& event) {
-      dynamic_cast<const InitializationTestSystem&>(system).InitPublish(
-          context, event);
+    PublishEvent<double> pub_event;
+    pub_event.set_callback([](const System<double>& system,
+                              const Context<double>& context,
+                              const PublishEvent<double>& event) {
+      dynamic_cast<const InitializationTestSystem&>(system).InitPublish(context,
+                                                                        event);
+      return EventStatus::Succeeded();
     });
     DeclareInitializationEvent(pub_event);
 

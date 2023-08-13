@@ -249,11 +249,13 @@ class TwoWitnessStatelessSystem : public LeafSystem<double> {
 
   explicit TwoWitnessStatelessSystem(double off1, double off2)
       : offset1_(off1), offset2_(off2) {
-    PublishEvent<double> event([](const System<double>& system,
-                                  const Context<double>& context,
-                                  const PublishEvent<double>& callback_event) {
+    PublishEvent<double> event;
+    event.set_callback([](const System<double>& system,
+                          const Context<double>& context,
+                          const PublishEvent<double>& callback_event) {
       dynamic_cast<const TwoWitnessStatelessSystem&>(system).PublishOnWitness(
           context, callback_event);
+      return EventStatus::Succeeded();
     });
     witness1_ = this->MakeWitnessFunction(
         "clock witness1", WitnessFunctionDirection::kCrossesZero,
@@ -727,11 +729,13 @@ class PeriodicPublishWithTimedWitnessSystem final : public LeafSystem<double> {
       1.0, 0.5, &PeriodicPublishWithTimedWitnessSystem::PublishPeriodic);
 
     // Declare the publish event for the witness trigger.
-    PublishEvent<double> event([](const System<double>& system,
-                                  const Context<double>& context,
-                                  const PublishEvent<double>& callback_event) {
+    PublishEvent<double> event;
+    event.set_callback([](const System<double>& system,
+                          const Context<double>& context,
+                          const PublishEvent<double>& callback_event) {
       dynamic_cast<const PeriodicPublishWithTimedWitnessSystem&>(system)
           .PublishWitness(context, callback_event);
+      return EventStatus::Succeeded();
     });
     witness_ = this->MakeWitnessFunction(
         "timed_witness", WitnessFunctionDirection::kPositiveThenNonPositive,
@@ -1413,9 +1417,8 @@ class UnrestrictedUpdater : public LeafSystem<double> {
                             double* time) const override {
     const double inf = std::numeric_limits<double>::infinity();
     *time = (context.get_time() < t_upd_) ? t_upd_ : inf;
-    UnrestrictedUpdateEvent<double> event(
-        TriggerType::kPeriodic);
-    event.AddToComposite(event_info);
+    UnrestrictedUpdateEvent<double> event;
+    event.AddToComposite(TriggerType::kPeriodic, event_info);
   }
 
   void DoCalcUnrestrictedUpdate(
@@ -2101,11 +2104,13 @@ GTEST_TEST(SimulatorTest, Initialization) {
   class InitializationTestSystem : public LeafSystem<double> {
    public:
     InitializationTestSystem() {
-      PublishEvent<double> pub_event([](const System<double>& system,
-                                        const Context<double>& context,
-                                        const PublishEvent<double>& event) {
+      PublishEvent<double> pub_event;
+      pub_event.set_callback([](const System<double>& system,
+                                const Context<double>& context,
+                                const PublishEvent<double>& event) {
         dynamic_cast<const InitializationTestSystem&>(system).InitPublish(
             context, event);
+        return EventStatus::Succeeded();
       });
       DeclareInitializationEvent(pub_event);
 
@@ -2362,11 +2367,13 @@ GTEST_TEST(SimulatorTest, MissedPublishEventIssue13296) {
                               double* next_update_time) const final {
       const double inf = std::numeric_limits<double>::infinity();
       *next_update_time = message_is_waiting_ ? context.get_time() : inf;
-      PublishEvent<double> event([](const System<double>& system,
-                                    const Context<double>& handler_context,
-                                    const PublishEvent<double>& handler_event) {
+      PublishEvent<double> event;
+      event.set_callback([](const System<double>& system,
+                            const Context<double>& handler_context,
+                            const PublishEvent<double>& handler_event) {
         dynamic_cast<const RightNowEventSystem&>(system).MyPublishHandler(
             handler_context, handler_event);
+        return EventStatus::Succeeded();
       });
       event.AddToComposite(TriggerType::kTimed, event_info);
     }

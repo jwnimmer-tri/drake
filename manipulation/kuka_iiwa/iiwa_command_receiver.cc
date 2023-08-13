@@ -117,12 +117,16 @@ void IiwaCommandReceiver::DoCalcNextUpdateTime(
   // Schedule a discrete update event at now to latch the current position.
   *time = context.get_time();
   auto& discrete_events = events->get_mutable_discrete_update_events();
-  discrete_events.AddEvent(DiscreteUpdateEvent<double>(
-      [this](const Context<double>& event_context,
-             const DiscreteUpdateEvent<double>&,
-             DiscreteValues<double>* next_values) {
-        LatchInitialPosition(event_context, next_values);
-      }));
+  DiscreteUpdateEvent<double> event;
+  event.set_trigger_type(systems::TriggerType::kTimed);
+  event.set_callback([this](const System<double>&,
+                            const Context<double>& event_context,
+                            const DiscreteUpdateEvent<double>&,
+                            DiscreteValues<double>* next_values) {
+    LatchInitialPosition(event_context, next_values);
+    return systems::EventStatus::Succeeded();
+  });
+  discrete_events.AddEvent(event);
 }
 
 void IiwaCommandReceiver::CalcDefaultedCommand(

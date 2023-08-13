@@ -478,55 +478,69 @@ void DoScalarDependentDefinitions(py::module m) {
       m, "Event", GetPyParam<T>(), doc.Event.doc)
       .def("get_trigger_type", &Event<T>::get_trigger_type,
           doc.Event.get_trigger_type.doc);
-  DefineTemplateClassWithDefault<PublishEvent<T>, Event<T>>(
-      m, "PublishEvent", GetPyParam<T>(), doc.PublishEvent.doc)
-      .def(py::init(WrapCallbacks(
-               [](const typename PublishEvent<T>::PublishCallback& callback) {
-                 return std::make_unique<PublishEvent<T>>(callback);
-               })),
-          py::arg("callback"), doc.PublishEvent.ctor.doc_1args_callback)
-      .def(py::init(
-               WrapCallbacks([](const typename PublishEvent<T>::SystemCallback&
-                                     system_callback) {
-                 return std::make_unique<PublishEvent<T>>(system_callback);
-               })),
-          py::arg("system_callback"),
-          doc.PublishEvent.ctor.doc_1args_system_callback)
-      .def(py::init(WrapCallbacks(
-               [](const TriggerType& trigger_type,
-                   const typename PublishEvent<T>::PublishCallback& callback) {
-                 return std::make_unique<PublishEvent<T>>(
-                     trigger_type, callback);
-               })),
-          py::arg("trigger_type"), py::arg("callback"),
-          "Users should not be calling these")
-      .def(py::init(
-               WrapCallbacks([](const TriggerType& trigger_type,
-                                 const typename PublishEvent<T>::SystemCallback&
-                                     system_callback) {
-                 return std::make_unique<PublishEvent<T>>(
-                     trigger_type, system_callback);
-               })),
-          py::arg("trigger_type"), py::arg("system_callback"),
-          "Users should not be calling these");
+  {
+    auto cls = DefineTemplateClassWithDefault<PublishEvent<T>, Event<T>>(
+        m, "PublishEvent", GetPyParam<T>(), doc.PublishEvent.doc);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    cls  // BR
+        .def(py::init(WrapCallbacks(
+                 [](const typename PublishEvent<T>::PublishCallback& callback) {
+                   return std::make_unique<PublishEvent<T>>(callback);
+                 })),
+            py::arg("callback"), doc.PublishEvent.ctor.doc_deprecated)
+        .def(py::init(WrapCallbacks(
+                 [](const typename PublishEvent<T>::SystemCallback&
+                         system_callback) {
+                   return std::make_unique<PublishEvent<T>>(system_callback);
+                 })),
+            py::arg("system_callback"), doc.PublishEvent.ctor.doc_deprecated)
+        .def(
+            py::init(WrapCallbacks(
+                [](const TriggerType& trigger_type,
+                    const typename PublishEvent<T>::PublishCallback& callback) {
+                  return std::make_unique<PublishEvent<T>>(
+                      trigger_type, callback);
+                })),
+            py::arg("trigger_type"), py::arg("callback"),
+            doc.PublishEvent.ctor.doc_deprecated)
+        .def(py::init(WrapCallbacks(
+                 [](const TriggerType& trigger_type,
+                     const typename PublishEvent<T>::SystemCallback&
+                         system_callback) {
+                   return std::make_unique<PublishEvent<T>>(
+                       trigger_type, system_callback);
+                 })),
+            py::arg("trigger_type"), py::arg("system_callback"),
+            doc.PublishEvent.ctor.doc_deprecated);
+#pragma GCC diagnostic pop
+  }
   DefineTemplateClassWithDefault<DiscreteUpdateEvent<T>, Event<T>>(
       m, "DiscreteUpdateEvent", GetPyParam<T>(), doc.DiscreteUpdateEvent.doc);
-  DefineTemplateClassWithDefault<UnrestrictedUpdateEvent<T>, Event<T>>(m,
-      "UnrestrictedUpdateEvent", GetPyParam<T>(),
-      doc.UnrestrictedUpdateEvent.doc)
-      .def(
-          py::init(WrapCallbacks([](const typename UnrestrictedUpdateEvent<
-                                     T>::UnrestrictedUpdateCallback& callback) {
-            return std::make_unique<UnrestrictedUpdateEvent<T>>(callback);
-          })),
-          py::arg("callback"),
-          doc.UnrestrictedUpdateEvent.ctor.doc_1args_callback)
-      .def(py::init(WrapCallbacks([](const typename UnrestrictedUpdateEvent<
-                                      T>::SystemCallback& system_callback) {
-        return std::make_unique<UnrestrictedUpdateEvent<T>>(system_callback);
-      })),
-          py::arg("system_callback"),
-          doc.UnrestrictedUpdateEvent.ctor.doc_1args_system_callback);
+  {
+    auto cls =
+        DefineTemplateClassWithDefault<UnrestrictedUpdateEvent<T>, Event<T>>(m,
+            "UnrestrictedUpdateEvent", GetPyParam<T>(),
+            doc.UnrestrictedUpdateEvent.doc);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    cls  // BR
+        .def(py::init(
+                 WrapCallbacks([](const typename UnrestrictedUpdateEvent<
+                                   T>::UnrestrictedUpdateCallback& callback) {
+                   return std::make_unique<UnrestrictedUpdateEvent<T>>(
+                       callback);
+                 })),
+            py::arg("callback"),
+            doc.UnrestrictedUpdateEvent.ctor.doc_deprecated)
+        .def(py::init(WrapCallbacks([](const typename UnrestrictedUpdateEvent<
+                                        T>::SystemCallback& system_callback) {
+          return std::make_unique<UnrestrictedUpdateEvent<T>>(system_callback);
+        })),
+            py::arg("system_callback"),
+            doc.UnrestrictedUpdateEvent.ctor.doc_deprecated);
+#pragma GCC diagnostic pop
+  }
 
   // Glue mechanisms.
   DefineTemplateClassWithDefault<DiagramBuilder<T>>(

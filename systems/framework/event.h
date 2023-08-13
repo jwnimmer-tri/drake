@@ -406,7 +406,7 @@ using TriggerTypeSet = std::unordered_set<TriggerType, DefaultHash>;
  * main pieces of information: an enum trigger type and an optional attribute
  * that can be used to explain why the event is triggered.
  * Derived classes should contain a function pointer to an optional callback
- * function that handles the event. See @ref event_callbacks for detail.
+ * function that handles the event.
  * No-op is the default handling behavior.  Currently, the System framework
  * supports three concrete event types: PublishEvent, DiscreteUpdateEvent,
  * and UnrestrictedUpdateEvent distinguished by their callback functions' write
@@ -419,29 +419,25 @@ using TriggerTypeSet = std::unordered_set<TriggerType, DefaultHash>;
 template <typename T>
 class Event {
  public:
-  #ifndef DRAKE_DOXYGEN_CXX
-  // Constructs an Event with no trigger type and no event data.
-  Event() { trigger_type_ = TriggerType::kUnknown; }
-  virtual ~Event() {}
-  #endif
+  virtual ~Event();
 
-  // TODO(eric.cousineau): Deprecate and remove this alias.
-  using TriggerType = systems::TriggerType;
+  // TODO(jwnimmer-tri) Upon completion of deprecation, we can respell
+  // systems::TriggerType to just plain TriggerType throughout the code below.
+  using TriggerType DRAKE_DEPRECATED(
+      "2023-12-01", "Use systems::TriggerType instead.") = systems::TriggerType;
 
-  /// Returns `true` if this is a DiscreteUpdateEvent.
+  /** Returns `true` if this is a DiscreteUpdateEvent. */
   virtual bool is_discrete_update() const = 0;
 
   /**
    * Clones this instance.
    */
-  std::unique_ptr<Event> Clone() const {
-    return std::unique_ptr<Event>(DoClone());
-  }
+  virtual std::unique_ptr<Event> Clone() const = 0;
 
   /**
    * Returns the trigger type.
    */
-  TriggerType get_trigger_type() const { return trigger_type_; }
+  systems::TriggerType get_trigger_type() const { return trigger_type_; }
 
   /**
    * Returns true if this event has associated data of the given
@@ -481,18 +477,21 @@ class Event {
     return std::get_if<EventDataType>(&event_data_);
   }
 
-  // Note: Users should not be calling these.
-  #if !defined(DRAKE_DOXYGEN_CXX)
-  // Sets the trigger type.
-  void set_trigger_type(const TriggerType trigger_type) {
-    trigger_type_ = trigger_type; }
+  /** Establishes the trigger type.
+   * @throws std::exception unless the existing trigger type was either
+   * `kUndefined` or already set to `trigger_type`.
+   */
+  void set_trigger_type(const systems::TriggerType trigger_type) {
+    trigger_type_ = trigger_type;
+  }
 
-  // Sets data to one of the available variants.
+#if !defined(DRAKE_DOXYGEN_CXX)
+  /* (Internal use only.) Sets data to one of the available variants. */
   template <typename EventDataType>
   void set_event_data(EventDataType data) {
     event_data_ = std::move(data);
   }
-  #endif
+#endif
 
   /**
    * Adds a clone of `this` event to the event collection `events`, with
@@ -503,10 +502,10 @@ class Event {
    *      unknown.
    * @pre `events` must not be null.
    */
-  void AddToComposite(TriggerType trigger_type,
+  void AddToComposite(systems::TriggerType trigger_type,
                       CompositeEventCollection<T>* events) const {
     DRAKE_DEMAND(events != nullptr);
-    DRAKE_DEMAND(trigger_type_ == TriggerType::kUnknown ||
+    DRAKE_DEMAND(trigger_type_ == systems::TriggerType::kUnknown ||
                  trigger_type_ == trigger_type);
     DoAddToComposite(trigger_type, &*events);
   }
@@ -517,35 +516,30 @@ class Event {
    */
   void AddToComposite(CompositeEventCollection<T>* events) const {
     DRAKE_DEMAND(events != nullptr);
-    DRAKE_DEMAND(trigger_type_ != TriggerType::kUnknown);
+    DRAKE_DEMAND(trigger_type_ != systems::TriggerType::kUnknown);
     DoAddToComposite(trigger_type_, &*events);
   }
 
  protected:
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(Event);
 
-  // Note: Users should not be calling this.
-  #if !defined(DRAKE_DOXYGEN_CXX)
-  // Constructs an Event with the specified @p trigger.
-  explicit Event(const TriggerType& trigger) : trigger_type_(trigger) {}
-  #endif
+  /** Creates an empty event. */
+  Event() = default;
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit Event(const systems::TriggerType& trigger)
+      : trigger_type_(trigger) {}
 
   /**
    * Derived classes must implement this to add a clone of this Event to
    * the event collection and unconditionally set its trigger type.
    */
-  virtual void DoAddToComposite(TriggerType trigger_type,
+  virtual void DoAddToComposite(systems::TriggerType trigger_type,
                                 CompositeEventCollection<T>* events) const = 0;
 
-  /**
-   * Derived classes must implement this method to clone themselves. Any
-   * Event-specific data is cloned using the Clone() method. Data specific
-   * to the class derived from Event must be cloned by the implementation.
-   */
-  [[nodiscard]] virtual Event* DoClone() const = 0;
-
  private:
-  TriggerType trigger_type_{TriggerType::kUnknown};
+  systems::TriggerType trigger_type_{systems::TriggerType::kUnknown};
   std::variant<std::monostate, PeriodicEventData, WitnessTriggeredEventData<T>>
       event_data_;
 };
@@ -563,349 +557,296 @@ struct PeriodicEventDataComparator {
   }
 };
 
-/** @defgroup event_callbacks Event Callbacks
-    @ingroup technical_notes
+namespace internal {
 
- The derived subclasses of Event<T> support two different type signatures for
- callbacks. They differ by whether a System<T>& argument is present. For this
- discussion, call them legacy (no system) callbacks and system callbacks.
+/* CRTP base class for events. */
+template <typename T, typename Derived, typename Output>
+class EventImpl : public Event<T> {
+ public:
+  bool is_discrete_update() const final;
 
- One goal of offering both signatures is to support the possibility of
- simulation without heap transactions after initialization. The motivation is
- to enable certain kinds of soft real-time applications of Drake; see #14543
- for more detail. Even with careful support within Drake, implementers of such
- systems need to analyze and test carefully to see the heap proscription is
- maintained.
+  std::unique_ptr<Event<T>> Clone() const final;
 
- The most common and convenient use of events and callbacks will be indirect,
- via the LeafSystem Declare*Event() methods. The system callbacks permit those
- methods to avoid heap usage induced in std::function by lambdas with captures
- of a certain size. Empirically, the capture of an ordinary pointer and a
- (wider) pointer-to-member-function are enough to induce heap allocations.
+ protected:
+  DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(EventImpl);
 
- Direct clients of the event callbacks here may prefer the legacy callback,
- together with a lambda capture of a pointer of the exact type needed. This
- technique avoids a down-cast within the callback body. However, if other
- captures are also necessary, the system callback (with a down-cast) may help
- avoid heap use.
-*/
-// TODO(rpoyner-tri): extend the support described above to all subclasses.
+  /* (Internal use only.) */
+  using Callback = std::conditional_t<
+      std::is_void_v<Output>,
+      std::function<EventStatus(const System<T>&, const Context<T>&,
+                                const Derived&)>,
+      std::function<EventStatus(const System<T>&, const Context<T>&,
+                                const Derived&, Output*)>>;
+
+  EventImpl() = default;
+
+  ~EventImpl() override;
+
+  const Callback& get_callback() const { return callback_; }
+  Callback& get_mutable_callback() { return callback_; }
+
+ private:
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  Derived& derived() { return *static_cast<Derived*>(this); }
+
+  void DoAddToComposite(TriggerType trigger_type,
+                        CompositeEventCollection<T>* events) const final;
+
+  // Callback function to handle this event; allowed to be null.
+  Callback callback_;
+};
+
+}  // namespace internal
 
 /**
  * This class represents a publish event. It has an optional callback function
- * (two forms are supported) to do custom handling of this event. @see
- * System::Publish for more details. @see LeafSystem for more convenient
- * interfaces to publish events via the Declare*PublishEvent() methods.
+ * to do custom handling of this event. @see System::Publish for more details.
+ * @see LeafSystem for more convenient interfaces to publish events via the
+ * Declare*PublishEvent() methods.
  */
 template <typename T>
-class PublishEvent final : public Event<T> {
+class PublishEvent final
+    : public internal::EventImpl<T, PublishEvent<T>, void> {
  public:
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(PublishEvent);
-  bool is_discrete_update() const override { return false; }
 
-  /** @name Publish Callbacks
-   *
-   * Two callback signatures are supported. See @ref event_callbacks for a
-   * complete discussion. Both callback types receive a const reference to the
-   * context and this publish event. They differ in whether a const reference
-   * to the owning system is also provided.
-   */
-  ///@{
-  /**
-   * Callback without system reference.
-   */
-  typedef std::function<void(const Context<T>&, const PublishEvent<T>&)>
-      PublishCallback;
+  /** Creates an empty event. */
+  PublishEvent() = default;
 
-  /**
-   * Callback with const system reference.
-   */
-  typedef std::function<void(const System<T>&, const Context<T>&,
-                             const PublishEvent<T>&)> SystemCallback;
-  ///@}
+  ~PublishEvent() final;
 
-  /// Makes a PublishEvent with no trigger type, no event data, and
-  /// no specified callback function.
-  PublishEvent() : Event<T>() {}
+  /** Sets the callback. Passing nullptr is allowed. */
+  void set_callback(
+      std::function<EventStatus(const System<T>&, const Context<T>&,
+                                const PublishEvent<T>&)>
+          callback) {
+    this->get_mutable_callback() = std::move(callback);
+  }
 
-  /// Makes a PublishEvent with no trigger type, no event data, and
-  /// the specified callback function.
-  explicit PublishEvent(const PublishCallback& callback)
-      : Event<T>(), callback_(callback) {}
+  /** Invokes the callback (if set). */
+  [[nodiscard]] EventStatus InvokeCallback(const System<T>& system,
+                                           const Context<T>& context) const;
 
-  /// Makes a PublishEvent with no trigger type, no event data, and
-  /// the specified system callback function.
-  explicit PublishEvent(const SystemCallback& system_callback)
-      : Event<T>(), system_callback_(system_callback) {}
+  // All members after this point are deprecated.
+  // Save your eyeballs and stop reading now.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  using PublishCallback DRAKE_DEPRECATED(
+      "2023-12-01", "Replaced by PublishEvent<T>::Callback") =
+      std::function<void(const Context<T>&, const PublishEvent<T>&)>;
 
-  // Note: Users should not be calling these.
-  #if !defined(DRAKE_DOXYGEN_CXX)
-  // Makes a PublishEvent with `trigger_type`, no event data, and
-  // callback function `callback`, which can be null.
-  PublishEvent(const TriggerType& trigger_type,
-               const PublishCallback& callback)
-      : Event<T>(trigger_type), callback_(callback) {}
+  using SystemCallback DRAKE_DEPRECATED(
+      "2023-12-01", "Replaced by PublishEvent<T>::Callback") =
+      std::function<void(const System<T>&, const Context<T>&,
+                         const PublishEvent<T>&)>;
 
-  // Makes a PublishEvent with `trigger_type`, no event data, and
-  // system callback function `system_callback`, which can be null.
-  PublishEvent(const TriggerType& trigger_type,
-               const SystemCallback& system_callback)
-      : Event<T>(trigger_type), system_callback_(system_callback) {}
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit PublishEvent(const PublishCallback& callback);
 
-  // Makes a PublishEvent with `trigger_type`, no event data, and
-  // no specified callback function.
-  explicit PublishEvent(const TriggerType& trigger_type)
-      : Event<T>(trigger_type) {}
-  #endif
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit PublishEvent(const SystemCallback& callback);
 
-  /**
-   * Calls the optional callback or system callback function, if one exists,
-   * with @p system, @p context, and `this`.
-   */
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  PublishEvent(const TriggerType& trigger_type, const PublishCallback& callback)
+      : PublishEvent(callback) {
+    this->set_trigger_type(trigger_type);
+  }
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  PublishEvent(const TriggerType& trigger_type, const SystemCallback& callback)
+      : PublishEvent(callback) {
+    this->set_trigger_type(trigger_type);
+  }
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit PublishEvent(const TriggerType& trigger_type) {
+    this->set_trigger_type(trigger_type);
+  }
+
+  DRAKE_DEPRECATED("2023-12-01", "Use InvokeCallback()")
   void handle(const System<T>& system, const Context<T>& context) const {
-    // At most one callback can be set.
-    DRAKE_ASSERT(!(callback_ && system_callback_));
-    if (callback_ != nullptr) {
-      callback_(context, *this);
-    } else if (system_callback_ != nullptr) {
-      system_callback_(system, context, *this);
-    }
+    const EventStatus ignored = this->InvokeCallback(system, context);
+    // The deprecated mechanisms did not provide the status back to users.
+    (void)(ignored);
   }
-
- private:
-  void DoAddToComposite(TriggerType trigger_type,
-                        CompositeEventCollection<T>* events) const final {
-    PublishEvent event(*this);
-    event.set_trigger_type(trigger_type);
-    events->AddPublishEvent(std::move(event));
-  }
-
-  // Clones PublishEvent-specific data.
-  [[nodiscard]] PublishEvent<T>* DoClone() const final {
-    return new PublishEvent(*this);
-  }
-
-  // Optional callback functions that handle this publish event. At most one
-  // callback can be set; whichever one is set will be invoked. It is valid for
-  // no callback to be set.
-  PublishCallback callback_{nullptr};
-  SystemCallback system_callback_{nullptr};
+#pragma GCC diagnostic pop
 };
 
 /**
  * This class represents a discrete update event. It has an optional callback
- * function (two forms are supported) to do custom handling of this event, and
- * that can write updates to a mutable, non-null DiscreteValues object.  @see
- * LeafSystem for more convenient interfaces to discrete update events via the
- * Declare*DiscreteUpdateEvent() methods.
+ * function to do custom handling of this event, and that can write updates to a
+ * mutable, non-null DiscreteValues object.  @see LeafSystem for more convenient
+ * interfaces to discrete update events via the Declare*DiscreteUpdateEvent()
+ * methods.
  */
 template <typename T>
-class DiscreteUpdateEvent final : public Event<T> {
+class DiscreteUpdateEvent final
+    : public internal::EventImpl<T, DiscreteUpdateEvent<T>, DiscreteValues<T>> {
  public:
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(DiscreteUpdateEvent);
-  bool is_discrete_update() const override { return true; }
 
-  /** @name Discrete Update Callbacks
-   *
-   * Two callback signatures are supported. See @ref event_callbacks for a
-   * complete discussion. Both callback types receive a const reference to the
-   * context and this discrete update event, and a writable non-null pointer to
-   * discrete state which the callback may write to. They differ in whether a
-   * const reference to the owning system is also provided.
-   */
-  ///@{
-  /**
-   * Callback without system reference.
-   */
-  typedef std::function<void(const Context<T>&, const DiscreteUpdateEvent<T>&,
-                             DiscreteValues<T>*)>
-      DiscreteUpdateCallback;
+  /** Creates an empty event. */
+  DiscreteUpdateEvent() = default;
 
-  /**
-   * Callback with const system reference.
-   */
-  typedef std::function<void(const System<T>&, const Context<T>&,
-                             const DiscreteUpdateEvent<T>&, DiscreteValues<T>*)>
-      SystemCallback;
-  ///@}
+  ~DiscreteUpdateEvent() final;
 
-  /// Makes a DiscreteUpdateEvent with no trigger type, no event data, and
-  /// no specified callback function.
-  DiscreteUpdateEvent() : Event<T>() {}
+  /** Sets the callback. Passing nullptr is allowed. */
+  void set_callback(
+      std::function<EventStatus(const System<T>&, const Context<T>&,
+                                const DiscreteUpdateEvent<T>&,
+                                DiscreteValues<T>*)>
+          callback) {
+    this->get_mutable_callback() = std::move(callback);
+  }
 
-  /// Makes a DiscreteUpdateEvent with no trigger type, no event data, and
-  /// the specified callback function.
-  explicit DiscreteUpdateEvent(const DiscreteUpdateCallback& callback)
-      : Event<T>(), callback_(callback) {}
+  /** Invokes the callback (if set). */
+  [[nodiscard]] EventStatus InvokeCallback(
+      const System<T>& system, const Context<T>& context,
+      DiscreteValues<T>* discrete_state) const;
 
-  /// Makes a DiscreteUpdateEvent with no trigger type, no event data, and
-  /// the specified system callback function.
-  explicit DiscreteUpdateEvent(const SystemCallback& system_callback)
-      : Event<T>(), system_callback_(system_callback) {}
+  // All members after this point are deprecated.
+  // Save your eyeballs and stop reading now.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  using DiscreteUpdateCallback DRAKE_DEPRECATED(
+      "2023-12-01", "Replaced by DiscreteUpdateEvent<T>::Callback") =
+      std::function<void(const Context<T>&, const DiscreteUpdateEvent<T>&,
+                         DiscreteValues<T>*)>;
 
-  // Note: Users should not be calling these.
-  #if !defined(DRAKE_DOXYGEN_CXX)
-  // Makes a DiscreteUpdateEvent with `trigger_type` with no event data and
-  // the callback function `callback`.
-  // `callback` can be null.
+  using SystemCallback DRAKE_DEPRECATED(
+      "2023-12-01", "Replaced by DiscreteUpdateEvent<T>::Callback") =
+      std::function<void(const System<T>&, const Context<T>&,
+                         const DiscreteUpdateEvent<T>&, DiscreteValues<T>*)>;
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit DiscreteUpdateEvent(const DiscreteUpdateCallback& callback);
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit DiscreteUpdateEvent(const SystemCallback& callback);
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
   DiscreteUpdateEvent(const TriggerType& trigger_type,
                       const DiscreteUpdateCallback& callback)
-      : Event<T>(trigger_type), callback_(callback) {}
+      : DiscreteUpdateEvent(callback) {
+    this->set_trigger_type(trigger_type);
+  }
 
-  // Makes a DiscreteUpdateEvent with `trigger_type` with no event data and
-  // the system callback function `system_callback`.
-  // `system_callback` can be null.
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
   DiscreteUpdateEvent(const TriggerType& trigger_type,
-                      const SystemCallback& system_callback)
-      : Event<T>(trigger_type), system_callback_(system_callback) {}
+                      const SystemCallback& callback)
+      : DiscreteUpdateEvent(callback) {
+    this->set_trigger_type(trigger_type);
+  }
 
-  // Makes a DiscreteUpdateEvent with @p trigger_type with no event data and
-  // no specified callback function.
-  explicit DiscreteUpdateEvent(const TriggerType& trigger_type)
-      : Event<T>(trigger_type) {}
-  #endif
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit DiscreteUpdateEvent(const TriggerType& trigger_type) {
+    this->set_trigger_type(trigger_type);
+  }
 
-  /**
-   * Calls the optional callback function, if one exists, with @p system, @p
-   * context, `this` and @p discrete_state.
-   */
+  DRAKE_DEPRECATED("2023-12-01", "Use InvokeCallback()")
   void handle(const System<T>& system, const Context<T>& context,
               DiscreteValues<T>* discrete_state) const {
-    // At most one callback can be set.
-    DRAKE_ASSERT(!(callback_ && system_callback_));
-    if (callback_ != nullptr) {
-      callback_(context, *this, discrete_state);
-    } else if (system_callback_ != nullptr) {
-      system_callback_(system, context, *this, discrete_state);
-    }
+    const EventStatus ignored =
+        this->InvokeCallback(system, context, discrete_state);
+    // The deprecated mechanisms did not provide the status back to users.
+    (void)(ignored);
   }
-
- private:
-  void DoAddToComposite(TriggerType trigger_type,
-                        CompositeEventCollection<T>* events) const final {
-    DiscreteUpdateEvent<T> event(*this);
-    event.set_trigger_type(trigger_type);
-    events->AddDiscreteUpdateEvent(std::move(event));
-  }
-
-  // Clones DiscreteUpdateEvent-specific data.
-  [[nodiscard]] DiscreteUpdateEvent<T>* DoClone() const final {
-    return new DiscreteUpdateEvent(*this);
-  }
-
-  // Optional callback functions that handle this discrete update event. At
-  // most one callback can be set; whichever one is set will be invoked. It is
-  // valid for no callback to be set.
-  DiscreteUpdateCallback callback_{nullptr};
-  SystemCallback system_callback_{nullptr};
+#pragma GCC diagnostic pop
 };
 
 /**
  * This class represents an unrestricted update event. It has an optional
- * callback function (two forms are supported) to do custom handling of this
- * event, and that can write updates to a mutable, non-null State object. @see
- * LeafSystem for more convenient interfaces to unrestricted update events via
- * the Declare*UnrestrictedUpdateEvent() methods.
+ * callback function to do custom handling of this event, and that can write
+ * updates to a mutable, non-null State object. @see LeafSystem for more
+ * convenient interfaces to unrestricted update events via the
+ * Declare*UnrestrictedUpdateEvent() methods.
  */
 template <typename T>
-class UnrestrictedUpdateEvent final : public Event<T> {
+class UnrestrictedUpdateEvent final
+    : public internal::EventImpl<T, UnrestrictedUpdateEvent<T>, State<T>> {
  public:
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(UnrestrictedUpdateEvent);
-  bool is_discrete_update() const override { return false; }
 
-  /** @name Unrestricted Update Callbacks
-   *
-   * Two callback signatures are supported. See @ref event_callbacks for a
-   * complete discussion. Both callback types receive a const reference to the
-   * context and this unrestricted update event, and a writable non-null
-   * pointer to state which the callback may write to. They differ in whether a
-   * const reference to the owning system is also provided.
-   */
-  ///@{
-  /**
-   * Callback without system reference.
-   */
-  typedef std::function<void(const Context<T>&,
-                             const UnrestrictedUpdateEvent<T>&, State<T>*)>
-      UnrestrictedUpdateCallback;
+  /** Creates an empty event. */
+  UnrestrictedUpdateEvent() = default;
 
-  /**
-   * Callback with const system reference.
-   */
-  typedef std::function<void(const System<T>&, const Context<T>&,
-                             const UnrestrictedUpdateEvent<T>&, State<T>*)>
-      SystemCallback;
-  ///@}
+  ~UnrestrictedUpdateEvent() final;
 
-  /// Makes an UnrestrictedUpdateEvent with no trigger type, no event data, and
-  /// no specified callback function.
-  UnrestrictedUpdateEvent() : Event<T>() {}
+  /** Sets the callback. Passing nullptr is allowed. */
+  void set_callback(
+      std::function<EventStatus(const System<T>&, const Context<T>&,
+                                const UnrestrictedUpdateEvent<T>&, State<T>*)>
+          callback) {
+    this->get_mutable_callback() = std::move(callback);
+  }
 
-  /// Makes a UnrestrictedUpdateEvent with no trigger type, no event data, and
-  /// the specified callback function.
-  explicit UnrestrictedUpdateEvent(const UnrestrictedUpdateCallback& callback)
-      : Event<T>(), callback_(callback) {}
+  /** Invokes the callback (if set). */
+  [[nodiscard]] EventStatus InvokeCallback(const System<T>& system,
+                                           const Context<T>& context,
+                                           State<T>* state) const;
 
-  /// Makes a UnrestrictedUpdateEvent with no trigger type, no event data, and
-  /// the specified system callback function.
-  explicit UnrestrictedUpdateEvent(
-      const SystemCallback& system_callback)
-      : Event<T>(), system_callback_(system_callback) {}
+  // All members after this point are deprecated.
+  // Save your eyeballs and stop reading now.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  using UnrestrictedUpdateCallback DRAKE_DEPRECATED(
+      "2023-12-01", "Replaced by UnrestrictedUpdateEvent<T>::Callback") =
+      std::function<void(const Context<T>&, const UnrestrictedUpdateEvent<T>&,
+                         State<T>*)>;
 
-  // Note: Users should not be calling these.
-  #if !defined(DRAKE_DOXYGEN_CXX)
-  // Makes an UnrestrictedUpdateEvent with `trigger_type` and callback function
-  // `callback`. `callback` can be null.
+  using SystemCallback DRAKE_DEPRECATED(
+      "2023-12-01", "Replaced by UnrestrictedUpdateEvent<T>::Callback") =
+      std::function<void(const System<T>&, const Context<T>&,
+                         const UnrestrictedUpdateEvent<T>&, State<T>*)>;
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit UnrestrictedUpdateEvent(const UnrestrictedUpdateCallback& callback);
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit UnrestrictedUpdateEvent(const SystemCallback& callback);
+
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
   UnrestrictedUpdateEvent(const TriggerType& trigger_type,
                           const UnrestrictedUpdateCallback& callback)
-      : Event<T>(trigger_type), callback_(callback) {}
+      : UnrestrictedUpdateEvent(callback) {
+    this->set_trigger_type(trigger_type);
+  }
 
-  // Makes an UnrestrictedUpdateEvent with `trigger_type` and system callback
-  // function `system_callback`. `system_callback` can be null.
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
   UnrestrictedUpdateEvent(const TriggerType& trigger_type,
-                          const SystemCallback& system_callback)
-      : Event<T>(trigger_type), system_callback_(system_callback) {}
+                          const SystemCallback& callback)
+      : UnrestrictedUpdateEvent(callback) {
+    this->set_trigger_type(trigger_type);
+  }
 
-  // Makes an UnrestrictedUpateEvent with @p trigger_type, no optional data, and
-  // no callback function.
-  explicit UnrestrictedUpdateEvent(
-      const TriggerType& trigger_type)
-      : Event<T>(trigger_type) {}
-  #endif
+  DRAKE_DEPRECATED("2023-12-01",
+                   "Use setter functions instead of constructor arguments")
+  explicit UnrestrictedUpdateEvent(const TriggerType& trigger_type) {
+    this->set_trigger_type(trigger_type);
+  }
 
-  /**
-   * Calls the optional callback function, if one exists, with @p system, @p
-   * context, `this` and @p state.
-   */
+  DRAKE_DEPRECATED("2023-12-01", "Use InvokeCallback()")
   void handle(const System<T>& system, const Context<T>& context,
               State<T>* state) const {
-    // At most one callback can be set.
-    DRAKE_ASSERT(!(callback_ && system_callback_));
-    if (callback_ != nullptr) {
-      callback_(context, *this, state);
-    } else if (system_callback_ != nullptr) {
-      system_callback_(system, context, *this, state);
-    }
+    const EventStatus ignored = this->InvokeCallback(system, context, state);
+    // The deprecated mechanisms did not provide the status back to users.
+    (void)(ignored);
   }
-
- private:
-  void DoAddToComposite(TriggerType trigger_type,
-                        CompositeEventCollection<T>* events) const final {
-    UnrestrictedUpdateEvent<T> event(*this);
-    event.set_trigger_type(trigger_type);
-    events->AddUnrestrictedUpdateEvent(std::move(event));
-  }
-
-  // Clones event data specific to UnrestrictedUpdateEvent.
-  UnrestrictedUpdateEvent<T>* DoClone() const final {
-    return new UnrestrictedUpdateEvent(*this);
-  }
-
-  // Optional callback functions that handle this unrestricted update event. At
-  // most one callback can be set; whichever one is set will be invoked. It is
-  // valid for no callback to be set.
-  UnrestrictedUpdateCallback callback_{nullptr};
-  SystemCallback system_callback_{nullptr};
+#pragma GCC diagnostic pop
 };
 
 }  // namespace systems

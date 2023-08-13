@@ -496,7 +496,8 @@ TEST_F(LeafSystemTest, WitnessDeclarations) {
   EXPECT_EQ(witness3->CalcWitnessValue(context_), 3.0);
   auto pe = dynamic_cast<const PublishEvent<double>*>(witness3->get_event());
   ASSERT_TRUE(pe);
-  pe->handle(system_, context_);
+  EXPECT_EQ(pe->InvokeCallback(system_, context_).severity(),
+            EventStatus::Severity::kSucceeded);
   EXPECT_TRUE(system_.publish_callback_called());
 
   auto witness4 = system_.MakeWitnessWithDiscreteUpdate();
@@ -510,7 +511,8 @@ TEST_F(LeafSystemTest, WitnessDeclarations) {
   auto de = dynamic_cast<const DiscreteUpdateEvent<double>*>(
       witness4->get_event());
   ASSERT_TRUE(de);
-  de->handle(system_, context_, nullptr);
+  EXPECT_EQ(de->InvokeCallback(system_, context_, nullptr).severity(),
+            EventStatus::Severity::kSucceeded);
   EXPECT_TRUE(system_.discrete_update_callback_called());
 
   auto witness5 = system_.MakeWitnessWithUnrestrictedUpdate();
@@ -524,7 +526,8 @@ TEST_F(LeafSystemTest, WitnessDeclarations) {
   auto ue = dynamic_cast<const UnrestrictedUpdateEvent<double>*>(
       witness5->get_event());
   ASSERT_TRUE(ue);
-  ue->handle(system_, context_, nullptr);
+  EXPECT_EQ(ue->InvokeCallback(system_, context_, nullptr).severity(),
+            EventStatus::Severity::kSucceeded);
   EXPECT_TRUE(system_.unrestricted_update_callback_called());
 
   auto witness6 = system_.DeclareLambdaWitnessWithoutEvent();
@@ -1721,13 +1724,13 @@ TEST_F(LeafSystemTest, CallbackAndInvalidUpdates) {
   // Create an unrestricted update callback that just copies the state.
   LeafCompositeEventCollection<double> leaf_events;
   {
-    UnrestrictedUpdateEvent<double>::UnrestrictedUpdateCallback callback = [](
-        const Context<double>& c, const Event<double>&, State<double>* s) {
+    UnrestrictedUpdateEvent<double> event;
+    event.set_callback([](const System<double>&, const Context<double>& c,
+                          const Event<double>&, State<double>* s) {
       s->SetFrom(*c.CloneState());
-    };
-
-    UnrestrictedUpdateEvent<double> event(TriggerType::kPeriodic, callback);
-    event.AddToComposite(&leaf_events);
+      return EventStatus::Succeeded();
+    });
+    event.AddToComposite(TriggerType::kPeriodic, &leaf_events);
   }
 
   // Verify no exception is thrown.
@@ -1739,15 +1742,15 @@ TEST_F(LeafSystemTest, CallbackAndInvalidUpdates) {
   // exception is thrown.
   leaf_events.Clear();
   {
-    UnrestrictedUpdateEvent<double>::UnrestrictedUpdateCallback callback = [](
-        const Context<double>& c, const Event<double>&, State<double>* s) {
+    UnrestrictedUpdateEvent<double> event;
+    event.set_callback([](const System<double>&, const Context<double>& c,
+                          const Event<double>&, State<double>* s) {
       s->SetFrom(*c.CloneState());
       s->set_continuous_state(std::make_unique<ContinuousState<double>>(
           std::make_unique<BasicVector<double>>(4), 4, 0, 0));
-    };
-
-    UnrestrictedUpdateEvent<double> event(TriggerType::kPeriodic, callback);
-    event.AddToComposite(&leaf_events);
+      return EventStatus::Succeeded();
+    });
+    event.AddToComposite(TriggerType::kPeriodic, &leaf_events);
   }
 
   // Call the unrestricted update function, verifying that an exception
@@ -1764,18 +1767,18 @@ TEST_F(LeafSystemTest, CallbackAndInvalidUpdates) {
   // Change the event to indicate to change the discrete state dimension.
   leaf_events.Clear();
   {
-    UnrestrictedUpdateEvent<double>::UnrestrictedUpdateCallback callback = [](
-        const Context<double>& c, const Event<double>&, State<double>* s) {
+    UnrestrictedUpdateEvent<double> event;
+    event.set_callback([](const System<double>&, const Context<double>& c,
+                          const Event<double>&, State<double>* s) {
       std::vector<std::unique_ptr<BasicVector<double>>> disc_data;
       s->SetFrom(*c.CloneState());
       disc_data.push_back(std::make_unique<BasicVector<double>>(1));
       disc_data.push_back(std::make_unique<BasicVector<double>>(1));
       s->set_discrete_state(
           std::make_unique<DiscreteValues<double>>(std::move(disc_data)));
-    };
-
-    UnrestrictedUpdateEvent<double> event(TriggerType::kPeriodic, callback);
-    event.AddToComposite(&leaf_events);
+      return EventStatus::Succeeded();
+    });
+    event.AddToComposite(TriggerType::kPeriodic, &leaf_events);
   }
 
   // Call the unrestricted update function again, again verifying that an
@@ -1792,14 +1795,14 @@ TEST_F(LeafSystemTest, CallbackAndInvalidUpdates) {
   // Change the event to indicate to change the abstract state dimension.
   leaf_events.Clear();
   {
-    UnrestrictedUpdateEvent<double>::UnrestrictedUpdateCallback callback = [](
-        const Context<double>& c, const Event<double>&, State<double>* s) {
+    UnrestrictedUpdateEvent<double> event;
+    event.set_callback([](const System<double>&, const Context<double>& c,
+                          const Event<double>&, State<double>* s) {
       s->SetFrom(*c.CloneState());
       s->set_abstract_state(std::make_unique<AbstractValues>());
-    };
-
-    UnrestrictedUpdateEvent<double> event(TriggerType::kPeriodic, callback);
-    event.AddToComposite(&leaf_events);
+      return EventStatus::Succeeded();
+    });
+    event.AddToComposite(TriggerType::kPeriodic, &leaf_events);
   }
 
   // Call the unrestricted update function again, again verifying that an

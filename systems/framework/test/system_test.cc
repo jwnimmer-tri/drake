@@ -259,11 +259,11 @@ class TestSystem : public TestSystemBase<double> {
     *time = context.get_time() + 1;
 
     if (context.get_time() < 10.0) {
-      PublishEvent<double> event(TriggerType::kPeriodic);
-      event.AddToComposite(event_info);
+      PublishEvent<double> event;
+      event.AddToComposite(TriggerType::kPeriodic, event_info);
     } else {
-      DiscreteUpdateEvent<double> event(TriggerType::kPeriodic);
-      event.AddToComposite(event_info);
+      DiscreteUpdateEvent<double> event;
+      event.AddToComposite(TriggerType::kPeriodic, event_info);
     }
   }
 

@@ -1,0 +1,8 @@
+
+Could merge early
+- Simulator test edit to use member functions
+  (and AddToComposite better spelling)
+- Rename event_collection => event_and_event_collection
+
+LeafSystem sugar could be better?  Just pass the right lambda to the callback-agnostic helper.
+LeafSystem test use of AddToComposite? (+ LCM interface)

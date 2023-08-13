@@ -6,6 +6,7 @@
 #include "absl/container/inlined_vector.h"
 
 #include "drake/common/pointer_cast.h"
+#include "drake/common/unused.h"
 #include "drake/systems/framework/system_symbolic_inspector.h"
 #include "drake/systems/framework/value_checker.h"
 
@@ -795,7 +796,9 @@ void LeafSystem<T>::DoPublish(
     const Context<T>& context,
     const std::vector<const PublishEvent<T>*>& events) const {
   for (const PublishEvent<T>* event : events) {
-    event->handle(*this, context);
+    const EventStatus status = event->InvokeCallback(*this, context);
+    // TODO(sherm1) Propagate the status.
+    unused(status);
   }
 }
 
@@ -805,7 +808,10 @@ void LeafSystem<T>::DoCalcDiscreteVariableUpdates(
     const std::vector<const DiscreteUpdateEvent<T>*>& events,
     DiscreteValues<T>* discrete_state) const {
   for (const DiscreteUpdateEvent<T>* event : events) {
-    event->handle(*this, context, discrete_state);
+    const EventStatus status =
+        event->InvokeCallback(*this, context, discrete_state);
+    // TODO(sherm1) Propagate the status.
+    unused(status);
   }
 }
 
@@ -815,7 +821,9 @@ void LeafSystem<T>::DoCalcUnrestrictedUpdate(
     const std::vector<const UnrestrictedUpdateEvent<T>*>& events,
     State<T>* state) const {
   for (const UnrestrictedUpdateEvent<T>* event : events) {
-    event->handle(*this, context, state);
+    const EventStatus status = event->InvokeCallback(*this, context, state);
+    // TODO(sherm1) Propagate the status.
+    unused(status);
   }
 }
 

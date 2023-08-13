@@ -110,20 +110,19 @@ void LcmSubscriberSystem::DoCalcNextUpdateTime(
 
   // Create a unrestricted event and tie the handler to the corresponding
   // function.
-  systems::UnrestrictedUpdateEvent<double>::UnrestrictedUpdateCallback
-      callback = [this](const Context<double>& c,
-                        const systems::UnrestrictedUpdateEvent<double>&,
-                        State<double>* s) {
-        this->ProcessMessageAndStoreToAbstractState(c, s);
-      };
+  systems::UnrestrictedUpdateEvent<double> event;
+  event.set_trigger_type(TriggerType::kTimed);
+  event.set_callback([this](const System<double>&, const Context<double>& c,
+                            const systems::UnrestrictedUpdateEvent<double>&,
+                            State<double>* s) {
+    return this->ProcessMessageAndStoreToAbstractState(c, s);
+  });
 
   // Schedule an update event at the current time.
   *time = context.get_time();
   EventCollection<UnrestrictedUpdateEvent<double>>& uu_events =
       events->get_mutable_unrestricted_update_events();
-  uu_events.AddEvent(
-      systems::UnrestrictedUpdateEvent<double>(
-          TriggerType::kTimed, callback));
+  uu_events.AddEvent(event);
 }
 
 std::string LcmSubscriberSystem::make_name(const std::string& channel) {

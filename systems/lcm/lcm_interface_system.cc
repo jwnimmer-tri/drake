@@ -90,8 +90,8 @@ void LcmInterfaceSystem::DoCalcNextUpdateTime(
     *time = context.get_time();
 
     // At least one Event object must be returned when time ≠ ∞.
-    PublishEvent<double> event(TriggerType::kTimed);
-    event.AddToComposite(events);
+    PublishEvent<double> event;
+    event.AddToComposite(TriggerType::kTimed, events);
   } else {
     *time = std::numeric_limits<double>::infinity();
   }

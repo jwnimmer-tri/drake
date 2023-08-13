@@ -99,7 +99,7 @@ GTEST_TEST(CompassGaitTest, TestCollisionGuard) {
   {
     std::vector<const systems::WitnessFunction<double>*> witness_functions;
     cg.GetWitnessFunctions(*context, &witness_functions);
-    EXPECT_EQ(witness_functions.size(), 1);
+    ASSERT_EQ(witness_functions.size(), 1);
     foot_collision = witness_functions[0];
   }
 
@@ -198,9 +198,12 @@ GTEST_TEST(CompassGaitTest, TestCollisionDynamics) {
 
   // Evaluate collision dynamics.
   auto next_context = cg.CreateDefaultContext();
-  dynamic_cast<const systems::UnrestrictedUpdateEvent<double>*>(
-      foot_collision->get_event())
-      ->handle(cg, *context, &next_context->get_mutable_state());
+  const systems::EventStatus event_status =
+      dynamic_cast<const systems::UnrestrictedUpdateEvent<double>&>(
+          *foot_collision->get_event())
+          .InvokeCallback(cg, *context, &next_context->get_mutable_state());
+  EXPECT_EQ(event_status.severity(),
+            systems::EventStatus::Severity::kSucceeded);
 
   const double angular_momentum_after =
       CalcAngularMomentum(cg, *next_context, true);

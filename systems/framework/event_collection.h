@@ -7,6 +7,7 @@
 
 #include "drake/common/default_scalars.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/pointer_cast.h"
 #include "drake/systems/framework/context.h"
 #include "drake/systems/framework/event.h"
@@ -325,7 +326,8 @@ class LeafEventCollection final : public EventCollection<EventType> {
   static std::unique_ptr<LeafEventCollection<EventType>>
   MakeForcedEventCollection() {
     auto ret = std::make_unique<LeafEventCollection<EventType>>();
-    EventType event(EventType::TriggerType::kForced);
+    EventType event;
+    event.set_trigger_type(TriggerType::kForced);
     ret->AddEvent(std::move(event));
     return ret;
   }
@@ -496,7 +498,7 @@ class CompositeEventCollection {
    * transferred) to it.
    * @throws std::exception if the assumption is incorrect.
    */
-  void AddPublishEvent(PublishEvent<T> event) {
+  void AddEvent(PublishEvent<T> event) {
     auto& events = dynamic_cast<LeafEventCollection<PublishEvent<T>>&>(
         this->get_mutable_publish_events());
     events.AddEvent(std::move(event));
@@ -508,7 +510,7 @@ class CompositeEventCollection {
    * also transferred) to it.
    * @throws std::exception if the assumption is incorrect.
    */
-  void AddDiscreteUpdateEvent(DiscreteUpdateEvent<T> event) {
+  void AddEvent(DiscreteUpdateEvent<T> event) {
     auto& events = dynamic_cast<LeafEventCollection<DiscreteUpdateEvent<T>>&>(
         this->get_mutable_discrete_update_events());
     events.AddEvent(std::move(event));
@@ -520,11 +522,24 @@ class CompositeEventCollection {
    * (ownership is also transferred) to it.
    * @throws std::exception if the assumption is incorrect.
    */
-  void AddUnrestrictedUpdateEvent(UnrestrictedUpdateEvent<T> event) {
+  void AddEvent(UnrestrictedUpdateEvent<T> event) {
     auto& events =
         dynamic_cast<LeafEventCollection<UnrestrictedUpdateEvent<T>>&>(
             this->get_mutable_unrestricted_update_events());
     events.AddEvent(std::move(event));
+  }
+
+  DRAKE_DEPRECATED("2023-12-01", "Use AddEvent() instead")
+  void AddPublishEvent(PublishEvent<T> event) {
+    this->AddEvent(std::move(event));
+  }
+  DRAKE_DEPRECATED("2023-12-01", "Use AddEvent() instead")
+  void AddDiscreteUpdateEvent(DiscreteUpdateEvent<T> event) {
+    this->AddEvent(std::move(event));
+  }
+  DRAKE_DEPRECATED("2023-12-01", "Use AddEvent() instead")
+  void AddUnrestrictedUpdateEvent(UnrestrictedUpdateEvent<T> event) {
+    this->AddEvent(std::move(event));
   }
 
   /**
