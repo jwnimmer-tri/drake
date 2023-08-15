@@ -321,7 +321,6 @@ drake_cc_library(
     hdrs = ["trajectory_source.h"],
     deps = [
         "//common/trajectories:trajectory",
-        "//math:gradient",
         "//systems/framework",
     ],
 )

@@ -4,7 +4,6 @@
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/ssize.h"
-#include "drake/math/autodiff_gradient.h"
 
 namespace drake {
 namespace systems {
@@ -23,8 +22,8 @@ TrajectorySource<T>::TrajectorySource(const Trajectory<T>& trajectory,
       clamp_derivatives_(zero_derivatives_beyond_limits) {
   // This class does not currently support trajectories which output
   // more complicated matrices.
-  DRAKE_DEMAND(trajectory.cols() == 1);
-  DRAKE_DEMAND(output_derivative_order >= 0);
+  DRAKE_THROW_UNLESS(trajectory.cols() == 1);
+  DRAKE_THROW_UNLESS(output_derivative_order >= 0);
 
   for (int i = 0; i < output_derivative_order; ++i) {
     if (i == 0)
@@ -32,89 +31,162 @@ TrajectorySource<T>::TrajectorySource(const Trajectory<T>& trajectory,
     else
       derivatives_.push_back(derivatives_[i - 1]->MakeDerivative());
   }
+
+  CheckInvariants();
 }
 
 template <typename T>
 template <typename U>
 TrajectorySource<T>::TrajectorySource(const TrajectorySource<U>& other)
-    : SingleOutputVectorSource<T>(
-          SystemTypeTag<TrajectorySource>{},
-          other.trajectory_->rows() * (1 + ssize(other.derivatives_))),
+    : SingleOutputVectorSource<T>(SystemTypeTag<TrajectorySource>{},
+                                  other.get_output_port().size()),
       clamp_derivatives_{other.clamp_derivatives_} {
+  other.CheckInvariants();
+  // The scalar_conversion::Traits in our header only allows two possible
+  // conversion patterns (the "if" and "else" cases here).
   if constexpr (std::is_same_v<U, double>) {
+    // We're converting from double to AutoDiffXd or Expression. We'll keep a
+    // copy of the Trajectory<double> as a "failsafe", until the user replaces
+    // it by calling UpdateTrajectory().
     failsafe_trajectory_ = other.trajectory_->Clone();
-    for (int i = 0; i < ssize(other.derivatives_); ++i) {
-      failsafe_derivatives_.emplace_back(other.derivatives_[i]->Clone());
+    for (auto& other_derivative : other.derivatives_) {
+      failsafe_derivatives_.emplace_back(other_derivative->Clone());
     }
   } else {
-    throw std::runtime_error(
-        "TrajectorySource only supports scalar conversion from double.");
+    // We're converting from AutoDiffXd to double, probably for a Clone().
+    // This is allowed iff `other` was still using the failsafe trajectory.
+    static_assert(std::is_same_v<U, AutoDiffXd>);
+    static_assert(std::is_same_v<T, double>);
+    if (other.failsafe_trajectory_ == nullptr) {
+      throw std::logic_error(fmt::format(
+          "System {} of type {} does not support scalar conversion to type {}",
+          this->GetSystemPathname(), "AutoDiffXd", "double"));
+    }
+    trajectory_ = other.failsafe_trajectory_->Clone();
+    for (auto& other_derivative : other.failsafe_derivatives_) {
+      derivatives_.emplace_back(other_derivative->Clone());
+    }
+  }
+  CheckInvariants();
+}
+
+template <typename T>
+void TrajectorySource<T>::CheckInvariants() const {
+  const bool is_normal = (trajectory_ != nullptr);
+  const bool is_failsafe = (failsafe_trajectory_ != nullptr);
+  if constexpr (std::is_same_v<T, double>) {
+    DRAKE_DEMAND(is_normal);
+  }
+  if (is_normal) {
+    DRAKE_DEMAND(!is_failsafe);
+    DRAKE_DEMAND(failsafe_derivatives_.empty());
+  } else {
+    DRAKE_DEMAND(is_failsafe);
+    DRAKE_DEMAND(derivatives_.empty());
   }
 }
 
 template <typename T>
 void TrajectorySource<T>::UpdateTrajectory(
     const trajectories::Trajectory<T>& trajectory) {
-  DRAKE_DEMAND(trajectory_ != nullptr || failsafe_trajectory_ != nullptr);
-  int rows = trajectory_ ? trajectory_->rows() : failsafe_trajectory_->rows();
-  DRAKE_DEMAND(trajectory.rows() == rows);
-  DRAKE_DEMAND(trajectory.cols() == 1);
+  CheckInvariants();
+  const int rows = (trajectory_ != nullptr) ? trajectory_->rows()
+                                            : failsafe_trajectory_->rows();
+  DRAKE_THROW_UNLESS(trajectory.rows() == rows);
+  DRAKE_THROW_UNLESS(trajectory.cols() == 1);
 
   trajectory_ = trajectory.Clone();
-  for (int i = 0; i < static_cast<int>(derivatives_.size()); ++i) {
+  for (int i = 0; i < ssize(derivatives_); ++i) {
     if (i == 0)
       derivatives_[i] = trajectory_->MakeDerivative();
     else
       derivatives_[i] = derivatives_[i - 1]->MakeDerivative();
   }
+
   failsafe_trajectory_ = nullptr;
   failsafe_derivatives_.clear();
+  CheckInvariants();
 }
+
+namespace {
+// Given a non-double `time`, either casts it to a `double` without discarding
+// any information, or else throws an exception.
+template <typename T>
+double ExtractFailsafeTime(const T& time) {
+  if constexpr (std::is_same_v<T, AutoDiffXd>) {
+    if (!time.derivatives().isZero(0.0)) {
+      throw std::logic_error(
+          "Cannot take gradients w.r.t. time with this TrajectorySource. "
+          "You must call UpdateTrajectory() to provide a "
+          "Trajectory<AutoDiffXd>.");
+    }
+    return ExtractDoubleOrThrow(time);
+  }
+  if constexpr (std::is_same_v<T, symbolic::Expression>) {
+    if (!is_constant(time)) {
+      throw std::logic_error(
+          "Cannot output using symbolic time with this TrajectorySource. "
+          "You must call UpdateTrajectory() to provide a "
+          "Trajectory<Expression>.");
+    }
+    return ExtractDoubleOrThrow(time);
+  }
+  DRAKE_UNREACHABLE();
+}
+
+// Implements DoCalcVectorOutput, after we've decided whether to use the
+// trajectory_ or fallback_trajectory_.
+//
+// @tparam T1 the scalar type of the Trajectory being evaluated
+// @tparam T2 the scalar type of the source's output
+template <typename T1, typename T2>
+void CalcVectorOutputImpl(
+    const T1& time, const std::unique_ptr<Trajectory<T1>>& trajectory,
+    const bool clamp_derivatives,
+    const std::vector<std::unique_ptr<Trajectory<T1>>>& derivatives,
+    Eigen::VectorBlock<T2>* output) {
+  // Output the value.
+  const int len = trajectory->rows();
+  output->head(len) = trajectory->value(time);
+  // Output the derivatives (possibly subject to clamping).
+  boolean<T1> want_derivatives =
+      !boolean<T1>(clamp_derivatives) ||
+      (time >= trajectory->start_time() && time <= trajectory->end_time());
+  if constexpr (scalar_predicate<T1>::is_bool) {
+    // When the trajectory is not symbolic, we can use block-wise evaluation.
+    if (want_derivatives) {
+      for (int i = 0; i < ssize(derivatives); ++i) {
+        output->segment(len * (i + 1), len) = derivatives[i]->value(time);
+      }
+    } else {
+      output->segment(len, len * ssize(derivatives)).setZero();
+    }
+  } else {
+    // When the trajectory is symbolic, we must operate one Expression at a time
+    // because there is no block-wise form of if_then_else.
+    for (int i = 0; i < ssize(derivatives); ++i) {
+      const VectorX<T1> value = derivatives[i]->value(time);
+      for (int j = 0; j < len; ++j) {
+        (*output)[len * (i + 1) + j] =
+            if_then_else(want_derivatives, value[j], 0.0);
+      }
+    }
+  }
+}
+}  // namespace
 
 template <typename T>
 void TrajectorySource<T>::DoCalcVectorOutput(
     const Context<T>& context, Eigen::VectorBlock<VectorX<T>>* output) const {
-  DRAKE_DEMAND(trajectory_ != nullptr || failsafe_trajectory_ != nullptr);
-  int len = trajectory_ ? trajectory_->rows() : failsafe_trajectory_->rows();
-  T time = context.get_time();
-  double maybe_time_as_double{std::numeric_limits<double>::quiet_NaN()};
-  if (trajectory_ != nullptr) {
-    output->head(len) = trajectory_->value(time);
+  CheckInvariants();
+  const T time = context.get_time();
+  if (failsafe_trajectory_ != nullptr) {
+    const double failsafe_time = ExtractFailsafeTime(time);
+    CalcVectorOutputImpl(failsafe_time, failsafe_trajectory_,
+                         clamp_derivatives_, failsafe_derivatives_, output);
   } else {
-    // TODO(russt): We are missing DiscardZeroGradient for scalars, and/or
-    // a version of ExtractDoubleOrThrow which throws on non-zero gradients.
-    if constexpr (std::is_same_v<T, AutoDiffXd>) {
-      if (time.derivatives().size() != 0 && !time.derivatives().isZero()) {
-        throw std::runtime_error(
-            "Cannot take gradients w.r.t. time with this TrajectorySource. You "
-            "must call UpdateTrajectory() to provide a "
-            "Trajectory<AutoDiffXd>.");
-      }
-    }
-    maybe_time_as_double = ExtractDoubleOrThrow(context.get_time());
-    output->head(len) = failsafe_trajectory_->value(maybe_time_as_double);
-  }
-
-  T start_time = trajectory_ ? trajectory_->start_time()
-                             : failsafe_trajectory_->start_time();
-  T end_time =
-      trajectory_ ? trajectory_->end_time() : failsafe_trajectory_->end_time();
-  boolean<T> set_zero =
-      boolean<T>(clamp_derivatives_) && (time > end_time || time < start_time);
-
-  DRAKE_DEMAND(derivatives_.size() == 0 || failsafe_derivatives_.size() == 0);
-  for (int i = 0; i < ssize(derivatives_); ++i) {
-    VectorX<T> value = derivatives_[i]->value(context.get_time());
-    for (int j = 0; j < len; ++j) {
-      (*output)[len * (i + 1) + j] = if_then_else(set_zero, T(0), value[j]);
-    }
-  }
-  for (int i = 0; i < ssize(failsafe_derivatives_); ++i) {
-    DRAKE_DEMAND(!std::isnan(maybe_time_as_double));
-    VectorX<T> value = failsafe_derivatives_[i]->value(maybe_time_as_double);
-    for (int j = 0; j < len; ++j) {
-      (*output)[len * (i + 1) + j] = if_then_else(set_zero, T(0), value[j]);
-    }
+    CalcVectorOutputImpl(time, trajectory_, clamp_derivatives_, derivatives_,
+                         output);
   }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "drake/common/drake_copyable.h"
@@ -26,10 +27,10 @@ namespace systems {
 /// - y0
 /// @endsystem
 ///
-/// Note: Scalar conversion is supported, but the stored Trajectory is not
-/// automatically scalar converted. You must call UpdateTrajectory() with an
-/// updated Trajectory<T> in order to fully-enable scalar-type support on the
-/// trajectory parameters/values.
+/// Note: Scalar conversion is supported from double to any other scalar, but
+/// the stored Trajectory is not automatically scalar converted. You must call
+/// UpdateTrajectory() with an updated Trajectory<T> in order to fully-enable
+/// scalar-type support on the trajectory parameters/values.
 ///
 /// @tparam_default_scalar @ingroup primitive_systems
 template <typename T>
@@ -64,6 +65,8 @@ class TrajectorySource final : public SingleOutputVectorSource<T> {
   template <typename>
   friend class TrajectorySource;
 
+  void CheckInvariants() const;
+
   // Outputs a vector of values evaluated at the context time of the trajectory
   // and up to its Nth derivatives, where the trajectory and N are passed to
   // the constructor. The size of the vector is:
@@ -86,6 +89,19 @@ class TrajectorySource final : public SingleOutputVectorSource<T> {
   std::vector<std::unique_ptr<trajectories::Trajectory<double>>>
       failsafe_derivatives_{};
 };
+
+namespace scalar_conversion {
+/// Spells out the supported scalar conversions for TrajectorySource.
+template <>
+struct Traits<TrajectorySource> {
+  template <typename T, typename U>
+  using supported = typename std::bool_constant<
+      // double -> anything
+      (std::is_same_v<U, double>) ||
+      // AutoDiffXd -> double (only when used for Clone())
+      (std::is_same_v<std::pair<U, T>, std::pair<AutoDiffXd, double>>)>;
+};
+}  // namespace scalar_conversion
 
 }  // namespace systems
 }  // namespace drake

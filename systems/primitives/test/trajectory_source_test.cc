@@ -91,6 +91,17 @@ TEST_F(TrajectorySourceTest, ConstantVectorSourceIsStateless) {
   EXPECT_EQ(0, context_->num_continuous_states());
 }
 
+TEST_F(TrajectorySourceTest, Clone) {
+  const int kRows = 2;
+  BuildSource(PiecewisePolynomial<double>(MatrixXd::Constant(kRows, 1, 1.5)));
+  std::unique_ptr<System<double>> copy;
+  EXPECT_NO_THROW(copy = source_->Clone());
+  ASSERT_TRUE(copy != nullptr);
+  EXPECT_EQ(copy->get_output_port().size(), kRows * (1 + kDerivativeOrder));
+  auto new_context = copy->CreateDefaultContext();
+  EXPECT_EQ(copy->get_output_port().Eval(*new_context)[0], 1.5);
+}
+
 template <typename T>
 void TestScalar(bool zero_derivatives_beyond_limits) {
   auto pp = PiecewisePolynomial<T>::ZeroOrderHold(Vector3<T>{0, 1, 2},
@@ -150,8 +161,7 @@ GTEST_TEST(AdditionalTrajectorySourceTests, ScalarConversion) {
     symbolic::Variable t("t");
     context_sym->SetTime(t);
     DRAKE_EXPECT_THROWS_MESSAGE(
-        source_sym->get_output_port().Eval(*context_sym),
-        ".*environment does not have an entry for the variable t[\\s\\S]*");
+        source_sym->get_output_port().Eval(*context_sym), ".*symbolic time.*");
 
     // UpdateTrajectory can resolve it. (We use BezierCurve here because
     // PiecewiseTrajectory doesn't currently support non-double Expression for
