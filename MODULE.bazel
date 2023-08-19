@@ -117,6 +117,17 @@ use_repo(
     "zlib",
 )
 
+# Load additional build-dependencies which are available as modules.
+
+bazel_dep(name = "llvm-project", version = "17.0.3.bcr.1")
+single_version_override(
+    module_name = "llvm-project",
+    patches = [
+        "@drake//tools/workspace:llvm-project/patches/targets.patch",
+    ],
+    version = "17.0.3.bcr.1",
+)
+
 # Load dependencies which are "private", i.e., not available for use by
 # downstream projects. These are all "internal use only".
 #

@@ -406,6 +406,7 @@ REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES = [
     "bazel_skylib",
     "eigen",
     "fmt",
+    "llvm-project",
     "platforms",
     "rust_toolchain",
     "rules_cc",
