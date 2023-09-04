@@ -1,3 +1,4 @@
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@drake//tools/workspace:mirrors.bzl", "DEFAULT_MIRRORS")
 load("@drake//tools/workspace:os.bzl", "os_repository")
 load("@drake//tools/workspace/abseil_cpp_internal:repository.bzl", "abseil_cpp_internal_repository")  # noqa
@@ -122,250 +123,250 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
           of a given name.
     """
     if "abseil_cpp_internal" not in excludes:
-        abseil_cpp_internal_repository(name = "abseil_cpp_internal", mirrors = mirrors)  # noqa
+        maybe(abseil_cpp_internal_repository, name = "abseil_cpp_internal", mirrors = mirrors)  # noqa
     if "bazelisk" not in excludes:
-        bazelisk_repository(name = "bazelisk", mirrors = mirrors)
+        maybe(bazelisk_repository, name = "bazelisk", mirrors = mirrors)
     if "bazel_skylib" not in excludes:
-        bazel_skylib_repository(name = "bazel_skylib", mirrors = mirrors)
+        maybe(bazel_skylib_repository, name = "bazel_skylib", mirrors = mirrors)  # noqa
     if "blas" not in excludes:
-        blas_repository(name = "blas")
+        maybe(blas_repository, name = "blas")
     if "buildifier" not in excludes:
         buildifier_repository(name = "buildifier", mirrors = mirrors)
     if "cc" not in excludes:
-        cc_repository(name = "cc")
+        maybe(cc_repository, name = "cc")
     if "ccd_internal" not in excludes:
-        ccd_internal_repository(name = "ccd_internal", mirrors = mirrors)
+        maybe(ccd_internal_repository, name = "ccd_internal", mirrors = mirrors)  # noqa
     if "clang_cindex_python3_internal" not in excludes:
-        clang_cindex_python3_internal_repository(name = "clang_cindex_python3_internal", mirrors = mirrors)  # noqa
+        maybe(clang_cindex_python3_internal_repository, name = "clang_cindex_python3_internal", mirrors = mirrors)  # noqa
     if "clp" not in excludes:
         # The @clp external is deprecated in Drake's WORKSPACE and will be
         # removed on or after 2023-12-01.
-        clp_repository(name = "clp")
+        maybe(clp_repository, name = "clp")
     if "clp_internal" not in excludes:
-        clp_internal_repository(name = "clp_internal", mirrors = mirrors)
+        maybe(clp_internal_repository, name = "clp_internal", mirrors = mirrors)  # noqa
     if "coinutils_internal" not in excludes:
-        coinutils_internal_repository(name = "coinutils_internal", mirrors = mirrors)  # noqa
+        maybe(coinutils_internal_repository, name = "coinutils_internal", mirrors = mirrors)  # noqa
     if "com_jidesoft_jide_oss" not in excludes:
-        com_jidesoft_jide_oss_repository(name = "com_jidesoft_jide_oss", mirrors = mirrors)  # noqa
+        maybe(com_jidesoft_jide_oss_repository, name = "com_jidesoft_jide_oss", mirrors = mirrors)  # noqa
     if "common_robotics_utilities" not in excludes:
-        common_robotics_utilities_repository(name = "common_robotics_utilities", mirrors = mirrors)  # noqa
+        maybe(common_robotics_utilities_repository, name = "common_robotics_utilities", mirrors = mirrors)  # noqa
     if "commons_io" not in excludes:
-        commons_io_repository(name = "commons_io", mirrors = mirrors)
+        maybe(commons_io_repository, name = "commons_io", mirrors = mirrors)
     if "conex" not in excludes:
         # The @conex external is deprecated in Drake's WORKSPACE and will be
         # removed on or after 2023-11-01.
-        conex_repository(name = "conex", mirrors = mirrors)
+        maybe(conex_repository, name = "conex", mirrors = mirrors)
     if "conex_internal" not in excludes:
-        conex_internal_repository(name = "conex_internal", mirrors = mirrors)
+        maybe(conex_internal_repository, name = "conex_internal", mirrors = mirrors)  # noqa
     if "csdp" not in excludes:
         # The @csdp external is deprecated in Drake's WORKSPACE and will be
         # removed on or after 2023-11-01.
-        csdp_repository(name = "csdp", mirrors = mirrors)
+        maybe(csdp_repository, name = "csdp", mirrors = mirrors)
     if "csdp_internal" not in excludes:
-        csdp_internal_repository(name = "csdp_internal", mirrors = mirrors)
+        maybe(csdp_internal_repository, name = "csdp_internal", mirrors = mirrors)  # noqa
     if "curl_internal" not in excludes:
-        curl_internal_repository(name = "curl_internal", mirrors = mirrors)
+        maybe(curl_internal_repository, name = "curl_internal", mirrors = mirrors)  # noqa
     if "double_conversion" not in excludes:
-        double_conversion_repository(name = "double_conversion")
+        maybe(double_conversion_repository, name = "double_conversion")
     if "doxygen" not in excludes:
-        doxygen_repository(name = "doxygen", mirrors = mirrors)
+        maybe(doxygen_repository, name = "doxygen", mirrors = mirrors)
     if "dm_control_internal" not in excludes:
-        dm_control_internal_repository(name = "dm_control_internal", mirrors = mirrors)  # noqa
+        maybe(dm_control_internal_repository, name = "dm_control_internal", mirrors = mirrors)  # noqa
     if "drake_detected_os" not in excludes:
-        os_repository(name = "drake_detected_os")
+        maybe(os_repository, name = "drake_detected_os")
     if "drake_models" not in excludes:
-        drake_models_repository(name = "drake_models", mirrors = mirrors)
+        maybe(drake_models_repository, name = "drake_models", mirrors = mirrors)  # noqa
     if "drake_visualizer" not in excludes:
-        drake_visualizer_repository(name = "drake_visualizer", mirrors = mirrors)  # noqa
+        maybe(drake_visualizer_repository, name = "drake_visualizer", mirrors = mirrors)  # noqa
     if "eigen" not in excludes:
-        eigen_repository(name = "eigen")
+        maybe(eigen_repository, name = "eigen")
     if "expat" not in excludes:
-        expat_repository(name = "expat")
+        maybe(expat_repository, name = "expat")
     if "fcl_internal" not in excludes:
-        fcl_internal_repository(name = "fcl_internal", mirrors = mirrors)
+        maybe(fcl_internal_repository, name = "fcl_internal", mirrors = mirrors)  # noqa
     if "fmt" not in excludes:
-        fmt_repository(name = "fmt", mirrors = mirrors)
+        maybe(fmt_repository, name = "fmt", mirrors = mirrors)
     if "gflags" not in excludes:
-        gflags_repository(name = "gflags", mirrors = mirrors)
+        maybe(gflags_repository, name = "gflags", mirrors = mirrors)
     if "gfortran" not in excludes:
-        gfortran_repository(name = "gfortran")
+        maybe(gfortran_repository, name = "gfortran")
     if "github3_py_internal" not in excludes:
-        github3_py_internal_repository(name = "github3_py_internal", mirrors = mirrors)  # noqa
+        maybe(github3_py_internal_repository, name = "github3_py_internal", mirrors = mirrors)  # noqa
     if "glew" not in excludes:
-        glew_repository(name = "glew")
+        maybe(glew_repository, name = "glew")
     if "glib" not in excludes:
-        glib_repository(name = "glib")
+        maybe(glib_repository, name = "glib")
     if "glx" not in excludes:
-        glx_repository(name = "glx")
+        maybe(glx_repository, name = "glx")
     if "googlebenchmark" not in excludes:
-        googlebenchmark_repository(name = "googlebenchmark", mirrors = mirrors)
+        maybe(googlebenchmark_repository, name = "googlebenchmark", mirrors = mirrors)  # noqa
     if "gtest" not in excludes:
-        gtest_repository(name = "gtest", mirrors = mirrors)
+        maybe(gtest_repository, name = "gtest", mirrors = mirrors)
     if "gurobi" not in excludes:
-        gurobi_repository(name = "gurobi")
+        maybe(gurobi_repository, name = "gurobi")
     if "gz_math_internal" not in excludes:
-        gz_math_internal_repository(name = "gz_math_internal", mirrors = mirrors)  # noqa
+        maybe(gz_math_internal_repository, name = "gz_math_internal", mirrors = mirrors)  # noqa
     if "gz_utils_internal" not in excludes:
-        gz_utils_internal_repository(name = "gz_utils_internal", mirrors = mirrors)  # noqa
+        maybe(gz_utils_internal_repository, name = "gz_utils_internal", mirrors = mirrors)  # noqa
     if "gym_py" not in excludes:
         # The @gym_py external is deprecated and will be removed from Drake's
         # WORKSPACE on or after 2023-12-01; see @gymnasium_py for an available
         # newer replacement.
-        gym_py_repository(name = "gym_py", mirrors = mirrors)
+        maybe(gym_py_repository, name = "gym_py", mirrors = mirrors)
     if "gymnasium_py" not in excludes:
-        gymnasium_py_repository(name = "gymnasium_py", mirrors = mirrors)
+        maybe(gymnasium_py_repository, name = "gymnasium_py", mirrors = mirrors)  # noqa
     if "intel_realsense_ros_internal" not in excludes:
-        intel_realsense_ros_internal_repository(name = "intel_realsense_ros_internal", mirrors = mirrors)  # noqa
+        maybe(intel_realsense_ros_internal_repository, name = "intel_realsense_ros_internal", mirrors = mirrors)  # noqa
     if "ipopt" not in excludes:
-        ipopt_repository(name = "ipopt")
+        maybe(ipopt_repository, name = "ipopt")
     if "ipopt_internal_fromsource" not in excludes:
-        ipopt_internal_fromsource_repository(name = "ipopt_internal_fromsource", mirrors = mirrors)  # noqa
+        maybe(ipopt_internal_fromsource_repository, name = "ipopt_internal_fromsource", mirrors = mirrors)  # noqa
     if "ipopt_internal_pkgconfig" not in excludes:
-        ipopt_internal_pkgconfig_repository(name = "ipopt_internal_pkgconfig")
+        maybe(ipopt_internal_pkgconfig_repository, name = "ipopt_internal_pkgconfig")  # noqa
     if "lapack" not in excludes:
-        lapack_repository(name = "lapack")
+        maybe(lapack_repository, name = "lapack")
     if "lcm" not in excludes:
-        lcm_repository(name = "lcm", mirrors = mirrors)
+        maybe(lcm_repository, name = "lcm", mirrors = mirrors)
     if "libblas" not in excludes:
-        libblas_repository(name = "libblas")
+        maybe(libblas_repository, name = "libblas")
     if "libcmaes" not in excludes:
-        libcmaes_repository(name = "libcmaes", mirrors = mirrors)
+        maybe(libcmaes_repository, name = "libcmaes", mirrors = mirrors)
     if "libjpeg" not in excludes:
-        libjpeg_repository(name = "libjpeg")
+        maybe(libjpeg_repository, name = "libjpeg")
     if "liblapack" not in excludes:
-        liblapack_repository(name = "liblapack")
+        maybe(liblapack_repository, name = "liblapack")
     if "liblz4" not in excludes:
-        liblz4_repository(name = "liblz4")
+        maybe(liblz4_repository, name = "liblz4")
     if "liblzma" not in excludes:
-        liblzma_repository(name = "liblzma")
+        maybe(liblzma_repository, name = "liblzma")
     if "libpfm" not in excludes:
-        libpfm_repository(name = "libpfm")
+        maybe(libpfm_repository, name = "libpfm")
     if "libpng" not in excludes:
-        libpng_repository(name = "libpng")
+        maybe(libpng_repository, name = "libpng")
     if "libtiff" not in excludes:
-        libtiff_repository(name = "libtiff")
+        maybe(libtiff_repository, name = "libtiff")
     if "meshcat" not in excludes:
-        meshcat_repository(name = "meshcat", mirrors = mirrors)
+        maybe(meshcat_repository, name = "meshcat", mirrors = mirrors)
     if "mosek" not in excludes:
-        mosek_repository(name = "mosek")
+        maybe(mosek_repository, name = "mosek")
     if "msgpack_internal" not in excludes:
-        msgpack_internal_repository(name = "msgpack_internal", mirrors = mirrors)  # noqa
+        maybe(msgpack_internal_repository, name = "msgpack_internal", mirrors = mirrors)  # noqa
     if "mumps_internal" not in excludes:
-        mumps_internal_repository(name = "mumps_internal")
+        maybe(mumps_internal_repository, name = "mumps_internal")
     if "mypy_extensions_internal" not in excludes:
-        mypy_extensions_internal_repository(name = "mypy_extensions_internal", mirrors = mirrors)  # noqa
+        maybe(mypy_extensions_internal_repository, name = "mypy_extensions_internal", mirrors = mirrors)  # noqa
     if "mypy_internal" not in excludes:
-        mypy_internal_repository(name = "mypy_internal", mirrors = mirrors)
+        maybe(mypy_internal_repository, name = "mypy_internal", mirrors = mirrors)  # noqa
     if "nanoflann_internal" not in excludes:
-        nanoflann_internal_repository(name = "nanoflann_internal", mirrors = mirrors)  # noqa
+        maybe(nanoflann_internal_repository, name = "nanoflann_internal", mirrors = mirrors)  # noqa
     if "net_sf_jchart2d" not in excludes:
-        net_sf_jchart2d_repository(name = "net_sf_jchart2d", mirrors = mirrors)
+        maybe(net_sf_jchart2d_repository, name = "net_sf_jchart2d", mirrors = mirrors)  # noqa
     if "nlohmann_internal" not in excludes:
-        nlohmann_internal_repository(name = "nlohmann_internal", mirrors = mirrors)  # noqa
+        maybe(nlohmann_internal_repository, name = "nlohmann_internal", mirrors = mirrors)  # noqa
     if "nlopt_internal" not in excludes:
-        nlopt_internal_repository(name = "nlopt_internal", mirrors = mirrors)
+        maybe(nlopt_internal_repository, name = "nlopt_internal", mirrors = mirrors)  # noqa
     if "openblas" not in excludes:
-        openblas_repository(name = "openblas")
+        maybe(openblas_repository, name = "openblas")
     if "opencl" not in excludes:
-        opencl_repository(name = "opencl")
+        maybe(opencl_repository, name = "opencl")
     if "opengl" not in excludes:
-        opengl_repository(name = "opengl")
+        maybe(opengl_repository, name = "opengl")
     if "optitrack_driver" not in excludes:
         # The @optitrack_driver external is deprecated and will be removed on
         # or after 2023-11-01.
         optitrack_driver_repository(name = "optitrack_driver", mirrors = mirrors)  # noqa
     if "org_apache_xmlgraphics_commons" not in excludes:
-        org_apache_xmlgraphics_commons_repository(name = "org_apache_xmlgraphics_commons", mirrors = mirrors)  # noqa
+        maybe(org_apache_xmlgraphics_commons_repository, name = "org_apache_xmlgraphics_commons", mirrors = mirrors)  # noqa
     if "osqp_internal" not in excludes:
-        osqp_internal_repository(name = "osqp_internal", mirrors = mirrors)
+        maybe(osqp_internal_repository, name = "osqp_internal", mirrors = mirrors)  # noqa
     if "petsc" not in excludes:
         # The @petsc external is deprecated in Drake's WORKSPACE and will be
         # removed on or after 2023-11-01.
-        petsc_repository(name = "petsc", mirrors = mirrors)
+        maybe(petsc_repository, name = "petsc", mirrors = mirrors)
     if "picosha2" not in excludes:
         # The @picosha2 external is deprecated in Drake's WORKSPACE and will
         # be removed on or after 2023-11-01.
-        picosha2_repository(name = "picosha2", mirrors = mirrors)
+        maybe(picosha2_repository, name = "picosha2", mirrors = mirrors)
     if "picosha2_internal" not in excludes:
-        picosha2_internal_repository(name = "picosha2_internal", mirrors = mirrors)  # noqa
+        maybe(picosha2_internal_repository, name = "picosha2_internal", mirrors = mirrors)  # noqa
     if "platforms" not in excludes:
-        platforms_repository(name = "platforms", mirrors = mirrors)
+        maybe(platforms_repository, name = "platforms", mirrors = mirrors)
     if "pybind11" not in excludes:
-        pybind11_repository(name = "pybind11", mirrors = mirrors)
+        maybe(pybind11_repository, name = "pybind11", mirrors = mirrors)
     if "pycodestyle" not in excludes:
-        pycodestyle_repository(name = "pycodestyle", mirrors = mirrors)
+        maybe(pycodestyle_repository, name = "pycodestyle", mirrors = mirrors)
     if "python" not in excludes:
-        python_repository(name = "python")
+        maybe(python_repository, name = "python")
     if "qdldl_internal" not in excludes:
-        qdldl_internal_repository(name = "qdldl_internal", mirrors = mirrors)
+        maybe(qdldl_internal_repository, name = "qdldl_internal", mirrors = mirrors)  # noqa
     if "qhull_internal" not in excludes:
-        qhull_internal_repository(name = "qhull_internal", mirrors = mirrors)
+        maybe(qhull_internal_repository, name = "qhull_internal", mirrors = mirrors)  # noqa
     if "ros_xacro_internal" not in excludes:
-        ros_xacro_internal_repository(name = "ros_xacro_internal", mirrors = mirrors)  # noqa
+        maybe(ros_xacro_internal_repository, name = "ros_xacro_internal", mirrors = mirrors)  # noqa
     if "rules_pkg" not in excludes:
         # The @rules_pkg external is deprecated in Drake's WORKSPACE and will
         # be removed on or after 2023-11-01.
-        rules_pkg_repository(name = "rules_pkg", mirrors = mirrors)
+        maybe(rules_pkg_repository, name = "rules_pkg", mirrors = mirrors)
     if "rules_python" not in excludes:
-        rules_python_repository(name = "rules_python", mirrors = mirrors)
+        maybe(rules_python_repository, name = "rules_python", mirrors = mirrors)  # noqa
     if "scs_internal" not in excludes:
-        scs_internal_repository(name = "scs_internal", mirrors = mirrors)
+        maybe(scs_internal_repository, name = "scs_internal", mirrors = mirrors)  # noqa
     if "sdformat_internal" not in excludes:
-        sdformat_internal_repository(name = "sdformat_internal", mirrors = mirrors)  # noqa
+        maybe(sdformat_internal_repository, name = "sdformat_internal", mirrors = mirrors)  # noqa
     if "snopt" not in excludes:
-        snopt_repository(name = "snopt")
+        maybe(snopt_repository, name = "snopt")
     if "spdlog" not in excludes:
-        spdlog_repository(name = "spdlog", mirrors = mirrors)
+        maybe(spdlog_repository, name = "spdlog", mirrors = mirrors)
     if "stable_baselines3_internal" not in excludes:
-        stable_baselines3_internal_repository(name = "stable_baselines3_internal", mirrors = mirrors)  # noqa
+        maybe(stable_baselines3_internal_repository, name = "stable_baselines3_internal", mirrors = mirrors)  # noqa
     if "statsjs" not in excludes:
-        statsjs_repository(name = "statsjs", mirrors = mirrors)
+        maybe(statsjs_repository, name = "statsjs", mirrors = mirrors)
     if "stduuid_internal" not in excludes:
-        stduuid_internal_repository(name = "stduuid_internal", mirrors = mirrors)  # noqa
+        maybe(stduuid_internal_repository, name = "stduuid_internal", mirrors = mirrors)  # noqa
     if "styleguide" not in excludes:
-        styleguide_repository(name = "styleguide", mirrors = mirrors)
+        maybe(styleguide_repository, name = "styleguide", mirrors = mirrors)
     if "suitesparse_internal" not in excludes:
-        suitesparse_internal_repository(name = "suitesparse_internal", mirrors = mirrors)  # noqa
+        maybe(suitesparse_internal_repository, name = "suitesparse_internal", mirrors = mirrors)  # noqa
     if "tinyobjloader" not in excludes:
         # The @tinyobjloader external is deprecated in Drake's WORKSPACE and
         # will be removed on or after 2023-11-01.
-        tinyobjloader_repository(name = "tinyobjloader", mirrors = mirrors)
+        maybe(tinyobjloader_repository, name = "tinyobjloader", mirrors = mirrors)  # noqa
     if "tinyobjloader_internal" not in excludes:
-        tinyobjloader_internal_repository(name = "tinyobjloader_internal", mirrors = mirrors)  # noqa
+        maybe(tinyobjloader_internal_repository, name = "tinyobjloader_internal", mirrors = mirrors)  # noqa
     if "tinyxml2_internal" not in excludes:
-        tinyxml2_internal_repository(name = "tinyxml2_internal", mirrors = mirrors)  # noqa
+        maybe(tinyxml2_internal_repository, name = "tinyxml2_internal", mirrors = mirrors)  # noqa
     if "tomli_internal" not in excludes:
-        tomli_internal_repository(name = "tomli_internal", mirrors = mirrors)
+        maybe(tomli_internal_repository, name = "tomli_internal", mirrors = mirrors)  # noqa
     if "typing_extensions_internal" not in excludes:
-        typing_extensions_internal_repository(name = "typing_extensions_internal", mirrors = mirrors)  # noqa
+        maybe(typing_extensions_internal_repository, name = "typing_extensions_internal", mirrors = mirrors)  # noqa
     if "uritemplate_py_internal" not in excludes:
-        uritemplate_py_internal_repository(name = "uritemplate_py_internal", mirrors = mirrors)  # noqa
+        maybe(uritemplate_py_internal_repository, name = "uritemplate_py_internal", mirrors = mirrors)  # noqa
     if "usockets" not in excludes:
         # The @usockets external is deprecated in Drake's WORKSPACE and will be
         # removed on or after 2023-11-01.
-        usockets_repository(name = "usockets", mirrors = mirrors)
+        maybe(usockets_repository, name = "usockets", mirrors = mirrors)
     if "usockets_internal" not in excludes:
-        usockets_internal_repository(name = "usockets_internal", mirrors = mirrors)  # noqa
+        maybe(usockets_internal_repository, name = "usockets_internal", mirrors = mirrors)  # noqa
     if "uwebsockets" not in excludes:
         # The @uwebsockets external is deprecated in Drake's WORKSPACE and will
         # be removed on or after 2023-11-01.
-        uwebsockets_repository(name = "uwebsockets", mirrors = mirrors)
+        maybe(uwebsockets_repository, name = "uwebsockets", mirrors = mirrors)
     if "uwebsockets_internal" not in excludes:
-        uwebsockets_internal_repository(name = "uwebsockets_internal", mirrors = mirrors)  # noqa
+        maybe(uwebsockets_internal_repository, name = "uwebsockets_internal", mirrors = mirrors)  # noqa
     if "voxelized_geometry_tools" not in excludes:
-        voxelized_geometry_tools_repository(name = "voxelized_geometry_tools", mirrors = mirrors)  # noqa
+        maybe(voxelized_geometry_tools_repository, name = "voxelized_geometry_tools", mirrors = mirrors)  # noqa
     if "vtk" not in excludes:
-        vtk_repository(name = "vtk", mirrors = mirrors)
+        maybe(vtk_repository, name = "vtk", mirrors = mirrors)
     if "vtk_internal" not in excludes:
-        vtk_internal_repository(name = "vtk_internal", mirrors = mirrors)
+        maybe(vtk_internal_repository, name = "vtk_internal", mirrors = mirrors)  # noqa
     if "x11" not in excludes:
-        x11_repository(name = "x11")
+        maybe(x11_repository, name = "x11")
     if "xmlrunner_py" not in excludes:
-        xmlrunner_py_repository(name = "xmlrunner_py", mirrors = mirrors)
+        maybe(xmlrunner_py_repository, name = "xmlrunner_py", mirrors = mirrors)  # noqa
     if "yaml_cpp_internal" not in excludes:
-        yaml_cpp_internal_repository(name = "yaml_cpp_internal", mirrors = mirrors)  # noqa
+        maybe(yaml_cpp_internal_repository, name = "yaml_cpp_internal", mirrors = mirrors)  # noqa
     if "zlib" not in excludes:
-        zlib_repository(name = "zlib")
+        maybe(zlib_repository, name = "zlib")
 
 def add_default_toolchains(excludes = []):
     """Register toolchains for each language (e.g., "py") not explicitly
