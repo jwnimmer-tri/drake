@@ -38,26 +38,31 @@ class MonomialTest : public ::testing::Test {
   const Expression y_{var_y_};
   const Expression x_{var_x_};
 
-  vector<Monomial> monomials_;
-
   void SetUp() override {
-    monomials_ = {
-        Monomial{},                                         // 1.0
-        Monomial{var_x_, 1},                                // x^1
-        Monomial{var_y_, 1},                                // y^1
-        Monomial{var_z_, 1},                                // z^1
-        Monomial{var_x_, 2},                                // x^2
-        Monomial{var_y_, 3},                                // y^3
-        Monomial{var_z_, 4},                                // z^4
-        Monomial{{{var_x_, 1}, {var_y_, 2}}},               // xy^2
-        Monomial{{{var_y_, 2}, {var_z_, 5}}},               // y^2z^5
-        Monomial{{{var_x_, 1}, {var_y_, 2}, {var_z_, 3}}},  // xy^2z^3
-        Monomial{{{var_x_, 2}, {var_y_, 4}, {var_z_, 3}}},  // x^2y^4z^3
-    };
-
     EXPECT_PRED2(VarLess, var_y_, var_x_);
     EXPECT_PRED2(VarLess, var_z_, var_y_);
     EXPECT_PRED2(VarLess, var_w_, var_z_);
+  }
+
+  const std::vector<Monomial>& monomials() {
+    if (monomials_.empty()) {
+      // Avoid doing this during SetUp, to avoid extra constructor calls that
+      // make tracing in gdb more annoying for all the other test cases.
+      monomials_ = {
+          Monomial{},                                         // 1.0
+          Monomial{var_x_, 1},                                // x^1
+          Monomial{var_y_, 1},                                // y^1
+          Monomial{var_z_, 1},                                // z^1
+          Monomial{var_x_, 2},                                // x^2
+          Monomial{var_y_, 3},                                // y^3
+          Monomial{var_z_, 4},                                // z^4
+          Monomial{{{var_x_, 1}, {var_y_, 2}}},               // xy^2
+          Monomial{{{var_y_, 2}, {var_z_, 5}}},               // y^2z^5
+          Monomial{{{var_x_, 1}, {var_y_, 2}, {var_z_, 3}}},  // xy^2z^3
+          Monomial{{{var_x_, 2}, {var_y_, 4}, {var_z_, 3}}},  // x^2y^4z^3
+      };
+    }
+    return monomials_;
   }
 
   // Helper function to extract Substitution (Variable -> Expression) from a
@@ -120,6 +125,9 @@ class MonomialTest : public ::testing::Test {
     const Expression e2{coeff * m2.ToExpression()};
     EXPECT_PRED2(ExprEqual, e1, e2);
   }
+
+ private:
+  vector<Monomial> monomials_;
 };
 
 // Tests that default constructor and EIGEN_INITIALIZE_MATRICES_BY_ZERO
@@ -782,7 +790,7 @@ TEST_F(MonomialTest, Evaluate) {
       {{var_x_, -1.0}, {var_y_, 2.0}, {var_z_, -3.0}},   // - + -
       {{var_x_, -1.0}, {var_y_, -2.0}, {var_z_, -3.0}},  // - - -
   };
-  for (const Monomial& m : monomials_) {
+  for (const Monomial& m : monomials()) {
     for (const Environment& env : environments) {
       CheckEvaluate(m, env);
     }
@@ -856,7 +864,7 @@ TEST_F(MonomialTest, EvaluatePartial) {
       {{var_x_, -2.3}, {var_z_, 2.6}},
       {{var_x_, -1.0}, {var_y_, 2.0}, {var_z_, 3.0}},
   };
-  for (const Monomial& m : monomials_) {
+  for (const Monomial& m : monomials()) {
     for (const Environment& env : environments) {
       CheckEvaluatePartial(m, env);
     }

@@ -51,15 +51,15 @@ class Variable {
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(Variable)
 
   /** Default constructor. Constructs a dummy variable of CONTINUOUS type. This
-   *  is needed to have Eigen::Matrix<Variable>. The objects created by the
-   *  default constructor share the same ID, zero. As a result, they all are
-   *  identified as a single variable by equality operator (==). They all have
-   *  the same hash value as well.
+   * is needed to have Eigen::Matrix<Variable>. The objects created by the
+   * default constructor share the same ID, zero. As a result, they all are
+   * identified as a single variable by equality operator (==). They all have
+   * the same hash value as well.
    *
-   *  It is allowed to construct a dummy variable but it should not be used to
-   *  construct a symbolic expression.
+   * It is allowed to construct a dummy variable but it should not be used to
+   * construct a symbolic expression.
    */
-  Variable() : name_{std::make_shared<std::string>()} {}
+  Variable() = default;
 
   /** Constructs a default value.  This overload is used by Eigen when
    * EIGEN_INITIALIZE_MATRICES_BY_ZERO is enabled.
