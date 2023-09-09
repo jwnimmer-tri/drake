@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "drake/common/eigen_types.h"
@@ -133,7 +134,7 @@ TEST_F(MonomialTest, DefaultConstructors) {
 
 TEST_F(MonomialTest, ConstructFromVariable) {
   const Monomial m1{var_x_};
-  const std::map<Variable, int> powers{m1.get_powers()};
+  const internal::MonomialVariableToDegreeMap& powers{m1.get_powers()};
 
   // Checks that powers = {x ↦ 1}.
   ASSERT_EQ(powers.size(), 1u);
@@ -197,7 +198,7 @@ TEST_F(MonomialTest, EigenMatrixOfMonomials) {
 TEST_F(MonomialTest, MonomialOne) {
   // Compares monomials all equal to 1, but with different variables.
   Monomial m1{};
-  Monomial m2({{var_x_, 0}});
+  Monomial m2(var_x_, 0);
   Monomial m3({{var_x_, 0}, {var_y_, 0}});
   EXPECT_EQ(m1, m2);
   EXPECT_EQ(m1, m3);
@@ -206,13 +207,12 @@ TEST_F(MonomialTest, MonomialOne) {
 
 TEST_F(MonomialTest, MonomialWithZeroExponent) {
   // Compares monomials containing zero exponent, such as x^0 * y^2
-  Monomial m1({{var_y_, 2}});
+  Monomial m1(var_y_, 2);
   Monomial m2({{var_x_, 0}, {var_y_, 2}});
   EXPECT_EQ(m1, m2);
-  EXPECT_EQ(m2.get_powers().size(), 1);
-  std::map<Variable, int> power_expected;
-  power_expected.emplace(var_y_, 2);
-  EXPECT_EQ(m2.get_powers(), power_expected);
+  ASSERT_EQ(m2.get_powers().size(), 1);
+  EXPECT_EQ(m2.get_powers().begin()->first.get_name(), "y");
+  EXPECT_EQ(m2.get_powers().begin()->second, 2);
 }
 
 TEST_F(MonomialTest, MonomialBasisX0) {

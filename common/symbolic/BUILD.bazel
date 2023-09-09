@@ -173,11 +173,13 @@ drake_cc_library(
     srcs = [
         "decompose.cc",
         "monomial.cc",
+        "monomial_variable_to_degree_map.cc",
         "polynomial.cc",
     ],
     hdrs = [
         "decompose.h",
         "monomial.h",
+        "monomial_variable_to_degree_map.h",
         "polynomial.h",
     ],
     deps = [

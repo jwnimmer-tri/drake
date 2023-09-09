@@ -28,15 +28,6 @@ using std::pair;
 using std::runtime_error;
 
 namespace {
-// Computes the total degree of a monomial. This method is used in a
-// constructor of Monomial to set its total degree at construction.
-int TotalDegree(const map<Variable, int>& powers) {
-  return accumulate(powers.begin(), powers.end(), 0,
-                    [](const int degree, const pair<const Variable, int>& p) {
-                      return degree + p.second;
-                    });
-}
-
 // Converts a symbolic expression @p e into an internal representation of
 // Monomial class, a mapping from a base (Variable) to its exponent (int). This
 // function is called inside of the constructor Monomial(const
@@ -93,6 +84,7 @@ map<Variable, int> ToMonomialPower(
     const Eigen::Ref<const Eigen::VectorXi>& exponents) {
   DRAKE_DEMAND(vars.size() == exponents.size());
   map<Variable, int> powers;
+#if 0
   for (int i = 0; i < vars.size(); ++i) {
     if (exponents[i] > 0) {
       powers.emplace(vars[i], exponents[i]);
@@ -100,6 +92,9 @@ map<Variable, int> ToMonomialPower(
       throw std::logic_error("The exponent is negative.");
     }
   }
+#else
+  throw std::runtime_error("Not implemented");
+#endif
   return powers;
 }
 
@@ -107,31 +102,9 @@ map<Variable, int> ToMonomialPower(
 
 Monomial::Monomial(const Eigen::Ref<const VectorX<Variable>>& vars,
                    const Eigen::Ref<const Eigen::VectorXi>& exponents)
-    : total_degree_{exponents.sum()},
-      powers_{ToMonomialPower(vars, exponents)} {}
+    : powers_{ToMonomialPower(vars, exponents)} {}
 
-Monomial::Monomial(const Variable& var) : total_degree_{1}, powers_{{var, 1}} {}
-
-Monomial::Monomial(const Variable& var, const int exponent)
-    : total_degree_{exponent} {
-  DRAKE_DEMAND(exponent >= 0);
-  if (exponent > 0) {
-    powers_.emplace(var, exponent);
-  }
-}
-
-Monomial::Monomial(const map<Variable, int>& powers)
-    : total_degree_{TotalDegree(powers)} {
-  for (const auto& p : powers) {
-    const int exponent{p.second};
-    if (exponent > 0) {
-      powers_.insert(p);
-    } else if (exponent < 0) {
-      throw std::logic_error("The exponent is negative.");
-    }
-    // Ignore the entry if exponent == 0.
-  }
-}
+Monomial::Monomial(const map<Variable, int>& powers) : powers_{powers} {}
 
 Monomial::Monomial(const Expression& e)
     : Monomial(ToMonomialPower(e.Expand())) {}
@@ -147,8 +120,8 @@ int Monomial::degree(const Variable& v) const {
 
 Variables Monomial::GetVariables() const {
   Variables vars{};
-  for (const pair<const Variable, int>& p : powers_) {
-    vars += p.first;
+  for (const auto& [variable, _] : powers_) {
+    vars += variable;
   }
   return vars;
 }
@@ -183,7 +156,7 @@ bool Monomial::operator!=(const Monomial& m) const {
 double Monomial::Evaluate(const Environment& env) const {
   return accumulate(
       powers_.begin(), powers_.end(), 1.0,
-      [this, &env](const double v, const pair<const Variable, int>& p) {
+      [this, &env](const double v, const auto& p) {
         const Variable& var{p.first};
         const auto it = env.find(var);
         if (it == env.end()) {
@@ -218,7 +191,7 @@ Eigen::VectorXd Monomial::Evaluate(
     throw std::invalid_argument(
         "Monomial::Evaluate(): vars contains repeated variables.");
   }
-  for (const auto& [var, degree] : powers_) {
+  for (const auto& [var, _] : powers_) {
     if (vars_set.find(var) == vars_set.end()) {
       throw std::invalid_argument(fmt::format(
           "Monomial::Evaluate(): {} is not present in vars", var.get_name()));
@@ -245,21 +218,12 @@ pair<double, Monomial> Monomial::EvaluatePartial(const Environment& env) const {
 }
 
 Expression Monomial::ToExpression() const {
-  return ExpressionMulFactory(powers_).GetExpression();
+  const std::map<Variable, int> map{powers_.begin(), powers_.end()};
+  return ExpressionMulFactory(map).GetExpression();
 }
 
 Monomial& Monomial::operator*=(const Monomial& m) {
-  for (const auto& p : m.get_powers()) {
-    const Variable& var{p.first};
-    const int exponent{p.second};
-    auto it = powers_.find(var);
-    if (it == powers_.end()) {
-      powers_.insert(p);
-    } else {
-      it->second += exponent;
-    }
-    total_degree_ += exponent;
-  }
+  powers_.MultiplyInPlace(m.get_powers());
   return *this;
 }
 
@@ -269,16 +233,7 @@ Monomial& Monomial::pow_in_place(const int p) {
     oss << "Monomial::pow(int p) is called with a negative p = " << p;
     throw runtime_error(oss.str());
   }
-  if (p == 0) {
-    total_degree_ = 0;
-    powers_.clear();
-  } else if (p > 1) {
-    for (auto& item : powers_) {
-      int& exponent{item.second};
-      exponent *= p;
-    }
-    total_degree_ *= p;
-  }  // If p == 1, NO OP.
+  powers_.PowInPlace(p);
   return *this;
 }
 

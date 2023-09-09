@@ -474,18 +474,16 @@ namespace {
 // returns `(2, xy)`.
 pair<int, Monomial> DifferentiateMonomial(const Monomial& m,
                                           const Variable& x) {
-  if (m.get_powers().count(x) == 0) {
+  const auto& powers = m.get_powers();
+  const auto iter = powers.find(x);
+  if (iter == powers.end()) {
     // x does not appear in m. Returns (0, 1).
     return make_pair(0, Monomial{});
   }
-  map<Variable, int> powers{m.get_powers()};
-  auto it = powers.find(x);
-  DRAKE_ASSERT(it != powers.end() && it->second >= 1);
-  const int n{it->second--};
-  if (it->second == 0) {
-    powers.erase(it);
-  }
-  return make_pair(n, Monomial{powers});
+  const int n = iter->second;
+  internal::MonomialVariableToDegreeMap new_powers{m.get_powers()};
+  new_powers.Decrement(x);
+  return make_pair(n, Monomial{std::move(new_powers)});
 }
 }  // namespace
 
@@ -539,15 +537,10 @@ Polynomial Polynomial::Integrate(const Variable& x) const {
        monomial_to_coefficient_map_) {
     const Monomial& m{term.first};
     const Expression& coeff{term.second};
-    int n = 0;
     auto new_powers = m.get_powers();
-    auto it = new_powers.find(x);
-    if (it != new_powers.end()) {
-      n = it->second++;
-    } else {
-      new_powers.emplace_hint(it, x, 1);
-    }
-    DoAddProduct((coeff / (n + 1)).Expand(), Monomial(new_powers), &map);
+    const int new_degree = new_powers.Increment(x);
+    DoAddProduct((coeff / new_degree).Expand(), Monomial(std::move(new_powers)),
+                 &map);
   }
   return Polynomial{map};
 }
@@ -949,11 +942,12 @@ Polynomial Polynomial::SubstituteAndExpand(
       substitutions->emplace(monomial, expanded_substitution.Expand());
     } else {
       std::map<Variable, int> remaining_powers;
-      const std::map<Variable, int>& cached_powers{
+      const internal::MonomialVariableToDegreeMap& cached_powers{
           nearest_cached_monomial.get_powers()};
       for (const auto& [var, power] : monomial.get_powers()) {
-        if (cached_powers.find(var) != cached_powers.cend()) {
-          remaining_powers.emplace(var, power - cached_powers.at(var));
+        auto iter = cached_powers.find(var);
+        if (iter != cached_powers.cend()) {
+          remaining_powers.emplace(var, power - iter->second);
         } else {
           remaining_powers.emplace(var, power);
         }

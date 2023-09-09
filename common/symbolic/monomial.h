@@ -20,8 +20,9 @@
 #error Do not directly include this file. Use "drake/common/symbolic/polynomial.h".
 #endif
 
-namespace drake {
+#include "drake/common/symbolic/monomial_variable_to_degree_map.h"
 
+namespace drake {
 namespace symbolic {
 
 /** Represents a monomial, a product of powers of variables with non-negative
@@ -63,23 +64,27 @@ class Monomial {
   explicit Monomial(const Expression& e);
 
   /** Constructs a Monomial from @p var. */
-  explicit Monomial(const Variable& var);
+  explicit Monomial(const Variable& var) : powers_{var} {}
 
   /** Constructs a Monomial from @p var and @p exponent. */
-  Monomial(const Variable& var, int exponent);
+  Monomial(const Variable& var, int exponent) : powers_{var, exponent} {}
+
+  /* (Internal use only) ... */
+  explicit Monomial(internal::MonomialVariableToDegreeMap powers)
+      : powers_{std::move(powers)} {}
 
   /** Returns the degree of this Monomial in a variable @p v. */
   int degree(const Variable& v) const;
 
   /** Returns the total degree of this Monomial. */
-  int total_degree() const { return total_degree_; }
+  int total_degree() const { return powers_.total_degree(); }
 
   /** Returns the set of variables in this monomial. */
   Variables GetVariables() const;
 
   /** Returns the internal representation of Monomial, the map from a base
    * (Variable) to its exponent (int).*/
-  const std::map<Variable, int>& get_powers() const { return powers_; }
+  const internal::MonomialVariableToDegreeMap& get_powers() const { return powers_; }
 
   /** Evaluates under a given environment @p env.
    *
@@ -147,12 +152,11 @@ class Monomial {
     using drake::hash_append;
     // We do not send total_degree_ to the hasher, because it is already fully
     // represented by powers_ -- it is just a cached tally of the exponents.
-    hash_append(hasher, item.powers_);
+    hash_append_range(hasher, item.powers_.begin(), item.powers_.end());
   }
 
  private:
-  int total_degree_{0};
-  std::map<Variable, int> powers_;
+  internal::MonomialVariableToDegreeMap powers_;
   friend std::ostream& operator<<(std::ostream& out, const Monomial& m);
 };
 

@@ -1573,7 +1573,7 @@ TEST_F(SymbolicPolynomialTest, CalcPolynomialWLowerTriangularPart) {
   // Q is a matrix of double.
   const Vector2<symbolic::Monomial> monomial_basis1(
       symbolic::Monomial({{var_x_, 2}, {var_y_, 1}}),
-      symbolic::Monomial({{var_x_, 1}}));
+      symbolic::Monomial(var_x_, 1));
   Eigen::Vector3d Q1_lower(1, 2, 3);
   const auto poly1 =
       CalcPolynomialWLowerTriangularPart(monomial_basis1, Q1_lower);
@@ -1584,9 +1584,9 @@ TEST_F(SymbolicPolynomialTest, CalcPolynomialWLowerTriangularPart) {
 
   // Q is a matrix of symbolic variable.
   const Vector3<symbolic::Monomial> monomial_basis2(
-      symbolic::Monomial({{var_x_, 2}}),
+      symbolic::Monomial(var_x_, 2),
       symbolic::Monomial({{var_x_, 1}, {var_y_, 1}}),
-      symbolic::Monomial({{var_y_, 2}}));
+      symbolic::Monomial(var_y_, 2));
   Vector6<symbolic::Variable> Q2_lower;
   for (int i = 0; i < 6; ++i) {
     Q2_lower(i) = symbolic::Variable("Q2_lower" + std::to_string(i));

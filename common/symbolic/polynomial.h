@@ -28,8 +28,7 @@ struct CompareMonomial {
     const auto& powers2 = m2.get_powers();
     return std::lexicographical_compare(
         powers1.begin(), powers1.end(), powers2.begin(), powers2.end(),
-        [](const std::pair<const Variable, int>& p1,
-           const std::pair<const Variable, int>& p2) {
+        [](const auto& p1, const auto& p2) {
           const Variable& v1{p1.first};
           const int i1{p1.second};
           const Variable& v2{p2.first};
