@@ -82,9 +82,8 @@ map<Variable, int> ToMonomialPower(const Expression& e) {
 map<Variable, int> ToMonomialPower(
     const Eigen::Ref<const VectorX<Variable>>& vars,
     const Eigen::Ref<const Eigen::VectorXi>& exponents) {
-  DRAKE_DEMAND(vars.size() == exponents.size());
+  DRAKE_THROW_UNLESS(vars.size() == exponents.size());
   map<Variable, int> powers;
-#if 0
   for (int i = 0; i < vars.size(); ++i) {
     if (exponents[i] > 0) {
       powers.emplace(vars[i], exponents[i]);
@@ -92,9 +91,6 @@ map<Variable, int> ToMonomialPower(
       throw std::logic_error("The exponent is negative.");
     }
   }
-#else
-  throw std::runtime_error("Not implemented");
-#endif
   return powers;
 }
 
