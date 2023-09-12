@@ -24,6 +24,11 @@
 #include <png.h>
 #include <uuid.h>
 
+// To ease build system upkeep, we annotate VTK includes with their deps.
+#include <vtkImageExport.h>   // vtkIOImage
+#include <vtkImageReader2.h>  // vtkIOImage
+#include <vtkNew.h>           // vtkCommonCore
+
 #include "drake/common/drake_export.h"
 #include "drake/common/drake_throw.h"
 #include "drake/common/find_resource.h"
@@ -33,6 +38,7 @@
 #include "drake/common/ssize.h"
 #include "drake/common/text_logging.h"
 #include "drake/geometry/meshcat_types.h"
+#include "drake/systems/sensors/vtk_image_reader_writer.h"
 
 #ifdef BOOST_VERSION
 # error Drake should be using the non-boost flavor of msgpack.
@@ -1608,7 +1614,8 @@ class Meshcat::Impl {
   }
 
   ImageRgba8U CaptureImage(int x_resolution, int y_resolution, double timeout) {
-    ImageRgba8U image_rgba;
+    bool success = false;
+    ImageRgba8U image_rgba(x_resolution, y_resolution);
     if (GetNumActiveConnections() != 1) {
       log()->error(
           "Meshcat::CaptureImage failed. You have {} active connections, but "
@@ -1639,30 +1646,25 @@ class Meshcat::Impl {
         continue;
       }
       // Convert png byte array into ImageRgba8U.
-      png_image image;
-      memset(&image, 0, sizeof(image));
-      image.version = PNG_IMAGE_VERSION;
-
-      if (png_image_begin_read_from_memory(&image, image_data_.data(),
-                                           image_data_.size())) {
-        std::vector<uint8_t> raw_pixel_data(PNG_IMAGE_SIZE(image));
-        if (raw_pixel_data.size() != 0 &&
-            png_image_finish_read(&image, nullptr, raw_pixel_data.data(), 0,
-                                  nullptr)) {
-          image_rgba = ImageRgba8U(x_resolution, y_resolution,
-                                   std::move(raw_pixel_data));
-        } else {
-          log()->error(
-              "Meshcat::CaptureImage: png_image_finish_read() failed.");
-        }
-      } else {
-        log()->error(
-            "Meshcat::CaptureImage: png_image_begin_read_from_memory() "
-            "failed.");
+      vtkSmartPointer<vtkImageReader2> reader =
+          systems::sensors::internal::MakeReader(
+              systems::sensors::ImageFileFormat::kPng, image_data_.data(),
+              image_data_.size());
+      reader->Update();
+      vtkNew<vtkImageExport> exporter;
+      exporter->SetInputConnection(reader->GetOutputPort(0));
+      exporter->ImageLowerLeftOff();
+      exporter->Update();
+      if (exporter->GetDataMemorySize() !=
+          image_rgba.width() * image_rgba.height() * image_rgba.kPixelSize) {
+        log()->error("Malformed output decoding PNG image");
       }
-      png_image_free(&image);
-      image_data_.clear();
+      exporter->Export(image_rgba.at(0, 0));
+      success = true;
       break;
+    }
+    if (!success) {
+      log()->warn("Timed out");
     }
     return image_rgba;
   }
@@ -1981,18 +1983,20 @@ class Meshcat::Impl {
       // TODO(russt): Meshcat handles "capture_image" by sending back a string
       // in JSON, instead of using msgpack. Consider upstreaming the fix so
       // that the protocols are consistent.
-      size_t pos = message.find("data:image/png;base64,") + 22;
-      if (pos != std::string_view::npos) {
-        int end_pos = message.find('"', pos);
-        std::lock_guard<std::mutex> lock(controls_mutex_);
-        image_data_ = common_robotics_utilities::base64_helpers::Decode(
-            std::string(message.substr(pos, end_pos - pos)));
-        return;
+      size_t pos = message.find("data:image/png;base64,");
+      if (pos == std::string_view::npos) {
+	// Quietly ignore messages that don't match our expected message type.
+	// This violates the style guide, but msgpack does not provide any other
+	// mechanism for checking the message type.
+	drake::log()->debug("Meshcat ignored an unparsable message {}", message);
+	return;
       }
-      // Quietly ignore messages that don't match our expected message type.
-      // This violates the style guide, but msgpack does not provide any other
-      // mechanism for checking the message type.
-      drake::log()->debug("Meshcat ignored an unparsable message {}", message);
+      pos += 22;
+      int end_pos = message.find('"', pos);
+      DRAKE_DEMAND(pos != std::string_view::npos);
+      std::lock_guard<std::mutex> lock(controls_mutex_);
+      image_data_ = common_robotics_utilities::base64_helpers::Decode(
+            std::string(message.substr(pos, end_pos - pos)));
       return;
     }
     std::lock_guard<std::mutex> lock(controls_mutex_);
