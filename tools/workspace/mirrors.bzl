@@ -43,6 +43,9 @@ DEFAULT_MIRRORS = {
         # N.B. ibiblio doesn't offer https.
         "http://maven.ibiblio.org/maven2/{fulljar}",
     ],
+    "mosek": [
+        "https://download.mosek.com/stable/{version}/mosektools{platform}.tar.bz2",  # noqa
+    ],
     "pypi": [
         "https://files.pythonhosted.org/packages/source/{p}/{package}/{package}-{version}.tar.gz",  # noqa
         "https://drake-mirror.csail.mit.edu/pypi/{package}/{package}-{version}.tar.gz",  # noqa

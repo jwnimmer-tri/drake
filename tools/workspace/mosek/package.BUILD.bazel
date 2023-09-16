@@ -1,0 +1,142 @@
+# -*- bazel -*-
+
+load("@drake//tools/install:install.bzl", "install", "install_files")
+load(
+    "@drake//tools/workspace/mosek:defs.bzl",
+    "glob_two_files_sorted_by_filename_length",
+)
+
+licenses([
+    # MOSEK™ is commercially licensed; see LICENSE-DRAKE.txt in the current
+    # directory for Drake's license to redistribute the MOSEK™ binaries.
+    "by_exception_only",
+    # MOSEK™ also incorporates third-party, open-source libraries; see
+    # LICENSE.txt in the current directory for the notices.
+    # ----------+-------------------------
+    # Library   | SPDX-License-Identifier
+    # ----------+-------------------------
+    # BLASFEO   | BSD-2-Clause
+    # OpenSSL   | OpenSSL AND ISC
+    # Zlib      | Zlib
+    # Zstandard | BSD-3-Clause
+    # fmt       | MIT
+    # fplib     | MIT
+    # mimalloc  | MIT
+    # oneTBB    | Apache-2.0
+    # ----------+-------------------------
+    "notice",
+])
+
+# The shared libraries we need from the MOSEK™ archive are listed below.
+#
+# We'll use placeholder letters for the verion numbers:
+# - M: MOSEK™ major version
+# - m: MOSEK™ minor version
+# - X: TBB major version
+# - y: TBB minor version
+#
+# Linux:
+#  libmosek64.so -> libmosek64.so.M.m (a symlink)
+#  libmosek64.so.M.m
+#   - Advertises itself as "SONAME libmosek64.so.M.m".
+#  libtbb.so.X -> libtbb.so.X.y (a symlink)
+#  libtbb.so.X.y
+#   - Advertises itself as "SONAME libtbb.so.X" (N.B. not '.X.y').
+#
+# macOS:
+#  libmosek64.dylib --> libmosek64.M.m.dylib (a symlink)
+#  libmosek64.M.m.dylib
+#  - Advertises itself as "install name libmosek64.M.m.dylib".
+#  - Advertises "compatibility version 0.0.0".
+#  libtbb.X.dylib --> libtbb.X.y.dylib (a symlink)
+#  libtbb.X.y.dylib
+#  - Advertises itself as "install name libtbb.X.y.dylib"
+#  - Advertises itself as "compatibility version 1.0.0".
+#
+# We use the the MOSEK™ copy of libtbb. The version of libtbb available in
+# Ubuntu is too old. XXX
+
+(MOSEK_SHARED_LIB_SYMLINK, MOSEK_SHARED_LIB_REAL) = (
+    glob_two_files_sorted_by_filename_length("bin/libmosek64.*")
+)
+
+MOSEK_SHARED_LIB_BASENAME = MOSEK_SHARED_LIB_REAL[4:]
+
+(TBB_SHARED_LIB_SYMLINK, TBB_SHARED_LIB_REAL) = (
+    glob_two_files_sorted_by_filename_length("bin/libtbb.*")
+)
+
+# Instead of directly linking to MOSEK™ (and TBB), we instead generate a
+# trampoline that will load them lazily.
+genrule(
+    name = "implib",
+    srcs = [
+        MOSEK_SHARED_LIB_REAL,
+    ],
+    outs = [
+        "{}.init.c".format(MOSEK_SHARED_LIB_BASENAME),
+        "{}.tramp.S".format(MOSEK_SHARED_LIB_BASENAME),
+    ],
+    tools = ["@yugr_implib_internal//:implib_gen"],
+    cmd = " ".join([
+        "$(location @yugr_implib_internal//:implib_gen)",
+        "$(location :bin/libmosek64.so.10.0)",
+        "--quiet",
+        "--dlopen-callback=drake_solvers_dlopen_mosek",
+        "--outdir=$$(dirname $(location :libmosek64.so.10.0.init.c))",
+    ])
+)
+
+cc_library(
+    name = "mosek",
+    srcs = [
+        ":{}.init.c".format(MOSEK_SHARED_LIB_BASENAME),
+        ":{}.tramp.S".format(MOSEK_SHARED_LIB_BASENAME),
+    ],
+    hdrs = ["h/mosek.h"],
+    includes = ["h"],
+    linkstatic = True,
+    data = [
+        TBB_SHARED_LIB_REAL,
+        TBB_SHARED_LIB_SYMLINK,
+        MOSEK_SHARED_LIB_REAL,
+        MOSEK_SHARED_LIB_SYMLINK,
+    ],
+    deps = [
+        "@drake//solvers:mosek_loader",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+install_files(
+    name = "install_libraries",
+    dest = "lib",
+    files = [
+        MOSEK_SHARED_LIB_REAL,
+        MOSEK_SHARED_LIB_SYMLINK,
+        TBB_SHARED_LIB_REAL,
+        TBB_SHARED_LIB_SYMLINK,
+    ],
+    strip_prefix = ["bin"],
+)
+
+install_files(
+    name = "install_licenses",
+    dest = "doc/mosek",
+    files = [
+        "@drake//tools/workspace/mosek:LICENSE.txt",
+        "@drake//tools/workspace/mosek:LICENSE-DRAKE.txt",
+        "@drake//tools/workspace/mosek:LICENSE-EULA.txt",
+    ],
+    strip_prefix = ["tools/workspace/mosek"],
+    allowed_externals = ["@drake//:.bazelproject"],
+)
+
+install(
+    name = "install",
+    deps = [
+        ":install_libraries",
+        ":install_licenses",
+    ],
+    visibility = ["//visibility:public"],
+)

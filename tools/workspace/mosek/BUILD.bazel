@@ -3,9 +3,6 @@
 
 load("//tools/lint:lint.bzl", "add_lint_tests")
 
-exports_files([
-    "drake_mosek_redistribution.txt",
-    "LICENSE.third_party",
-])
+exports_files(glob(["*.txt"]))
 
 add_lint_tests()

@@ -1,0 +1,460 @@
+This document is a copy of the MOSEK™ website here:
+
+https://www.mosek.com/products/license-agreement/
+
+(The file has been converted from PDF to TXT to save space.)
+
+==============================================================================
+
+MOSEK
+
+End User License and
+Support and Maintenance 
+Agreement 
+(EULA) 
+02-12-2016 
+
+These terms apply to all end user licenses for this software and to all support
+and maintenance services relating to this software - including support and
+maintenance services bought by the licensee subsequent to and independent of the
+transaction, according to which the licensee acquired his license for the
+software.
+
+These terms can under no circumstances be deviated from and shall always apply,
+unless the Danish company MOSEK ApS in writing has explicitly consented to the
+specific deviations.
+
+A copy of this EULA is included in all MOSEK distributions of THE SOFTWARE and
+available on the MOSEK web site.
+
+Terms and Conditions 
+
+INITIAL PROVISIONS 
+
+1. Definitions 
+
+1.1. THE SOFTWARE means the modules of the MOSEK® mathematical optimization
+software, for which the licensee has been granted a license.
+
+1.2. FLOATING LICENSE means a software license tied to a particular computer
+that is acting as a license token server. Every computer connected to the
+license server can use the license. A floating license can only be used from one
+program/process at any given point in time. If a licensee acquires several
+FLOATING LICENSES tied to the same license server, the number of
+programs/processes, which at any given point in time can use the software
+corresponds to the number of licenses.
+
+1.3. SERVER LICENSE means a software license, tied to a specific computer. On
+the specified computer, an arbitrary number of users and programs can use the
+license simultaneously.
+
+1.4. UNRESTRICTED TEMPORARY LICENSE means a software license, which is not tied
+to any particu lar computer but is of limited duration.
+
+1.5. REHOST - A license is REHOSTED when Licensor provides a new license file
+for a new host ID – e.g. because the licensee wants to transfer the license to
+another computer, or because the host ID of the original computer has been
+changed.
+
+1.6. ERROR means a material verifiable and reproducible failure of THE SOFTWARE
+to conform in all material respects to the features and functions as described
+in the relevant documentation.
+
+1.7. WORKAROUND means a suggested set of actions or recommendations intended,
+when properly implemented, to restore the functionality of THE SOFTWARE or to
+provide equivalent or similar functionality. 
+
+1.8. THE EFFECTIVE DATE means the date, on which the license for THE SOFTWARE
+was granted to the licensee.
+
+1.9. THE SUPPORT AND MAINTENANCE PERIOD means the period, for which a licensee
+with a commercial license has paid the annual support and maintenance fee
+periodically invoiced by Licensor at the request of Licensee.
+
+1.10. ACADEMIC INSTITUTION means a university or the like on which students can
+obtain at least a bachelor degree (normally after 3 years studying).
+
+1.11. OOC means open online course. 
+
+1.12. DAY means a full calendar day of 24 hours starting at 0:00 and ending at
+24:00.
+
+1.13. DANISH WORKING DAY means a DAY excluding Saturdays, Sundays, 1 January,
+Maundy Thursday, Good Friday, Easter Monday, Ascension Day, Whit Sunday, Whit
+Monday, 24 - 26 December and 31 December.
+
+1.14. EU SUMMER TIME PERIOD means the period beginning on the last Sunday in
+March and ending on the last Sunday in October.
+
+1.15. DANISH WORKING HOURS means 9:00 to 16:00 Greenwich Mean Time + 1 hour on
+DANISH WORKING DAYS except during EU SUMMER TIME PERIOD, where it is Greenwich
+Mean Time + 2 hours.
+
+OPERATIVE PROVISIONS 
+
+2. Commercial License
+
+2.1. A commercial license is a nonexclusive software end user license, according
+to which the licensee is entitled to receive and use an object code copy of the
+licensed software for an unlimited period and for commercial as well as
+non-commercial purposes.
+
+2.2. A commercial license shall be considered to be granted, when Licensor has
+issued the invoice for the license.
+
+2.3. A commercial license can be either a FLOATING LICENSE or a SERVER LICENSE. 
+
+3. Academic License
+
+3.1. An academic license is a nonexclusive software end user license that
+entitles the licensee to receive and use an object code copy of the licensed
+software for academic education and research purposes only.
+
+3.2. An academic license shall be considered to be granted, when the licensee
+has accepted these terms and has been provided with a license file.
+
+3.3. MOSEK provides the following types of academic licenses: personal academic
+license, academic institution license and personal OOC license.
+
+3.3.1. Personal academic license: It is an academic license where the licensee
+must be a student studying or an employee working at an ACADEMIC INSTITUTION. It
+is granted for a period of one year.
+
+It may, however, be prolonged for one or more periods. The license is
+personal. It is an UNRESTRICTED TEMPORARY LICENSE.
+
+3.3.2. Academic institution license: It is an academic license, where the
+licensee must be an ACADEMIC INSTITUTION. It is granted for a period of two
+years and may be renewed. It is granted as a number of FLOATING LICENSES. The
+number of floating licenses is agreed on a case by case basis. Licensor has no
+obligation to provide support and maintenance but may choose to do so
+anyway. Licensor shall have the right to limit the number of persons entitled to
+contact Licensor about support and maintenance issues to 2 contact persons.
+
+3.3.3. Personal OOC license: It is an academic license where the licensee must
+be a student enrolled in a OOC. It is granted for the period in which the course
+lasts and in any case for no longer than six months. It may, however, be
+prolonged for one or more periods. The license is personal and may be used only
+for activities related to the course. It is an UNRESTRICTED TEMPORARY LICENSE.
+
+4. Trial License 
+
+4.1. A trial license is a nonexclusive software end user license, which gives
+the licensee the right to evaluate an object code copy of the licensed software
+for a trial period not exceeding thirty (30) days, and which forbids the
+licensee to use the licensed software for any other purposes including
+commercial purposes. It is an UNRESTRICTED TEMPORARY LICENSE.
+
+4.2. A trial license shall be considered to be granted, when the licensee has
+accepted these terms and has been provided with a license file.
+
+5. Stand in Computer License
+
+5.1. A stand in computer license gives Licensee the right: 
+
+* to get an extra license file for a (stand in) server / computer 
+
+* to run the software on that computer while the server(s) / computer(s)
+  normally used is/are inoperative
+
+* to test the operability of the extra license file on the (stand in) server /
+  computer up to once a month. 
+
+5.2. Stand in computer licenses are only granted to licensees with commercial
+license(s) for which support and maintenance has been subscribed. Their term
+cannot go beyond the term of THE SUPPORT AND MAINTENANCE PERIOD.
+
+5.3. Licensor shall have the right to require the licensee to enable the report
+log file feature of the license system and to provide Licensor with copies of
+the log files at reasonable intervals.
+
+5.4. Licensor shall be entitled to terminate a stand in computer license any
+time at 3 months' notice.
+
+6. Right to Use and No Right to Sublicense 
+
+6.1. The licensee acquires the right to use the delivered (downloaded) object
+code copy of THE SOFTWARE only and does not acquire any rights of ownership.
+
+6.2. The licensee shall be prohibited from sublicensing and otherwise letting
+third parties use THE SOFTWARE without prior written consent from the licensor,
+unless otherwise expressly stipulated elsewhere in these terms. 
+
+7. License System and License Files
+
+7.1. Licensor has embedded a license system in THE SOFTWARE in order to make it
+possible to control A) that end users do not use more copies on more computers
+than the they are entitled to B) that end users do not use the software for
+longer time than the duration of the license and C) that end users only can get
+access to modules and functionality, for which they have a license.
+
+7.2. Because of the license system a license file is required in order to use
+THE SOFTWARE.
+
+7.3. In order to make it possible for Licensor to provide a license file the
+licensee must provide Licensor with certain information about the licensee's
+computer, server and/or dongle. Without undue delay after receipt thereof,
+Licensor will send the licensee the necessary license file.
+
+7.4. The license file should only activate those modules, for which the licensee
+has a license, and the licensee shall not be considered to have any rights
+whatsoever to any excess modules, for which the licensee does not have a
+license, even though the licensee can download such modules from Licensor's
+website.
+
+7.5. The licensee is forbidden to tamper with the license file or the license system. 
+
+8. REHOSTING
+
+8.1. During the SUPPORT AND MAINTENANCE PERIOD commercial licenses, for which
+the invoiced support and maintenance fee has been paid, can free of charge be
+REHOSTED an unlimited number of times.
+
+8.2. Other commercial licenses can free of charge be REHOSTED once only. 
+
+8.3. Licensor will provide new license file(s) after receipt of the information
+necessary for generating the file(s).
+
+9. Support and Maintenance 
+
+9.1. During THE SUPPORT AND MAINTENANCE PERIOD, licensees with commercial licenses will be 
+provided with the following support and maintenance services: 
+
+* Hotline telephone and email assistance and advice, which during DANISH WORKING
+  HOURS and in English will provide qualified technical help in using THE
+  SOFTWARE.
+
+* Receiving and handling documented error reports in English and responding to
+  such error reports in English.
+
+* Using reasonable efforts either to correct ERRORS reported in English or to
+  suggest alternative approaches in order to bypass them (WORKAROUNDS).
+  Correction of ERRORS will be limited to the latest major version of THE
+  SOFTWARE. However the preceding major version will still be sup ported for a
+  period of 2 years after the release of the latest major version.
+
+ * Providing technical information about THE SOFTWARE in English.
+
+ * In accordance with Licensor's release policy published on Licensor's website
+   providing new releases of THE SOFTWARE in the form of new major versions,
+   minor versions, builds and revisions.
+
+ * Unlimited REHOSTING free of charge, in accordance with the above REHOSTING
+   clause 8.  Granting computer stand in licenses in accordance with the above
+   clause 5.
+
+9.2. Licensor shall not be obliged to correct all errors reported but will
+respond to error reports in the way described above. Furthermore, Licensor will
+take all English error reports into consideration when developing new releases.
+
+9.3. Licensee shall give Licensor remote access to Licensee's relevant computers
+to the extent that is necessary for providing adequate support.
+
+9.4. Alpha releases and beta releases are not subject to support and maintenance. 
+
+9.5. The support and maintenance is governed by the license and support and
+maintenance terms in force on THE EFFECTIVE DATE. Should the terms subsequently
+be changed, Licensee will be informed about the new terms in connection with
+renewal of the support and maintenance subscription, and the new terms shall as
+from the renewal date apply to future support and maintenance and the
+corresponding license(s).
+
+10. No Modifying, Reverse Engineering etc. 
+
+The licensee shall not be entitled to modify, reverse engineer, disassemble or
+decompile THE SOFTWARE, unless otherwise expressly stipulated elsewhere in these
+terms. The licensee shall only be entitled to make copies of THE SOFTWARE for
+back up purposes.
+
+11. The MOSEK® trademark 
+
+MOSEK® is a registered trademark belonging to MOSEK ApS. Licensee is not granted
+any license rights under the MOSEK® trademark and may not use it without the
+prior written consent of MOSEK ApS.
+
+12. License and Maintenance Fees and Terms of Payment 
+
+12.1. Academic licenses and trial licenses are free of charge. So is any
+support, which Licensor may choose to provide in connection with such licenses
+even though Licensor is under no obligation to provide such support.
+
+12.2. The fees and terms of payment relating to commercial licenses and support
+and maintenance provided in connection with such licenses are those which the
+licensee agree with Licensor and which appear from Licensor's invoices to the
+licensee.
+
+13. Confidentiality 
+
+13.1. All confidential information relating to the license, the licensee's
+computers or support and maintenance, which one of the parties discloses to the
+other party, shall by the receiving party be treated confidentially as long as
+the information is still confidential, provided the disclosing party at the time
+of disclosure in a durable way has designated the information to be
+confidential.
+
+13.2. Licensor will neither for PR purposes nor for any other purposes publish
+the names of end users with commercial licenses. Licensor shall be entitled to
+publish the names of end users with academic licenses.
+
+14. Warranties and DISCLAIMER OF WARRANTIES 
+
+14.1. Licensor warrants end users with commercial licenses for a period of 90
+days after THE EFFECTIVE DATE that they will be satisfied with THE SOFTWARE.
+
+14.2. Licensor warrants that THE SOFTWARE will implement the functionalities and
+perform substantially in accordance with the official documentation, which is
+available free of charge on Licensor's website.
+
+14.3. Licensor does not warrant that THE SOFTWARE will be error free.
+
+14.4. Licensor warrants Licensees with commercial licenses that during THE
+SUPPORT AND MAINTENANCE PERIOD the support and maintenance services will be in
+accordance with generally accepted sound international industry standards and
+practices.
+
+14.5. Licensor warrants that THE SOFTWARE does not infringe third parties'
+intellectual property rights under the laws of the country where the licensee is
+domiciled. This warranty does not extend to infringement of rights which the
+licensee at THE EFFECTIVE DATE knew or should have known.
+
+14.6. Licensor represents and warrants that Licensor has the right to grant all
+the rights and licenses granted herein. Licensor represents and warrants that
+THE SOFTWARE does not comprise any (third party) open source software, free
+software or the like which according to applicable license conditions will
+require the licensees a) to disclose or (re)distribute source code versions or
+object code versions of any software derived from or developed by means of THE
+SOFTWARE or b) to grant third parties licenses for such derived or developed
+software.
+
+14.7. The warranties do not extend to data fed into THE SOFTWARE by the licensee
+or the licensee's software. The warranties cover the way such input data are
+processed and the resulting output data.  The warranties do not cover the use of
+the output data made by the licensee or the licensee's software.
+
+14.8. The above warranties are in lieu of all other warranties whether express
+or implied including implied warranties of merchantability and fitness for a
+particular purpose.
+
+REMEDIES 
+
+15. LIMITATION OF BOTH PARTIES' LIABILITY and EXCLUSIVE REMEDIES 
+
+15.1. Should a licensee not - as warranted by Licensor - be satisfied with THE
+SOFTWARE, the licensee shall during the first 90 days after THE EFFECTIVE DATE
+be free to recover any paid license and support and maintenance fees in full,
+provided the licensee has a) discontinued use of THE SOFTWARE, b) destroyed all
+copies of the license file, c) returned everything received from Licensor. This
+is the licensee's sole remedy for breach of that warranty.
+
+15.2. If Licensor is unable within reasonable time to perform support and
+maintenance services to a licensee with commercial licenses substantially as
+warranted, the licensee shall have the right:
+
+* to demand re-performance of the services without undue delay. 
+
+* to terminate the support and maintenance subscription and recover the part of
+  the support and maintenance fee, which proportionately corresponds to the
+  remaining part of the current support and maintenance period.
+
+15.3. In the event that Licensor believes that THE SOFTWARE infringes
+intellectual property, against which Licensor has warranted, Licensor shall have
+the right at Licensor's option:
+
+* to modify THE SOFTWARE to become non-infringing and 
+
+* to obtain for the licensee a license to continue the licensee's use of THE
+  SOFTWARE.
+
+15.4. If i) the licensee's right to use THE SOFTWARE gets appreciably restricted
+because of third parties intellectual property rights, against which Licensor
+has warranted, and ii) MOSEK does not modify THE SOFTWARE or obtain a license
+from the third party in question in accordance with the above clause, the
+licensee shall have the right to a) terminate the license and discontinue use of
+THE SOFTWARE, b) destroy all copies of the license file, c) return everything
+received from Licensor and d) recover any license fee paid by the licensee to
+Licensor for the license written down over a 3 years period. 
+
+15.5. Should one of the parties breach his obligations, he shall compensate the
+other party for the economic damage caused by the breach to the extent it is due
+to negligence. If THE SOFTWARE infringes a third party's intellectual property
+covered by Licensor's warranty against such infringements, Licensor shall only
+indemnify the licensee damages which the licensee may be liable to pay the third
+party because of the infringement if the licensee forthwith notifies Licensor in
+writing of the claim and Licensor gets the opportunity to participate in the
+defence and agree to any settlements.
+
+15.6. In no event - except in case of gross negligence - shall any of the
+parties be liable for any indirect, incidental, special or consequential
+damages, including loss of profits, revenue, data or use incurred by the other
+party or any third party whether in action of contract or tort even if the party
+or any other person has been advised of the possibility of such damages.
+
+15.7. Licensor's liability for damages shall in no event - except in case of
+gross negligence – exceed the license / support and maintenance fee received by
+Licensor for the relevant license / support and maintenance period.
+
+15.8. Licensor shall in no event be liable for any losses, which could have been
+avoided if the licensee had used the latest release of THE SOFTWARE provided by
+Licensor.
+
+15.9. Should the licensee substantially violate his obligations, the license and
+THE SUPPORT AND MAINTENANCE PERIOD shall automatically terminate.
+
+15.10. The licensee's sole remedies relating to THE SOFTWARE and support and
+maintenance shall regardless of negligence - except gross negligence - be the
+remedies specified in this provision, unless other remedies are explicitly
+provided for elsewhere in these terms.
+
+16. General Notice of Breach of Contract 
+
+16.1. If one of the parties wishes to exercise any remedies against the other
+party because of the other party's breach of contract, he must give notice to
+the other party specifying the nature of the violation without undue delay after
+he has discovered the violation or he ought to have discovered it.
+
+16.2. To the extent a party's claim relates to goods or services supplied by the
+other party, the notice must be delivered not later than one year after the
+date, on which the goods or services were supplied.
+
+MISCELLANEOUS PROVISIONS 
+
+17. Transferability 
+
+The rights granted to the licensee according to these terms are personal to the
+licensee and may not be transferred to third parties - except to transferees
+belonging to the same group of companies as the licensee. Transfer to third
+parties not belonging to the same group of companies can only take place with
+the prior written consent of Licensor.
+
+18. Purchase Orders, Order Confirmations and Similar Documents 
+
+Any purchase orders, confirmations of orders and similar documents issued by one
+of the parties and relating to the subject matter of these terms shall be
+considered to be issued and accepted for invoicing and payment purposes only -
+even if they state the opposite and are accepted by the other party without
+reservations.
+
+CHOICE OF LAW AND DISPUTE RESOLUTION
+
+19. Choice of Law 
+
+These terms are governed by Danish law. 
+
+20. Venue 
+
+20.1. Any dispute, controversy or claim arising under, out of or relating to
+this agreement and any subsequent amendments of this agreement - including,
+without limitation, its formation, validity, binding effect, interpretation,
+performance, breach, expiration or termination, as well as non-contractual
+claims and product liability claims - shall depending on the subject matter of
+the dispute be settled by the City Court of Copenhagen or the Danish Maritime
+and Commercial High Court. If both courts are competent in relation to a subject
+matter, the suing part shall be free to choose between the 2 courts.
+
+20.2. This clause shall not restrict the parties' right to have disputes about
+intellectual property rights and trade secrets - including cases about
+infringement of intellectual property rights and misappropriation of trade
+secrets - settled by other courts which according their own rules of competence
+can decide such cases. This clause shall, likewise, not restrict the parties'
+right to request interim measures to be taken by other courts which according
+their own rules of competence can take such interim measures.

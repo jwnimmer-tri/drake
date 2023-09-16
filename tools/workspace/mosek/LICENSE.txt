@@ -2,6 +2,11 @@ This document is a copy of the MOSEK™ website here:
 
 https://docs.mosek.com/latest/licensing/license-agreement-info.html
 
+(The file has been converted from HTML to TXT to save space.)
+
+The EULA cited by Section 3.1 (below) is also available at LICENSE-EULA.txt in
+the same directory as this file.
+
 ==============================================================================
 
 3 License Agreement
@@ -11,7 +16,9 @@ https://docs.mosek.com/latest/licensing/license-agreement-info.html
 Before using the MOSEK software, please read the license agreement available in
 the distribution at <MSKHOME>/mosek/10.0/mosek-eula.pdf or on the MOSEK website
 https://mosek.com/products/license-agreement. By using MOSEK you agree to the
-terms of that license agreement.  3.2 Third party licenses
+terms of that license agreement.
+
+3.2 Third party licenses
 
 MOSEK uses some third-party open-source libraries. Their license details follow.
 

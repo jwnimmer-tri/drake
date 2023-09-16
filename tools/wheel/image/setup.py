@@ -14,6 +14,10 @@ python_required = [
     'PyYAML',
 ]
 
+# Optional dependencies (aka "extras").
+python_extras = {
+    "mosek": ["Mosek >= 10.0, < 10.1"],
+}
 
 def find_data_files(*patterns):
     result = []
@@ -91,6 +95,7 @@ See https://drake.mit.edu/pip.html for installation instructions and caveats.
       },
       python_requires='>=3.8',
       install_requires=python_required,
+      extras_require=python_extras,
       # Ensure the wheel is not platform-agnostic.
       ext_modules=[
         setuptools.Extension(name='drake',

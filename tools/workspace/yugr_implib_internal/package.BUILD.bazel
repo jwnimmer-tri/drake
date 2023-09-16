@@ -1,0 +1,13 @@
+# -*- bazel -*-
+
+load("@drake//tools/skylark:py.bzl", "py_binary")
+
+licenses(["notice"])  # MIT
+
+py_binary(
+    name = "implib_gen",
+    srcs = ["implib-gen.py"],
+    main = "implib-gen.py",
+    data = glob(["arch/**"]),
+    visibility = ["//visibility:public"],
+)

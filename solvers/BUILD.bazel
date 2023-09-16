@@ -807,6 +807,17 @@ drake_cc_variant_library(
     ],
 )
 
+drake_cc_library(
+    name = "mosek_loader",
+    srcs = ["mosek_loader.cc"],
+    tags = ["manual"],
+    visibility = ["@mosek//:__pkg__"],
+    deps = [
+        "//common:essential",
+        "//common:find_runfiles",
+    ],
+)
+
 # If --config mosek is used, this target builds object code that satisfies
 # SolverInterface by calling MOSEK. Otherwise, this target builds dummy object
 # code that fails at runtime.

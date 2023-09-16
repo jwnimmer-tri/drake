@@ -109,6 +109,7 @@ load("@drake//tools/workspace/vtk_internal:repository.bzl", "vtk_internal_reposi
 load("@drake//tools/workspace/x11:repository.bzl", "x11_repository")
 load("@drake//tools/workspace/xmlrunner_py:repository.bzl", "xmlrunner_py_repository")  # noqa
 load("@drake//tools/workspace/yaml_cpp_internal:repository.bzl", "yaml_cpp_internal_repository")  # noqa
+load("@drake//tools/workspace/yugr_implib_internal:repository.bzl", "yugr_implib_internal_repository")  # noqa
 load("@drake//tools/workspace/zlib:repository.bzl", "zlib_repository")
 
 def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
@@ -255,7 +256,7 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "meshcat" not in excludes:
         meshcat_repository(name = "meshcat", mirrors = mirrors)
     if "mosek" not in excludes:
-        mosek_repository(name = "mosek")
+        mosek_repository(name = "mosek", mirrors = mirrors)
     if "msgpack_internal" not in excludes:
         msgpack_internal_repository(name = "msgpack_internal", mirrors = mirrors)  # noqa
     if "mumps_internal" not in excludes:
@@ -374,6 +375,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         xmlrunner_py_repository(name = "xmlrunner_py", mirrors = mirrors)
     if "yaml_cpp_internal" not in excludes:
         yaml_cpp_internal_repository(name = "yaml_cpp_internal", mirrors = mirrors)  # noqa
+    if "yugr_implib_internal" not in excludes:
+        yugr_implib_internal_repository(name = "yugr_implib_internal", mirrors = mirrors)  # noqa
     if "zlib" not in excludes:
         zlib_repository(name = "zlib")
 
