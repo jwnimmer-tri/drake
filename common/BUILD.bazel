@@ -187,15 +187,16 @@ drake_cc_library(
     ],
 )
 
+# XXX shim, no sources
 drake_cc_library(
     name = "polynomial",
-    srcs = ["polynomial.cc"],
     hdrs = ["polynomial.h"],
     deps = [
         ":autodiff",
         ":default_scalars",
         ":essential",
         "//common/symbolic:expression",
+        "//common/symbolic:polynomial",
     ],
 )
 
@@ -1024,16 +1025,6 @@ drake_cc_googletest(
     num_threads = 2,
     deps = [
         ":parallelism",
-    ],
-)
-
-drake_cc_googletest(
-    name = "polynomial_test",
-    deps = [
-        ":essential",
-        "//common/test_utilities:eigen_matrix_compare",
-        "//common/test_utilities:expect_no_throw",
-        "//common/test_utilities:random_polynomial_matrix",
     ],
 )
 
