@@ -412,6 +412,31 @@ Polynomial::Polynomial(const Expression& e, Variables indeterminates)
   DRAKE_ASSERT_VOID(CheckInvariant());
 }
 
+template <typename T>
+Polynomial Polynomial::MakeUnivariateImpl(
+    const Eigen::Ref<const VectorX<T>>& coefficients,
+    const Variable& indeterminate) {
+  if constexpr (std::is_same_v<T, double>) {
+    Polynomial::MapType map;
+    for (int i = 0; i < coefficients.size(); ++i) {
+      const double coeff = coefficients(i);
+      if (coeff != 0.0) {
+        map.emplace(Monomial(indeterminate, i), coeff);
+      }
+    }
+    return Polynomial(std::move(map));
+  } else {
+    // This loop is intended for clarity and correctness, not speed. If we ever
+    // find that it's a bottleneck, it should be possible to make it faster.
+    Expression result;
+    for (int i = 0; i < coefficients.size(); ++i) {
+      const T& coeff = coefficients(i);
+      result += coeff * pow(indeterminate, i);
+    }
+    return Polynomial(result, Variables{indeterminate});
+  }
+}
+
 const Variables& Polynomial::indeterminates() const {
   return indeterminates_;
 }
@@ -556,6 +581,69 @@ Polynomial Polynomial::Integrate(const Variable& x, double a, double b) const {
   // Note: This is still correct if a > b.
   const auto p = this->Integrate(x);
   return p.EvaluatePartial(x, b) - p.EvaluatePartial(x, a);
+}
+
+template <typename T, int derivative_order_at_compile_time>
+T Polynomial::EvaluateUnivariateImpl(const T& value,
+                                     int derivative_order) const {
+  // Check the preconditions.
+  DRAKE_THROW_UNLESS(derivative_order >= 0);
+  if constexpr (derivative_order_at_compile_time >= 0) {
+    // Allow the compiler to optimize as if the derivative_order argument was a
+    // compile-time constant.
+    if (derivative_order != derivative_order_at_compile_time) {
+      __builtin_unreachable();
+    }
+  }
+  if (!(indeterminates_.size() <= 1)) {
+    throw std::logic_error(fmt::format(
+        "EvaluateUnivariate: Cannot evaluate when more than one indeterminate "
+        "is present ({}). To provide values for all indeterminates at once, "
+        "use Evaluate(Environment) instead.",
+        fmt::join(indeterminates(), ", ")));
+  }
+  if constexpr (!std::is_same_v<T, Expression>) {
+    if (!decision_variables_.empty()) {
+      throw std::logic_error(fmt::format(
+          "EvaluateUnivariate: Cannot evaluate to a real number when decision "
+          "variables are present ({}). To evaluate symbolically instead, pass "
+          "'Expression(value)' instead to get an Expression result. To provide "
+          "values for decision variables, use Evaluate(Environment).",
+          fmt::join(decision_variables(), ", ")));
+    }
+  }
+
+  // Skip to the first monomial of sufficient degree.
+  auto iter = monomial_to_coefficient_map_.begin();
+  const auto end = monomial_to_coefficient_map_.end();
+  for (; iter != end; ++iter) {
+    const Monomial& monomial = iter->first;
+    if (monomial.total_degree() >= derivative_order) {
+      break;
+    }
+  }
+
+  // Sum the terms.
+  T result{};
+  for (; iter != end; ++iter) {
+    const Monomial& monomial = iter->first;
+    const Expression& coeff_expr = iter->second;
+    T coeff{};
+    if constexpr (std::is_same_v<T, double>) {
+      DRAKE_ASSERT(is_constant(coeff_expr));
+      coeff = get_constant_value(coeff_expr);
+    } else {
+      coeff = coeff_expr;
+    }
+    int degree = monomial.total_degree();
+    for (int i = 0; i < derivative_order; ++i) {
+      coeff *= degree;
+      --degree;
+    }
+    using std::pow;
+    result += coeff * pow(value, degree);
+  }
+  return result;
 }
 
 double Polynomial::Evaluate(const Environment& env) const {
@@ -1276,6 +1364,23 @@ ostream& operator<<(ostream& os, const Polynomial& p) {
   }
   return os;
 }
+
+// clang-format off
+// Explicit instantiations for our function templates.
+template Polynomial Polynomial::MakeUnivariateImpl<double>(
+    const Eigen::Ref<const VectorX<double>>& coefficients,
+    const Variable& indeterminate);
+template Polynomial Polynomial::MakeUnivariateImpl<Expression>(
+    const Eigen::Ref<const VectorX<Expression>>& coefficients,
+    const Variable& indeterminate);
+template double Polynomial::EvaluateUnivariateImpl<double, 0>(
+    const double& value, int) const;
+template double Polynomial::EvaluateUnivariateImpl<double, -1>(
+    const double& value, int) const;
+template Expression Polynomial::EvaluateUnivariateImpl<Expression, -1>(
+    const Expression& value, int) const;
+// clang-format on
+
 }  // namespace symbolic
 }  // namespace drake
 

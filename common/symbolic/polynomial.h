@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <ostream>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -125,6 +126,23 @@ class Polynomial {
   /// indeterminates.
   Polynomial(const Expression& e, Variables indeterminates);
 
+  /// Constructs a univariate polynomial with the given `coefficients` and a
+  /// single `indeterminate` variable used for all monomials.
+  /// @param[in] coefficients The `coefficients(i)` is the coefficient for
+  /// the monomial `pow(indeterminate, i)`. When the coefficients have type
+  /// `T == Expression`, all variables within `coefficients` other than
+  /// `indeterminate` are considered as decision variables.
+  /// @param[in] indeterminate The indeterminate to use for all monomials. When
+  /// no `indeterminate` is given, uses the default `Variable`.
+  /// @tparam T The scalar type, which must be either `double` or `Expression`.
+  template <typename T>
+  [[nodiscard]] static Polynomial MakeUnivariate(
+      const Eigen::Ref<const VectorX<T>>& coefficients,
+      const Variable& indeterminate = {}) {
+    static_assert(std::is_same_v<T, double> || std::is_same_v<T, Expression>);
+    return MakeUnivariateImpl(coefficients, indeterminate);
+  }
+
   /// Returns the indeterminates of this polynomial.
   [[nodiscard]] const Variables& indeterminates() const;
 
@@ -207,6 +225,36 @@ class Polynomial {
   /// @throws std::exception if there is a variable in this polynomial whose
   /// assignment is not provided by @p env.
   [[nodiscard]] double Evaluate(const Environment& env) const;
+
+  /// Evaluates this univariate polynomial, substituting the given `value` for
+  /// the sole variable in indeterminates(), if any. The indeterminate in this
+  /// Polynomial can be any Variable with any Variable::Type.
+  /// @param[in] value The substitution for the sole intederminate variable.
+  /// When `value` has type `T == Expression`, the result is an Expression over
+  /// decision_variables(); for any other type, it is an error to have any
+  /// decision_variables().
+  /// @param[in] derivative_order Cannot be negative. When set to positive
+  /// integer, the result will be the the n'th derivative of this Polynomial
+  /// with respect to the indeterminate, evaluated at the given `value`.
+  /// @throws std::exception if there is more than one indeterminate in this
+  /// polynomial.
+  /// @throws std::exception if `T != Expression` and there are any decision
+  /// variables in this polynomial.
+  /// @throws std::exception if derivative_order < 0.
+  /// @tparam T The scalar type, which must be either `double` or `Expression`.
+  template <typename T>
+  [[nodiscard]] T EvaluateUnivariate(const T& value,
+                                     int derivative_order = 0) const {
+    static_assert(std::is_same_v<T, double> || std::is_same_v<T, Expression>);
+    if constexpr (std::is_same_v<T, double>) {
+      if (derivative_order == 0) {
+        // Use an optimized implementation.
+        return EvaluateUnivariateImpl<T, 0>(value, derivative_order);
+      }
+    }
+    // Use the default implementation.
+    return EvaluateUnivariateImpl<T, -1>(value, derivative_order);
+  }
 
   /// Partially evaluates this polynomial using an environment @p env.
   ///
@@ -415,6 +463,18 @@ class Polynomial {
   // 2. There is a [monomial, coeff] pair in monomial_to_coefficient_map_ that
   // symbolic::is_zero(coeff) is true.
   void CheckInvariant() const;
+
+  // The implementation of MakeUnivariate().
+  template <typename T>
+  static Polynomial MakeUnivariateImpl(
+      const Eigen::Ref<const VectorX<T>>& coefficients,
+      const Variable& indeterminate);
+
+  // The implementation of EvalUnivariate().
+  // @tparam derivative_order_at_compile_time will either be `derivative_order`
+  // when using an optimized implementation, or else will be `-1`.
+  template <typename T, int derivative_order_at_compile_time>
+  T EvaluateUnivariateImpl(const T& value, int derivative_order) const;
 
   MapType monomial_to_coefficient_map_;
   Variables indeterminates_;
