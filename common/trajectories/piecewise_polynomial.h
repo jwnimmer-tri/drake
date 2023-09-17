@@ -12,7 +12,7 @@
 #include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/name_value.h"
-#include "drake/common/polynomial.h"
+#include "drake/common/symbolic/polynomial.h"
 #include "drake/common/trajectories/piecewise_trajectory.h"
 
 namespace drake {
@@ -84,7 +84,7 @@ class PiecewisePolynomial final : public PiecewiseTrajectory<T> {
   // We are final, so this is okay.
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(PiecewisePolynomial)
 
-  typedef MatrixX<Polynomial<T>> PolynomialMatrix;
+  typedef MatrixX<symbolic::Polynomial> PolynomialMatrix;
 
   /**
    * Single segment, constant value constructor over the interval [-∞, ∞].
@@ -96,7 +96,8 @@ class PiecewisePolynomial final : public PiecewiseTrajectory<T> {
       : PiecewiseTrajectory<T>(
             std::vector<T>({-std::numeric_limits<double>::infinity(),
                             std::numeric_limits<double>::infinity()})) {
-    polynomials_.push_back(constant_value.template cast<Polynomial<T>>());
+    polynomials_.push_back(
+        constant_value.template cast<symbolic::Polynomial>());
   }
 
   /**
@@ -178,7 +179,7 @@ class PiecewisePolynomial final : public PiecewiseTrajectory<T> {
    *
    * @pre `polynomials.size() == breaks.size() - 1`
    */
-  PiecewisePolynomial(const std::vector<Polynomial<T>>& polynomials,
+  PiecewisePolynomial(const std::vector<symbolic::Polynomial>& polynomials,
                       const std::vector<T>& breaks);
   // @}
 
@@ -531,8 +532,9 @@ class PiecewisePolynomial final : public PiecewiseTrajectory<T> {
    * @note Calls PiecewiseTrajectory<T>::segment_number_range_check() to
    *       validate `segment_index`.
    */
-  const Polynomial<T>& getPolynomial(int segment_index, Eigen::Index row = 0,
-                                     Eigen::Index col = 0) const;
+  const symbolic::Polynomial& getPolynomial(int segment_index,
+                                            Eigen::Index row = 0,
+                                            Eigen::Index col = 0) const;
 
   /**
    * Gets the degree of the Polynomial with the given matrix row and column

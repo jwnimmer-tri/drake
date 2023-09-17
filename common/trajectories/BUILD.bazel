@@ -88,6 +88,7 @@ drake_cc_library(
         "//common:essential",
         "//common:name_value",
         "//common:polynomial",
+        "//math:autodiff",  # XXX temp
         "//math:matrix_util",
         "@fmt",
     ],

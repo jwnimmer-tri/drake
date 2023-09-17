@@ -11,6 +11,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_throw.h"
 #include "drake/common/unused.h"
+#include "drake/math/autodiff.h"
 #include "drake/math/matrix_util.h"
 
 using Eigen::VectorXd;
@@ -24,6 +25,54 @@ namespace drake {
 namespace trajectories {
 
 using math::EigenToStdVector;
+using symbolic::Expression;
+using symbolic::Monomial;
+using symbolic::Polynomial;
+using symbolic::Variable;
+using symbolic::Variables;
+
+namespace {
+
+template <typename T>
+bool PolynomialCoefficientsAlmostEqual(const Polynomial& a, const Polynomial& b,
+                                       const T& tol,
+                                       const ToleranceType& tol_type) {
+  (void)(a);
+  (void)(b);
+  (void)(tol);
+  (void)(tol_type);
+  throw std::runtime_error("Not implemented");
+}
+
+template <typename T>
+auto MagicCast(const T& value) {
+  if constexpr (std::is_same_v<T, AutoDiffXd>) {
+    return value.value();
+  } else {
+    return value;
+  }
+}
+
+template <typename T>
+auto MagicCast(const Eigen::Ref<const VectorX<T>>& coeffs) {
+  if constexpr (std::is_same_v<T, AutoDiffXd>) {
+    return math::ExtractValue(coeffs);
+  } else {
+    return VectorX<T>(coeffs);
+  }
+}
+
+template <typename T>
+Polynomial PolynomialMakeUnivariate(
+    const Eigen::Ref<const VectorX<T>>& coeffs) {
+  if constexpr (std::is_same_v<T, AutoDiffXd>) {
+    return Polynomial::MakeUnivariate<double>(MagicCast(coeffs));
+  } else {
+    return Polynomial::MakeUnivariate<T>(MagicCast(coeffs));
+  }
+}
+
+}  // namespace
 
 template <typename T>
 PiecewisePolynomial<T>::PiecewisePolynomial(
@@ -45,7 +94,7 @@ PiecewisePolynomial<T>::PiecewisePolynomial(
 
 template <typename T>
 PiecewisePolynomial<T>::PiecewisePolynomial(
-    const std::vector<Polynomial<T>>& polynomials, const std::vector<T>& breaks)
+    const std::vector<Polynomial>& polynomials, const std::vector<T>& breaks)
     : PiecewiseTrajectory<T>(breaks) {
   DRAKE_ASSERT(breaks.size() == (polynomials.size() + 1));
 
@@ -71,13 +120,15 @@ PiecewisePolynomial<T>::GetSerialized() const {
     // Copy the polynomials_'s coefficients into polynomials.
     int max_degree = 0;
     for (int i = 0; i < static_cast<int>(polynomials.size()); ++i) {
-      const MatrixX<Polynomial<double>>& ith_in = polynomials_[i];
+      const MatrixX<Polynomial>& ith_in = polynomials_[i];
       MatrixX<VectorXd>& ith_out = polynomials[i];
       ith_out.resize(ith_in.rows(), ith_in.cols());
       for (int j = 0; j < ith_in.rows(); ++j) {
         for (int k = 0; k < ith_in.cols(); ++k) {
+#if 0  // XXX
           ith_out(j, k) = ith_in(j, k).GetCoefficients();
-          max_degree = std::max(max_degree, ith_in(j, k).GetDegree());
+          max_degree = std::max(max_degree, ith_in(j, k).TotalDegree());
+#endif
         }
       }
     }
@@ -132,11 +183,13 @@ void PiecewisePolynomial<T>::SetSerialized(
     polynomials_.resize(polynomials.size());
     for (int i = 0; i < static_cast<int>(polynomials.size()); ++i) {
       const MatrixX<VectorXd>& ith_in = polynomials[i];
-      MatrixX<Polynomial<double>>& ith_out = polynomials_[i];
+      MatrixX<Polynomial>& ith_out = polynomials_[i];
       ith_out.resize(ith_in.rows(), ith_in.cols());
       for (int j = 0; j < ith_in.rows(); ++j) {
         for (int k = 0; k < ith_in.cols(); ++k) {
-          ith_out(j, k) = Polynomial<double>(ith_in(j, k));
+#if 0  // XXX
+          ith_out(j, k) = Polynomial(ith_in(j, k));
+#endif
         }
       }
     }
@@ -155,7 +208,15 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::derivative(
     PolynomialMatrix& matrix = *it;
     for (Eigen::Index row = 0; row < rows(); row++) {
       for (Eigen::Index col = 0; col < cols(); col++) {
-        matrix(row, col) = matrix(row, col).Derivative(derivative_order);
+        for (int i = 0; i < derivative_order; ++i) {
+          const Variables& indeterminates = matrix(row, col).indeterminates();
+          if (indeterminates.empty()) {
+            break;
+          }
+          DRAKE_THROW_UNLESS(indeterminates.size() == 1);
+          const Variable& var = *indeterminates.begin();
+          matrix(row, col) = matrix(row, col).Differentiate(var);
+        }
       }
     }
   }
@@ -170,6 +231,7 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::integral(
   return integral(matrix_value_at_start_time);
 }
 
+#if 0  // XXX
 template <typename T>
 PiecewisePolynomial<T> PiecewisePolynomial<T>::integral(
     const Eigen::Ref<MatrixX<T>>& value_at_start_time) const {
@@ -193,6 +255,7 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::integral(
   }
   return ret;
 }
+#endif
 
 template <typename T>
 T PiecewisePolynomial<T>::scalarValue(const T& t, Eigen::Index row,
@@ -225,7 +288,7 @@ PiecewisePolynomial<T>::getPolynomialMatrix(int segment_index) const {
 }
 
 template <typename T>
-const Polynomial<T>& PiecewisePolynomial<T>::getPolynomial(
+const Polynomial& PiecewisePolynomial<T>::getPolynomial(
     int segment_index, Eigen::Index row, Eigen::Index col) const {
   this->segment_number_range_check(segment_index);
   return polynomials_[segment_index](row, col);
@@ -236,7 +299,7 @@ int PiecewisePolynomial<T>::getSegmentPolynomialDegree(int segment_index,
                                                        Eigen::Index row,
                                                        Eigen::Index col) const {
   this->segment_number_range_check(segment_index);
-  return polynomials_[segment_index](row, col).GetDegree();
+  return polynomials_[segment_index](row, col).TotalDegree();
 }
 
 template <typename T>
@@ -273,19 +336,38 @@ PiecewisePolynomial<T>& PiecewisePolynomial<T>::operator*=(
   return *this;
 }
 
+namespace {
+template <typename T>
+MatrixX<Polynomial> MatrixCopyToPolynomial(const MatrixX<T>& input) {
+  MatrixX<Polynomial> result(input.rows(), input.cols());
+  for (int i = 0; i < input.rows(); ++i) {
+    for (int j = 0; j < input.cols(); ++j) {
+      Polynomial::MapType map;
+      if constexpr (!std::is_same_v<T, AutoDiffXd>) {
+        map.emplace(Monomial{}, input(i, j));
+      }
+      result(i, j) = Polynomial(std::move(map));
+    }
+  }
+  return result;
+}
+}  // namespace
+
 template <typename T>
 PiecewisePolynomial<T>& PiecewisePolynomial<T>::operator+=(
     const MatrixX<T>& offset) {
+  const MatrixX<Polynomial> offset_poly = MatrixCopyToPolynomial(offset);
   for (size_t i = 0; i < polynomials_.size(); i++)
-    polynomials_[i] += offset.template cast<Polynomial<T>>();
+    polynomials_[i] += offset_poly;
   return *this;
 }
 
 template <typename T>
 PiecewisePolynomial<T>& PiecewisePolynomial<T>::operator-=(
     const MatrixX<T>& offset) {
+  const MatrixX<Polynomial> offset_poly = MatrixCopyToPolynomial(offset);
   for (size_t i = 0; i < polynomials_.size(); i++)
-    polynomials_[i] -= offset.template cast<Polynomial<T>>();
+    polynomials_[i] -= offset_poly;
   return *this;
 }
 
@@ -346,14 +428,13 @@ bool PiecewisePolynomial<T>::isApprox(const PiecewisePolynomial<T>& other,
 
   if (!this->SegmentTimesEqual(other, tol)) return false;
 
-  for (int segment_index = 0; segment_index < this->get_number_of_segments();
-       segment_index++) {
-    const PolynomialMatrix& matrix = polynomials_[segment_index];
-    const PolynomialMatrix& other_matrix = other.polynomials_[segment_index];
+  for (int i = 0; i < this->get_number_of_segments(); ++i) {
+    const PolynomialMatrix& matrix = polynomials_[i];
+    const PolynomialMatrix& other_matrix = other.polynomials_[i];
     for (Eigen::Index row = 0; row < rows(); row++) {
       for (Eigen::Index col = 0; col < cols(); col++) {
-        if (!matrix(row, col).CoefficientsAlmostEqual(other_matrix(row, col),
-                                                      tol, tol_type)) {
+        if (!PolynomialCoefficientsAlmostEqual(
+                matrix(row, col), other_matrix(row, col), tol, tol_type)) {
           return false;
         }
       }
@@ -418,7 +499,7 @@ void PiecewisePolynomial<T>::AppendCubicHermiteSegment(
           segment_index, this->end_time(), row, col, derivative_order);
       Vector4<T> coeffs = ComputeCubicSplineCoeffs(
           dt, start, sample(row, col), start_dot, sample_dot(row, col));
-      matrix(row, col) = Polynomial<T>(coeffs);
+      matrix(row, col) = PolynomialMakeUnivariate<T>(coeffs);
     }
   }
   polynomials_.push_back(std::move(matrix));
@@ -442,7 +523,7 @@ void PiecewisePolynomial<T>::AppendFirstOrderSegment(
     for (int col = 0; col < cols(); ++col) {
       const T start = EvaluateSegmentAbsoluteTime(segment_index,
                                                   this->end_time(), row, col);
-      matrix(row, col) = Polynomial<T>(
+      matrix(row, col) = PolynomialMakeUnivariate<T>(
           Eigen::Matrix<T, 2, 1>(start, (sample(row, col) - start) / dt));
     }
   }
@@ -468,17 +549,23 @@ void PiecewisePolynomial<T>::ReverseTime() {
     const T h = b[i + 1] - b[i];
     for (int row = 0; row < rows(); row++) {
       for (int col = 0; col < cols(); col++) {
-        const int d = matrix(row, col).GetDegree();
-        if (d == 0) continue;
         // Must shift this segment by h, because it will now be evaluated
         // relative to breaks[i+1] instead of breaks[i], via p_after(t) =
         // p_before(t+h).  But we can perform the time-reversal at the same
         // time, using the variant p_after(t) = p_before(h-t).
-        const auto& vars = matrix(row, col).GetVariables();
+        const auto& vars = matrix(row, col).indeterminates();
+        if (vars.empty()) {
+          continue;
+        }
         DRAKE_ASSERT(vars.size() == 1);
-        const typename Polynomial<T>::VarType& t = *vars.begin();
+        const Variable& t = *vars.begin();
+#if 0  // XXX
         matrix(row, col) =
-            matrix(row, col).Substitute(t, h - Polynomial<T>(1.0, t));
+            matrix(row, col).Substitute(t, h - Polynomial(1.0, t));
+#else
+        (void)(h);
+        (void)(t);
+#endif
       }
     }
   }
@@ -503,21 +590,22 @@ void PiecewisePolynomial<T>::ScaleTime(const T& scale) {
     PolynomialMatrix& matrix = polynomials_[i];
     for (int row = 0; row < rows(); row++) {
       for (int col = 0; col < cols(); col++) {
-        const int d = matrix(row, col).GetDegree();
-        if (d == 0) continue;
-        VectorX<T> coeffs = matrix(row, col).GetCoefficients();
-        for (int p = 1; p < d + 1; p++) {
-          coeffs(p) /= pow(scale, p);
+        Polynomial::MapType new_poly;
+        for (const auto& [monomial, coeff] :
+             matrix(row, col).monomial_to_coefficient_map()) {
+          const int degree = monomial.total_degree();
+          Expression new_coeff = coeff / pow(MagicCast(scale), degree);
+          new_poly.emplace(monomial, std::move(new_coeff));
         }
-        matrix(row, col) = Polynomial<T>(coeffs);
+        matrix(row, col) = Polynomial(std::move(new_poly));
       }
     }
   }
 
   // Update the breaks.
   std::vector<T>& breaks = this->get_mutable_breaks();
-  for (auto it = breaks.begin(); it != breaks.end(); ++it) {
-    *it *= scale;
+  for (T& one_break : breaks) {
+    one_break *= scale;
   }
 }
 
@@ -563,7 +651,7 @@ T PiecewisePolynomial<T>::EvaluateSegmentAbsoluteTime(
     int derivative_order) const {
   DRAKE_DEMAND(static_cast<int>(polynomials_.size()) > segment_index);
   return polynomials_[segment_index](row, col).EvaluateUnivariate(
-      t - this->start_time(segment_index), derivative_order);
+      MagicCast(t - this->start_time(segment_index)), derivative_order);
 }
 
 template <typename T>
@@ -691,8 +779,8 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::ZeroOrderHold(
 
     for (int j = 0; j < samples[i].rows(); ++j) {
       for (int k = 0; k < samples[i].cols(); ++k) {
-        poly_matrix(j, k) =
-            Polynomial<T>(Eigen::Matrix<T, 1, 1>(samples[i](j, k)));
+        poly_matrix(j, k) = PolynomialMakeUnivariate<T>(
+            Eigen::Matrix<T, 1, 1>(samples[i](j, k)));
       }
     }
     polys.push_back(poly_matrix);
@@ -715,7 +803,7 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::FirstOrderHold(
 
     for (int j = 0; j < samples[i].rows(); ++j) {
       for (int k = 0; k < samples[i].cols(); ++k) {
-        poly_matrix(j, k) = Polynomial<T>(Eigen::Matrix<T, 2, 1>(
+        poly_matrix(j, k) = PolynomialMakeUnivariate<T>(Eigen::Matrix<T, 2, 1>(
             samples[i](j, k), (samples[i + 1](j, k) - samples[i](j, k)) /
                                   (breaks[i + 1] - breaks[i])));
       }
@@ -842,7 +930,7 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::CubicShapePreserving(
       for (int t = 0; t < N - 1; ++t) {
         coeffs = ComputeCubicSplineCoeffs(dt[t], Y[t](j, k), Y[t + 1](j, k),
                                           Ydot[t](j, k), Ydot[t + 1](j, k));
-        polynomials[t](j, k) = Polynomial<T>(coeffs);
+        polynomials[t](j, k) = PolynomialMakeUnivariate<T>(coeffs);
       }
     }
   }
@@ -883,7 +971,7 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::CubicHermite(
       for (int j = 0; j < cols; ++j) {
         Eigen::Matrix<T, 4, 1> coeffs = ComputeCubicSplineCoeffs(
             dt, Y[t](i, j), Y[t + 1](i, j), Ydot[t](i, j), Ydot[t + 1](i, j));
-        polynomials[t](i, j) = Polynomial<T>(coeffs);
+        polynomials[t](i, j) = PolynomialMakeUnivariate<T>(coeffs);
       }
     }
   }
@@ -1020,7 +1108,7 @@ PiecewisePolynomial<T>::CubicWithContinuousSecondDerivatives(
       for (int i = 0; i < N - 1; ++i) {
         coeffs(0) = Y[i](j, k);
         coeffs.tail(3) = solution.template segment<3>(3 * i);
-        polynomials[i](j, k) = Polynomial<T>(coeffs);
+        polynomials[i](j, k) = PolynomialMakeUnivariate<T>(coeffs);
       }
     }
   }
@@ -1137,7 +1225,7 @@ PiecewisePolynomial<T>::CubicWithContinuousSecondDerivatives(
       for (int i = 0; i < N - 1; ++i) {
         coeffs(0) = Y[i](j, k);
         coeffs.tail(3) = solution.template segment<3>(3 * i);
-        polynomials[i](j, k) = Polynomial<T>(coeffs);
+        polynomials[i](j, k) = PolynomialMakeUnivariate<T>(coeffs);
       }
     }
   }
@@ -1189,7 +1277,7 @@ PiecewisePolynomial<T> PiecewisePolynomial<T>::LagrangeInterpolatingPolynomial(
       for (size_t k = 0; k < times.size(); ++k) {
         b(k) = samples[k](i, j);
       }
-      polynomials(i, j) = Polynomial<T>(Aqr.solve(b));
+      polynomials(i, j) = PolynomialMakeUnivariate<T>(Aqr.solve(b));
     }
   }
 
