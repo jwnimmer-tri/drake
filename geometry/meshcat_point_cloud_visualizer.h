@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "drake/geometry/meshcat.h"
+#include "drake/geometry/meshcat_visualizer_base.h"
 #include "drake/geometry/rgba.h"
 #include "drake/systems/framework/leaf_system.h"
 
@@ -30,7 +31,7 @@ the path representing the `cloud`.  If it is not connected, then we set
 @tparam_nonsymbolic_scalar
 */
 template <typename T>
-class MeshcatPointCloudVisualizer final : public systems::LeafSystem<T> {
+class MeshcatPointCloudVisualizer final : public MeshcatVisualizerBase<T> {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(MeshcatPointCloudVisualizer)
 
@@ -62,9 +63,8 @@ class MeshcatPointCloudVisualizer final : public systems::LeafSystem<T> {
   `has_rgbs() == false` for the cloud on the input port. */
   void set_default_rgba(const Rgba& rgba) { default_rgba_ = rgba; }
 
-  /** Calls Meshcat::Delete(path), where `path` is the value passed in the
-   constructor. */
-  void Delete() const;
+  // Add this base class function into this Doxygen section.
+  using MeshcatVisualizerBase<T>::Delete;
 
   /** Returns the RigidTransform-valued input port. */
   const systems::InputPort<T>& cloud_input_port() const {
@@ -82,30 +82,21 @@ class MeshcatPointCloudVisualizer final : public systems::LeafSystem<T> {
   template <typename>
   friend class MeshcatPointCloudVisualizer;
 
+  // Avoid `this->` boilerplate like `this->meshcat().Func(...)`.
+  using MeshcatVisualizerBase<T>::meshcat;
+  using MeshcatVisualizerBase<T>::prefix;
+
   /* The periodic event handler which publishes the cloud to Meshcat.  */
-  systems::EventStatus UpdateMeshcat(const systems::Context<T>& context) const;
+  systems::EventStatus DoOnPublish(
+      double time, const systems::Context<T>& context) const final;
 
   /* Input ports. */
-  int cloud_input_port_{};
-  int pose_input_port_{};
-
-  /* Meshcat is mutable because we must send messages (a non-const operation)
-   from a const System (e.g. during simulation).  We use shared_ptr instead of
-   unique_ptr to facilitate sharing ownership through scalar conversion;
-   creating a new Meshcat object during the conversion is not a viable option.
-   */
-  mutable std::shared_ptr<Meshcat> meshcat_{};
-
-  /* The Meshcat path where the cloud is set. */
-  std::string path_;
+  systems::InputPortIndex cloud_;
+  systems::InputPortIndex pose_;
 
   /* Visualization parameters. */
   double point_size_{0.001};
   Rgba default_rgba_{.9, .9, .9, 1.0};
-
-  /* We store the arguments passed in the constructor to support scalar
-  conversion. */
-  double publish_period_;
 };
 
 /** A convenient alias for the MeshcatPointCloudVisualizer class when using the
@@ -114,8 +105,7 @@ using MeshcatPointCloudVisualizerd = MeshcatPointCloudVisualizer<double>;
 
 }  // namespace geometry
 
-// Define the conversion trait to *only* allow double -> AutoDiffXd conversion.
-// Symbolic is not supported yet, and AutoDiff -> double doesn't "make sense".
+// Define the conversion trait to *only* allow double <-> AutoDiffXd conversion.
 namespace systems {
 namespace scalar_conversion {
 template <>

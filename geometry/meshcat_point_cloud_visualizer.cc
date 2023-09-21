@@ -13,63 +13,56 @@
 namespace drake {
 namespace geometry {
 
+using math::RigidTransform;
+using perception::PointCloud;
+using systems::Context;
+using systems::EventStatus;
+using systems::SystemTypeTag;
+
+// TODO(jwnimmer-tri) delete_on_initialization_event should be configurable.
 template <typename T>
 MeshcatPointCloudVisualizer<T>::MeshcatPointCloudVisualizer(
-    std::shared_ptr<Meshcat> meshcat, std::string path, double publish_period)
-    : systems::LeafSystem<T>(
-          systems::SystemTypeTag<MeshcatPointCloudVisualizer>{}),
-      meshcat_(std::move(meshcat)),
-      path_(std::move(path)),
-      publish_period_(publish_period) {
-  DRAKE_DEMAND(meshcat_ != nullptr);
-  DRAKE_DEMAND(publish_period >= 0.0);
-
-  this->DeclarePeriodicPublishEvent(
-      publish_period, 0.0,
-      &MeshcatPointCloudVisualizer<T>::UpdateMeshcat);
-  this->DeclareForcedPublishEvent(
-      &MeshcatPointCloudVisualizer<T>::UpdateMeshcat);
-
-  cloud_input_port_ =
-      this->DeclareAbstractInputPort("cloud", Value<perception::PointCloud>())
-          .get_index();
-
-  pose_input_port_ = this->DeclareAbstractInputPort(
-                             "X_ParentCloud", Value<math::RigidTransform<T>>{})
-                         .get_index();
+    std::shared_ptr<Meshcat> meshcat_in, std::string path,
+    double publish_period)
+    : MeshcatVisualizerBase<T>(
+          SystemTypeTag<MeshcatPointCloudVisualizer>{}, std::move(meshcat_in),
+          std::move(path), publish_period,
+          /* publish_offset = */ 0.0,
+          /* params.delete_on_initialization_event = */ false) {
+  cloud_ =
+      this->DeclareAbstractInputPort("cloud", Value<PointCloud>()).get_index();
+  pose_ = this->DeclareAbstractInputPort("X_ParentCloud",
+                                         Value<RigidTransform<T>>{})
+              .get_index();
 }
 
 template <typename T>
 template <typename U>
 MeshcatPointCloudVisualizer<T>::MeshcatPointCloudVisualizer(
     const MeshcatPointCloudVisualizer<U>& other)
-    : MeshcatPointCloudVisualizer(other.meshcat_, other.path_,
-                                  other.publish_period_) {
+    : MeshcatPointCloudVisualizer(other.shared_meshcat(), other.prefix(),
+                                  other.publish_period()) {
   set_point_size(other.point_size_);
   set_default_rgba(other.default_rgba_);
 }
 
 template <typename T>
-void MeshcatPointCloudVisualizer<T>::Delete() const {
-  meshcat_->Delete(path_);
-}
+EventStatus MeshcatPointCloudVisualizer<T>::DoOnPublish(
+    double time, const Context<T>& context) const {
+  // TODO(jwnimmer-tri) Pass the timestamp to meshcat.
+  unused(time);
 
-template <typename T>
-systems::EventStatus MeshcatPointCloudVisualizer<T>::UpdateMeshcat(
-    const systems::Context<T>& context) const {
-  const auto& cloud =
-      cloud_input_port().template Eval<perception::PointCloud>(context);
-  meshcat_->SetObject(path_, cloud, point_size_, default_rgba_);
+  const auto& cloud = cloud_input_port().template Eval<PointCloud>(context);
+  meshcat().SetObject(prefix(), cloud, point_size_, default_rgba_);
 
-  const math::RigidTransformd X_ParentCloud =
+  const RigidTransform<double> X_ParentCloud =
       pose_input_port().HasValue(context)
           ? internal::convert_to_double(
-                pose_input_port().template Eval<math::RigidTransform<T>>(
-                    context))
-          : math::RigidTransformd::Identity();
-  meshcat_->SetTransform(path_, X_ParentCloud);
+                pose_input_port().template Eval<RigidTransform<T>>(context))
+          : RigidTransform<double>::Identity();
+  meshcat().SetTransform(prefix(), X_ParentCloud);
 
-  return systems::EventStatus::Succeeded();
+  return EventStatus::Succeeded();
 }
 
 }  // namespace geometry

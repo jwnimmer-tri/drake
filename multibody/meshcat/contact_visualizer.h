@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "drake/geometry/meshcat.h"
+#include "drake/geometry/meshcat_visualizer_base.h"
 #include "drake/multibody/meshcat/contact_visualizer_params.h"
 #include "drake/multibody/plant/internal_geometry_names.h"
 #include "drake/multibody/plant/multibody_plant.h"
@@ -49,7 +50,7 @@ instance is not yet supported. We may generalize this in the future.
 @tparam_nonsymbolic_scalar
 @ingroup visualization */
 template <typename T>
-class ContactVisualizer final : public systems::LeafSystem<T> {
+class ContactVisualizer final : public MeshcatVisualizerBase<T> {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(ContactVisualizer)
 
@@ -64,13 +65,8 @@ class ContactVisualizer final : public systems::LeafSystem<T> {
 
   ~ContactVisualizer() final;
 
-  /** Calls geometry::Meshcat::Delete(std::string_view path), with the path set
-  to `prefix`. Since this visualizer will only ever add geometry under this
-  prefix, this will remove all geometry/transforms added by the visualizer, or
-  by a previous instance of this visualizer using the same prefix.  Use the
-  `delete_on_initialization_event` in the parameters to determine whether this
-  should be called on initialization. */
-  void Delete() const;
+  // Add this base class function into this Doxygen section.
+  using MeshcatVisualizerBase<T>::Delete;
 
   /** Returns the multibody::ContactResults-valued input port. It should be
   connected to MultibodyPlant's multibody::ContactResults-valued output port.
@@ -130,9 +126,13 @@ class ContactVisualizer final : public systems::LeafSystem<T> {
   template <typename>
   friend class ContactVisualizer;
 
+  // Avoid `this->` boilerplate like `this->meshcat().Func(...)`.
+  using MeshcatVisualizerBase<T>::meshcat;
+
   /* The periodic event handler. It tests to see if the last scene description
   is valid (if not, sends the objects) and then sends the transforms. */
-  systems::EventStatus UpdateMeshcat(const systems::Context<T>&) const;
+  systems::EventStatus DoOnPuublish(
+      double time, const systems::Context<T>& context) const final;
 
   /* Obtains the geometry_names scratch entry. On the first call, queries
   @p plant and the attached QueryObject and fills the returned GeometryNames. */
@@ -148,16 +148,6 @@ class ContactVisualizer final : public systems::LeafSystem<T> {
   void CalcHydroelasticContacts(
       const systems::Context<T>&,
       std::vector<internal::HydroelasticContactVisualizerItem>*) const;
-
-  /* Handles the initialization event. */
-  systems::EventStatus OnInitialization(const systems::Context<T>&) const;
-
-  /* Meshcat is mutable because we must send messages (a non-const operation)
-  from a const System (e.g., during simulation). We use shared_ptr instead of
-  unique_ptr to facilitate sharing ownership through scalar conversion;
-  creating a new Meshcat object during the conversion is not a viable option.
-  */
-  const std::shared_ptr<geometry::Meshcat> meshcat_;
 
   /* The parameters for the visualizer. */
   const ContactVisualizerParams params_;

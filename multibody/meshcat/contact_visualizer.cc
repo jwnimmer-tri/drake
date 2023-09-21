@@ -317,11 +317,21 @@ void ContactVisualizer<T>::CalcPointContacts(
   }
 }
 
-// N.B. This is only called if params_.delete_on_initialization_event was true.
 template <typename T>
-EventStatus ContactVisualizer<T>::OnInitialization(const Context<T>&) const {
-  Delete();
-  return EventStatus::Succeeded();
+typename systems::LeafSystem<T>::GraphvizFragment
+ContactVisualizer<T>::DoGetGraphvizFragment(
+    const typename systems::LeafSystem<T>::GraphvizFragmentParams& params)
+    const {
+  typename systems::LeafSystem<T>::GraphvizFragmentParams new_params{params};
+  new_params.header_lines.push_back(
+      fmt::format("path=/drake/{}", params_.prefix));
+  typename systems::LeafSystem<T>::GraphvizFragment result =
+      systems::LeafSystem<T>::DoGetGraphvizFragment(new_params);
+  result.fragments.push_back(
+      fmt::format("Meshcat [color=magenta];\n"
+                  "{}:e -> Meshcat [style=dashed, color=magenta]\n",
+                  new_params.node_id));
+  return result;
 }
 
 }  // namespace meshcat

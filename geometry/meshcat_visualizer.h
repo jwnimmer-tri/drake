@@ -8,6 +8,7 @@
 #include "drake/geometry/geometry_roles.h"
 #include "drake/geometry/meshcat.h"
 #include "drake/geometry/meshcat_animation.h"
+#include "drake/geometry/meshcat_visualizer_base.h"
 #include "drake/geometry/meshcat_visualizer_params.h"
 #include "drake/geometry/rgba.h"
 #include "drake/geometry/scene_graph.h"
@@ -49,7 +50,7 @@ same Meshcat instance.
 @tparam_nonsymbolic_scalar
 */
 template <typename T>
-class MeshcatVisualizer final : public systems::LeafSystem<T> {
+class MeshcatVisualizer final : public MeshcatVisualizerBase<T> {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(MeshcatVisualizer)
 
@@ -69,6 +70,8 @@ class MeshcatVisualizer final : public systems::LeafSystem<T> {
   template <typename U>
   explicit MeshcatVisualizer(const MeshcatVisualizer<U>& other);
 
+  ~MeshcatVisualizer() final;
+
   /** Resets the realtime rate calculator. Calculation will resume on the next
    periodic publish event. This is useful for correcting the realtime rate after
    simulation is resumed from a paused state, etc. */
@@ -76,13 +79,8 @@ class MeshcatVisualizer final : public systems::LeafSystem<T> {
     realtime_rate_calculator_.Reset();
   }
 
-  /** Calls Meshcat::Delete(std::string path), with the path set to
-   MeshcatVisualizerParams::prefix.  Since this visualizer will only ever add
-   geometry under this prefix, this will remove all geometry/transforms added
-   by the visualizer, or by a previous instance of this visualizer using the
-   same prefix.  Use MeshcatVisualizer::delete_on_initialization_event
-   to determine whether this should be called on initialization. */
-  void Delete() const;
+  // Add this base class function into this Doxygen section.
+  using MeshcatVisualizerBase<T>::Delete;
 
   /** Sets a flag indicating that subsequent publish events should also be
   "recorded" into a MeshcatAnimation.  The data in these events will be
@@ -166,9 +164,16 @@ class MeshcatVisualizer final : public systems::LeafSystem<T> {
   template <typename>
   friend class MeshcatVisualizer;
 
-  /* The periodic event handler. It tests to see if the last scene description
-   is valid (if not, sends the objects) and then sends the transforms.  */
-  systems::EventStatus UpdateMeshcat(const systems::Context<T>& context) const;
+  // Avoid `this->` boilerplate like `this->meshcat().Func(...)`.
+  using MeshcatVisualizerBase<T>::meshcat;
+
+  /* The publish event handler. It tests to see if the last scene description is
+   valid (if not, sends the objects) and then sends the transforms. */
+  systems::EventStatus DoOnPublish(
+      double time, const systems::Context<T>& context) const final;
+
+  /* The delete event handler. */
+  systems::EventStatus DoOnDelete() const final;
 
   /* Makes calls to Meshcat::SetObject to register geometry in SceneGraph. */
   void SetObjects(const SceneGraphInspector<T>& inspector) const;
@@ -184,18 +189,8 @@ class MeshcatVisualizer final : public systems::LeafSystem<T> {
    configuring it. Once the geometry is loaded, they can be updated en masse. */
   void SetAlphas(bool initializing) const;
 
-  /* Handles the initialization event. */
-  systems::EventStatus OnInitialization(const systems::Context<T>&) const;
-
   /* The index of this System's QueryObject-valued input port. */
   int query_object_input_port_{};
-
-  /* Meshcat is mutable because we must send messages (a non-const operation)
-   from a const System (e.g. during simulation).  We use shared_ptr instead of
-   unique_ptr to facilitate sharing ownership through scalar conversion;
-   creating a new Meshcat object during the conversion is not a viable option.
-   */
-  mutable std::shared_ptr<Meshcat> meshcat_{};
 
   /* The version of the geometry that was last set in Meshcat by this
    instance. Because the underlying Meshcat is shared, this visualizer has no
@@ -237,8 +232,7 @@ using MeshcatVisualizerd = MeshcatVisualizer<double>;
 
 }  // namespace geometry
 
-// Define the conversion trait to *only* allow double -> AutoDiffXd conversion.
-// Symbolic is not supported yet, and AutoDiff -> double doesn't "make sense".
+// Define the conversion trait to *only* allow double <-> AutoDiffXd conversion.
 namespace systems {
 namespace scalar_conversion {
 template <>

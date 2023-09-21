@@ -38,6 +38,7 @@ drake_cc_package_library(
         ":meshcat_animation",
         ":meshcat_point_cloud_visualizer",
         ":meshcat_visualizer",
+        ":meshcat_visualizer_base",
         ":meshcat_visualizer_params",
         ":proximity_engine",
         ":proximity_properties",
@@ -543,6 +544,7 @@ drake_cc_library(
     hdrs = ["meshcat_point_cloud_visualizer.h"],
     deps = [
         ":meshcat",
+        ":meshcat_visualizer_base",
         ":rgba",
         ":utilities",
         "//perception:point_cloud",
@@ -558,6 +560,16 @@ drake_cc_googletest(
         "//systems/analysis:simulator",
         "//systems/framework:diagram_builder",
         "//systems/primitives:constant_value_source",
+    ],
+)
+
+drake_cc_library(
+    name = "meshcat_visualizer_base",
+    srcs = ["meshcat_visualizer_base.cc"],
+    hdrs = ["meshcat_visualizer_base.h"],
+    deps = [
+        ":meshcat",
+        "//systems/framework:leaf_system",
     ],
 )
 
@@ -578,6 +590,7 @@ drake_cc_library(
     deps = [
         ":geometry_roles",
         ":meshcat",
+        ":meshcat_visualizer_base",
         ":meshcat_visualizer_params",
         ":rgba",
         ":scene_graph",
