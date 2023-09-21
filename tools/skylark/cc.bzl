@@ -10,6 +10,8 @@ TODO(jwnimmer-tri) Consider writing a linter to check for this, in case
 we find that people are unable to manually maintain this invariant.
 """
 
+load(":kwargs.bzl", "amend")
+
 def cc_binary(**kwargs):
     native.cc_binary(**kwargs)
 
@@ -17,7 +19,9 @@ def cc_import(**kwargs):
     native.cc_input(**kwargs)
 
 def cc_library(**kwargs):
-    native.cc_library(**kwargs)
+    # Always sets `features = ["pic"]`. Without this, on Ubuntu every library
+    # would get compiled twice (once for shared, once for static).
+    native.cc_library(**amend(kwargs, "features", append = ["pic"]))
 
 def cc_shared_library(**kwargs):
     native.cc_shared_library(**kwargs)
