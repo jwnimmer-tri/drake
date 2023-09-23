@@ -130,13 +130,18 @@ void CheckSupportedElements(
     const std::string& element_name = element->GetName();
     if ((supported_elements.find(element_name) == supported_elements.end()) &&
         element->GetExplicitlySetInFile()) {
-      // Unsupported elements in the drake namespace are errors.
       if (element_name.find("drake:") == 0) {
+        // Unsupported elements in the drake namespace are errors.
         std::string message =
             std::string("Unsupported SDFormat element in ") +
             root_element->GetName() + std::string(": ") + element_name;
         diagnostic.Error(element, std::move(message));
+      } else if (element_name.find_first_of(':') != std::string::npos) {
+        // Unsupported elements in a custom namespace are quietly ignored.
+        drake::log()->debug("Ignoring custom element in {}: {}",
+                            root_element->GetName(), element_name);
       } else {
+        // Unsupported first-party (SDFormat) elements are a warning.
         std::string message =
             std::string("Ignoring unsupported SDFormat element in ") +
             root_element->GetName() + std::string(": ") + element_name;

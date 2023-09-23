@@ -64,11 +64,14 @@ class SDFormatDiagnostic {
   const std::string file_extension_;
 };
 
-// Checks that all child elements of @p root_element are in the set of @p
-// supported_elements, and logs warnings/errors using @p diagnostic.
-// Unsupported elements in the `drake:` namespace are errors, all others are
-// warnings.  (see https://github.com/RobotLocomotion/drake/issues/16785 for
-// some discussion of this rationale)
+// Checks that all child elements of `root_element` are in the set of
+// `supported_elements`, and logs warnings/errors using `diagnostic`.
+// The severity of an unsupported element depends on its XML namespace:
+// - Warnings: for the default (SDFormat) namespace.
+// - Errors: for the `drake` namespace.
+// - Debug: for any other third-party namespace.
+// See https://github.com/RobotLocomotion/drake/issues/16785 for some discussion
+// of this rationale.
 void CheckSupportedElements(
     const SDFormatDiagnostic& diagnostic,
     sdf::ElementConstPtr root_element,

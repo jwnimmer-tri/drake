@@ -106,6 +106,10 @@ TEST_F(SDFormatDiagnosticContentsTest, PolicyForNode) {
   EXPECT_EQ(TakeWarning(), "<literal-string>.stuff:2: warning: meh");
 }
 
+TEST_F(CheckSupportedElements, Debug) {
+  // XXX test me
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace multibody
