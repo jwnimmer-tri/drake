@@ -37,6 +37,11 @@ DEFAULT_MIRRORS = {
         "https://drake-mirror.csail.mit.edu/github/{repository}/{commit}.tar.gz",  # noqa
         "https://s3.amazonaws.com/drake-mirror/github/{repository}/{commit}.tar.gz",  # noqa
     ],
+    "github_attachment": [
+        "https://github.com/{repository}/releases/download/{tag_name}/{attachment}",  # noqa
+        "https://drake-mirror.csail.mit.edu/github/{repository}/{tag_name}/{attachment}",  # noqa
+        "https://s3.amazonaws.com/drake-mirror/github/{repository}/{tag_name}/{attachment}",  # noqa
+    ],
     "maven": [
         "https://jcenter.bintray.com/{fulljar}",
         "https://repo1.maven.org/maven2/{fulljar}",

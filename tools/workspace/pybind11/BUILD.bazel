@@ -31,7 +31,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":module_py",
-        "@clang_cindex_python3_internal//:clang",
+        "@clang_cindex_py_internal//:clang",
     ],
 )
 
@@ -44,7 +44,7 @@ py_binary(
     deps = [
         ":libclang_setup_py",
         ":mkdoc_comment_py",
-        "@clang_cindex_python3_internal//:clang",
+        "@clang_cindex_py_internal//:clang",
     ],
 )
 

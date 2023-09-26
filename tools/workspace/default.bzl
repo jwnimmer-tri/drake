@@ -7,7 +7,7 @@ load("//tools/workspace/blas:repository.bzl", "blas_repository")
 load("//tools/workspace/buildifier:repository.bzl", "buildifier_repository")
 load("//tools/workspace/cc:repository.bzl", "cc_repository")
 load("//tools/workspace/ccd_internal:repository.bzl", "ccd_internal_repository")  # noqa
-load("//tools/workspace/clang_cindex_python3_internal:repository.bzl", "clang_cindex_python3_internal_repository")  # noqa
+load("//tools/workspace/clang_cindex_py_internal:repository.bzl", "clang_cindex_py_internal_repository")  # noqa
 load("//tools/workspace/clp:repository.bzl", "clp_repository")
 load("//tools/workspace/clp_internal:repository.bzl", "clp_internal_repository")  # noqa
 load("//tools/workspace/coinutils_internal:repository.bzl", "coinutils_internal_repository")  # noqa
@@ -134,8 +134,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         cc_repository(name = "cc")
     if "ccd_internal" not in excludes:
         ccd_internal_repository(name = "ccd_internal", mirrors = mirrors)
-    if "clang_cindex_python3_internal" not in excludes:
-        clang_cindex_python3_internal_repository(name = "clang_cindex_python3_internal", mirrors = mirrors)  # noqa
+    if "clang_cindex_py_internal" not in excludes:
+        clang_cindex_py_internal_repository(name = "clang_cindex_py_internal", mirrors = mirrors)  # noqa
     if "clp" not in excludes:
         # The @clp external is deprecated in Drake's WORKSPACE and will be
         # removed on or after 2023-12-01.

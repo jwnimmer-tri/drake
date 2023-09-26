@@ -6,6 +6,7 @@ def github_archive(
         repository = None,
         commit = None,
         commit_pin = None,
+        attachment = "",
         sha256 = "0" * 64,
         build_file = None,
         patches = None,
@@ -26,6 +27,7 @@ def github_archive(
         commit_pin: optional boolean, set to True iff the archive should remain
             at the same version indefinitely, eschewing automated upgrades to
             newer versions.
+        attachment: ...
         sha256: required sha256 is the expected SHA-256 checksum of the
             downloaded archive. When unsure, you can omit this argument (or
             comment it out) and then the checksum-mismatch error message will
@@ -94,6 +96,7 @@ def github_archive(
         repository = repository,
         commit = commit,
         commit_pin = commit_pin,
+        attachment = attachment,
         sha256 = sha256,
         build_file = build_file,
         patches = patches,
@@ -135,6 +138,9 @@ _github_archive_real = repository_rule(
             mandatory = True,
         ),
         "commit_pin": attr.bool(),
+        "attachment": attr.string(
+            default = "",
+        ),
         "sha256": attr.string(
             mandatory = False,
             default = "0" * 64,
@@ -185,6 +191,7 @@ def setup_github_repository(repository_ctx):
         repository = repository_ctx.attr.repository,
         commit = repository_ctx.attr.commit,
         commit_pin = getattr(repository_ctx.attr, "commit_pin", None),
+        attachment = getattr(repository_ctx.attr, "attachment", ""),
         mirrors = repository_ctx.attr.mirrors,
         sha256 = repository_ctx.attr.sha256,
         extra_strip_prefix = repository_ctx.attr.extra_strip_prefix,
@@ -227,6 +234,7 @@ def github_download_and_extract(
         commit,
         mirrors,
         output = "",
+        attachment = "",
         sha256 = "0" * 64,
         extra_strip_prefix = "",
         upgrade_advice = "",
@@ -242,6 +250,7 @@ def github_download_and_extract(
             an example.
         output: path to the directory where the archive will be unpacked,
             relative to the Bazel repository directory.
+        attachment: ...
         sha256: expected SHA-256 hash of the archive downloaded. Fallback to
             an incorrect default value to prevent the hash check from being
             disabled, but allow the first download attempt to fail and print
@@ -255,18 +264,23 @@ def github_download_and_extract(
             be taken when upgrading to a new version.
             Used by //tools/workspace:new_release.
     """
-    urls = _urls(
+    urls, type = _urls(
         repository = repository,
         commit = commit,
+        attachment = attachment,
         mirrors = mirrors,
     )
 
-    strip_prefix = _strip_prefix(repository, commit, extra_strip_prefix)
+    if attachment:
+        strip_prefix = extra_strip_prefix
+    else:
+        strip_prefix = _strip_prefix(repository, commit, extra_strip_prefix)
+    
     repository_ctx.download_and_extract(
         urls,
         output = output,
         sha256 = _sha256(sha256),
-        type = "tar.gz",
+        type = type,
         stripPrefix = strip_prefix,
     )
 
@@ -333,7 +347,7 @@ def _is_commit_sha(commit):
         for ch in commit.elems()
     ])
 
-def _format_url(*, pattern, repository, commit):
+def _format_url(*, pattern, repository, commit, attachment):
     """Given a URL pattern for github.com or a Drake-specific mirror,
     substitutes in the given repository and commit (tag or git sha).
 
@@ -341,6 +355,7 @@ def _format_url(*, pattern, repository, commit):
 
     The {repository} is always substituted with `repository`.
     The {commit} is always substituted with `commit`.
+    The {attachment} is always substituted with `attachment` unless it's empty.
     If `commit` refers to a git tag, then {tag_name} will be substituted.
     If `commit` refers to a git branch, then {branch_name} will be substituted.
     If `commit` refers to a git sha, then {commit_sha} will be substituted.
@@ -357,6 +372,7 @@ def _format_url(*, pattern, repository, commit):
         "commit": commit,
         "tag_name": commit if is_tag else None,
         "commit_sha": commit if is_commit_sha else None,
+        "attachment": attachment if attachment else None,
     }
     for name, value in substitutions.items():
         if value == None:
@@ -368,26 +384,37 @@ def _format_url(*, pattern, repository, commit):
                 return None
     return pattern.format(**substitutions)
 
-def _urls(*, repository, commit, mirrors):
-    """Compute the urls from which an archive of the provided GitHub
-    repository and commit may be downloaded.
+def _urls(*, repository, commit, attachment, mirrors):
+    """Compute the urls (and file_type) from which an archive of the provided
+    GitHub repository and commit may be downloaded.
 
      Args:
         repository: GitHub repository name in the form organization/project.
         commit: git revision for which the archive should be downloaded.
+        attachment: ...
         mirrors: dictionary of mirrors, see mirrors.bzl in this directory for
             an example.
+     Returns:
+        (urls : List[str], type : str)
     """
-    result_with_nulls = [
+    if attachment:
+        url_patterns = mirrors["github_attachment"]
+        type = ""
+    else:
+        url_patterns = mirrors["github"]
+        type = "tar.gz"
+    urls_with_nulls = [
         _format_url(
             pattern = x,
             repository = repository,
             commit = commit,
+            attachment = attachment,
         )
-        for x in mirrors.get("github")
+        for x in url_patterns
     ]
-    return [
+    urls = [
         url
-        for url in result_with_nulls
+        for url in urls_with_nulls
         if url != None
     ]
+    return urls, type
