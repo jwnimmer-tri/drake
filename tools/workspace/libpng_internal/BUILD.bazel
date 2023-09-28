@@ -1,5 +1,35 @@
 load("//tools/lint:lint.bzl", "add_lint_tests")
+load("//tools/skylark:drake_py.bzl", "drake_py_binary", "drake_py_test")
 
 exports_files(["png_drake_vendor.h"])
+
+drake_py_binary(
+    name = "png_drake_vendor",
+    srcs = ["png_drake_vendor.py"],
+    data = [
+        ":png_drake_vendor.h",
+        "@libpng_internal//:png.h",
+        "@libpng_internal//:pngpriv.h",
+    ],
+    deps = [
+        "@bazel_tools//tools/python/runfiles",
+    ],
+)
+
+drake_py_test(
+    name = "png_drake_vendor_lint",
+    srcs = ["png_drake_vendor.py"],
+    args = ["--action=check"],
+    data = [
+        ":png_drake_vendor.h",
+        "@libpng_internal//:png.h",
+        "@libpng_internal//:pngpriv.h",
+    ],
+    main = "png_drake_vendor.py",
+    tags = ["lint"],
+    deps = [
+        "@bazel_tools//tools/python/runfiles",
+    ],
+)
 
 add_lint_tests()
