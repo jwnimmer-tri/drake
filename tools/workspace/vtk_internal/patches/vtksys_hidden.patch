@@ -4,6 +4,14 @@ The vtksys library doesn't obey the VTK_ABI_NAMESPACE macros, so it's
 an ODR hazard versus other non-Drake builds of VTK. Switch it to use
 hidden visibility to help mitigate the risk.
 
+--- Utilities/KWSys/vtksys/kwsysPrivate.h
++++ Utilities/KWSys/vtksys/kwsysPrivate.h
+@@ -18,3 +18,3 @@
+ /* clang-format off */
+-#define KWSYS_HEADER(x) KWSYS_HEADER0(KWSYS_NAMESPACE/x)
++#define KWSYS_HEADER(x) KWSYS_HEADER0(vtksys/x)
+ /* clang-format on */
+
 --- Utilities/KWSys/vtksys/Configure.h.in
 +++ Utilities/KWSys/vtksys/Configure.h.in
 @@ -39,7 +39,7 @@

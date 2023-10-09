@@ -51,8 +51,9 @@ MODULE_SETTINGS = {
             "Utilities/KWSys/vtksys/SystemTools.cxx",
         ],
         "cmake_defines": [
+            # Match the VTK defaults, but with a drake prefix.
+            "KWSYS_NAMESPACE=drake_vendor_vtksys",
             # Match the VTK defaults.
-            "KWSYS_NAMESPACE=vtksys",
             "KWSYS_NAME_IS_KWSYS=0",
             "KWSYS_SYSTEMTOOLS_USE_TRANSLATION_MAP=1",
             # Features that are available on the host platform.
@@ -67,8 +68,8 @@ MODULE_SETTINGS = {
             "KWSYS_BUILD_SHARED=0",
         ],
         "copts_extra": [
-            # Match the VTK defaults.
-            "-DKWSYS_NAMESPACE=vtksys",
+            # Match the VTK defaults, but with a drake prefix.
+            "-DKWSYS_NAMESPACE=drake_vendor_vtksys",
             # Features that are available on the host platform.
             "-DKWSYS_SYS_HAS_IFADDRS_H",
             "-DKWSYS_CXX_HAS_SETENV",
