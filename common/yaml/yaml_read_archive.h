@@ -7,6 +7,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -21,6 +22,7 @@
 #include "drake/common/name_value.h"
 #include "drake/common/nice_type_name.h"
 #include "drake/common/unused.h"
+#include "drake/common/yaml/yaml_internal.h"
 #include "drake/common/yaml/yaml_io_options.h"
 #include "drake/common/yaml/yaml_node.h"
 
@@ -194,7 +196,12 @@ class YamlReadArchive final {
   // For std::variant.
   template <typename NVP, typename... Types>
   void DoVisit(const NVP& nvp, const std::variant<Types...>&, int32_t) {
-    this->VisitVariant(nvp);
+    if constexpr (std::is_constructible_v<std::variant<Types...>,
+                                          std::monostate>) {
+      this->VisitNullableVariant(nvp);
+    } else {
+      this->VisitVariant(nvp);
+    }
   }
 
   // For Eigen::Matrix or Eigen::Vector.
@@ -270,6 +277,24 @@ class YamlReadArchive final {
     }
     this->Visit(drake::MakeNameValue(nvp.name(), &storage.value()),
                 VisitShouldMemorizeType::kNo);
+  }
+
+  template <typename NVP>
+  void VisitNullableVariant(const NVP& nvp) {
+    // Our YAML semantics for for variant<monostate, Types...> exactly match
+    // optional<variant<Types...>.
+    auto copy = internal::CopyMonostateVariantToOptionalVariant(*nvp.value());
+    this->Visit(drake::MakeNameValue(nvp.name(), &copy),
+                VisitShouldMemorizeType::kNo);
+    if (copy.has_value()) {
+      std::visit(
+          [&nvp](auto& x) {
+            *nvp.value() = std::move(x);
+          },
+          *copy);
+    } else {
+      *nvp.value() = std::monostate{};
+    }
   }
 
   template <typename NVP>

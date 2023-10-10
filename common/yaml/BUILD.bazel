@@ -12,6 +12,7 @@ drake_cc_package_library(
     name = "yaml",
     visibility = ["//visibility:public"],
     deps = [
+        ":yaml_internal",
         ":yaml_io",
         ":yaml_io_options",
         ":yaml_node",
@@ -39,10 +40,16 @@ drake_cc_library(
 )
 
 drake_cc_library(
+    name = "yaml_internal",
+    hdrs = ["yaml_internal.h"],
+)
+
+drake_cc_library(
     name = "yaml_read_archive",
     srcs = ["yaml_read_archive.cc"],
     hdrs = ["yaml_read_archive.h"],
     deps = [
+        ":yaml_internal",
         ":yaml_io_options",
         ":yaml_node",
         "//common:essential",

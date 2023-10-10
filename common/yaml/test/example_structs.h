@@ -255,6 +255,16 @@ struct VariantStruct {
   Variant4 value;
 };
 
+template <typename... Types>
+struct BespokeVariantStruct {
+  template <typename Archive>
+  void Serialize(Archive* a) {
+    a->Visit(DRAKE_NVP(value));
+  }
+
+  std::variant<Types...> value{kNominalDouble};
+};
+
 struct VariantWrappingStruct {
   template <typename Archive>
   void Serialize(Archive* a) {

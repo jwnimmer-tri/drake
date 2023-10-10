@@ -217,6 +217,18 @@ TEST_F(YamlWriteArchiveTest, Variant) {
       "Cannot YamlWriteArchive the variant type double with a non-zero index");
 }
 
+TEST_F(YamlWriteArchiveTest, VariantMonoFirst) {
+  const auto test = [](const auto& value, const std::string& expected) {
+    const BespokeVariantStruct<std::monostate, double, std::string> x{
+        .value = value};
+    EXPECT_EQ(Save(x), WrapDoc(expected));
+  };
+
+  test(std::string(), "\"\"");
+  test(std::string("foo"), "foo");
+  test(std::monostate{}, "");
+}
+
 TEST_F(YamlWriteArchiveTest, EigenVector) {
   const auto test = [](const Eigen::VectorXd& value,
                        const std::string& expected) {

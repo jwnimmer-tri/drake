@@ -269,18 +269,23 @@ class YamlWriteArchive final {
     const size_t index = variant.index();
     std::visit(
         [this, name, index](auto&& unwrapped) {
-          this->Visit(drake::MakeNameValue(name, &unwrapped));
-          if (index != 0) {
-            using T = decltype(unwrapped);
-            root_.At(name).SetTag(YamlWriteArchive::GetVariantTag<T>());
+          if constexpr (!std::is_same_v<
+                            std::remove_reference_t<
+                                std::remove_cv_t<decltype(unwrapped)>>,
+                            std::monostate>) {
+            this->Visit(drake::MakeNameValue(name, &unwrapped));
+            // The above call to this->Visit() for the *unwrapped* value pushed
+            // our name onto the visit_order a second time, duplicating work
+            // performed by the Visit() for the *wrapped* value.  We'll undo
+            // that duplication now.
+            this->visit_order_.pop_back();
+            if (index != 0) {
+              using T = decltype(unwrapped);
+              root_.At(name).SetTag(YamlWriteArchive::GetVariantTag<T>());
+            }
           }
         },
         variant);
-
-    // The above call to this->Visit() for the *unwrapped* value pushed our
-    // name onto the visit_order a second time, duplicating work performed by
-    // the Visit() for the *wrapped* value.  We'll undo that duplication now.
-    this->visit_order_.pop_back();
   }
 
   template <typename T>

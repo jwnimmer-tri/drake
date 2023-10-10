@@ -539,6 +539,22 @@ TEST_P(YamlReadArchiveTest, VariantMissing) {
   EXPECT_EQ(std::get<double>(x.value), kNominalDouble);
 }
 
+TEST_P(YamlReadArchiveTest, VariantMonoFirst) {
+  const auto test = [](const std::string& doc, const std::string& expected) {
+    const auto& x = AcceptNoThrow<VariantMonoFirstStruct>(Load(doc));
+    const std::string value_or_missing =
+        std::holds_alternative<std::string>(x.value)
+            ? std::get<std::string>(x.value)
+            : "MISSING";
+    EXPECT_EQ(value_or_missing, expected) << doc;
+  };
+
+  test("doc:\n  value: \"\"", "");
+  test("doc:\n  value: foo", "foo");
+  test("doc:\n  value: \"foo\"", "foo");
+  test("doc:\n  value: !!str foo", "foo");
+}
+
 TEST_P(YamlReadArchiveTest, EigenVector) {
   const auto test = [](const std::string& value,
                        const Eigen::VectorXd& expected) {
