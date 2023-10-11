@@ -278,8 +278,7 @@ class YamlWriteArchive final {
             // We'll undo that duplication now.
             this->visit_order_.pop_back();
             if (index != 0) {
-              root_.At(name).SetTag(
-                  YamlWriteArchive::GetVariantTag<Unwrapped>());
+	      YamlWriteArchive::SetVariantTag<Unwrapped>(&root_.At(name));
             }
           }
         },
@@ -287,10 +286,18 @@ class YamlWriteArchive final {
   }
 
   template <typename T>
-  static std::string GetVariantTag() {
+  static void SetVariantTag(internal::Node* node) {
+    DRAKE_DEMAND(node != nullptr);
     const std::string full_name = NiceTypeName::GetFromStorage<T>();
-    if ((full_name == "std::string") || (full_name == "double") ||
-        (full_name == "int")) {
+    if (full_name == "int") {
+      node->SetTag(JsonSchemaTag::kInt);
+      return;
+    }
+    if (full_name == "double") {
+      node->SetTag(JsonSchemaTag::kFloat);
+      return;
+    }
+    if (full_name == "std::string") {
       // TODO(jwnimmer-tri) Add support for well-known YAML primitive types
       // within variants (when placed other than at the 0'th index).  To do
       // that, we need to emit the tag as "!!str" instead of "!string" or
@@ -306,7 +313,7 @@ class YamlWriteArchive final {
       // Remove template arguments.
       short_name.resize(angle);
     }
-    return short_name;
+    node->SetTag(short_name);
   }
 
   // This is used for std::array, std::vector, Eigen::Vector, or similar.
