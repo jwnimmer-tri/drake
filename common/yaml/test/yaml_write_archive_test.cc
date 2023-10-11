@@ -209,7 +209,7 @@ TEST_F(YamlWriteArchiveTest, Variant) {
   test(Variant4(DoubleStruct{1.0}), "!DoubleStruct\n    value: 1.0");
   test(Variant4(EigenVecStruct{Eigen::Vector2d(1.0, 2.0)}),
        "!EigenStruct\n    value: [1.0, 2.0]");
-  test(Variant4(std::string()), "!!float 1.0");
+  test(Variant4(double{1.0}), "!!float 1.0");
 }
 
 TEST_F(YamlWriteArchiveTest, VariantMonoFirst) {
