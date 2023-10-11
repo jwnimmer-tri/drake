@@ -274,10 +274,9 @@ class YamlWriteArchive final {
                                 std::remove_cv_t<decltype(unwrapped)>>,
                             std::monostate>) {
             this->Visit(drake::MakeNameValue(name, &unwrapped));
-            // The above call to this->Visit() for the *unwrapped* value pushed
-            // our name onto the visit_order a second time, duplicating work
-            // performed by the Visit() for the *wrapped* value.  We'll undo
-            // that duplication now.
+            // The Visit(name, &unwrapped) pushed our name onto the visit_order
+            // a second time, duplicating work performed by the Visit() on nvp.
+            // We'll undo that duplication now.
             this->visit_order_.pop_back();
             if (index != 0) {
               using T = decltype(unwrapped);
