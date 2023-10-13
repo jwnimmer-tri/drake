@@ -29,6 +29,7 @@ _HDRS = [
 
 cc_library_vendored(
     name = "msgpack",
+    vendor_tool_args = ["--no-inline-namespace"],
     hdrs = _HDRS,
     defines = ["MSGPACK_NO_BOOST"],
     hdrs_vendored = [
