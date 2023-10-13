@@ -113,6 +113,7 @@ _HDRS = _HDRS_GLOB + [
 
 cc_library_vendored(
     name = "fcl",
+    vendor_tool_args = ["--no-inline-namespace"],
     srcs = _SRCS,
     srcs_vendored = [
         x.replace("src/", "drake_src/src/")
