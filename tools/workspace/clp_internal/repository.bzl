@@ -11,6 +11,9 @@ def clp_internal_repository(
         build_file = ":package.BUILD.bazel",
         patches = [
             ":patches/missing_include.patch",
+            ":patches/no_mumps.patch",
+            ":patches/no_signals.patch",
+            ":patches/vendor_cxx.patch",
         ],
         mirrors = mirrors,
     )

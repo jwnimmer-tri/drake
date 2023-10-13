@@ -1,0 +1,67 @@
+[coinutils] Remove coding tricks that break our vendor_cxx tool
+
+CoinFactorization: Trigger warning -- it would better for your mental
+health if you just ignored this patch. If you really need to know what
+it's doing, then read on -- but you've been warned! We rename the
+repeated includes of our header file to spell the filename `*.inc` so
+vendor_cxx has a clue that it should not close the namespace prior to
+including the code snippet.
+
+CoinOslC: No point in using the C ABI. We want C++ mangled symbols.
+
+--- CoinUtils/src/CoinFactorization2.cpp
++++ CoinUtils/src/CoinFactorization2.cpp
+@@ -371,5 +371,5 @@
+ #else
+ #define FAC_SET SMALL_SET
+-#include "CoinFactorization.hpp"
++#include "CoinFactorization.inc"
+ #undef FAC_SET
+ #undef UGLY_COIN_FACTOR_CODING
+@@ -1357,5 +1357,5 @@
+ #else
+ #define FAC_SET LARGE_SET
+-#include "CoinFactorization.hpp"
++#include "CoinFactorization.inc"
+ #undef FAC_SET
+ #endif
+
+--- CoinUtils/src/CoinOslFactorization3.cpp
++++ CoinUtils/src/CoinOslFactorization3.cpp
+@@ -802,5 +802,5 @@
+   int *ncompactionsp)
+ 
+-#include "CoinOslC.h"
++#include "CoinOslC.inc"
+ #undef COIN_OSL_CMFC
+ #undef MACTION_T
+@@ -1194,5 +1194,5 @@
+   int *ncompactionsp)
+ 
+-#include "CoinOslC.h"
++#include "CoinOslC.inc"
+ #undef COIN_OSL_CMFC
+ #undef C_EKKCMFY
+
+--- CoinUtils/src/CoinOslC.h
++++ CoinUtils/src/CoinOslC.h
+@@ -30,9 +30,6 @@
+ #include "CoinHelperFunctions.hpp"
+ 
+ #include <stddef.h>
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+ 
+ int c_ekkbtrn(register const EKKfactinfo *fact,
+   double *dwork1,
+@@ -83,9 +80,6 @@
+ {
+   CoinZeroN(marray, n);
+ }
+-#ifdef __cplusplus
+-}
+-#endif
+ 
+ #define c_ekkscpy_0_1(s, ival, array) CoinFillN(array, s, ival)
+ #define c_ekks1cpy(n, marr1, marr2) CoinMemcpyN(marr1, n, marr2)

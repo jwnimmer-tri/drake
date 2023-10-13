@@ -1,0 +1,28 @@
+[clp] Disable signal handling
+
+--- Clp/src/ClpSolve.cpp
++++ Clp/src/ClpSolve.cpp
+@@ -365,1 +365,1 @@
+-#include "CoinSignal.hpp"
++// #include "CoinSignal.hpp"
+@@ -912,4 +912,5 @@
+   ClpSimplex *model2 = this;
+   bool interrupt = (options.getSpecialOption(2) == 0);
++#if 0
+   CoinSighandler_t saveSignal = static_cast< CoinSighandler_t >(0);
+   if (interrupt) {
+@@ -918,4 +919,5 @@
+     saveSignal = signal(SIGINT, signal_handler);
+   }
++#endif
+   // If no status array - set up basis
+   if (!status_)
+@@ -3899,6 +3901,8 @@
+     << timeIdiot;
+   handler_->message() << CoinMessageEol;
++#if 0
+   if (interrupt)
+     signal(SIGINT, saveSignal);
++#endif
+   perturbation_ = savePerturbation;
+   scalingFlag_ = saveScaling;

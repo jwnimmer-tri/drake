@@ -20,6 +20,8 @@ _HDRS = glob(
     exclude = [
         "**/config*",
         "**/*Config.h",
+        # These headers are too complicated for vendor_cxx to handle.
+        "**/CoinSignal.hpp",
     ],
     allow_empty = False,
 )
@@ -118,6 +120,21 @@ _INCLUDES = [
     "CoinUtils/src/",
 ]
 
+# This file is not only a header file with declarations, but is also snippet
+# file that gets repeatedly copy-pasted into its *.cpp file.
+genrule(
+    name = "_copy_CoinOslC",
+    srcs = ["CoinUtils/src/CoinOslC.h"],
+    outs = ["inc/CoinOslC.inc"],
+    cmd = "cp $< $@",
+)
+
+cc_library(
+    name = "_coin_osl_c_inc",
+    hdrs = [":inc/CoinOslC.inc"],
+    includes = ["inc"],
+)
+
 coin_cc_library(
     name = "coinutils",
     config_h = "CoinUtilsConfig.h",
@@ -131,9 +148,9 @@ coin_cc_library(
     hdrs_private = _HDRS,
     includes_private = _INCLUDES,
     srcs = _SRCS,
-    vendor_tool_args = ["--no-inline-namespace"],
     output_vendoring_patch = "drake_coinutils.patch",
     deps = [
+        ":_coin_osl_c_inc",
         "@blas",
         "@lapack",
     ],

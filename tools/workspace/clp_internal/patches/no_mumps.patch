@@ -1,0 +1,9 @@
+[clp] Remove an unguarded include for Mumps
+
+We have Mumps set to OFF for Drake.
+
+--- Clp/src/ClpSolve.cpp
++++ Clp/src/ClpSolve.cpp
+@@ -77 +77 @@
+-#include "ClpCholeskyMumps.hpp"
++// #include "ClpCholeskyMumps.hpp"

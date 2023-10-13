@@ -1,0 +1,71 @@
+[clp] Remove coding tricks that break our vendor_cxx tool
+
+ClpCholeskyDense: Remove dead CILK code.
+
+ClpPackedMatrix: Trigger warning -- it would better for your mental
+health if you just ignored this patch. If you really need to know what
+it's doing, then read on -- but you've been warned! In the header
+file, we adjust it to use canonical include guard spelling, instead of
+closing its include guard with `#elif`. In the cpp file, we rename the
+repeated self-includes to spell the filename `*.inc` so vendor_cxx has
+a clue that it should not close the namespace prior to including the
+code snippet.
+
+ClpSolve: No need for 'extern "C"' on a static function.
+
+--- Clp/src/ClpCholeskyDense.hpp
++++ Clp/src/ClpCholeskyDense.hpp
+@@ -96,9 +96,6 @@
+   int numberBlocks;
+ } ClpCholeskyDenseC;
+ 
+-extern "C" {
+-void ClpCholeskySpawn(void *);
+-}
+ /**Non leaf recursive factor */
+ void ClpCholeskyCfactor(ClpCholeskyDenseC *thisStruct,
+   longDouble *a, int n, int numberBlocks,
+
+--- Clp/src/ClpPackedMatrix.hpp
++++ Clp/src/ClpPackedMatrix.hpp
+@@ -705,7 +705,8 @@
+   int ifActive_;
+   //@}
+ };
+-#elif INCLUDE_MATRIX3_PRICING
++#endif
++#if INCLUDE_MATRIX3_PRICING
+ int iColumn = *column;
+ column++;
+ if (fabs(value) > zeroTolerance) {
+
+--- Clp/src/ClpPackedMatrix.cpp
++++ Clp/src/ClpPackedMatrix.cpp
+@@ -8145,3 +8145,3 @@
+         // common coding
+-#include "ClpPackedMatrix.hpp"
++#include "ClpPackedMatrix.inc"
+       }
+@@ -8176,3 +8176,3 @@
+         // common coding
+-#include "ClpPackedMatrix.hpp"
++#include "ClpPackedMatrix.inc"
+       }
+@@ -8190,3 +8190,3 @@
+ // common coding
+-#include "ClpPackedMatrix.hpp"
++#include "ClpPackedMatrix.inc"
+       row++;
+@@ -8205,3 +8205,3 @@
+ // common coding
+-#include "ClpPackedMatrix.hpp"
++#include "ClpPackedMatrix.inc"
+       row += nel;
+
+--- Clp/src/ClpSolve.cpp
++++ Clp/src/ClpSolve.cpp
+@@ -370,3 +370,3 @@
+ 
+-extern "C" {
++namespace {
+ static void

@@ -1,6 +1,7 @@
 # -*- bazel -*-
 
 load("@drake//tools/install:install.bzl", "install")
+load("@drake//tools/skylark:cc.bzl", "cc_library")
 load(
     "@drake//tools/workspace/coinutils_internal:defs.bzl",
     "coin_cc_library",
@@ -15,12 +16,38 @@ exports_files([
     "LICENSE",
 ])
 
+_EXCLUDE = [
+    # We only want libClp, not libClpSolver nor the main program.
+    "**/MyEventHandler*",
+    "**/MyMessageHandler*",
+    "**/CbcOrClpParam*",
+    "**/ClpMain*",
+    "**/ClpSolver*",
+    "**/Clp_C_Interface*",
+    "**/Clp_ampl*",
+    "**/unitTest*",
+    # We treat COIN_HAS_ABC as OFF.
+    "**/Abc*",
+    "**/CoinAbc*",
+    # We treat COIN_HAS_AMD, COIN_HAS_CHOLMOD, and COIN_HAS_GLPK as OFF.
+    "**/ClpCholeskyUfl*",
+    # We treat COIN_HAS_MUMPS as OFF.
+    # TODO(jwnimmer-tri) We can probably enable this. I've left it off for
+    # now only out of inertia -- Ubuntu builds CLP without MUMPS.
+    "**/ClpCholeskyMumps*",
+    # We treat COIN_HAS_WSMP as OFF.
+    "**/ClpCholeskyWssmp*",
+    # It is not at all clear in the upstream build system how PARDISO_BARRIER
+    # can be set ON in the first place, but in any case we have it OFF.
+    "**/ClpCholeskyPardiso*",
+]
+
 _HDRS = glob(
     [
         "Clp/src/*.h",
         "Clp/src/*.hpp",
     ],
-    exclude = [
+    exclude = _EXCLUDE + [
         "**/config*",
         "**/*Config.h",
     ],
@@ -31,28 +58,7 @@ _SRCS = glob(
     [
         "Clp/src/*.cpp",
     ],
-    exclude = [
-        # We only want libClp, not libClpSolver nor the main program.
-        "**/MyEventHandler*",
-        "**/MyMessageHandler*",
-        "**/CbcOrClpParam*",
-        "**/ClpMain*",
-        "**/ClpSolver*",
-        "**/Clp_C_Interface*",
-        "**/Clp_ampl*",
-        "**/unitTest*",
-        # We treat COIN_HAS_ABC as OFF.
-        "**/Abc*",
-        "**/CoinAbc*",
-        # We treat COIN_HAS_AMD, COIN_HAS_CHOLMOD, and COIN_HAS_GLPK as OFF.
-        "**/ClpCholeskyUfl*",
-        # We treat COIN_HAS_MUMPS as OFF.
-        # TODO(jwnimmer-tri) We can probably enable this. I've left it off for
-        # now only out of inertia -- Ubuntu builds CLP without MUMPS.
-        "**/ClpCholeskyMumps*",
-        # We treat COIN_HAS_WSMP as OFF.
-        "**/ClpCholeskyWssmp*",
-    ],
+    exclude = _EXCLUDE,
     allow_empty = False,
 )
 
@@ -134,6 +140,21 @@ _INCLUDES = [
     "Clp/src/",
 ]
 
+# This file is not only a header file with declarations, but is also snippet
+# file that gets repeatedly copy-pasted into its *.cpp file.
+genrule(
+    name = "_copy_ClpPackedMatrix",
+    srcs = ["Clp/src/ClpPackedMatrix.hpp"],
+    outs = ["inc/ClpPackedMatrix.inc"],
+    cmd = "cp $< $@",
+)
+
+cc_library(
+    name = "_clp_packed_matrix_inc",
+    hdrs = [":inc/ClpPackedMatrix.inc"],
+    includes = ["inc"],
+)
+
 coin_cc_library(
     name = "clp",
     config_h = "ClpConfig.h",
@@ -147,9 +168,9 @@ coin_cc_library(
     hdrs_private = _HDRS,
     includes_private = _INCLUDES,
     srcs = _SRCS,
-    vendor_tool_args = ["--no-inline-namespace"],
     output_vendoring_patch = "drake_clp.patch",
     deps = [
+        ":_clp_packed_matrix_inc",
         "@coinutils_internal//:coinutils",
     ],
     visibility = ["//visibility:public"],

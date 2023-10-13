@@ -9,5 +9,8 @@ def coinutils_internal_repository(
         commit = "releases/2.11.9",
         sha256 = "15d572ace4cd3b7c8ce117081b65a2bd5b5a4ebaba54fadc99c7a244160f88b8",  # noqa
         build_file = ":package.BUILD.bazel",
+        patches = [
+            ":patches/vendor_cxx.patch",
+        ],
         mirrors = mirrors,
     )
