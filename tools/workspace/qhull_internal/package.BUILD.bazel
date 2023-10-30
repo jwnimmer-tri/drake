@@ -35,7 +35,7 @@ _SRCS_C = [
     "src/libqhull_r/stat_r.c",
     "src/libqhull_r/user_r.c",
     "src/libqhull_r/usermem_r.c",
-    "@drake//tools/workspace/qhull_internal:qh_printf.c",
+    "@drake//tools/workspace/qhull_internal:qh_printf.cc",
 ]
 
 _SRCS_CPP = [

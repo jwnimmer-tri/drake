@@ -11,6 +11,6 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-exports_files(["qh_printf.c"])
+exports_files(["qh_printf.cc"])
 
 add_lint_tests()
