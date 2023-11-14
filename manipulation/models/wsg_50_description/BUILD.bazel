@@ -2,8 +2,13 @@ load(
     "//tools/skylark:drake_cc.bzl",
     "drake_cc_googletest",
 )
+load(
+    "//tools/skylark:drake_py.bzl",
+    "drake_py_unittest",
+)
 load("//tools/skylark:drake_data.bzl", "models_filegroup")
 load("//tools/install:install_data.bzl", "install_data")
+load("//tools/workspace/ros_xacro_internal:defs.bzl", "xacro_filegroup")
 load("//tools/lint:lint.bzl", "add_lint_tests")
 
 package(default_visibility = [":__subpackages__"])
@@ -32,9 +37,30 @@ filegroup(
 
 # === test/ ===
 
+xacro_filegroup(
+    name = "xacro",
+    srcs = [
+        "sources/schunk_wsg_50.sdf.xacro",
+        "sources/schunk_wsg_50_ball_contact.sdf.xacro",
+    ],
+    data = [
+        "sources/schunk_wsg_50.xacro",
+    ],
+)
+
+drake_py_unittest(
+    name = "xacro_cross_check_test",
+    data = [
+        ":glob_models",
+        ":xacro",
+    ],
+    deps = [
+        "@bazel_tools//tools/python/runfiles",
+    ],
+)
+
 drake_cc_googletest(
     name = "wsg_50_sdf_test",
-    srcs = ["sdf/test/wsg_50_sdf_test.cc"],
     data = [":models"],
     deps = [
         "//common:find_resource",

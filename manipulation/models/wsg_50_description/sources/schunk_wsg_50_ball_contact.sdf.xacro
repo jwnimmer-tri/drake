@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<sdf version="1.7" xmlns:drake="http://drake.mit.edu" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="schunk_wsg_50.xacro"/>
+  <xacro:schunk_gripper with_ball_contact="true"/>
+</sdf>
