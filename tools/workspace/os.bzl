@@ -143,7 +143,8 @@ def _determine_linux(repository_ctx):
 
     # Nothing matched.
     return _make_result(
-        error = error_prologue + "unsupported distribution '%s'" % distro,
+        ubuntu_release = "22.04",
+        is_wheel = False,
     )
 
 def _determine_macos(repository_ctx):
