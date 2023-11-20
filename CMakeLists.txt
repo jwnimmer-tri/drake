@@ -93,10 +93,11 @@ else()
   # The supported releases should match those listed in both
   # doc/_pages/from_source.md and tools/workspace/os.bzl.
   if(NOT UNIX_DISTRIBUTION_CODENAME MATCHES "^(focal|jammy)$")
-    message(FATAL_ERROR
+    message(WARNING
       "Release ${UNIX_DISTRIBUTION_CODENAME} is NOT supported. Please use "
       "Ubuntu 20.04 (Focal) or Ubuntu 22.04 (Jammy)."
     )
+    set(UNIX_DISTRIBUTION_CODENAME "jammy")
   endif()
 
   list(APPEND BAZELRC_IMPORTS "tools/ubuntu.bazelrc")
