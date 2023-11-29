@@ -19,11 +19,11 @@ namespace sensors {
 /** Utility functions for reading and writing images, from/to either files or
 memory buffers.
 
-The only file formats supported are JPEG, PNG, and TIFF.
+The only image formats supported are JPEG, PNG, and TIFF.
 
 The only format that supports floating-point scalars (e.g., ImageDepth32F) is
-TIFF. Trying to load or save a floating-point image from/to a PNG or JPEG file
-will throw an exception. */
+TIFF. Trying to load or save a floating-point image from/to a PNG- or
+JPEG-formatted file or buffer will throw an exception. */
 class ImageIo {
  public:
   DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(ImageIo);
@@ -65,7 +65,7 @@ class ImageIo {
 
   /** Returns the metadata of the given image file, or nullopt if the metadata
   cannot be determined or is unsupported. The filename extension has no bearing
-  on the result; the actual file content solely determines the file format. */
+  on the result; the actual file contents solely determine the image format. */
   std::optional<Metadata> LoadMetadata(
       const std::filesystem::path& path) const {
     return LoadMetadataImpl(&path);
@@ -78,10 +78,10 @@ class ImageIo {
   }
 
   /** Loads and returns an image from disk.
-  @param format (Optionally) establishes the required image file format. When
-  set, images that are a different file format will throw an exception. When not
-  set, the filename extension has no bearing on the result; the actual file
-  content solely determines the file format.
+  @param format (Optionally) establishes the required image format. When set, if
+  the file contains data in a different format, an exception will be thrown.
+  The filename extension is ignored; only the actual file contents determine
+  the image format.
   @throws std::exception for any kind of error loading the image file. */
   ImageAny Load(const std::filesystem::path& path,
                 std::optional<ImageFileFormat> format = std::nullopt) const {
@@ -89,8 +89,8 @@ class ImageIo {
   }
 
   /** Loads and returns an image from a memory buffer.
-  @param format (Optionally) establishes the required image file format. When
-  set, images that are a different file format will throw an exception.
+  @param format (Optionally) establishes the required image format. When set, if
+  the buffer contains data in a different format, an exception will be thrown.
   @throws std::exception for any kind of error loading the image data. */
   ImageAny Load(ByteSpan buffer,
                 std::optional<ImageFileFormat> format = std::nullopt) const {
@@ -98,7 +98,7 @@ class ImageIo {
   }
 
   /** Loads and outputs an image from disk. The filename extension has no
-  bearing on the result; the actual file content solely determines the file
+  bearing on the result; only the actual file contents determine the image
   format.
   @param[out] image The output image (which will be overwritten).
   @throws std::exception for any kind of error loading the image file.
@@ -109,8 +109,8 @@ class ImageIo {
   }
 
   /** Loads and outputs an image from disk.
-  @param format Establishes the required image file format; images that are a
-  different file format will throw an exception.
+  @param format Establishes the required image format; images that are a
+  different format will throw an exception.
   @param[out] image The output image (which will be overwritten).
   @throws std::exception for any kind of error loading the image file.
   @throws std::exception if the loaded image does not match the kPixelType. */
@@ -130,8 +130,8 @@ class ImageIo {
   }
 
   /** Loads and outputs an image from a memory buffer.
-  @param format Establishes the required image file format; images that are a
-  different file format will throw an exception.
+  @param format Establishes the required image format; images that are a
+  different format will throw an exception.
   @param[out] image The output image (which will be overwritten).
   @throws std::exception for any kind of error loading the image data.
   @throws std::exception if the loaded image does not match the kPixelType. */
@@ -142,9 +142,11 @@ class ImageIo {
   }
 
   /** Saves an image to disk.
-  @param format (Optionally) chooses the image file format. When not set, the
+  @param format (Optionally) chooses the image format. When not set, the
   filename extension will determine the format and the extension must be a
   supported choice (i.e., `.jpg`, `.jpeg`, `.png`, `.tif`, or `.tiff`).
+  @throws std::exception if the image data format cannot be determined (via
+  extension or value of `format`).
   @throws std::exception for any kind of error saving the image file. */
   template <PixelType kPixelType>
   void Save(const Image<kPixelType>& image, const std::filesystem::path& path,
