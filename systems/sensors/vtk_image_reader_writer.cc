@@ -122,6 +122,7 @@ vtkSmartPointer<vtkImageWriter> MakeWriter(ImageFileFormat format,
       break;
     case ImageFileFormat::kPng:
       writer_variant = static_cast<vtkPNGWriter*>(writer.Get());
+      static_cast<vtkPNGWriter*>(writer.Get())->SetCompressionLevel(0);
       break;
     case ImageFileFormat::kTiff:
       DRAKE_UNREACHABLE();
