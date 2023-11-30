@@ -38,6 +38,7 @@ drake_pybind_library(
         "visualization_py.cc",
         "visualization_py_config.cc",
         "visualization_py_image_systems.cc",
+        "visualization_py_lcm_image_worker.cc",
         "visualization_py_sliders.cc",
         "visualization_py.h",
     ],
@@ -236,6 +237,7 @@ drake_py_unittest(
 
 drake_py_unittest(
     name = "lcm_image_array_viewer_test",
+    tags = ["manual"],
     deps = [
         ":_lcm_image_array_viewer_py",
     ],

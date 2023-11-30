@@ -16,6 +16,7 @@ drake_cc_package_library(
         ":colorize_label_image",
         ":concatenate_images",
         ":inertia_visualizer",
+        ":lcm_image_stream_worker",
         ":meshcat_pose_sliders",
         ":visualization_config",
         ":visualization_config_functions",
@@ -63,6 +64,27 @@ drake_cc_library(
         "//multibody/plant",
         "//systems/framework:diagram_builder",
         "//systems/framework:leaf_system",
+    ],
+)
+
+drake_cc_library(
+    name = "lcm_image_stream_worker",
+    srcs = ["lcm_image_stream_worker.cc"],
+    hdrs = ["lcm_image_stream_worker.h"],
+    interface_deps = [
+        "//common:essential",
+    ],
+    deps = [
+        ":colorize_depth_image",
+        ":colorize_label_image",
+        ":concatenate_images",
+        "//lcm:drake_lcm",
+        "//lcmtypes:image_array",
+        "//systems/framework:diagram_builder",
+        "//systems/lcm:lcm_subscriber_system",
+        "//systems/sensors:image_io",
+        "//systems/sensors:lcm_image_array_to_images",
+        "@abseil_cpp_internal//absl/container:btree",
     ],
 )
 

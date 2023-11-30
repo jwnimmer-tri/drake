@@ -17,6 +17,7 @@ Bindings for Visualization.
   // The order of these calls matters. Some modules rely on prior definitions.
   internal::DefineVisualizationConfig(m);
   internal::DefineVisualizationImageSystems(m);
+  internal::DefineVisualizationLcmImageStreamWorker(m);
   internal::DefineVisualizationSliders(m);
 
   py::module::import("pydrake.visualization.meldis");
