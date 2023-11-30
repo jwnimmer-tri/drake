@@ -78,6 +78,7 @@ load("//tools/workspace/picosha2_internal:repository.bzl", "picosha2_internal_re
 load("//tools/workspace/platforms:repository.bzl", "platforms_repository")
 load("//tools/workspace/pybind11:repository.bzl", "pybind11_repository")
 load("//tools/workspace/pycodestyle:repository.bzl", "pycodestyle_repository")
+load("//tools/workspace/pypi_universe:repository.bzl", "pypi_universe_repositories")  # noqa
 load("//tools/workspace/python:repository.bzl", "python_repository")
 load("//tools/workspace/qdldl_internal:repository.bzl", "qdldl_internal_repository")  # noqa
 load("//tools/workspace/qhull_internal:repository.bzl", "qhull_internal_repository")  # noqa
@@ -298,6 +299,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         pybind11_repository(name = "pybind11", mirrors = mirrors)
     if "pycodestyle" not in excludes:
         pycodestyle_repository(name = "pycodestyle", mirrors = mirrors)
+    if "pypy_universe" not in excludes:
+        pypi_universe_repositories()
     if "python" not in excludes:
         python_repository(name = "python")
     if "qdldl_internal" not in excludes:

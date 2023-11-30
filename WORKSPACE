@@ -25,3 +25,17 @@ versions.check(minimum_bazel_version = "5.1")
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")  # noqa
 
 crate_universe_dependencies(bootstrap = True)
+
+# This rules_python stuff is only used by Drake's new_release tooling, not by
+# any compilation rules. As such, we can put it directly into the WORKSPACE
+# instead of into our `//tools/workspace:default.bzl` repositories.
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
+
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "pypi_universe",
+    requirements_lock = "//tools/workspace/pypi_universe:lock/requirements.txt",
+)

@@ -1,0 +1,14 @@
+# To compile this file into requirements.txt, run:
+#  bazel run //tools/workspace/pypi_universe:requirements.update -- --upgrade
+
+Pillow
+PyYAML
+flask
+ipywidgets
+jupyter
+matplotlib
+notebook
+pydot
+six
+u-msgpack-python
+websockets
