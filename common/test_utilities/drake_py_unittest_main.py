@@ -114,6 +114,9 @@ def main():
               f"chmod a-x {test_basename}")
         sys.exit(1)
 
+    # Promote encoding warnings to errors.
+    warnings.simplefilter("error", EncodingWarning)
+
     # On import, force all drake deprecation warnings to trigger an error.
     if has_pydrake:
         warnings.simplefilter("error", DrakeDeprecationWarning)
