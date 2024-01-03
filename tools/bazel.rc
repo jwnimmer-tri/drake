@@ -21,6 +21,10 @@ build --test_tag_filters=-gurobi,-mosek,-snopt
 # Inject DISPLAY into test runner environment for tests that use X.
 build --test_env=DISPLAY
 
+# Fail-fast when code fails to choose an encoding.
+# See https://peps.python.org/pep-0597/.
+build --test_env=PYTHONWARNDEFAULTENCODING=1
+
 # Location of the Gurobi license key file, typically named "gurobi.lic".
 # Setting this --test_env for all configurations is deliberate to improve
 # remote caching performance.

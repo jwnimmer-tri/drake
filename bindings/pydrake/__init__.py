@@ -69,7 +69,7 @@ def _execute_extra_python_code(m, use_subdir: bool = False):
         extra_module_name = f"_{base_module_name}_extra.py"
     extra_path = [top_module_dir] + mid_module_names + [extra_module_name]
     extra_filename = os.path.join(*extra_path)
-    with open(extra_filename) as f:
+    with open(extra_filename, encoding="utf-8") as f:
         _code = compile(f.read(), extra_filename, 'exec')
         exec(_code, m.__dict__, m.__dict__)
 
@@ -144,7 +144,7 @@ def _check_for_rtld_global_usages():
         init_file = init_file[:-1]
     if not init_file.endswith(".py"):
         return False
-    with open(init_file) as f:
+    with open(init_file, encoding="utf-8") as f:
         init_source = f.read()
     return "sys.setdlopenflags(_dl_flags.RTLD_GLOBAL" in init_source
 
@@ -174,7 +174,7 @@ dependencies are installed.
         wheel_doc = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), 'INSTALLATION')
         if os.path.exists(wheel_doc):
-            with open(wheel_doc) as f:
+            with open(wheel_doc, encoding="utf-8") as f:
                 message += f.read()
         message += '''
 For more information, please see https://drake.mit.edu/installation.html
