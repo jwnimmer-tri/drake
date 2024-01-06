@@ -91,19 +91,9 @@ MultibodyTree<T>::MultibodyTree() {
 template <typename T>
 void MultibodyTree<T>::RemoveJointActuator(const JointActuator<T>& actuator) {
   DRAKE_MBT_THROW_IF_FINALIZED();
-  JointActuatorIndex actuator_index = actuator.index();
-
-  // Rather than change all of the remaining actuator indices, we'll just
-  // invalidate this actuator in the list.
-  owned_actuators_.at(actuator_index) = nullptr;
-
-  // Remove the actuator index.
-  joint_actuator_indices_.erase(
-      std::remove(joint_actuator_indices_.begin(),
-                  joint_actuator_indices_.end(), actuator_index),
-      joint_actuator_indices_.end());
-
+  const JointActuatorIndex actuator_index = actuator.index();
   topology_.RemoveJointActuator(actuator_index);
+  actuators_.Remove(actuator_index);
 }
 
 template <typename T>
@@ -439,13 +429,13 @@ bool MultibodyTree<T>::HasJointNamed(
 
 template <typename T>
 bool MultibodyTree<T>::HasJointActuatorNamed(std::string_view name) const {
-  return HasElementNamed(*this, name, std::nullopt, actuator_name_to_index_);
+  return HasElementNamed(*this, name, std::nullopt, actuators_.names());
 }
 
 template <typename T>
 bool MultibodyTree<T>::HasJointActuatorNamed(
     std::string_view name, ModelInstanceIndex model_instance) const {
-  return HasElementNamed(*this, name, model_instance, actuator_name_to_index_);
+  return HasElementNamed(*this, name, model_instance, actuators_.names());
 }
 
 template <typename T>
@@ -575,13 +565,13 @@ void MultibodyTree<T>::ThrowJointSubtypeMismatch(
 template <typename T>
 const JointActuator<T>& MultibodyTree<T>::GetJointActuatorByName(
     std::string_view name) const {
-  return GetElementByName(*this, name, std::nullopt, actuator_name_to_index_);
+  return GetElementByName(*this, name, std::nullopt, actuators_.names());
 }
 
 template <typename T>
 const JointActuator<T>& MultibodyTree<T>::GetJointActuatorByName(
     std::string_view name, ModelInstanceIndex model_instance) const {
-  return GetElementByName(*this, name, model_instance, actuator_name_to_index_);
+  return GetElementByName(*this, name, model_instance, actuators_.names());
 }
 
 template <typename T>
@@ -811,10 +801,8 @@ void MultibodyTree<T>::FinalizeInternals() {
   for (const auto& force_element : owned_force_elements_) {
     force_element->SetTopology(topology_);
   }
-  for (const auto& actuator : owned_actuators_) {
-    if (actuator != nullptr) {
-      actuator->SetTopology(topology_);
-    }
+  for (const auto& actuator_index : actuators_.indices()) {
+    actuators_.get_element_mutable(actuator_index).SetTopology(topology_);
   }
 
   body_node_levels_.resize(topology_.forest_height());
@@ -934,11 +922,10 @@ void MultibodyTree<T>::CreateModelInstances() {
   // N.B. The result of the code below is that actuators are sorted by
   // JointActuatorIndex within each model instance. If this was not true,
   // ModelInstance::add_joint_actuator() would throw.
-  for (const auto& joint_actuator : owned_actuators_) {
-    if (joint_actuator != nullptr) {
-      model_instances_.at(joint_actuator->model_instance())
-          ->add_joint_actuator(joint_actuator.get());
-    }
+  for (const auto& actuator_index : actuators_.indices()) {
+    const JointActuator<T>& actuator = actuators_.get_element(actuator_index);
+    model_instances_.at(actuator.model_instance())
+        ->add_joint_actuator(&actuator);
   }
 }
 
@@ -1278,12 +1265,13 @@ void MultibodyTree<T>::CalcReflectedInertia(
 
   // See JointActuator::reflected_inertia().
   *reflected_inertia = VectorX<double>::Zero(num_velocities());
-  for (const auto& actuator : owned_actuators_) {
-    if (actuator == nullptr) continue;
+
+  for (const auto& actuator_index : actuators_.indices()) {
+    const JointActuator<T>& actuator = actuators_.get_element(actuator_index);
     const int joint_velocity_index =
-        actuator->joint().velocity_start();  // within v
+        actuator.joint().velocity_start();  // within v
     (*reflected_inertia)(joint_velocity_index) =
-        actuator->calc_reflected_inertia(context);
+        actuator.calc_reflected_inertia(context);
   }
 }
 

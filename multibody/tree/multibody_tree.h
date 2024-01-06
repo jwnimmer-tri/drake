@@ -568,7 +568,7 @@ class MultibodyTree {
 
   // Returns the number of actuators in the model.
   // @see AddJointActuator().
-  int num_actuators() const { return ssize(joint_actuator_indices_); }
+  int num_actuators() const { return actuators_.num_elements(); }
 
   // See MultibodyPlant method.
   int num_mobilizers() const { return ssize(owned_mobilizers_); }
@@ -682,30 +682,19 @@ class MultibodyTree {
 
   // See MultibodyPlant method.
   bool has_joint_actuator(JointActuatorIndex actuator_index) const {
-    if (actuator_index >= ssize(owned_actuators_)) return false;
-    return owned_actuators_.at(actuator_index) != nullptr;
+    return actuators_.has_element(actuator_index);
   }
 
   // See MultibodyPlant method.
   const JointActuator<T>& get_joint_actuator(
       JointActuatorIndex actuator_index) const {
-    DRAKE_THROW_UNLESS(actuator_index < ssize(owned_actuators_));
-    if (owned_actuators_.at(actuator_index) == nullptr) {
-      throw std::logic_error(fmt::format(
-          "JointActuator at index {} has been removed.", actuator_index));
-    }
-    return *owned_actuators_[actuator_index];
+    return actuators_.get_element(actuator_index);
   }
 
   // See MultibodyPlant method.
   JointActuator<T>& get_mutable_joint_actuator(
-      JointActuatorIndex actuator_index) const {
-    DRAKE_THROW_UNLESS(actuator_index < ssize(owned_actuators_));
-    if (owned_actuators_.at(actuator_index) == nullptr) {
-      throw std::logic_error(fmt::format(
-          "JointActuator at index {} has been removed.", actuator_index));
-    }
-    return *owned_actuators_[actuator_index];
+      JointActuatorIndex actuator_index) {
+    return actuators_.get_element_mutable(actuator_index);
   }
 
   // See MultibodyPlant method.
@@ -855,7 +844,7 @@ class MultibodyTree {
 
   // See MultibodyPlant method.
   const std::vector<JointActuatorIndex>& GetJointActuatorIndices() const {
-    return joint_actuator_indices_;
+    return actuators_.indices();
   }
 
   // See MultibodyPlant method.
@@ -2351,13 +2340,12 @@ class MultibodyTree {
       tree_clone->CloneJointAndAdd(*joint);
     }
 
-    for (const auto& actuator : owned_actuators_) {
-      if (actuator == nullptr) {
-        // For consistency, the clone must also keep a nullptr in the same
-        // index.
-        tree_clone->owned_actuators_.push_back(nullptr);
+    for (JointActuatorIndex i{0}; i < actuators_.next_index(); ++i) {
+      if (actuators_.has_element(i)) {
+        tree_clone->CloneActuatorAndAdd(actuators_.get_element(i));
       } else {
-        tree_clone->CloneActuatorAndAdd(*actuator);
+        // For index consistency, the clone must keep the empty slot intact.
+        tree_clone->actuators_.AddRemovedElementClone();
       }
     }
 
@@ -2372,7 +2360,6 @@ class MultibodyTree {
     tree_clone->body_name_to_index_ = this->body_name_to_index_;
     tree_clone->frame_name_to_index_ = this->frame_name_to_index_;
     tree_clone->joint_name_to_index_ = this->joint_name_to_index_;
-    tree_clone->actuator_name_to_index_ = this->actuator_name_to_index_;
     tree_clone->instance_name_to_index_ = this->instance_name_to_index_;
     tree_clone->instance_index_to_name_ = this->instance_index_to_name_;
     tree_clone->joint_to_mobilizer_ = this->joint_to_mobilizer_;
@@ -3117,16 +3104,87 @@ class MultibodyTree {
   std::vector<std::unique_ptr<Frame<T>>> owned_frames_;
   std::vector<std::unique_ptr<Mobilizer<T>>> owned_mobilizers_;
   std::vector<std::unique_ptr<ForceElement<T>>> owned_force_elements_;
-  std::vector<std::unique_ptr<JointActuator<T>>> owned_actuators_;
   std::vector<std::unique_ptr<internal::BodyNode<T>>> body_nodes_;
   std::vector<std::unique_ptr<internal::ModelInstance<T>>> model_instances_;
-
   std::vector<std::unique_ptr<Joint<T>>> owned_joints_;
 
-  // Maintain a list of the actuator indices that have _not_ been removed. This
-  // may not be the same size as owned_actuators_ (which maintains a nullptr
-  // for the removed elements).
-  std::vector<JointActuatorIndex> joint_actuator_indices_{};
+  template <template <typename> class Element, typename Index>
+  class ElementCollection {
+   public:
+    int num_elements() const { return ssize(indices_); }
+
+    const std::vector<Index>& indices() const { return indices_; }
+
+    const std::unordered_multimap<StringViewMapKey, Index>& names() const {
+      return names_;
+    }
+
+    bool has_element(Index index) const {
+      return (index >= 0) && (index < ssize(owned_)) &&
+             (owned_[index] != nullptr);
+    }
+
+    Index next_index() const { return Index{ssize(owned_)}; }
+
+    const Element<T>& get_element(Index index) const {
+      DRAKE_THROW_UNLESS(index >= 0);
+      DRAKE_THROW_UNLESS(index < ssize(owned_));
+      if (owned_[index] == nullptr) {
+        throw std::logic_error(
+            fmt::format("JointActuator at index {} has been removed.", index));
+      }
+      return *owned_[index];
+    }
+
+    Element<T>& get_element_mutable(Index index) {
+      DRAKE_THROW_UNLESS(index >= 0);
+      DRAKE_THROW_UNLESS(index < ssize(owned_));
+      if (owned_[index] == nullptr) {
+        throw std::logic_error(
+            fmt::format("JointActuator at index {} has been removed.", index));
+      }
+      return *owned_[index];
+    }
+
+    void AddRemovedElementClone() {
+	owned_.push_back(nullptr);
+    }
+
+    Element<T>& Add(std::unique_ptr<Element<T>> element) {
+      DRAKE_DEMAND(element->index() == ssize(owned_));
+      indices_.push_back(element->index());
+      names_.emplace(std::string(element->name()), element->index());
+      Element<T>& result = *element;
+      owned_.push_back(std::move(element));
+      return result;
+    }
+
+    void Remove(Index index) {
+      DRAKE_DEMAND(owned_.at(index) != nullptr);
+      const std::string name{owned_[index]->name()};
+      owned_[index] = nullptr;
+      indices_.erase(std::remove(indices_.begin(), indices_.end(), index),
+                     indices_.end());
+      auto [lower, upper] = names_.equal_range(name);
+      for (auto iter = lower; iter != upper; ++iter) {
+        if (iter->second == index) {
+          names_.erase(iter);
+          return;
+        }
+      }
+      DRAKE_UNREACHABLE();
+    }
+
+   private:
+    // The elements owned by the MbT. Removed elements will be nullptr.
+    std::vector<std::unique_ptr<Element<T>>> owned_;
+    // The indices of `owned_` that have _not_ been removed.
+    std::vector<Index> indices_;
+    // Map used to find actuator indexes by their actuator name. The same name
+    // may appear in different model instances (hence the multimap).
+    std::unordered_multimap<StringViewMapKey, Index> names_;
+  };
+  ElementCollection<JointActuator, JointActuatorIndex> actuators_;
 
   // List of all frames in the system ordered by their FrameIndex.
   // This vector contains a pointer to all frames in owned_frames_ as well as a
@@ -3156,10 +3214,6 @@ class MultibodyTree {
 
   // Map used to find joint indexes by their joint name.
   std::unordered_multimap<StringViewMapKey, JointIndex> joint_name_to_index_;
-
-  // Map used to find actuator indexes by their actuator name.
-  std::unordered_multimap<StringViewMapKey, JointActuatorIndex>
-      actuator_name_to_index_;
 
   // Map used to find a model instance index by its model instance name.
   std::unordered_map<StringViewMapKey, ModelInstanceIndex>
