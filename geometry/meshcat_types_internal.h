@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -248,7 +249,7 @@ struct BoxGeometryData : public GeometryData {
 
 struct MeshFileGeometryData : public GeometryData {
   std::string format;
-  std::string data;
+  std::string url;
 
   // NOLINTNEXTLINE(runtime/references) cpplint disapproves of msgpack choices.
   void msgpack_pack(msgpack::packer<std::stringstream>& o) const override {
@@ -257,7 +258,7 @@ struct MeshFileGeometryData : public GeometryData {
     o.pack("_meshfile_geometry");
     PACK_MAP_VAR(o, uuid);
     PACK_MAP_VAR(o, format);
-    PACK_MAP_VAR(o, data);
+    PACK_MAP_VAR(o, url);
   }
 };
 
@@ -312,11 +313,11 @@ struct MeshfileObjectData {
   std::string uuid;
   std::string type{"_meshfile_object"};
   std::string format;
-  std::string data;
+  std::string url;
   std::string mtl_library;
   std::map<std::string, std::string> resources;
   double matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
-  MSGPACK_DEFINE_MAP(uuid, type, format, data, mtl_library, resources, matrix);
+  MSGPACK_DEFINE_MAP(uuid, type, format, url, mtl_library, resources, matrix);
 };
 
 struct LumpedObjectData {
@@ -326,6 +327,15 @@ struct LumpedObjectData {
   std::unique_ptr<GeometryData> geometry;
   std::unique_ptr<MaterialData> material;
   std::variant<std::monostate, MeshData, MeshfileObjectData> object;
+
+  // @tparam BoxGeometryData
+  template <typename SomeGeometryData>
+  SomeGeometryData& emplace_geometry() {
+    auto owned = std::make_unique<SomeGeometryData>();
+    SomeGeometryData* result = owned.get();
+    geometry = std::move(owned);
+    return *result;
+  }
 
   template <typename Packer>
   // NOLINTNEXTLINE(runtime/references) cpplint disapproves of msgpack choices.

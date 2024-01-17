@@ -1,10 +1,14 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
 
+#include "drake/common/diagnostic_policy.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/geometry/meshcat_types_internal.h"
+#include "drake/geometry/shape_specification.h"
 
 namespace drake {
 namespace geometry {
@@ -44,6 +48,36 @@ class UuidGenerator final {
   struct Impl;
   std::unique_ptr<Impl> impl_;
 };
+
+/* The return type for ScrapeMtllib. */
+struct ScrapedMtllib {
+  /* The contents of the `*.mtl` file. */
+  std::string mtl_data;
+  /* The list of filenames (if any) mentioned in the `mtl_data`. */
+  std::vector<std::string> texture_filenames;
+  /* The directory that `texture_filenames` should be taken relative to. */
+  std::filesystem::path texture_dir;
+};
+
+/* Given the contents of a `*.obj` file as `obj_data` and its path as
+`obj_path`, returns the content of its associated `*.mtl` file and the texture
+filenames reference by the `*.mtl` content. On error, the `result.mtl_data` will
+be empty. */
+ScrapedMtllib ScrapeMtllib(const drake::internal::DiagnosticPolicy& diagnostic,
+                           const std::string_view obj_data,
+                           const std::filesystem::path& obj_path);
+
+/* Populates `lumped` to reflect the given `shape`.
+All of the arguments must be non-null.
+@param[in,out] content Cache used to store the large data buffers.
+@param[in,out] resources Any items added to the cache will be appended here.
+@param[out] lumped The output object to be overwritten.
+*/
+void ConvertShapeToMessage(const drake::internal::DiagnosticPolicy& diagnostic,
+                           const Shape& shape, UuidGenerator* uuid,
+                           FileStorage* content,
+                           std::vector<FileStorage::Handle>* resources,
+                           LumpedObjectData* lumped);
 
 }  // namespace internal
 }  // namespace geometry
