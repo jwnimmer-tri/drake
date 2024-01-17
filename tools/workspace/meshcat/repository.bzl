@@ -5,6 +5,7 @@ def meshcat_repository(
         mirrors = None):
     github_archive(
         name = name,
+        local_repository_override = "/home/jwnimmer/jwnimmer-tri/meshcat",
         repository = "meshcat-dev/meshcat",
         upgrade_advice = """
         Updating this commit requires local testing; see
