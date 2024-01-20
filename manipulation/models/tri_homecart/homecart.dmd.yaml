@@ -3,3 +3,21 @@ directives:
     file: package://drake/manipulation/models/tri_homecart/homecart_no_grippers.dmd.yaml
 - add_directives:
     file: package://drake/manipulation/models/tri_homecart/homecart_grippers.dmd.yaml
+- add_model:
+    name: free1
+    file: package://drake/manipulation/models/ycb/sdf/003_cracker_box.sdf
+    default_free_body_pose:
+      base_link_cracker:
+        translation: [0.0, 0.0, 0.5]
+- add_model:
+    name: free2
+    file: package://drake/manipulation/models/ycb/sdf/003_cracker_box.sdf
+    default_free_body_pose:
+      base_link_cracker:
+        translation: [0.0, 0.0, 0.6]
+- add_model:
+    name: free3
+    file: package://drake/manipulation/models/ycb/sdf/003_cracker_box.sdf
+    default_free_body_pose:
+      base_link_cracker:
+        translation: [0.0, 0.0, 0.7]
