@@ -1,0 +1,37 @@
+# -*- bazel -*-
+
+# This file is only used in cases when we need to build and/or install eigen
+# from source, i.e., when we are not using pkg-config.
+
+load("@drake//tools/skylark:cc.bzl", "cc_library")
+load("@drake//tools/install:install.bzl", "install")
+
+licenses(["notice"])  # MIT
+
+package(default_visibility = ["//visibility:public"])
+
+# -*- bazel -*-
+
+load("@drake//tools/install:install.bzl", "install")
+
+cc_library(
+    name = "eigen",
+    hdrs = glob(
+        [
+            "Eigen/**",
+            "unsupported/Eigen/**",
+        ],
+        allow_empty = False,
+    ),
+    includes = ["."],
+)
+
+install(
+    name = "install",
+    docs = [
+        "COPYING.APACHE",
+        "COPYING.BSD",
+        "COPYING.MINPACK",
+        "COPYING.MPL2",
+    ],
+)

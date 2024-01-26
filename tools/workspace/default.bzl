@@ -24,8 +24,10 @@ load("//tools/workspace/doxygen:repository.bzl", "doxygen_repository")
 load("//tools/workspace/dm_control_internal:repository.bzl", "dm_control_internal_repository")  # noqa
 load("//tools/workspace/drake_models:repository.bzl", "drake_models_repository")  # noqa
 load("//tools/workspace/eigen:repository.bzl", "eigen_repository")
+load("//tools/workspace/eigen_internal_fromsource:repository.bzl", "eigen_internal_fromsource_repository")  # noqa
 load("//tools/workspace/fcl_internal:repository.bzl", "fcl_internal_repository")  # noqa
 load("//tools/workspace/fmt:repository.bzl", "fmt_repository")
+load("//tools/workspace/fmt_internal_fromsource:repository.bzl", "fmt_internal_fromsource_repository")  # noqa
 load("//tools/workspace/gflags:repository.bzl", "gflags_repository")
 load("//tools/workspace/gfortran:repository.bzl", "gfortran_repository")
 load("//tools/workspace/github3_py_internal:repository.bzl", "github3_py_internal_repository")  # noqa
@@ -85,6 +87,7 @@ load("//tools/workspace/scs_internal:repository.bzl", "scs_internal_repository")
 load("//tools/workspace/sdformat_internal:repository.bzl", "sdformat_internal_repository")  # noqa
 load("//tools/workspace/snopt:repository.bzl", "snopt_repository")
 load("//tools/workspace/spdlog:repository.bzl", "spdlog_repository")
+load("//tools/workspace/spdlog_internal_fromsource:repository.bzl", "spdlog_internal_fromsource_repository")  # noqa
 load("//tools/workspace/stable_baselines3_internal:repository.bzl", "stable_baselines3_internal_repository")  # noqa
 load("//tools/workspace/statsjs:repository.bzl", "statsjs_repository")
 load("//tools/workspace/stduuid_internal:repository.bzl", "stduuid_internal_repository")  # noqa
@@ -165,10 +168,14 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         drake_models_repository(name = "drake_models", mirrors = mirrors)
     if "eigen" not in excludes:
         eigen_repository(name = "eigen")
+    if "eigen_internal_fromsource" not in excludes:
+        eigen_internal_fromsource_repository(name = "eigen_internal_fromsource", mirrors = mirrors)  # noqa
     if "fcl_internal" not in excludes:
         fcl_internal_repository(name = "fcl_internal", mirrors = mirrors)
     if "fmt" not in excludes:
-        fmt_repository(name = "fmt", mirrors = mirrors)
+        fmt_repository(name = "fmt")
+    if "fmt_internal_fromsource" not in excludes:
+        fmt_internal_fromsource_repository(name = "fmt_internal_fromsource", mirrors = mirrors)  # noqa
     if "gflags" not in excludes:
         gflags_repository(name = "gflags", mirrors = mirrors)
     if "gfortran" not in excludes:
@@ -286,7 +293,9 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
     if "snopt" not in excludes:
         snopt_repository(name = "snopt")
     if "spdlog" not in excludes:
-        spdlog_repository(name = "spdlog", mirrors = mirrors)
+        spdlog_repository(name = "spdlog")
+    if "spdlog_internal_fromsource" not in excludes:
+        spdlog_internal_fromsource_repository(name = "spdlog_internal_fromsource", mirrors = mirrors)  # noqa
     if "stable_baselines3_internal" not in excludes:
         stable_baselines3_internal_repository(name = "stable_baselines3_internal", mirrors = mirrors)  # noqa
     if "statsjs" not in excludes:

@@ -10,7 +10,7 @@ licenses(["notice"])  # MIT
 
 config_setting(
     name = "linux",
-    values = {"cpu": "k8"},
+    constraint_values = ["@platforms//os:linux"],
     visibility = ["//visibility:private"],
 )
 
@@ -92,9 +92,6 @@ cc_library(
 install(
     name = "install",
     targets = [":libdrake_spdlog.so"],
-    hdr_dest = "include/spdlog",
-    hdr_strip_prefix = ["include"],
-    hdrs = _HDRS,
     docs = ["LICENSE"],
     visibility = ["//visibility:public"],
 )
