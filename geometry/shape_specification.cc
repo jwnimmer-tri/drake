@@ -30,6 +30,10 @@ using math::RigidTransform;
 
 Shape::~Shape() {}
 
+void Shape::Reify(ShapeReifier* reifier) const {
+  reifier_(*this, reifier, nullptr);
+}
+
 void Shape::Reify(ShapeReifier* reifier, void* user_data) const {
   reifier_(*this, reifier, user_data);
 }
@@ -276,6 +280,52 @@ void ShapeName::ImplementGeometry(const Sphere&, void*) {
 std::ostream& operator<<(std::ostream& out, const ShapeName& name) {
   out << name.name();
   return out;
+}
+
+namespace {
+
+class ToShapeVariantReifier final : public ShapeReifier {
+ public:
+  ToShapeVariantReifier(ShapeVariant* result)
+      : result_(*result) {}
+  void ImplementGeometry(const Sphere& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const Cylinder& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const HalfSpace& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const Box& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const Capsule& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const Ellipsoid& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const Mesh& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const Convex& shape, void*) final {
+    result_ = shape;
+  }
+  void ImplementGeometry(const MeshcatCone& shape, void*) final {
+    result_ = shape;
+  }
+ private:
+  ShapeVariant& result_;
+};
+
+}  // namespace
+
+ShapeVariant ToShapeVariant(const Shape& shape) {
+  ShapeVariant result{Sphere(0.0)};
+  ToShapeVariantReifier reifier(&result);
+  shape.Reify(&reifier);
+  return result;
 }
 
 namespace {

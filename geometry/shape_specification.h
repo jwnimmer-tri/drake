@@ -3,9 +3,11 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <variant>
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/fmt_ostream.h"
 #include "drake/math/rigid_transform.h"
@@ -57,9 +59,11 @@ class Shape {
   virtual ~Shape();
 
   /** Causes this description to be reified in the given `reifier`. Each
-   concrete subclass must invoke the single, matching method on the reifier.
-   Provides optional user-data (cast as a void*) for the reifier to consume. */
-  void Reify(ShapeReifier* reifier, void* user_data = nullptr) const;
+   concrete subclass must invoke the single, matching method on the reifier. */
+  void Reify(ShapeReifier* reifier) const;
+
+  // XXX DRAKE_DEPRECATED("2024-06-01", "...")
+  void Reify(ShapeReifier* reifier, void* user_data) const;
 
   /** Creates a unique copy of this shape. */
   std::unique_ptr<Shape> Clone() const;
@@ -516,6 +520,22 @@ class ShapeName final : public ShapeReifier {
 
 /** @relates ShapeName */
 std::ostream& operator<<(std::ostream& out, const ShapeName& name);
+
+/** ... */
+using ShapeVariant = std::variant<
+    Box,
+    Capsule,
+    Convex,
+    Cylinder,
+    Ellipsoid,
+    HalfSpace,
+    Mesh,
+    MeshcatCone,
+    Sphere>;
+
+/** ... */
+ShapeVariant ToShapeVariant(const Shape& shape);
+ShapeVariant ToShapeVariant(Shape&& shape);
 
 /** Calculates the volume (in meters^3) for the Shape. For convex and mesh
  geometries, the algorithm only supports ".obj" files and only produces
