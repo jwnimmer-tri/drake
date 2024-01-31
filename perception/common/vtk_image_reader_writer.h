@@ -9,7 +9,7 @@
 #include <vtkImageWriter.h>   // vtkIOImage
 #include <vtkSmartPointer.h>  // vtkCommonCore
 
-#include "drake/systems/sensors/image_file_format.h"
+#include "drake/perception/common/image_file_format.h"
 
 namespace drake {
 namespace systems {

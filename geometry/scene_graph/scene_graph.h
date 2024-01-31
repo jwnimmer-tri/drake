@@ -7,13 +7,13 @@
 #include <vector>
 
 #include "drake/common/drake_deprecated.h"
-#include "drake/geometry/collision_filter_manager.h"
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_set.h"
-#include "drake/geometry/kinematics_vector.h"
-#include "drake/geometry/query_object.h"
+#include "drake/geometry/scene_graph/collision_filter_manager.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_set.h"
+#include "drake/geometry/common/kinematics_vector.h"
+#include "drake/geometry/scene_graph/query_object.h"
 #include "drake/geometry/query_results/penetration_as_point_pair.h"
-#include "drake/geometry/scene_graph_inspector.h"
+#include "drake/geometry/scene_graph/scene_graph_inspector.h"
 #include "drake/systems/framework/context.h"
 #include "drake/systems/framework/leaf_system.h"
 

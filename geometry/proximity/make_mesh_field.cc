@@ -10,8 +10,8 @@
 #include "drake/common/extract_double.h"
 #include "drake/common/ssize.h"
 #include "drake/geometry/proximity/calc_distance_to_surface_mesh.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
-#include "drake/geometry/proximity/volume_to_surface_mesh.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
+#include "drake/geometry/common/volume_to_surface_mesh.h"
 
 namespace drake {
 namespace geometry {

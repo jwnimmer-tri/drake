@@ -1,4 +1,4 @@
-#include "drake/multibody/meshcat/joint_sliders.h"
+#include "drake/visualization/joint_sliders.h"
 
 #include <chrono>
 #include <thread>

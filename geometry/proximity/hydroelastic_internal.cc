@@ -20,9 +20,9 @@
 #include "drake/geometry/proximity/make_mesh_from_vtk.h"
 #include "drake/geometry/proximity/make_sphere_field.h"
 #include "drake/geometry/proximity/make_sphere_mesh.h"
-#include "drake/geometry/proximity/obj_to_surface_mesh.h"
+#include "drake/geometry/common/obj_to_surface_mesh.h"
 #include "drake/geometry/proximity/tessellation_strategy.h"
-#include "drake/geometry/proximity/volume_to_surface_mesh.h"
+#include "drake/geometry/common/volume_to_surface_mesh.h"
 
 namespace drake {
 namespace geometry {

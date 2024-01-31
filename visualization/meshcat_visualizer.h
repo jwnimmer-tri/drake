@@ -5,12 +5,12 @@
 #include <optional>
 #include <string>
 
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/meshcat.h"
-#include "drake/geometry/meshcat_animation.h"
-#include "drake/geometry/meshcat_visualizer_params.h"
-#include "drake/geometry/rgba.h"
-#include "drake/geometry/scene_graph.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/meshcat/meshcat.h"
+#include "drake/meshcat/meshcat_animation.h"
+#include "drake/visualization/meshcat_visualizer_params.h"
+#include "drake/geometry/common/rgba.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
 #include "drake/systems/analysis/instantaneous_realtime_rate_calculator.h"
 #include "drake/systems/framework/diagram_builder.h"
 #include "drake/systems/framework/leaf_system.h"

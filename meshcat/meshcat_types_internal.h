@@ -11,9 +11,9 @@
 #include <msgpack.hpp>
 
 #include "drake/common/nice_type_name.h"
-#include "drake/geometry/meshcat.h"
-#include "drake/geometry/meshcat_animation.h"
-#include "drake/geometry/rgba.h"
+#include "drake/meshcat/meshcat.h"
+#include "drake/meshcat/meshcat_animation.h"
+#include "drake/geometry/common/rgba.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

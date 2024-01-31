@@ -6,10 +6,10 @@
 #include <vector>
 
 #include "drake/common/drake_copyable.h"
-#include "drake/geometry/drake_visualizer_params.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/geometry_version.h"
-#include "drake/geometry/query_object.h"
+#include "drake/visualization/drake_visualizer_params.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/geometry_version.h"
+#include "drake/geometry/scene_graph/query_object.h"
 #include "drake/lcm/drake_lcm_interface.h"
 #include "drake/systems/framework/diagram_builder.h"
 #include "drake/systems/framework/event_status.h"

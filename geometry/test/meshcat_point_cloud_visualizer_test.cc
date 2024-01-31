@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_point_cloud_visualizer.h"
+#include "drake/geometry/meshcat/meshcat_point_cloud_visualizer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

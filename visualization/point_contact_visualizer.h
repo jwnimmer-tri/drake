@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "drake/geometry/meshcat.h"
-#include "drake/multibody/meshcat/contact_visualizer_params.h"
+#include "drake/visualization/contact_visualizer_params.h"
 
 namespace drake {
 namespace multibody {

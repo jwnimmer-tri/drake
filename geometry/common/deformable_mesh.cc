@@ -1,4 +1,4 @@
-#include "drake/geometry/deformable_mesh.h"
+#include "drake/geometry/common/deformable_mesh.h"
 
 namespace drake {
 namespace geometry {

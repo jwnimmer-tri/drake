@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_frame.h"
+#include "drake/geometry/common/geometry_frame.h"
 
 #include <memory>
 

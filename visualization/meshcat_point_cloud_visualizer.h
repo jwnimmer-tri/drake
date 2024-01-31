@@ -5,8 +5,8 @@
 #include <string>
 #include <utility>
 
-#include "drake/geometry/meshcat.h"
-#include "drake/geometry/rgba.h"
+#include "drake/meshcat/meshcat.h"
+#include "drake/geometry/common/rgba.h"
 #include "drake/systems/framework/leaf_system.h"
 
 namespace drake {

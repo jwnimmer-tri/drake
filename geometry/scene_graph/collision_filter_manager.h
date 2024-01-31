@@ -1,8 +1,8 @@
 #pragma once
 
 #include "drake/common/drake_copyable.h"
-#include "drake/geometry/collision_filter_declaration.h"
-#include "drake/geometry/geometry_set.h"
+#include "drake/geometry/common/collision_filter_declaration.h"
+#include "drake/geometry/common/geometry_set.h"
 #include "drake/geometry/proximity/collision_filter.h"
 
 namespace drake {

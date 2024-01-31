@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "drake/lcmt_image.hpp"
-#include "drake/systems/sensors/pixel_types.h"
+#include "drake/perception/common/pixel_types.h"
 
 namespace drake {
 namespace systems {

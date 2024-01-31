@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "drake/systems/sensors/camera_info.h"
+#include "drake/perception/common/camera_info.h"
 
 namespace drake {
 namespace systems {

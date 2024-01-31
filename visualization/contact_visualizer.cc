@@ -1,4 +1,4 @@
-#include "drake/multibody/meshcat/contact_visualizer.h"
+#include "drake/visualization/contact_visualizer.h"
 
 #include <string>
 #include <utility>
@@ -8,8 +8,8 @@
 #include "drake/common/extract_double.h"
 #include "drake/geometry/meshcat_graphviz.h"
 #include "drake/math/rigid_transform.h"
-#include "drake/multibody/meshcat/hydroelastic_contact_visualizer.h"
-#include "drake/multibody/meshcat/point_contact_visualizer.h"
+#include "drake/visualization/hydroelastic_contact_visualizer.h"
+#include "drake/visualization/point_contact_visualizer.h"
 #include "drake/multibody/plant/contact_results.h"
 
 namespace drake {

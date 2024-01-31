@@ -1,6 +1,6 @@
-#include "drake/geometry/geometry_instance.h"
+#include "drake/geometry/common/geometry_instance.h"
 
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/utilities.h"
 
 namespace drake {
 namespace geometry {

@@ -5,7 +5,7 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/math/rigid_transform.h"
-#include "drake/systems/sensors/camera_info.h"
+#include "drake/perception/common/camera_info.h"
 
 namespace drake {
 namespace geometry {

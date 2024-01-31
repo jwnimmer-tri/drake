@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_file_storage_internal.h"
+#include "drake/geometry/meshcat/meshcat_file_storage_internal.h"
 
 #include <deque>
 #include <future>

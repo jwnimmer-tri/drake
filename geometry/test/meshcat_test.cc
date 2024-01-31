@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat.h"
+#include "drake/geometry/meshcat/meshcat.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -13,7 +13,7 @@
 #include "drake/common/find_resource.h"
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/meshcat_types_internal.h"
+#include "drake/geometry/meshcat/meshcat_types_internal.h"
 
 namespace drake {
 namespace geometry {

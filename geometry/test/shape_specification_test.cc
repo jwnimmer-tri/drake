@@ -1,4 +1,4 @@
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 
 #include <filesystem>
 #include <memory>

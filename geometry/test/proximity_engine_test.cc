@@ -1,4 +1,4 @@
-#include "drake/geometry/proximity_engine.h"
+#include "drake/geometry/scene_graph/proximity_engine.h"
 
 #include <cmath>
 #include <filesystem>
@@ -19,8 +19,8 @@
 #include "drake/geometry/proximity/deformable_contact_internal.h"
 #include "drake/geometry/proximity/hydroelastic_callback.h"
 #include "drake/geometry/proximity/make_sphere_mesh.h"
-#include "drake/geometry/proximity_properties.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/proximity_properties.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/math/autodiff.h"
 #include "drake/math/autodiff_gradient.h"
 #include "drake/math/rigid_transform.h"

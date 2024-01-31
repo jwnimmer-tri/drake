@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/pixel_types.h"
+#include "drake/perception/common/pixel_types.h"
 
 #include "drake/common/drake_assert.h"
 

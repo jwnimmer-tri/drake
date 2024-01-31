@@ -2,7 +2,7 @@
 
 #include "drake/geometry/proximity/bvh.h"
 #include "drake/geometry/proximity/obb.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
 
 namespace drake {
 namespace geometry {

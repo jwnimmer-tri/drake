@@ -1,4 +1,4 @@
-#include "drake/geometry/proximity/sorted_triplet.h"
+#include "drake/common/sorted_triplet.h"
 
 namespace drake {
 namespace geometry {

@@ -14,7 +14,7 @@
 #include <libqhullcpp/QhullVertexSet.h>
 
 #include "drake/common/is_approx_equal_abstol.h"
-#include "drake/geometry/read_obj.h"
+#include "drake/geometry/common/read_obj.h"
 #include "drake/solvers/solve.h"
 
 namespace drake {

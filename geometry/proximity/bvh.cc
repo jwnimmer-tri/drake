@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/utilities.h"
 
 namespace drake {
 namespace geometry {

@@ -4,7 +4,7 @@
 
 #include "drake/systems/framework/diagram_builder.h"
 #include "drake/systems/primitives/zero_order_hold.h"
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/image.h"
 
 namespace drake {
 namespace systems {

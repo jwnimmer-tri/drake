@@ -34,12 +34,12 @@
 #include "drake/common/diagnostic_policy.h"
 #include "drake/common/text_logging.h"
 #include "drake/geometry/render/render_mesh.h"
-#include "drake/geometry/render/shaders/depth_shaders.h"
+#include "drake/geometry/render_vtk/internal_depth_shaders.h"
 #include "drake/geometry/render_vtk/internal_render_engine_vtk_base.h"
 #include "drake/geometry/render_vtk/internal_vtk_util.h"
 #include "drake/math/rotation_matrix.h"
 #include "drake/systems/sensors/color_palette.h"
-#include "drake/systems/sensors/vtk_diagnostic_event_observer.h"
+#include "drake/perception/common/vtk_diagnostic_event_observer.h"
 
 namespace drake {
 namespace geometry {

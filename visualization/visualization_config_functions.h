@@ -9,7 +9,7 @@
 #include "drake/geometry/meshcat.h"
 #include "drake/geometry/meshcat_visualizer_params.h"
 #include "drake/geometry/scene_graph.h"
-#include "drake/multibody/meshcat/contact_visualizer_params.h"
+#include "drake/visualization/contact_visualizer_params.h"
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/systems/framework/diagram_builder.h"
 #include "drake/systems/lcm/lcm_buses.h"

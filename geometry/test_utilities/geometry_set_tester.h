@@ -2,7 +2,7 @@
 
 #include <unordered_set>
 
-#include "drake/geometry/geometry_set.h"
+#include "drake/geometry/common/geometry_set.h"
 
 namespace drake {
 namespace geometry {

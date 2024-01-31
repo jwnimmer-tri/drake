@@ -1,4 +1,4 @@
-#include "drake/geometry/proximity_engine.h"
+#include "drake/geometry/scene_graph/proximity_engine.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -15,7 +15,7 @@
 
 #include "drake/common/default_scalars.h"
 #include "drake/common/eigen_types.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/geometry_ids.h"
 #include "drake/geometry/proximity/collisions_exist_callback.h"
 #include "drake/geometry/proximity/deformable_contact_geometries.h"
 #include "drake/geometry/proximity/deformable_contact_internal.h"
@@ -25,12 +25,12 @@
 #include "drake/geometry/proximity/hydroelastic_callback.h"
 #include "drake/geometry/proximity/hydroelastic_internal.h"
 #include "drake/geometry/proximity/make_mesh_from_vtk.h"
-#include "drake/geometry/proximity/obj_to_surface_mesh.h"
+#include "drake/geometry/common/obj_to_surface_mesh.h"
 #include "drake/geometry/proximity/penetration_as_point_pair_callback.h"
-#include "drake/geometry/proximity/volume_to_surface_mesh.h"
+#include "drake/geometry/common/volume_to_surface_mesh.h"
 #include "drake/geometry/proximity/vtk_to_volume_mesh.h"
-#include "drake/geometry/read_obj.h"
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/read_obj.h"
+#include "drake/geometry/common/utilities.h"
 
 namespace drake {
 namespace geometry {

@@ -12,7 +12,7 @@
 #include "drake/geometry/render_gltf_client/internal_merge_gltf.h"
 #include "drake/geometry/render_gltf_client/internal_render_client.h"
 #include "drake/geometry/render_vtk/internal_render_engine_vtk.h"
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/image.h"
 
 namespace drake {
 namespace geometry {

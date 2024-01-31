@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/image_io_internal.h"
+#include "drake/perception/common/image_io_internal.h"
 
 #include <array>
 #include <fstream>

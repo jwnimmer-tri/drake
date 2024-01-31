@@ -1,4 +1,4 @@
-#include "drake/geometry/deformable_mesh_with_bvh.h"
+#include "drake/geometry/proximity/deformable_mesh_with_bvh.h"
 
 namespace drake {
 namespace geometry {

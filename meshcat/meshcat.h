@@ -10,13 +10,13 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/common/name_value.h"
-#include "drake/geometry/meshcat_animation.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
-#include "drake/geometry/rgba.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/meshcat/meshcat_animation.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
+#include "drake/geometry/common/rgba.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/math/rigid_transform.h"
 // TODO(russt): Move point_cloud.h to a more central location.
-#include "drake/perception/point_cloud.h"
+#include "drake/perception/common/point_cloud.h"
 
 namespace drake {
 namespace geometry {

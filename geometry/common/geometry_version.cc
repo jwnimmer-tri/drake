@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_version.h"
+#include "drake/geometry/common/geometry_version.h"
 
 namespace drake {
 namespace geometry {

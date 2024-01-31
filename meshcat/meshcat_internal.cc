@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_internal.h"
+#include "drake/meshcat/meshcat_internal.h"
 
 #include <stdexcept>
 #include <utility>

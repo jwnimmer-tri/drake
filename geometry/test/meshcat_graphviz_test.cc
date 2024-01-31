@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_graphviz.h"
+#include "drake/geometry/meshcat/meshcat_graphviz.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -1,8 +1,8 @@
-#include "drake/geometry/geometry_version.h"
+#include "drake/geometry/common/geometry_version.h"
 
 #include <gtest/gtest.h>
 
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_roles.h"
 
 namespace drake {
 namespace geometry {

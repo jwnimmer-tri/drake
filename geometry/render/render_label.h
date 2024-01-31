@@ -8,7 +8,7 @@
 #include "drake/common/drake_copyable.h"
 #include "drake/common/fmt_ostream.h"
 #include "drake/common/hash.h"
-#include "drake/systems/sensors/pixel_types.h"
+#include "drake/perception/common/pixel_types.h"
 
 namespace drake {
 namespace geometry {

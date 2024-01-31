@@ -9,8 +9,8 @@
 #include "drake/common/diagnostic_policy.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/name_value.h"
-#include "drake/systems/sensors/image.h"
-#include "drake/systems/sensors/image_file_format.h"
+#include "drake/perception/common/image.h"
+#include "drake/perception/common/image_file_format.h"
 
 namespace drake {
 namespace systems {

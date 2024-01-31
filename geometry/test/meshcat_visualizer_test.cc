@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_visualizer.h"
+#include "drake/geometry/meshcat/meshcat_visualizer.h"
 
 #include <thread>
 
@@ -8,7 +8,7 @@
 
 #include "drake/common/find_resource.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/meshcat_types_internal.h"
+#include "drake/geometry/meshcat/meshcat_types_internal.h"
 #include "drake/multibody/parsing/parser.h"
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/systems/analysis/simulator.h"

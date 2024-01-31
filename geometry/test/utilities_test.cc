@@ -1,4 +1,4 @@
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/utilities.h"
 
 #include <set>
 #include <string>

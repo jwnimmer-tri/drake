@@ -1,10 +1,10 @@
-#include "drake/geometry/proximity/deformable_mesh_intersection.h"
+#include "drake/geometry/common/deformable_mesh_intersection.h"
 
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-#include "drake/geometry/deformable_mesh_with_bvh.h"
+#include "drake/geometry/proximity/deformable_mesh_with_bvh.h"
 #include "drake/geometry/proximity/contact_surface_utility.h"
 #include "drake/geometry/proximity/mesh_intersection.h"
 

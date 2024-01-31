@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_internal.h"
+#include "drake/geometry/meshcat/meshcat_internal.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

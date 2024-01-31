@@ -1,4 +1,4 @@
-#include "drake/geometry/proximity/volume_mesh_field.h"
+#include "drake/geometry/common/volume_mesh_field.h"
 
 namespace drake {
 namespace geometry {

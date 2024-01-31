@@ -1,9 +1,9 @@
-#include "drake/geometry/proximity_properties.h"
+#include "drake/geometry/common/proximity_properties.h"
 
 #include <gtest/gtest.h>
 
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_roles.h"
 #include "drake/multibody/plant/coulomb_friction.h"
 
 namespace drake {

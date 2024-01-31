@@ -1,4 +1,4 @@
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -8,8 +8,8 @@
 
 #include "drake/common/nice_type_name.h"
 #include "drake/geometry/proximity/meshing_utilities.h"
-#include "drake/geometry/proximity/obj_to_surface_mesh.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
+#include "drake/geometry/common/obj_to_surface_mesh.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
 
 namespace drake {
 namespace geometry {

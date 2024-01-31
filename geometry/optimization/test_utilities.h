@@ -4,7 +4,7 @@
 #include <tuple>
 
 #include "drake/geometry/optimization/convex_set.h"
-#include "drake/geometry/scene_graph.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

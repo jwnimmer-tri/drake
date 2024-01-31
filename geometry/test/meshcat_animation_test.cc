@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_animation.h"
+#include "drake/geometry/meshcat/meshcat_animation.h"
 
 #include <cstdlib>
 

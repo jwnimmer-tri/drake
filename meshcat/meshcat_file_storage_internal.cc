@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_file_storage_internal.h"
+#include "drake/meshcat/meshcat_file_storage_internal.h"
 
 #include <algorithm>
 #include <mutex>

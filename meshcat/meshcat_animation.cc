@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_animation.h"
+#include "drake/meshcat/meshcat_animation.h"
 
 namespace drake {
 namespace geometry {

@@ -10,7 +10,7 @@
 
 #include <fmt/format.h>
 
-#include "drake/systems/sensors/image_io.h"
+#include "drake/perception/common/image_io.h"
 
 namespace drake {
 namespace systems {

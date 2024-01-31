@@ -8,9 +8,9 @@
 #include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

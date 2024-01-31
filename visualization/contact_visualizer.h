@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "drake/geometry/meshcat.h"
-#include "drake/multibody/meshcat/contact_visualizer_params.h"
+#include "drake/visualization/contact_visualizer_params.h"
 #include "drake/multibody/plant/internal_geometry_names.h"
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/systems/framework/diagram_builder.h"

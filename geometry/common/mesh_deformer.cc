@@ -1,9 +1,9 @@
-#include "drake/geometry/proximity/mesh_deformer.h"
+#include "drake/geometry/common/mesh_deformer.h"
 
 #include <fmt/format.h>
 
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
-#include "drake/geometry/proximity/volume_mesh.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
+#include "drake/geometry/common/volume_mesh.h"
 
 namespace drake {
 namespace geometry {

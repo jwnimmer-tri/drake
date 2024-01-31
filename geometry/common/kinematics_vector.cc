@@ -1,4 +1,4 @@
-#include "drake/geometry/kinematics_vector.h"
+#include "drake/geometry/common/kinematics_vector.h"
 
 #include <stdexcept>
 

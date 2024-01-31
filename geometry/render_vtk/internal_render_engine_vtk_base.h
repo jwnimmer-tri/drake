@@ -7,9 +7,9 @@
 #include <vtkTransform.h>                // vtkCommonTransforms
 #include <vtkTransformPolyDataFilter.h>  // vtkFiltersGeneral
 
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_roles.h"
 #include "drake/geometry/render/render_mesh.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 
 namespace drake {
 namespace geometry {

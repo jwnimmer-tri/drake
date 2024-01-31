@@ -1,4 +1,4 @@
-#include "drake/geometry/drake_visualizer.h"
+#include "drake/geometry/meshcat/drake_visualizer.h"
 
 #include <map>
 #include <memory>
@@ -12,13 +12,13 @@
 
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/kinematics_vector.h"
-#include "drake/geometry/proximity_properties.h"
-#include "drake/geometry/rgba.h"
-#include "drake/geometry/scene_graph.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/common/kinematics_vector.h"
+#include "drake/geometry/common/proximity_properties.h"
+#include "drake/geometry/common/rgba.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/lcm/drake_lcm.h"
 #include "drake/lcm/lcm_messages.h"
 #include "drake/lcmt_viewer_draw.hpp"

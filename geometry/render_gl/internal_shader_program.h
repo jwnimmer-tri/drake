@@ -7,12 +7,12 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_roles.h"
 #include "drake/geometry/render/light_parameter.h"
 #include "drake/geometry/render/render_camera.h"
 #include "drake/geometry/render_gl/internal_opengl_includes.h"
 #include "drake/geometry/render_gl/internal_shader_program_data.h"
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/rgba.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

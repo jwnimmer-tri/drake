@@ -1,4 +1,4 @@
-#include "drake/geometry/proximity/volume_mesh_refiner.h"
+#include "drake/geometry/common/volume_mesh_refiner.h"
 
 #include <array>
 #include <unordered_set>

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/meshcat.h"
+#include "drake/geometry/meshcat/meshcat.h"
 
 namespace drake {
 namespace geometry {

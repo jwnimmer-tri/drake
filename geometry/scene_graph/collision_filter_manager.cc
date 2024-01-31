@@ -1,4 +1,4 @@
-#include "drake/geometry/collision_filter_manager.h"
+#include "drake/geometry/scene_graph/collision_filter_manager.h"
 
 #include <utility>
 

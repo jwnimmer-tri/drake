@@ -5,7 +5,7 @@
 
 #include "drake/geometry/proximity/bvh.h"
 #include "drake/geometry/proximity/deformable_contact_geometries.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
 #include "drake/geometry/query_results/deformable_contact.h"
 #include "drake/math/rigid_transform.h"
 

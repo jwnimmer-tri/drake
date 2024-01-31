@@ -14,7 +14,7 @@
 #include "drake/common/fmt_ostream.h"
 #include "drake/common/never_destroyed.h"
 #include "drake/common/value.h"
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/rgba.h"
 
 namespace drake {
 namespace geometry {

@@ -8,7 +8,7 @@
 #include "drake/geometry/render/render_camera.h"
 #include "drake/geometry/render_gltf_client/internal_http_service.h"
 #include "drake/geometry/render_gltf_client/render_engine_gltf_client_params.h"
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/image.h"
 
 namespace drake {
 namespace geometry {

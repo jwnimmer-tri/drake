@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat.h"
+#include "drake/meshcat/meshcat.h"
 
 #include <algorithm>
 #include <atomic>
@@ -30,9 +30,9 @@
 #include "drake/common/scope_exit.h"
 #include "drake/common/ssize.h"
 #include "drake/common/text_logging.h"
-#include "drake/geometry/meshcat_file_storage_internal.h"
-#include "drake/geometry/meshcat_internal.h"
-#include "drake/geometry/meshcat_types_internal.h"
+#include "drake/meshcat/meshcat_file_storage_internal.h"
+#include "drake/meshcat/meshcat_internal.h"
+#include "drake/meshcat/meshcat_types_internal.h"
 
 #ifdef BOOST_VERSION
 #error Drake should be using the non-boost flavor of msgpack.

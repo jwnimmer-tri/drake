@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "drake/common/drake_copyable.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/multibody/rational/rational_forward_kinematics.h"
 #include "drake/multibody/tree/multibody_tree_indexes.h"
 

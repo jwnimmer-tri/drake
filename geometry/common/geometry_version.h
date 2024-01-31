@@ -2,7 +2,7 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/common/identifier.h"
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_roles.h"
 
 namespace drake {
 namespace geometry {

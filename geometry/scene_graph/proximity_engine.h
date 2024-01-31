@@ -10,9 +10,9 @@
 
 #include "drake/common/autodiff.h"
 #include "drake/common/sorted_pair.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/internal_geometry.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/scene_graph/internal_geometry.h"
 #include "drake/geometry/proximity/collision_filter.h"
 #include "drake/geometry/proximity/deformable_contact_internal.h"
 #include "drake/geometry/proximity/hydroelastic_internal.h"
@@ -21,7 +21,7 @@
 #include "drake/geometry/query_results/penetration_as_point_pair.h"
 #include "drake/geometry/query_results/signed_distance_pair.h"
 #include "drake/geometry/query_results/signed_distance_to_point.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

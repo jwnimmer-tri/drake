@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/image.h"
 
 #include <algorithm>
 

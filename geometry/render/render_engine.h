@@ -11,18 +11,18 @@
 
 #include "drake/common/drake_copyable.h"
 #include "drake/common/drake_deprecated.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/proximity/volume_mesh.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/volume_mesh.h"
 #include "drake/geometry/render/render_camera.h"
 #include "drake/geometry/render/render_label.h"
 #include "drake/geometry/render/render_mesh.h"
-#include "drake/geometry/shape_specification.h"
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/shape_specification.h"
+#include "drake/geometry/common/utilities.h"
 #include "drake/math/rigid_transform.h"
-#include "drake/systems/sensors/camera_info.h"
+#include "drake/perception/common/camera_info.h"
 #include "drake/systems/sensors/color_palette.h"
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/image.h"
 
 namespace drake {
 namespace geometry {

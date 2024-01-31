@@ -1,4 +1,4 @@
-#include "drake/geometry/read_obj.h"
+#include "drake/geometry/common/read_obj.h"
 
 #include <unordered_set>
 

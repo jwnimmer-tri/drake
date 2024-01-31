@@ -9,7 +9,7 @@
 
 #include "drake/common/drake_export.h"
 #include "drake/common/sorted_pair.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/geometry_ids.h"
 #include "drake/geometry/proximity/collision_filter.h"
 
 namespace drake {

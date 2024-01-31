@@ -5,13 +5,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_instance.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_instance.h"
 #include "drake/geometry/proximity/collision_filter.h"
 #include "drake/geometry/proximity/deformable_contact_geometries.h"
-#include "drake/geometry/proximity/volume_mesh.h"
+#include "drake/geometry/common/volume_mesh.h"
 #include "drake/geometry/query_results/deformable_contact.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 
 namespace drake {
 namespace geometry {

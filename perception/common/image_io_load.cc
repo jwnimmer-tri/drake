@@ -1,5 +1,5 @@
 /* clang-format off to disable clang-format-includes */
-#include "drake/systems/sensors/image_io.h"
+#include "drake/perception/common/image_io.h"
 /* clang-format on */
 
 #include <memory>
@@ -14,9 +14,9 @@
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_export.h"
-#include "drake/systems/sensors/image_io_internal.h"
-#include "drake/systems/sensors/vtk_diagnostic_event_observer.h"
-#include "drake/systems/sensors/vtk_image_reader_writer.h"
+#include "drake/perception/common/image_io_internal.h"
+#include "drake/perception/common/vtk_diagnostic_event_observer.h"
+#include "drake/perception/common/vtk_image_reader_writer.h"
 
 // This file implements half of the class ImageIo (the Load functions).
 

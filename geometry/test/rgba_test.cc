@@ -1,4 +1,4 @@
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/rgba.h"
 
 #include <limits>
 

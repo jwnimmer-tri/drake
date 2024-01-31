@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_state.h"
+#include "drake/geometry/scene_graph/geometry_state.h"
 
 #include <algorithm>
 #include <map>
@@ -18,15 +18,15 @@
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/common/test_utilities/expect_no_throw.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/geometry_set.h"
-#include "drake/geometry/geometry_version.h"
-#include "drake/geometry/internal_frame.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/geometry_set.h"
+#include "drake/geometry/common/geometry_version.h"
+#include "drake/geometry/common/internal_frame.h"
 #include "drake/geometry/proximity/make_sphere_mesh.h"
 #include "drake/geometry/render/render_label.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/geometry/test_utilities/dummy_render_engine.h"
 
 namespace drake {

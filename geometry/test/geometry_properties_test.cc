@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_properties.h"
+#include "drake/geometry/common/geometry_properties.h"
 
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
@@ -8,7 +8,7 @@
 #include "drake/common/test_utilities/expect_throws_message.h"
 #include "drake/common/test_utilities/limit_malloc.h"
 #include "drake/common/unused.h"
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/rgba.h"
 
 namespace drake {
 namespace geometry {

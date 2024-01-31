@@ -5,7 +5,7 @@
 #include "drake/common/text_logging.h"
 #include "drake/geometry/proximity/detect_zero_simplex.h"
 #include "drake/geometry/proximity/mesh_to_vtk.h"
-#include "drake/geometry/proximity/volume_mesh_refiner.h"
+#include "drake/geometry/common/volume_mesh_refiner.h"
 #include "drake/geometry/proximity/vtk_to_volume_mesh.h"
 
 namespace drake {

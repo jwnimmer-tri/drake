@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_set.h"
+#include "drake/geometry/common/geometry_set.h"
 
 #include <set>
 #include <unordered_set>

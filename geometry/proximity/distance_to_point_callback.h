@@ -11,7 +11,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_export.h"
 #include "drake/common/eigen_types.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/geometry_ids.h"
 #include "drake/geometry/proximity/proximity_utilities.h"
 #include "drake/geometry/query_results/signed_distance_to_point.h"
 #include "drake/math/rigid_transform.h"

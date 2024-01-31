@@ -1,4 +1,4 @@
-#include "drake/geometry/shape_to_string.h"
+#include "drake/geometry/common/shape_to_string.h"
 
 #include <fmt/format.h>
 

@@ -6,8 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "drake/geometry/collision_filter_declaration.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/collision_filter_declaration.h"
+#include "drake/geometry/common/geometry_ids.h"
 
 namespace drake {
 namespace geometry {

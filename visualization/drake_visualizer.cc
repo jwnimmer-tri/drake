@@ -1,4 +1,4 @@
-#include "drake/geometry/drake_visualizer.h"
+#include "drake/visualization/drake_visualizer.h"
 
 #include <algorithm>
 #include <array>
@@ -10,12 +10,12 @@
 #include "drake/common/default_scalars.h"
 #include "drake/common/extract_double.h"
 #include "drake/common/value.h"
-#include "drake/geometry/proximity/sorted_triplet.h"
-#include "drake/geometry/proximity/volume_to_surface_mesh.h"
-#include "drake/geometry/query_object.h"
-#include "drake/geometry/scene_graph.h"
-#include "drake/geometry/shape_specification.h"
-#include "drake/geometry/utilities.h"
+#include "drake/common/sorted_triplet.h"
+#include "drake/geometry/common/volume_to_surface_mesh.h"
+#include "drake/geometry/scene_graph/query_object.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
+#include "drake/geometry/common/shape_specification.h"
+#include "drake/geometry/common/utilities.h"
 #include "drake/lcm/drake_lcm.h"
 #include "drake/lcmt_viewer_draw.hpp"
 #include "drake/lcmt_viewer_geometry_data.hpp"

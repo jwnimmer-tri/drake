@@ -1,4 +1,4 @@
-#include "drake/multibody/meshcat/hydroelastic_contact_visualizer.h"
+#include "drake/visualization/hydroelastic_contact_visualizer.h"
 
 #include <algorithm>
 #include <utility>

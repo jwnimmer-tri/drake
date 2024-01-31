@@ -1,8 +1,8 @@
 #pragma once
 
 #include "drake/common/name_value.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/rgba.h"
 
 namespace drake {
 namespace geometry {

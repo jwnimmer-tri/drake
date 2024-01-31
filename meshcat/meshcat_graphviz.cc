@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_graphviz.h"
+#include "drake/meshcat/meshcat_graphviz.h"
 
 #include <utility>
 

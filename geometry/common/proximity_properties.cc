@@ -1,4 +1,4 @@
-#include "drake/geometry/proximity_properties.h"
+#include "drake/geometry/common/proximity_properties.h"
 
 namespace drake {
 namespace geometry {

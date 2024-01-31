@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_point_cloud_visualizer.h"
+#include "drake/visualization/meshcat_point_cloud_visualizer.h"
 
 #include <memory>
 #include <string>
@@ -7,8 +7,8 @@
 #include <fmt/format.h>
 
 #include "drake/common/extract_double.h"
-#include "drake/geometry/meshcat_graphviz.h"
-#include "drake/geometry/utilities.h"
+#include "drake/meshcat/meshcat_graphviz.h"
+#include "drake/geometry/common/utilities.h"
 #include "drake/perception/point_cloud.h"
 
 namespace drake {

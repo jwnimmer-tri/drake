@@ -1,4 +1,4 @@
-#include "drake/geometry/scene_graph.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
 
 #include <memory>
 #include <utility>
@@ -10,14 +10,14 @@
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/common/test_utilities/expect_no_throw.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_set.h"
-#include "drake/geometry/geometry_state.h"
-#include "drake/geometry/make_mesh_for_deformable.h"
-#include "drake/geometry/query_object.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/common/geometry_set.h"
+#include "drake/geometry/scene_graph/geometry_state.h"
+#include "drake/geometry/proximity/make_mesh_for_deformable.h"
+#include "drake/geometry/scene_graph/query_object.h"
 #include "drake/geometry/render/render_label.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/geometry/test_utilities/dummy_render_engine.h"
 #include "drake/systems/framework/context.h"
 #include "drake/systems/framework/diagram_builder.h"

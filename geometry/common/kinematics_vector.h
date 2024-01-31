@@ -9,7 +9,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/geometry_ids.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

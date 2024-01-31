@@ -1,4 +1,4 @@
-#include "drake/geometry/scene_graph.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
 
 #include <algorithm>
 #include <string>
@@ -8,8 +8,8 @@
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/nice_type_name.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_state.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/scene_graph/geometry_state.h"
 #include "drake/systems/framework/context.h"
 
 namespace drake {

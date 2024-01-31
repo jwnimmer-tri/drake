@@ -1,4 +1,4 @@
-#include "drake/geometry/internal_geometry.h"
+#include "drake/geometry/scene_graph/internal_geometry.h"
 
 #include <utility>
 

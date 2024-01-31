@@ -9,8 +9,8 @@
 #include "drake/geometry/scene_graph.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/systems/framework/leaf_system.h"
-#include "drake/systems/sensors/camera_info.h"
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/camera_info.h"
+#include "drake/perception/common/image.h"
 
 namespace drake {
 namespace systems {

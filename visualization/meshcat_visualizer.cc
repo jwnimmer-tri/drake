@@ -1,4 +1,4 @@
-#include "drake/geometry/meshcat_visualizer.h"
+#include "drake/visualization/meshcat_visualizer.h"
 
 #include <algorithm>
 #include <memory>
@@ -10,9 +10,9 @@
 
 #include "drake/common/extract_double.h"
 #include "drake/common/overloaded.h"
-#include "drake/geometry/meshcat_graphviz.h"
-#include "drake/geometry/proximity/volume_to_surface_mesh.h"
-#include "drake/geometry/utilities.h"
+#include "drake/meshcat/meshcat_graphviz.h"
+#include "drake/geometry/common/volume_to_surface_mesh.h"
+#include "drake/geometry/common/utilities.h"
 
 namespace drake {
 namespace geometry {

@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/image_file_format.h"
+#include "drake/perception/common/image_file_format.h"
 
 #include "drake/common/drake_assert.h"
 

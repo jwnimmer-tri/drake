@@ -1,4 +1,4 @@
-#include "drake/geometry/scene_graph_inspector.h"
+#include "drake/geometry/scene_graph/scene_graph_inspector.h"
 
 #include <algorithm>
 #include <memory>
@@ -6,9 +6,9 @@
 
 #include <gtest/gtest.h>
 
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_state.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/scene_graph/geometry_state.h"
 
 namespace drake {
 namespace geometry {

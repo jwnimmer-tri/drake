@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "drake/geometry/optimization/convex_set.h"
-#include "drake/geometry/scene_graph.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/solvers/mathematical_program.h"
 #include "drake/solvers/solve.h"

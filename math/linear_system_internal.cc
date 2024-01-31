@@ -1,4 +1,4 @@
-#include "drake/systems/primitives/linear_system_internal.h"
+#include "drake/math/linear_system_internal.h"
 
 namespace drake {
 namespace systems {

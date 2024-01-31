@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_properties.h"
+#include "drake/geometry/common/geometry_properties.h"
 
 #include <fmt/format.h>
 

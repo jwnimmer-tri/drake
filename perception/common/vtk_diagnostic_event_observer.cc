@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/vtk_diagnostic_event_observer.h"
+#include "drake/perception/common/vtk_diagnostic_event_observer.h"
 
 #include <string>
 

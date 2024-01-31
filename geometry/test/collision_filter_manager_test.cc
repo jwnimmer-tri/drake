@@ -1,4 +1,4 @@
-#include "drake/geometry/collision_filter_manager.h"
+#include "drake/geometry/scene_graph/collision_filter_manager.h"
 
 #include <array>
 #include <memory>
@@ -8,13 +8,13 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/test_utilities/expect_no_throw.h"
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_properties.h"
-#include "drake/geometry/query_object.h"
-#include "drake/geometry/scene_graph.h"
-#include "drake/geometry/scene_graph_inspector.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/common/geometry_properties.h"
+#include "drake/geometry/scene_graph/query_object.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
+#include "drake/geometry/scene_graph/scene_graph_inspector.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

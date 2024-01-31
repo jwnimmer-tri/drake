@@ -9,11 +9,11 @@
 
 #include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/drake_copyable.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/internal_frame.h"
-#include "drake/geometry/proximity/volume_mesh.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/internal_frame.h"
+#include "drake/geometry/common/volume_mesh.h"
+#include "drake/geometry/common/shape_specification.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

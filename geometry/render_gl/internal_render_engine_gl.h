@@ -13,7 +13,7 @@
 #include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/reset_on_copy.h"
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_roles.h"
 #include "drake/geometry/render/render_engine.h"
 #include "drake/geometry/render/render_material.h"
 #include "drake/geometry/render/render_mesh.h"
@@ -25,7 +25,7 @@
 #include "drake/geometry/render_gl/internal_texture_library.h"
 #include "drake/geometry/render_gl/render_engine_gl_params.h"
 #include "drake/math/rigid_transform.h"
-#include "drake/systems/sensors/image.h"
+#include "drake/perception/common/image.h"
 
 namespace drake {
 namespace geometry {

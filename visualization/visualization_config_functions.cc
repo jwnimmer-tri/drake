@@ -6,7 +6,7 @@
 
 #include "drake/geometry/drake_visualizer.h"
 #include "drake/geometry/meshcat_visualizer.h"
-#include "drake/multibody/meshcat/contact_visualizer.h"
+#include "drake/visualization/contact_visualizer.h"
 #include "drake/multibody/plant/contact_results_to_lcm.h"
 #include "drake/systems/lcm/lcm_config_functions.h"
 #include "drake/visualization/inertia_visualizer.h"

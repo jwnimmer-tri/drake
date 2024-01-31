@@ -6,11 +6,11 @@
 #include <vector>
 
 #include "drake/common/sorted_pair.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/geometry_ids.h"
 #include "drake/geometry/proximity/bvh.h"
 #include "drake/geometry/proximity/contact_surface_utility.h"
 #include "drake/geometry/proximity/plane.h"
-#include "drake/geometry/proximity/volume_mesh_field.h"
+#include "drake/geometry/common/volume_mesh_field.h"
 #include "drake/geometry/query_results/contact_surface.h"
 #include "drake/math/rigid_transform.h"
 

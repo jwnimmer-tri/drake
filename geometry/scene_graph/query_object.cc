@@ -1,9 +1,9 @@
-#include "drake/geometry/query_object.h"
+#include "drake/geometry/scene_graph/query_object.h"
 
 #include "drake/common/default_scalars.h"
 #include "drake/common/drake_assert.h"
-#include "drake/geometry/geometry_state.h"
-#include "drake/geometry/scene_graph.h"
+#include "drake/geometry/scene_graph/geometry_state.h"
+#include "drake/geometry/scene_graph/scene_graph.h"
 
 namespace drake {
 namespace geometry {

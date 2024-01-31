@@ -5,7 +5,7 @@
 #include <set>
 #include <unordered_set>
 
-#include "drake/geometry/proximity/volume_to_surface_mesh.h"
+#include "drake/geometry/common/volume_to_surface_mesh.h"
 
 namespace drake {
 namespace geometry {

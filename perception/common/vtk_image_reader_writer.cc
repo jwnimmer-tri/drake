@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/vtk_image_reader_writer.h"
+#include "drake/perception/common/vtk_image_reader_writer.h"
 
 #include <functional>
 #include <utility>

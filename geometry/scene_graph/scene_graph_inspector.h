@@ -10,14 +10,14 @@
 #include <vector>
 
 #include "drake/common/drake_deprecated.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/geometry_set.h"
-#include "drake/geometry/geometry_version.h"
-#include "drake/geometry/internal_frame.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
-#include "drake/geometry/proximity/volume_mesh.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/geometry_set.h"
+#include "drake/geometry/common/geometry_version.h"
+#include "drake/geometry/common/internal_frame.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
+#include "drake/geometry/common/volume_mesh.h"
+#include "drake/geometry/common/shape_specification.h"
 
 namespace drake {
 namespace geometry {

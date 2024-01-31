@@ -9,9 +9,9 @@
 #include <vtkType.h>  // vtkCommonCore
 
 #include "drake/common/drake_assert.h"
-#include "drake/systems/sensors/image.h"
-#include "drake/systems/sensors/image_file_format.h"
-#include "drake/systems/sensors/image_io.h"
+#include "drake/perception/common/image.h"
+#include "drake/perception/common/image_file_format.h"
+#include "drake/perception/common/image_io.h"
 
 // This file contains low-level ImageIo helper functions that are carved out in
 // support of direct unit testing.

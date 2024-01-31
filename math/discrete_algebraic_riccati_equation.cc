@@ -6,7 +6,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_throw.h"
 #include "drake/common/is_approx_equal_abstol.h"
-#include "drake/systems/primitives/linear_system_internal.h"
+#include "drake/math/linear_system_internal.h"
 
 namespace drake {
 namespace math {

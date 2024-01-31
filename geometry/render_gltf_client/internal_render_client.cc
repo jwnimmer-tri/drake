@@ -16,7 +16,7 @@
 #include "drake/common/temp_directory.h"
 #include "drake/common/text_logging.h"
 #include "drake/geometry/render_gltf_client/internal_http_service_curl.h"
-#include "drake/systems/sensors/image_io.h"
+#include "drake/perception/common/image_io.h"
 
 namespace drake {
 namespace geometry {

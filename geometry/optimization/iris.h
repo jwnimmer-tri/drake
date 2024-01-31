@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "drake/common/name_value.h"
-#include "drake/geometry/meshcat.h"
+#include "drake/meshcat/meshcat.h"
 #include "drake/geometry/optimization/convex_set.h"
 #include "drake/geometry/optimization/hpolyhedron.h"
 #include "drake/multibody/plant/multibody_plant.h"

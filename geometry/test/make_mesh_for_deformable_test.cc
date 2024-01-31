@@ -1,4 +1,4 @@
-#include "drake/geometry/make_mesh_for_deformable.h"
+#include "drake/geometry/proximity/make_mesh_for_deformable.h"
 
 #include <gtest/gtest.h>
 

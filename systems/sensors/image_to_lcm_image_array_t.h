@@ -6,8 +6,8 @@
 #include "drake/common/drake_copyable.h"
 #include "drake/lcmt_image_array.hpp"
 #include "drake/systems/framework/leaf_system.h"
-#include "drake/systems/sensors/image.h"
-#include "drake/systems/sensors/pixel_types.h"
+#include "drake/perception/common/image.h"
+#include "drake/perception/common/pixel_types.h"
 
 namespace drake {
 namespace systems {

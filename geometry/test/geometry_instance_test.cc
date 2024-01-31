@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_instance.h"
+#include "drake/geometry/common/geometry_instance.h"
 
 #include <memory>
 
@@ -6,7 +6,7 @@
 
 #include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/shape_specification.h"
 
 namespace drake {
 namespace geometry {

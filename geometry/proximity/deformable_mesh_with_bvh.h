@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "drake/geometry/deformable_mesh.h"
+#include "drake/geometry/common/deformable_mesh.h"
 #include "drake/geometry/proximity/bvh.h"
 #include "drake/geometry/proximity/bvh_updater.h"
 

@@ -1,4 +1,4 @@
-#include "drake/systems/sensors/camera_info.h"
+#include "drake/perception/common/camera_info.h"
 
 #include <cmath>
 #include <sstream>

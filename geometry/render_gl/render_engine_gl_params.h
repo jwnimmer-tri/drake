@@ -5,7 +5,7 @@
 #include "drake/common/name_value.h"
 #include "drake/geometry/render/light_parameter.h"
 #include "drake/geometry/render/render_label.h"
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/rgba.h"
 
 namespace drake {
 namespace geometry {

@@ -1,9 +1,9 @@
-#include "drake/geometry/internal_geometry.h"
+#include "drake/geometry/scene_graph/internal_geometry.h"
 
 #include <memory>
 
 #include "drake/common/drake_assert.h"
-#include "drake/geometry/make_mesh_for_deformable.h"
+#include "drake/geometry/proximity/make_mesh_for_deformable.h"
 
 namespace drake {
 namespace geometry {

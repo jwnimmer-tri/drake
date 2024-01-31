@@ -1,4 +1,4 @@
-#include "drake/geometry/geometry_state.h"
+#include "drake/geometry/scene_graph/geometry_state.h"
 
 #include <algorithm>
 #include <functional>
@@ -12,13 +12,13 @@
 #include "drake/common/default_scalars.h"
 #include "drake/common/extract_double.h"
 #include "drake/common/text_logging.h"
-#include "drake/geometry/geometry_frame.h"
-#include "drake/geometry/geometry_instance.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/proximity_engine.h"
-#include "drake/geometry/proximity_properties.h"
+#include "drake/geometry/common/geometry_frame.h"
+#include "drake/geometry/common/geometry_instance.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/scene_graph/proximity_engine.h"
+#include "drake/geometry/common/proximity_properties.h"
 #include "drake/geometry/render/render_engine.h"
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/utilities.h"
 #include "drake/math/autodiff_gradient.h"
 
 namespace drake {

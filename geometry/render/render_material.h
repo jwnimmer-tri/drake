@@ -3,8 +3,8 @@
 #include <filesystem>
 
 #include "drake/common/diagnostic_policy.h"
-#include "drake/geometry/geometry_properties.h"
-#include "drake/geometry/rgba.h"
+#include "drake/geometry/common/geometry_properties.h"
+#include "drake/geometry/common/rgba.h"
 
 namespace drake {
 namespace geometry {

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "drake/geometry/meshcat.h"
+#include "drake/geometry/meshcat/meshcat.h"
 
 namespace drake {
 namespace geometry {

@@ -9,13 +9,13 @@
 #include "drake/common/copyable_unique_ptr.h"
 #include "drake/common/drake_assert.h"
 #include "drake/common/text_logging.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_roles.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_roles.h"
 #include "drake/geometry/proximity/bvh.h"
-#include "drake/geometry/proximity/triangle_surface_mesh.h"
-#include "drake/geometry/proximity/volume_mesh_field.h"
-#include "drake/geometry/proximity_properties.h"
-#include "drake/geometry/shape_specification.h"
+#include "drake/geometry/common/triangle_surface_mesh.h"
+#include "drake/geometry/common/volume_mesh_field.h"
+#include "drake/geometry/common/proximity_properties.h"
+#include "drake/geometry/common/shape_specification.h"
 
 namespace drake {
 namespace geometry {

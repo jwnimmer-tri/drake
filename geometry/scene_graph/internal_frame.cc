@@ -1,4 +1,4 @@
-#include "drake/geometry/internal_frame.h"
+#include "drake/geometry/common/internal_frame.h"
 
 #include "drake/common/never_destroyed.h"
 

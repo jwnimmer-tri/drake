@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "drake/common/drake_assert.h"
-#include "drake/geometry/geometry_ids.h"
+#include "drake/geometry/common/geometry_ids.h"
 #include "drake/geometry/optimization/vpolytope.h"
 #include "drake/multibody/rational/rational_forward_kinematics.h"
 

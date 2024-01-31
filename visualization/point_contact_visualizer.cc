@@ -1,4 +1,4 @@
-#include "drake/multibody/meshcat/point_contact_visualizer.h"
+#include "drake/visualization/point_contact_visualizer.h"
 
 #include <utility>
 

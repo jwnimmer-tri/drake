@@ -7,8 +7,8 @@
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
 #include "drake/geometry/proximity/plane.h"
-#include "drake/geometry/shape_specification.h"
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/shape_specification.h"
+#include "drake/geometry/common/utilities.h"
 #include "drake/math/rigid_transform.h"
 
 namespace drake {

@@ -12,18 +12,18 @@
 
 #include "drake/common/autodiff.h"
 #include "drake/common/drake_copyable.h"
-#include "drake/geometry/collision_filter_manager.h"
-#include "drake/geometry/geometry_ids.h"
-#include "drake/geometry/geometry_roles.h"
-#include "drake/geometry/geometry_set.h"
-#include "drake/geometry/geometry_version.h"
-#include "drake/geometry/internal_frame.h"
-#include "drake/geometry/internal_geometry.h"
-#include "drake/geometry/kinematics_vector.h"
-#include "drake/geometry/proximity_engine.h"
+#include "drake/geometry/scene_graph/collision_filter_manager.h"
+#include "drake/geometry/common/geometry_ids.h"
+#include "drake/geometry/common/geometry_roles.h"
+#include "drake/geometry/common/geometry_set.h"
+#include "drake/geometry/common/geometry_version.h"
+#include "drake/geometry/common/internal_frame.h"
+#include "drake/geometry/scene_graph/internal_geometry.h"
+#include "drake/geometry/common/kinematics_vector.h"
+#include "drake/geometry/scene_graph/proximity_engine.h"
 #include "drake/geometry/render/render_camera.h"
 #include "drake/geometry/render/render_engine.h"
-#include "drake/geometry/utilities.h"
+#include "drake/geometry/common/utilities.h"
 
 namespace drake {
 namespace geometry {
