@@ -7,7 +7,6 @@
 #include <fmt/format.h>
 
 #include "drake/common/nice_type_name.h"
-#include "drake/geometry/proximity/meshing_utilities.h"
 #include "drake/geometry/common/obj_to_surface_mesh.h"
 #include "drake/geometry/common/triangle_surface_mesh.h"
 
