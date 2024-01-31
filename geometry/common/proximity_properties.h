@@ -12,7 +12,6 @@
 
 #include "drake/common/fmt_ostream.h"
 #include "drake/geometry/common/geometry_roles.h"
-#include "drake/multibody/plant/coulomb_friction.h"
 
 namespace drake {
 namespace geometry {
@@ -108,7 +107,8 @@ std::ostream& operator<<(std::ostream& out, const HydroelasticType& type);
 void AddContactMaterial(
     const std::optional<double>& dissipation,
     const std::optional<double>& point_stiffness,
-    const std::optional<multibody::CoulombFriction<double>>& friction,
+    const std::optional<double>& static_friction,
+    const std::optional<double>& dynamic_friction,
     ProximityProperties* properties);
 
 /** Adds properties to the given set of proximity properties sufficient to cause
