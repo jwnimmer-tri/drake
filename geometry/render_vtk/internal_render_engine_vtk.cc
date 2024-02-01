@@ -38,7 +38,6 @@
 #include "drake/geometry/render_vtk/internal_render_engine_vtk_base.h"
 #include "drake/geometry/render_vtk/internal_vtk_util.h"
 #include "drake/math/rotation_matrix.h"
-#include "drake/systems/sensors/color_palette.h"
 #include "drake/perception/common/vtk_diagnostic_event_observer.h"
 
 namespace drake {

@@ -21,7 +21,6 @@
 #include "drake/geometry/common/utilities.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/perception/common/camera_info.h"
-#include "drake/systems/sensors/color_palette.h"
 #include "drake/perception/common/image.h"
 
 namespace drake {

@@ -12,7 +12,6 @@
 #include "drake/common/ssize.h"
 #include "drake/geometry/render/render_engine.h"
 #include "drake/math/rigid_transform.h"
-#include "drake/systems/sensors/color_palette.h"
 
 namespace drake {
 namespace geometry {
