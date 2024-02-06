@@ -23,21 +23,23 @@ class november {
   // but note that we use `int64_t` instead of `int` for byte counts.
   //@{
   static const char* getTypeName() { return "november"; }
-  int64_t getEncodedSize() const { return 8 + _getEncodedSizeNoHash(); }
+  int64_t getEncodedSize() const {
+    return sizeof(int64_t) + _getEncodedSizeNoHash();
+  }
   int64_t _getEncodedSizeNoHash() const {
-    int64_t _result = 0;
-    _result += alpha._getEncodedSizeNoHash();
-    _result += bravo._getEncodedSizeNoHash();
-    _result += 4;  // charlie
-    return _result;
+    auto [_required_size, _error] = _get_encoded_size<false>();
+    return _error ? 0 : _required_size;
   }
   template <bool with_hash = true>
   int64_t encode(void* buf, int64_t offset, int64_t maxlen) const {
-    uint8_t* const _begin = static_cast<uint8_t*>(buf);
-    uint8_t* const _start = _begin + offset;
-    uint8_t* const _end = _begin + maxlen;
+    auto [_required_size, _error] = _get_encoded_size<with_hash>();
+    if (_error || (maxlen - offset) < _required_size) {
+      return -1;
+    }
+    uint8_t* const _start = static_cast<uint8_t*>(buf) + offset;
     uint8_t* _cursor = _start;
-    return this->_encode<with_hash>(&_cursor, _end) ? (_cursor - _start) : -1;
+    this->_encode<with_hash>(&_cursor);
+    return _cursor - _start;
   }
   int64_t _encodeNoHash(void* buf, int64_t offset, int64_t maxlen) const {
     return encode<false>(buf, offset, maxlen);
@@ -81,31 +83,62 @@ class november {
     return (composite_hash << 1) + ((composite_hash >> 63) & 1);
   }
 
+  // New-style size calculation with invariant checks.
+  template <bool with_hash>
+  std::pair<int64_t, bool /* error */> _get_encoded_size() const {
+    int64_t _result = with_hash ? sizeof(int64_t) : 0;
+    bool _error = false;
+    int64_t _temp_result;
+    bool _temp_error;
+    // alpha
+    std::tie(_temp_result, _temp_error) =
+        alpha._get_encoded_size<false>();
+    _result += _temp_result;
+    if (_temp_error) [[unlikely]] { _error = true; }
+    // bravo
+    std::tie(_temp_result, _temp_error) =
+        bravo._get_encoded_size<false>();
+    _result += _temp_result;
+    if (_temp_error) [[unlikely]] { _error = true; }
+    // charlie
+    _result += 4;
+    return {_result, _error};
+  }
+
   // New-style encoding.
+  // @pre The cursor has at least _get_encoded_size() bytes available.
   template <bool with_hash = true>
-  bool _encode(uint8_t** _cursor, uint8_t* _end) const {
+  void _encode(uint8_t** _cursor) const {
     constexpr int64_t _hash = _get_hash_impl();
-    return  // true iff success
-        (with_hash ? _encode_field(_hash, _cursor, _end) : true) &&
-        _encode_field(alpha, _cursor, _end) &&
-        _encode_field(bravo, _cursor, _end) &&
-        _encode_field(charlie, _cursor, _end);
+    if (with_hash) { _encode_field<int64_t, 0>(_hash, _cursor); }
+    _encode_field<papa::lima, 0>(alpha, _cursor);
+    _encode_field<papa::lima, 0>(bravo, _cursor);
+    _encode_field<int32_t, 0>(charlie, _cursor);
   }
 
   // New-style decoding.
   template <bool with_hash = true>
   bool _decode(const uint8_t** _cursor, const uint8_t* _end) {
     constexpr int64_t _expected_hash = _get_hash_impl();
+    constexpr int64_t _hash_size = with_hash ? sizeof(_expected_hash) : 0;
     int64_t _hash = _expected_hash;
     return  // true iff success
+        (*_cursor + _hash_size <= _end) &&
         (with_hash ? _decode_field(&_hash, _cursor, _end) : true) &&
         (_hash == _expected_hash) &&
         _decode_field(&alpha, _cursor, _end) &&
         _decode_field(&bravo, _cursor, _end) &&
+        (*_cursor + 4 <= _end) &&
         _decode_field(&charlie, _cursor, _end);
   }
 
  private:
+  // TODO(jwnimmer-tri) Remove once we have C++20.
+  template <typename Container>
+  static int64_t ssize(const Container& c) {
+    return static_cast<int64_t>(c.size());
+  }
+
   // Given an N-byte integer at `_input` in network byte order, returns it as
   // a host unsigned integer using the matching unsigned integer type. (This
   // is also used to convert host to network order; it's the same operation.)
@@ -132,6 +165,24 @@ class november {
     }
   }
 
+  template <size_t N>
+  static void _memcpy_bswap(uint8_t** _cursor, const void* _src,
+                            size_t _bytes) {
+    if constexpr (N == 1) {
+      if (_bytes > 0) {
+        std::memcpy(*_cursor, _src, _bytes);
+        *_cursor += _bytes;
+      }
+    } else {
+      const uint8_t* const _src_bytes = reinterpret_cast<const uint8_t*>(_src);
+      for (size_t _i = 0; _i < _bytes; _i += N) {
+        auto _swapped = _byteswap<N>(_src_bytes + _i);
+        std::memcpy(*_cursor, &_swapped, N);
+        *_cursor += N;
+      }
+    }
+  }
+
   // The dimensions of an array, for use during encoding / decoding, e.g., for
   // a message field `int8_t image[6][4]` we'd use `ArrayDims<2>{6, 4}`.
   template <size_t ndims>
@@ -149,64 +200,55 @@ class november {
     return _result;
   }
 
+  // Returns true iff T has a "slab" layout in memory, where all of its data
+  // lives in one block of contiguous memory. The template arguments are the
+  // same as _encode_field().
+  template <typename Base, int ndims, typename T>
+  static constexpr bool _is_slab() {
+    if constexpr (std::is_fundamental_v<Base> && ndims > 0) {
+      return std::is_trivial_v<typename T::value_type>;
+    }
+    return false;
+  }
+
   // Given a field (or child element within a field), encodes it into the given
-  // byte cursor and advances the cursor, returning true on success. Arrays are
-  // passed with `_input` as vector-like container and `_dims` as the list of
-  // multi-dimensional vector sizes, e.g., `int8_t image[6][4]` would be called
-  // like `_encode_field(image.at(0), &cursor, end, ArrayDims<2>{6, 4})`. In
-  // LCM messages, multi-dimensional arrays are encoded using C's memory layout
-  // (i.e., with the last dimension as the most tightly packed.)
-  template <typename T, size_t ndims = 0>
-  static bool _encode_field(const T& _input, uint8_t** _cursor, uint8_t* _end,
-                            const ArrayDims<ndims>& _dims = ArrayDims<0>{}) {
+  // byte cursor and advances the cursor. As with _encode(), we assume as a
+  // precondition that the cursor has sufficient writeable space.
+  template <typename Base, int ndims, typename T>
+  static void _encode_field(const T& _input, uint8_t** _cursor) {
     static_assert(!std::is_pointer_v<T>);
-    if constexpr (ndims == 0) {
-      // With no array dimensions, just decode the field directly.
-      if constexpr (std::is_fundamental_v<T>) {
-        // POD input.
-        constexpr size_t N = sizeof(T);
-        if (*_cursor + N > _end) {
-          return false;
-        }
-        auto _swapped = _byteswap<N>(&_input);
-        std::memcpy(*_cursor, &_swapped, N);
-        *_cursor += N;
-        return true;
-      } else if constexpr (std::is_same_v<T, std::string>) {
-        // String input.
-        const int32_t _size = _input.size() + 1;
-        const bool ok = (_input.size() < INT32_MAX) &&
-                        (*_cursor + sizeof(_size) + _size <= _end) &&
-                        _encode_field(_size, _cursor, _end);
-        if (ok) {
-          std::memcpy(*_cursor, _input.c_str(), _size);
-        }
-        *_cursor += _size;
-        return ok;
-      } else {
-        // Struct input.
-        return _input.template _encode<false>(_cursor, _end);
-      }
-    } else {
-      // Cross-check the container size vs the size specified in the message's
-      // size field. (For fixed-size containers this is a no-op.)
-      if (static_cast<int64_t>(_input.size()) != _dims[0]) {
-        return false;
-      }
-      // Encode each sub-item in turn, forwarding all the _dims but the first.
+    if constexpr (std::is_fundamental_v<Base> && ndims == 0) {
+      // Encode a single POD value.
+      static_assert(std::is_same_v<Base, T>);
+      _memcpy_bswap<sizeof(T)>(_cursor, &_input, sizeof(T));
+    } else if constexpr (_is_slab<Base, ndims, T>()) {
+      // Encode a slab of POD memory.
+      const size_t _raw_size = _input.size() * sizeof(_input[0]);
+      _memcpy_bswap<sizeof(Base)>(_cursor, _input.data(), _raw_size);
+    } else if constexpr (ndims > 0) {
+      // Encode a non-slab array.
       for (const auto& _child : _input) {
-        if (!_encode_field(_child, _cursor, _end, _cdr(_dims))) {
-          return false;
-        }
+        _encode_field<Base, ndims - 1>(_child, _cursor);
       }
-      return true;
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      // Encode a string.
+      const int32_t _size = _input.size() + 1;
+      _encode_field<int32_t, 0>(_size, _cursor);
+      std::memcpy(*_cursor, _input.c_str(), _size);
+      *_cursor += _size;
+    } else {
+      // Encode a struct.
+      _input.template _encode<false>(_cursor);
     }
   }
 
   // Given a pointer to a field (or child element within a field), decodes it
   // from the given byte cursor and advances the cursor, returning true on
   // success. The array `_dims` and storage order follow the same pattern as in
-  // _encode_field(); refer to those docs for details.
+  // _encode_field(); refer to those docs for details. When T is a POD type or
+  // an LCM array with a POD type as its base, checking that the cursor has
+  // enough readable bytes is a pre-condition that must met by the calling code
+  // inside _decode().
   template <typename T, size_t ndims = 0>
   static bool _decode_field(T* _output, const uint8_t** _cursor,
                             const uint8_t* _end,
@@ -217,17 +259,17 @@ class november {
       if constexpr (std::is_fundamental_v<T>) {
         // POD output.
         constexpr size_t N = sizeof(T);
-        if (*_cursor + N > _end) {
-          return false;
-        }
         auto _swapped = _byteswap<N>(*_cursor);
         std::memcpy(_output, &_swapped, N);
         *_cursor += N;
+        // Overflow checking is the responsibility of the top-level _decode.
+        (void)(_end);
         return true;
       } else if constexpr (std::is_same_v<T, std::string>) {
         // String output.
         int32_t _size{};
-        const bool ok = _decode_field(&_size, _cursor, _end) &&
+        const bool ok = (*_cursor + sizeof(_size) <= _end) &&
+                        _decode_field(&_size, _cursor, _end) &&
                         (_size > 0) && (*_cursor + _size <= _end);
         if (ok) {
           _output->replace(_output->begin(), _output->end(), *_cursor,
