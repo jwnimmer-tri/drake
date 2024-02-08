@@ -43,7 +43,7 @@ class lima {
   template <bool with_hash = true>
   int64_t encode(void* buf, int64_t offset, int64_t maxlen) const {
     auto [_required_size, _error] = _get_encoded_size<with_hash>();
-    if (_error || (maxlen - offset) < _required_size) {
+    if (_error || (maxlen - offset) < _required_size) [[unlikely]] {
       return -1;
     }
     uint8_t* const _start = static_cast<uint8_t*>(buf) + offset;
@@ -137,16 +137,16 @@ class lima {
     int64_t _hash = _expected_hash;
     return  // true iff success
         (*_cursor + _hash_size + 1 + 1 + 8 + 4 + 1 + 2 + 4 + 8 <= _end) &&
-        (with_hash ? _decode_field(&_hash, _cursor, _end) : true) &&
+        (with_hash ? _decode_field<int64_t, 0>(&_hash, _cursor, _end) : true) &&
         (_hash == _expected_hash) &&
-        _decode_field(&golf, _cursor, _end) &&
-        _decode_field(&bravo, _cursor, _end) &&
-        _decode_field(&delta, _cursor, _end) &&
-        _decode_field(&foxtrot, _cursor, _end) &&
-        _decode_field(&india8, _cursor, _end) &&
-        _decode_field(&india16, _cursor, _end) &&
-        _decode_field(&india32, _cursor, _end) &&
-        _decode_field(&india64, _cursor, _end);
+        _decode_field<bool, 0>(&golf, _cursor, _end) &&
+        _decode_field<uint8_t, 0>(&bravo, _cursor, _end) &&
+        _decode_field<double, 0>(&delta, _cursor, _end) &&
+        _decode_field<float, 0>(&foxtrot, _cursor, _end) &&
+        _decode_field<int8_t, 0>(&india8, _cursor, _end) &&
+        _decode_field<int16_t, 0>(&india16, _cursor, _end) &&
+        _decode_field<int32_t, 0>(&india32, _cursor, _end) &&
+        _decode_field<int64_t, 0>(&india64, _cursor, _end);
   }
 
  private:
@@ -183,19 +183,17 @@ class lima {
   }
 
   template <size_t N>
-  static void _memcpy_bswap(uint8_t** _cursor, const void* _src,
-                            size_t _bytes) {
+  static void _memcpy_bswap(void* _dst, const void* _src, size_t _bytes) {
     if constexpr (N == 1) {
-      if (_bytes > 0) {
-        std::memcpy(*_cursor, _src, _bytes);
-        *_cursor += _bytes;
+      if (_bytes > 0) [[likely]] {
+        std::memcpy(_dst, _src, _bytes);
       }
     } else {
-      const uint8_t* const _src_bytes = reinterpret_cast<const uint8_t*>(_src);
       for (size_t _i = 0; _i < _bytes; _i += N) {
-        auto _swapped = _byteswap<N>(_src_bytes + _i);
-        std::memcpy(*_cursor, &_swapped, N);
-        *_cursor += N;
+        auto _swapped = _byteswap<N>(_src);
+        std::memcpy(_dst, &_swapped, N);
+        _dst = static_cast<uint8_t*>(_dst) + N;
+        _src = static_cast<const uint8_t*>(_src) + N;
       }
     }
   }
@@ -237,11 +235,13 @@ class lima {
     if constexpr (std::is_fundamental_v<Base> && ndims == 0) {
       // Encode a single POD value.
       static_assert(std::is_same_v<Base, T>);
-      _memcpy_bswap<sizeof(T)>(_cursor, &_input, sizeof(T));
+      _memcpy_bswap<sizeof(T)>(*_cursor, &_input, sizeof(T));
+       *_cursor += sizeof(T);
     } else if constexpr (_is_slab<Base, ndims, T>()) {
       // Encode a slab of POD memory.
       const size_t _raw_size = _input.size() * sizeof(_input[0]);
-      _memcpy_bswap<sizeof(Base)>(_cursor, _input.data(), _raw_size);
+      _memcpy_bswap<sizeof(Base)>(*_cursor, _input.data(), _raw_size);
+       *_cursor += _raw_size;
     } else if constexpr (ndims > 0) {
       // Encode a non-slab array.
       for (const auto& _child : _input) {
@@ -266,7 +266,7 @@ class lima {
   // an LCM array with a POD type as its base, checking that the cursor has
   // enough readable bytes is a pre-condition that must met by the calling code
   // inside _decode().
-  template <typename T, size_t ndims = 0>
+  template <typename Base, size_t ndims, typename T>
   static bool _decode_field(T* _output, const uint8_t** _cursor,
                             const uint8_t* _end,
                             const ArrayDims<ndims>& _dims = {}) {
@@ -286,9 +286,9 @@ class lima {
         // String output.
         int32_t _size{};
         const bool ok = (*_cursor + sizeof(_size) <= _end) &&
-                        _decode_field(&_size, _cursor, _end) &&
+                        _decode_field<int32_t, 0>(&_size, _cursor, _end) &&
                         (_size > 0) && (*_cursor + _size <= _end);
-        if (ok) {
+        if (ok) [[likely]] {
           _output->replace(_output->begin(), _output->end(), *_cursor,
                            *_cursor + _size - 1);
         }
@@ -303,10 +303,21 @@ class lima {
       if constexpr (std::is_same_v<T, std::vector<typename T::value_type>>) {
         _output->resize(_dims[0]);
       }
-      // Decode each sub-item in turn.
-      for (auto& _child : *_output) {
-        if (!_decode_field(&_child, _cursor, _end, _cdr(_dims))) {
-          return false;
+      if constexpr (_is_slab<Base, ndims, T>()) {
+        // Decode a slab of POD memory.
+        if (_dims[0] > 0) [[likely]] {
+          const size_t _raw_size = _dims[0] * sizeof(T[0]);
+          _memcpy_bswap<sizeof(Base)>(_output, *_cursor, _raw_size);
+          *_cursor += _raw_size;
+        }
+      } else {
+        // Decode each sub-item in turn.
+        for (auto& _child : *_output) {
+          const bool _ok = _decode_field<Base, ndims - 1>(
+              &_child, _cursor, _end, _cdr(_dims));
+          if (!_ok) [[unlikely]] {
+            return false;
+          }
         }
       }
       return true;
