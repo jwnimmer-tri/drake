@@ -5,9 +5,11 @@
 #include "drake/bindings/pydrake/autodiff_types_pybind.h"
 #include "drake/bindings/pydrake/common/cpp_param_pybind.h"
 #include "drake/bindings/pydrake/common/cpp_template_pybind.h"
+#include "drake/bindings/pydrake/common/deprecation_pybind.h"
 #include "drake/bindings/pydrake/common/eigen_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
+#include "drake/bindings/pydrake/solvers/solvers_py.h"
 #include "drake/bindings/pydrake/symbolic_types_pybind.h"
 #include "drake/solvers/choose_best_solver.h"
 #include "drake/solvers/common_solver_option.h"
@@ -25,7 +27,6 @@ namespace pydrake {
 
 using solvers::Binding;
 using solvers::BoundingBoxConstraint;
-using solvers::CommonSolverOption;
 using solvers::Constraint;
 using solvers::Cost;
 using solvers::EvaluatorBase;
@@ -243,7 +244,7 @@ class PySolverInterface : public py::wrapper<solvers::SolverInterface> {
 
   void Solve(const solvers::MathematicalProgram& prog,
       const std::optional<Eigen::VectorXd>& initial_guess,
-      const std::optional<solvers::SolverOptions>& solver_options,
+      const std::optional<SolverOptions>& solver_options,
       solvers::MathematicalProgramResult* result) const override {
     PYBIND11_OVERLOAD_PURE(void, solvers::SolverInterface, Solve, prog,
         initial_guess, solver_options, result);
@@ -303,7 +304,7 @@ void BindSolverInterfaceAndFlags(py::module m) {
           [](const SolverInterface& self,
               const solvers::MathematicalProgram& prog,
               const std::optional<Eigen::VectorXd>& initial_guess,
-              const std::optional<solvers::SolverOptions>& solver_options,
+              const std::optional<SolverOptions>& solver_options,
               solvers::MathematicalProgramResult* result) {
             self.Solve(prog, initial_guess, solver_options, result);
           },
@@ -384,61 +385,6 @@ void BindSolverInterfaceAndFlags(py::module m) {
       .value("kSnopt", SolverType::kSnopt, doc.SolverType.kSnopt.doc)
       .value("kUnrevisedLemke", SolverType::kUnrevisedLemke,
           doc.SolverType.kUnrevisedLemke.doc);
-
-  // TODO(jwnimmer-tri) Bind the accessors for SolverOptions.
-  py::class_<SolverOptions>(m, "SolverOptions", doc.SolverOptions.doc)
-      .def(py::init<>(), doc.SolverOptions.ctor.doc)
-      .def("SetOption",
-          py::overload_cast<const SolverId&, const std::string&, double>(
-              &SolverOptions::SetOption),
-          py::arg("solver_id"), py::arg("solver_option"),
-          py::arg("option_value"),
-          doc.SolverOptions.SetOption.doc_double_option)
-      .def("SetOption",
-          py::overload_cast<const SolverId&, const std::string&, int>(
-              &SolverOptions::SetOption),
-          py::arg("solver_id"), py::arg("solver_option"),
-          py::arg("option_value"), doc.SolverOptions.SetOption.doc_int_option)
-      .def("SetOption",
-          py::overload_cast<const SolverId&, const std::string&,
-              const std::string&>(&SolverOptions::SetOption),
-          py::arg("solver_id"), py::arg("solver_option"),
-          py::arg("option_value"), doc.SolverOptions.SetOption.doc_str_option)
-      .def("SetOption",
-          py::overload_cast<CommonSolverOption, SolverOptions::OptionValue>(
-              &SolverOptions::SetOption),
-          py::arg("key"), py::arg("value"),
-          doc.SolverOptions.SetOption.doc_common_option)
-      .def(
-          "GetOptions",
-          [](const SolverOptions& solver_options, SolverId solver_id) {
-            py::dict out;
-            py::object update = out.attr("update");
-            update(solver_options.GetOptionsDouble(solver_id));
-            update(solver_options.GetOptionsInt(solver_id));
-            update(solver_options.GetOptionsStr(solver_id));
-            return out;
-          },
-          py::arg("solver_id"), doc.SolverOptions.GetOptionsDouble.doc)
-      .def("common_solver_options", &SolverOptions::common_solver_options,
-          doc.SolverOptions.common_solver_options.doc)
-      .def("get_print_file_name", &SolverOptions::get_print_file_name,
-          doc.SolverOptions.get_print_file_name.doc)
-      .def("get_print_to_console", &SolverOptions::get_print_to_console,
-          doc.SolverOptions.get_print_to_console.doc)
-      .def("__repr__", [](const SolverOptions&) -> std::string {
-        // This is a minimal implementation that serves to avoid displaying
-        // memory addresses in pydrake docs and help strings. In the future,
-        // we should enhance this to provide more details.
-        return "<SolverOptions>";
-      });
-
-  py::enum_<CommonSolverOption>(
-      m, "CommonSolverOption", doc.CommonSolverOption.doc)
-      .value("kPrintFileName", CommonSolverOption::kPrintFileName,
-          doc.CommonSolverOption.kPrintFileName.doc)
-      .value("kPrintToConsole", CommonSolverOption::kPrintToConsole,
-          doc.CommonSolverOption.kPrintToConsole.doc);
 }
 
 void BindMathematicalProgram(py::module m) {
@@ -1381,27 +1327,37 @@ void BindMathematicalProgram(py::module m) {
       .def("SetSolverOption", &SetSolverOptionBySolverType<string>,
           doc.MathematicalProgram.SetSolverOption.doc_string_option)
       .def("SetSolverOptions", &MathematicalProgram::SetSolverOptions,
-          doc.MathematicalProgram.SetSolverOptions.doc)
-      // TODO(m-chaturvedi) Add Pybind11 documentation.
+          doc.MathematicalProgram.SetSolverOptions.doc);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  prog_cls  // BR
       .def("GetSolverOptions",
-          [](MathematicalProgram& prog, SolverId solver_id) {
-            py::dict out;
-            py::object update = out.attr("update");
-            update(prog.GetSolverOptionsDouble(solver_id));
-            update(prog.GetSolverOptionsInt(solver_id));
-            update(prog.GetSolverOptionsStr(solver_id));
-            return out;
-          })
+          WrapDeprecated(
+              doc.MathematicalProgram.GetSolverOptionsDouble.doc_deprecated,
+              [](MathematicalProgram& prog, SolverId solver_id) {
+                py::dict out;
+                py::object update = out.attr("update");
+                update(prog.GetSolverOptionsDouble(solver_id));
+                update(prog.GetSolverOptionsInt(solver_id));
+                update(prog.GetSolverOptionsStr(solver_id));
+                return out;
+              }),
+          doc.MathematicalProgram.GetSolverOptionsDouble.doc_deprecated)
       .def("GetSolverOptions",
-          [](MathematicalProgram& prog, SolverType solver_type) {
-            py::dict out;
-            py::object update = out.attr("update");
-            const SolverId id = SolverTypeConverter::TypeToId(solver_type);
-            update(prog.GetSolverOptionsDouble(id));
-            update(prog.GetSolverOptionsInt(id));
-            update(prog.GetSolverOptionsStr(id));
-            return out;
-          })
+          WrapDeprecated(
+              doc.MathematicalProgram.GetSolverOptionsDouble.doc_deprecated,
+              [](MathematicalProgram& prog, SolverType solver_type) {
+                py::dict out;
+                py::object update = out.attr("update");
+                const SolverId id = SolverTypeConverter::TypeToId(solver_type);
+                update(prog.GetSolverOptionsDouble(id));
+                update(prog.GetSolverOptionsInt(id));
+                update(prog.GetSolverOptionsStr(id));
+                return out;
+              }),
+          doc.MathematicalProgram.GetSolverOptionsDouble.doc_deprecated);
+#pragma GCC diagnostic pop
+  prog_cls  // BR
       .def("generic_costs", &MathematicalProgram::generic_costs,
           doc.MathematicalProgram.generic_costs.doc)
       .def("generic_constraints", &MathematicalProgram::generic_constraints,
@@ -1648,6 +1604,11 @@ namespace internal {
 void DefineSolversMathematicalProgram(py::module m) {
   BindPyFunctionConstraint(m);
   BindSolverInterfaceAndFlags(m);
+
+  // TODO(jwnimmer-tri) After we've split out more groups of bindings, this
+  // should move to a more appropriate order of operations.
+  DefineSolversOptions(m);
+
   BindMathematicalProgram(m);
   BindFreeFunctions(m);
 }

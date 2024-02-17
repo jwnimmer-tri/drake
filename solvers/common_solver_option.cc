@@ -4,18 +4,16 @@
 
 namespace drake {
 namespace solvers {
-std::ostream& operator<<(std::ostream& os,
-                         CommonSolverOption common_solver_option) {
+
+std::string_view to_string(CommonSolverOption common_solver_option) {
   switch (common_solver_option) {
     case CommonSolverOption::kPrintFileName:
-      os << "kPrintFileName";
-      return os;
+      return "kPrintFileName";
     case CommonSolverOption::kPrintToConsole:
-      os << "kPrintToConsole";
-      return os;
-    default:
-      DRAKE_UNREACHABLE();
+      return "kPrintToConsole";
   }
+  DRAKE_UNREACHABLE();
 }
+
 }  // namespace solvers
 }  // namespace drake
