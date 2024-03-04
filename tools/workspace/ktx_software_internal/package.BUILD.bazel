@@ -1,0 +1,22 @@
+# -*- bazel -*-
+
+load("@drake//tools/skylark:py.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:private"])
+
+# Apache-2.0 for first-party code.
+# Various LICENSES/* for third-party code.
+licenses(["notice"])
+
+py_binary(
+    name = "ktx",
+    srcs = ["@drake//tools/workspace/ktx_software_internal:ktx.py"],
+    main = "@drake//tools/workspace/ktx_software_internal:ktx.py",
+    data = glob([
+        "*Linux-x86_64/bin/ktx",
+        "*Linux-arm64/bin/ktx",
+    ]),
+    deps = [
+        "@bazel_tools//tools/python/runfiles",
+    ],
+)

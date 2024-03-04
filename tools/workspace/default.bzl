@@ -41,6 +41,7 @@ load("//tools/workspace/intel_realsense_ros_internal:repository.bzl", "intel_rea
 load("//tools/workspace/ipopt:repository.bzl", "ipopt_repository")
 load("//tools/workspace/ipopt_internal_fromsource:repository.bzl", "ipopt_internal_fromsource_repository")  # noqa
 load("//tools/workspace/ipopt_internal_pkgconfig:repository.bzl", "ipopt_internal_pkgconfig_repository")  # noqa
+load("//tools/workspace/ktx_software_internal:repository.bzl", "ktx_software_internal_repository")  # noqa
 load("//tools/workspace/lapack:repository.bzl", "lapack_repository")
 load("//tools/workspace/lcm:repository.bzl", "lcm_repository")
 load("//tools/workspace/libblas:repository.bzl", "libblas_repository")
@@ -199,6 +200,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         ipopt_internal_fromsource_repository(name = "ipopt_internal_fromsource", mirrors = mirrors)  # noqa
     if "ipopt_internal_pkgconfig" not in excludes:
         ipopt_internal_pkgconfig_repository(name = "ipopt_internal_pkgconfig")
+    if "ktx_software_internal" not in excludes:
+        ktx_software_internal_repository(name = "ktx_software_internal", mirrors = mirrors)  # noqa
     if "lapack" not in excludes:
         lapack_repository(name = "lapack")
     if "lcm" not in excludes:
