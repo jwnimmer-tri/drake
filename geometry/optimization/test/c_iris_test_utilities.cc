@@ -41,9 +41,7 @@ CIrisToyRobotTest::CIrisToyRobotTest() {
 
   // C-IRIS only considers robot kinematics, not dynamics. So we use an
   // arbitrary inertia.
-  const multibody::SpatialInertia<double> spatial_inertia(
-      1, Eigen::Vector3d::Zero(),
-      multibody::UnitInertia<double>(0.01, 0.01, 0.01));
+  const auto spatial_inertia = multibody::SpatialInertia<double>::MakeUnitary();
 
   // body0
   body_indices_.push_back(
@@ -170,9 +168,7 @@ CIrisRobotPolytopicGeometryTest::CIrisRobotPolytopicGeometryTest() {
 
   // C-IRIS only considers robot kinematics, not dynamics. So we use an
   // arbitrary inertia.
-  const multibody::SpatialInertia<double> spatial_inertia(
-      1, Eigen::Vector3d::Zero(),
-      multibody::UnitInertia<double>(0.01, 0.01, 0.01, 0, 0, 0));
+  const auto spatial_inertia = multibody::SpatialInertia<double>::MakeUnitary();
 
   auto add_body = [this, &spatial_inertia, &proximity_properties](
                       const math::RigidTransformd& X_PF,

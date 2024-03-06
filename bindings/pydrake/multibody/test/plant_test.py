@@ -790,6 +790,7 @@ class TestPlant(unittest.TestCase):
         SpatialInertia.MakeFromCentralInertia(
             mass=1.3, p_PScm_E=[0.1, -0.2, 0.3],
             I_SScm_E=RotationalInertia(Ixx=2.0, Iyy=2.3, Izz=2.4))
+        SpatialInertia.MakeUnitary()
         SpatialInertia.SolidBoxWithDensity(
             density=1000, lx=0.1, ly=0.2, lz=0.3)
         SpatialInertia.SolidBoxWithMass(

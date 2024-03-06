@@ -20,7 +20,7 @@ using Eigen::Vector3d;
 GTEST_TEST(PointSourceForceFieldTest, EvaluateAt) {
   MultibodyPlant<double> plant(0.01);
   const RigidBody<double>& box = plant.AddRigidBody(
-      "box", SpatialInertia<double>::SolidCubeWithMass(1.0, 0.1));
+      "box", SpatialInertia<double>::MakeUnitary());
   /* The fixed offset from the body origin B to the point source of
    the force field C. */
   const Vector3d p_BC(0, 0, 0.123);

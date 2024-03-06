@@ -157,7 +157,7 @@ GTEST_TEST(InverseKinematicsTest, ConstructorLockedJoints) {
 
   // Create a plant with four bodies.
   const auto& world = plant.world_body();
-  const auto M = SpatialInertia<double>::SolidCubeWithMass(1.0, 0.1);
+  const auto M = SpatialInertia<double>::MakeUnitary();
   const auto& body1 = plant.AddRigidBody("body1", M);
   const auto& body2 = plant.AddRigidBody("body2", M);
   const auto& body3 = plant.AddRigidBody("body3", M);

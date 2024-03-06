@@ -48,9 +48,7 @@ class KinematicTreeTest : public ::testing::Test {
   void AddBodyWithJoint(const std::string& body_name,
                         const BodyIndex parent_index,
                         const std::string& joint_name, Args&&... args) {
-    const SpatialInertia<double> spatial_inertia(
-        1, Eigen::Vector3d::Zero(),
-        UnitInertia<double>(0.01, 0.01, 0.01, 0, 0, 0));
+    const auto spatial_inertia = SpatialInertia<double>::MakeUnitary();
     body_indices_.push_back(
         plant_->AddRigidBody(body_name, spatial_inertia).index());
     plant_->AddJoint<JointType>(joint_name, plant_->get_body(parent_index),

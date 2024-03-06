@@ -295,9 +295,7 @@ class KinematicTreeTest : public testing::Test {
                         const std::optional<math::RigidTransform<double>>& X_PF,
                         const std::optional<math::RigidTransform<double>>& X_BM,
                         Args&&... args) {
-    const SpatialInertia<double> spatial_inertia(
-        1, Eigen::Vector3d::Zero(),
-        UnitInertia<double>(0.01, 0.01, 0.01, 0, 0, 0));
+    const auto spatial_inertia = SpatialInertia<double>::MakeUnitary();
     body_indices_.push_back(
         plant_->AddRigidBody(body_name, spatial_inertia).index());
     plant_->AddJoint<JointType>(joint_name, plant_->get_body(parent_index),

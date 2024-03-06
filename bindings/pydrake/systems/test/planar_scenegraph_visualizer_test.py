@@ -105,9 +105,7 @@ class TestPlanarSceneGraphVisualizer(unittest.TestCase):
         box_shape = Box(1., 2., 3.)
         # This rigid body will be added to the world model instance since
         # the model instance is not specified.
-        box_body = mbp.AddRigidBody("box", SpatialInertia(
-            mass=1.0, p_PScm_E=np.array([0., 0., 0.]),
-            G_SP_E=UnitInertia(1.0, 1.0, 1.0)))
+        box_body = mbp.AddRigidBody("box", SpatialInertia.MakeUnitary())
         mbp.WeldFrames(world_body.body_frame(), box_body.body_frame(),
                        RigidTransform())
         mbp.RegisterVisualGeometry(
@@ -146,9 +144,7 @@ class TestPlanarSceneGraphVisualizer(unittest.TestCase):
             world_body = mbp.world_body()
 
             mesh_shape = Mesh(filename, scale=scale)
-            mesh_body = mbp.AddRigidBody("mesh", SpatialInertia(
-                mass=1.0, p_PScm_E=np.array([0., 0., 0.]),
-                G_SP_E=UnitInertia(1.0, 1.0, 1.0)))
+            mesh_body = mbp.AddRigidBody("mesh", SpatialInertia.MakeUnitary())
             mbp.WeldFrames(world_body.body_frame(), mesh_body.body_frame(),
                            RigidTransform())
             mbp.RegisterVisualGeometry(

@@ -87,7 +87,7 @@ class DeformableFixedConstraintTest : public ::testing::Test {
     rigid_body_index_ =
         plant_
             ->AddRigidBody("rigid_box",
-                           SpatialInertia<double>::SolidCubeWithMass(1.0, 0.2))
+                           SpatialInertia<double>::MakeUnitary())
             .index();
     IllustrationProperties illustration_props;
     illustration_props.AddProperty("phong", "diffuse",

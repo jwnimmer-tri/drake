@@ -59,10 +59,7 @@ GTEST_TEST(IntegratorTest, AccuracyEstAndErrorControl) {
 GTEST_TEST(IntegratorTest, RigidBody) {
   // Instantiate a multibody plant consisting of a single rigid body.
   multibody::MultibodyPlant<double> plant(0.0);
-  const double radius = 0.05;   // m
-  const double mass = 0.1;      // kg
-  multibody::SpatialInertia<double> M_BBcm =
-      multibody::SpatialInertia<double>::SolidSphereWithMass(mass, radius);
+  const auto M_BBcm = multibody::SpatialInertia<double>::MakeUnitary();
   plant.AddRigidBody("Ball", M_BBcm);
   plant.Finalize();
 

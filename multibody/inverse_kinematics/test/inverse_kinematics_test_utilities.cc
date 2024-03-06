@@ -63,14 +63,8 @@ TwoFreeBodiesConstraintTest::TwoFreeBodiesConstraintTest() {
 
 template <typename T>
 void AddTwoFreeBodiesToPlant(MultibodyPlant<T>* model) {
-  const double mass{1};
-  const Eigen::Vector3d p_AoAcm_A(0, 0, 0);
-  const RotationalInertia<double> I_AAcm_A{0.001, 0.001, 0.001};
-  const SpatialInertia<double> M_AAo_A =
-      SpatialInertia<double>::MakeFromCentralInertia(mass, p_AoAcm_A, I_AAcm_A);
-
-  model->AddRigidBody("body1", M_AAo_A);
-  model->AddRigidBody("body2", M_AAo_A);
+  model->AddRigidBody("body1", SpatialInertia<double>::MakeUnitary());
+  model->AddRigidBody("body2", SpatialInertia<double>::MakeUnitary());
 }
 
 template <typename T>

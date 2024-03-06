@@ -55,8 +55,7 @@ def construct_environment(masses: typing.List, box_sizes: typing.List):
     builder = DiagramBuilder_[AutoDiffXd]()
     plant, scene_graph = AddMultibodyPlantSceneGraph(builder, 0.0)
     # Add the ground as a big box.
-    ground_box = plant.AddRigidBody(
-        "ground", SpatialInertia(1, np.array([0, 0, 0]), UnitInertia(1, 1, 1)))
+    ground_box = plant.AddRigidBody("ground", MakeUnitary(())
     X_WG = RigidTransform([0, 0, -0.05])
     ground_geometry_id = plant.RegisterCollisionGeometry(
         ground_box, RigidTransform(), Box(10, 10, 0.1), "ground",

@@ -53,8 +53,7 @@ class DeformableCollisionFilterTest : public ::testing::Test {
      deformable bodies. */
     proximity_prop.AddProperty(geometry::internal::kHydroGroup,
                                geometry::internal::kRezHint, 1.0);
-    const SpatialInertia<double> M_Bcm =
-        SpatialInertia<double>::SolidCubeWithMass(1.0, 1.0);
+    const auto M_Bcm = SpatialInertia<double>::MakeUnitary();
     const RigidBody<double>& welded_body =
         plant_->AddRigidBody("welded body", M_Bcm);
     plant_->AddJoint<WeldJoint>("weld joint", plant_->world_body(),

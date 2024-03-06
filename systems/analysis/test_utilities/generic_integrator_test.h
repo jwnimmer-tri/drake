@@ -18,10 +18,7 @@ struct GenericIntegratorTest : public ::testing::Test {
     plant_ = std::make_unique<multibody::MultibodyPlant<double>>(0.0);
 
     // Add a single free body to the world.
-    const double radius = 0.05;  // m
-    const double mass = 0.1;     // kg
-    multibody::SpatialInertia<double> M_BBcm =
-        multibody::SpatialInertia<double>::SolidSphereWithMass(mass, radius);
+    const auto M_BBcm = multibody::SpatialInertia<double>::MakeUnitary();
 
     plant_->AddRigidBody("Ball", M_BBcm);
     plant_->Finalize();

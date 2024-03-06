@@ -37,13 +37,8 @@ std::unique_ptr<multibody::MultibodyPlant<double>> ConstructKuka() {
 }
 
 std::unique_ptr<MultibodyPlant<double>> ConstructSingleBody() {
-  const double mass{1};
-  const Eigen::Vector3d p_AoAcm_A(0, 0, 0);
-  const RotationalInertia<double> I_AAcm_A{0.001, 0.001, 0.001};
-  const SpatialInertia<double> M_AAo_A =
-      SpatialInertia<double>::MakeFromCentralInertia(mass, p_AoAcm_A, I_AAcm_A);
   auto plant = std::make_unique<MultibodyPlant<double>>(0.1);
-  plant->AddRigidBody("body1", M_AAo_A);
+  plant->AddRigidBody("body1", SpatialInertia<double>::MakeUnitary());
   plant->Finalize();
   return plant;
 }

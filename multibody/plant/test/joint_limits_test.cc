@@ -58,10 +58,6 @@ GTEST_TEST(JointLimitsTest, PrismaticJointConvergenceTest) {
   // Length of the simulation, in seconds.
   const double simulation_time = 1.0;
 
-  // Plant's parameters.
-  const double mass = 1.0;      // Mass of the body, [kg]
-  const double box_size = 0.3;  // The size of the box shaped body, [m].
-
   // At steady state after one second of simulation, we expect the velocity to
   // be zero within this absolute tolerance.
   const double kVelocityTolerance = 1.0e-12;  // in m/s.
@@ -69,9 +65,8 @@ GTEST_TEST(JointLimitsTest, PrismaticJointConvergenceTest) {
   for (double time_step : {2.5e-4, 5.0e-4, 1.0e-3}) {
     MultibodyPlant<double> plant(time_step);
     plant.mutable_gravity_field().set_gravity_vector(Vector3<double>::Zero());
-    const SpatialInertia<double> M_B =
-        SpatialInertia<double>::SolidCubeWithMass(mass, box_size);
-    const RigidBody<double>& body = plant.AddRigidBody("Body", M_B);
+    const RigidBody<double>& body =
+        plant.AddRigidBody("Body", SpatialInertia<double>::MakeUnitary());
     const PrismaticJoint<double>& slider = plant.AddJoint<PrismaticJoint>(
         "Slider", plant.world_body(), std::nullopt, body, std::nullopt,
         Vector3<double>::UnitZ(), 0.0 /* lower limit */, 0.1 /* upper limit */,

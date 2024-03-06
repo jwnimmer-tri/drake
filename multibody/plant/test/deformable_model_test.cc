@@ -271,7 +271,7 @@ TEST_F(DeformableModelTest, AddFixedConstraint) {
   DeformableBodyId deformable_id = RegisterSphere(100, X_WA);
   ASSERT_EQ(deformable_model_ptr_->GetFemModel(deformable_id).num_nodes(), 7);
   const RigidBody<double>& rigid_body =
-      plant_->AddRigidBody("box", SpatialInertia<double>());
+      plant_->AddRigidBody("box", SpatialInertia<double>::MakeUnitary());
   geometry::Box box(1.0, 1.0, 1.0);
   const RigidTransformd X_BA(Vector3d(-2, 0, 0));
   const RigidTransformd X_BG(Vector3d(-1, 0, 0));

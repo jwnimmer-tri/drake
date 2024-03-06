@@ -514,9 +514,7 @@ GTEST_TEST(DistanceToHalfspace, Test) {
                      &proximity_properties);
   // C-IRIS only considers robot kinematics, not dynamics. So we use an
   // arbitrary inertia.
-  const multibody::SpatialInertia<double> spatial_inertia(
-      1, Eigen::Vector3d::Zero(),
-      multibody::UnitInertia<double>(0.01, 0.01, 0.01, 0, 0, 0));
+  const auto spatial_inertia = multibody::SpatialInertia<double>::MakeUnitary();
 
   std::vector<multibody::BodyIndex> body_indices;
   for (int i = 0; i < 5; ++i) {
