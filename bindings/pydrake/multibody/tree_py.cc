@@ -1392,6 +1392,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
         .def_static("MakeFromCentralInertia", &Class::MakeFromCentralInertia,
             py::arg("mass"), py::arg("p_PScm_E"), py::arg("I_SScm_E"),
             cls_doc.MakeFromCentralInertia.doc)
+        .def_static("MakeUnitary", &Class::MakeUnitary, cls_doc.MakeUnitary.doc)
         .def_static("SolidBoxWithDensity", &Class::SolidBoxWithDensity,
             py::arg("density"), py::arg("lx"), py::arg("ly"), py::arg("lz"),
             cls_doc.SolidBoxWithDensity.doc)

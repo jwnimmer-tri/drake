@@ -132,9 +132,9 @@ class SpatialInertia {
   static SpatialInertia<T> MakeFromCentralInertia(const T& mass,
       const Vector3<T>& p_PScm_E, const RotationalInertia<T>& I_SScm_E);
 
-  /// (Internal use only) Creates a spatial inertia whose mass is 1, position
-  /// vector to center of mass is zero, and whose rotational inertia has
-  /// moments of inertia of 1 and products of inertia of 0.
+  /// Creates a spatial inertia whose mass is 1, position vector to center of
+  /// mass is zero, and whose rotational inertia has moments of inertia of 1 and
+  /// products of inertia of 0.
   static SpatialInertia<T> MakeUnitary();
 
   /// Creates the spatial inertia for a particle Q of mass m about a point P.
