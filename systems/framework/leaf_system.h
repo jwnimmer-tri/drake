@@ -1761,6 +1761,18 @@ class LeafSystem : public System<T> {
       SystemConstraintBounds bounds,
       std::string description);
 
+#ifndef DRAKE_DOXYGEN_CXX
+  // Bring these into scope, to avoid a lot of extra syntax.
+  using GraphvizFragment = typename System<T>::GraphvizFragment;
+  using GraphvizFragmentParams = typename System<T>::GraphvizFragmentParams;
+#endif
+
+  /// The NVI implementation of SystemBase::GetGraphvizFragment() for subclasses
+  /// to override if desired. The default behavior should be sufficient in most
+  /// cases.
+  GraphvizFragment DoGetGraphvizFragment(
+      const GraphvizFragmentParams& params) const override;
+
  private:
   using SystemBase::NextInputPortName;
   using SystemBase::NextOutputPortName;

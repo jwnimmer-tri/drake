@@ -1047,6 +1047,33 @@ void LeafSystem<T>::MaybeDeclareVectorBaseInequalityConstraint(
       kind + " of type " + NiceTypeName::Get(model_vector));
 }
 
+namespace {
+std::string RemoveTemplates(std::string type_name) {
+  const auto offset = type_name.find('<');
+  DRAKE_DEMAND(offset != std::string::npos);
+  type_name.erase(offset);
+  return type_name;
+}
+}  // namespace
+
+template <typename T>
+LeafSystem<T>::GraphvizFragment LeafSystem<T>::DoGetGraphvizFragment(
+    const GraphvizFragmentParams& params) const {
+  GraphvizFragmentParams amended_params(params);
+  for (const auto& [timing, events] : this->MapPeriodicEventsByTiming()) {
+    std::vector<std::string> types;
+    for (const auto& event : events) {
+      std::string type =
+          NiceTypeName::RemoveNamespaces(NiceTypeName::Get(*event));
+      types.push_back(RemoveTemplates(type));
+    }
+    amended_params.header_lines.push_back(
+        fmt::format("periodic({}, {}): {}", timing.period_sec(),
+                    timing.offset_sec(), fmt::join(types, ", ")));
+  }
+  return SystemBase::DoGetGraphvizFragment(amended_params);
+}
+
 }  // namespace systems
 }  // namespace drake
 
