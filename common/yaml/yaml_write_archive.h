@@ -102,8 +102,8 @@ class YamlWriteArchive final {
 
   // This version applies when Serialize is member function.
   template <typename Serializable>
-  auto DoAccept(Serializable* serializable, int32_t)
-      -> decltype(serializable->Serialize(this)) {
+  auto DoAccept(Serializable* serializable,
+                int32_t) -> decltype(serializable->Serialize(this)) {
     return serializable->Serialize(this);
   }
 

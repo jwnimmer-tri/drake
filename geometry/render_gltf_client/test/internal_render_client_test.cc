@@ -74,8 +74,7 @@ class RenderClientTest : public ::testing::Test {
   // Creates the given filename (and returns the filename for convenience).
   std::string Touch(const std::string& filename) {
     std::ofstream stream{filename};
-    stream << "## RenderClientTest sample file."
-           << "\n";
+    stream << "## RenderClientTest sample file." << "\n";
     DRAKE_DEMAND(stream.good());
     return filename;
   }

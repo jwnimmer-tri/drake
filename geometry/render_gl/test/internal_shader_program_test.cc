@@ -173,14 +173,13 @@ class ShaderProgramTest : public ::testing::Test {
         p1.magic_number_ != p2.magic_number_) {
       return ::testing::AssertionFailure()
              << "Shader programs didn't match"
-             << "\n  p1:"
-             << "\n    shader id: " << p1.id_
+             << "\n  p1:" << "\n    shader id: " << p1.id_
              << "\n    OpenGl id: " << p1.gl_id_
              << "\n    projection matrix location: "
              << p1.projection_matrix_loc_
              << "\n    model view matrix location: " << p1.model_view_loc_
-             << "\n    magic number: " << p1.magic_number_ << "\n  p2:"
-             << "\n    shader id: " << p2.id_
+             << "\n    magic number: " << p1.magic_number_
+             << "\n  p2:" << "\n    shader id: " << p2.id_
              << "\n    OpenGl id: " << p2.gl_id_
              << "\n    projection matrix location: "
              << p2.projection_matrix_loc_

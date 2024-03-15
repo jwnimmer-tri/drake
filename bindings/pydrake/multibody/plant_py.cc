@@ -216,7 +216,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
     cls  // BR
         .def(
             "AddJoint",
-            [](Class * self, std::unique_ptr<Joint<T>> joint) -> auto& {
+            [](Class* self, std::unique_ptr<Joint<T>> joint) -> auto& {
               return self->AddJoint(std::move(joint));
             },
             py::arg("joint"), py_rvp::reference_internal,
@@ -227,7 +227,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             cls_doc.AddJointActuator.doc)
         .def(
             "AddFrame",
-            [](Class * self, std::unique_ptr<Frame<T>> frame) -> auto& {
+            [](Class* self, std::unique_ptr<Frame<T>> frame) -> auto& {
               return self->AddFrame(std::move(frame));
             },
             py_rvp::reference_internal, py::arg("frame"), cls_doc.AddFrame.doc)
@@ -238,7 +238,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             cls_doc.RenameModelInstance.doc)
         .def(
             "AddRigidBody",
-            [](Class * self, const std::string& name,
+            [](Class* self, const std::string& name,
                 const SpatialInertia<double>& s) -> auto& {
               return self->AddRigidBody(name, s);
             },
@@ -255,7 +255,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             py_rvp::reference_internal, cls_doc.WeldFrames.doc)
         .def(
             "AddForceElement",
-            [](Class * self,
+            [](Class* self,
                 std::unique_ptr<ForceElement<T>> force_element) -> auto& {
               return self->template AddForceElement<ForceElement>(
                   std::move(force_element));
@@ -829,7 +829,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             py_rvp::reference_internal, cls_doc.GetJointByName.doc)
         .def(
             "GetMutableJointByName",
-            [](Class * self, string_view name,
+            [](Class* self, string_view name,
                 std::optional<ModelInstanceIndex> model_instance) -> auto& {
               return self->GetMutableJointByName(name, model_instance);
             },

@@ -801,9 +801,8 @@ TEST_F(RenderEngineGlTest, TransparentSphereTest) {
   const RgbaColor at_pixel(color.at(inlier.x, inlier.y));
   EXPECT_TRUE(CompareColor(expect_linear, color, inlier) ||
               CompareColor(expect_quad, color, inlier))
-      << "Expected one of two colors:"
-      << "\n  " << expect_linear << " or " << expect_quad << "."
-      << "\n  Found " << at_pixel;
+      << "Expected one of two colors:" << "\n  " << expect_linear << " or "
+      << expect_quad << "." << "\n  Found " << at_pixel;
 }
 
 // Performs the shape-centered-in-the-image test with a deformable mesh. In

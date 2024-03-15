@@ -62,30 +62,30 @@ void CheckOrdering(const vector<Expression>& expressions) {
       if (i < j) {
         EXPECT_PRED2(ExprLess, expressions[i], expressions[j])
             << "(Expressions[" << i << "] = " << expressions[i] << ")"
-            << " is not less than "
-            << "(Expressions[" << j << "] = " << expressions[j] << ")";
+            << " is not less than " << "(Expressions[" << j
+            << "] = " << expressions[j] << ")";
         EXPECT_PRED2(ExprNotLess, expressions[j], expressions[i])
             << "(Expressions[" << j << "] = " << expressions[j] << ")"
-            << " is less than "
-            << "(Expressions[" << i << "] = " << expressions[i] << ")";
+            << " is less than " << "(Expressions[" << i
+            << "] = " << expressions[i] << ")";
       } else if (i > j) {
         EXPECT_PRED2(ExprLess, expressions[j], expressions[i])
             << "(Expressions[" << j << "] = " << expressions[j] << ")"
-            << " is not less than "
-            << "(Expressions[" << i << "] = " << expressions[i] << ")";
+            << " is not less than " << "(Expressions[" << i
+            << "] = " << expressions[i] << ")";
         EXPECT_PRED2(ExprNotLess, expressions[i], expressions[j])
             << "(Expressions[" << i << "] = " << expressions[i] << ")"
-            << " is less than "
-            << "(Expressions[" << j << "] = " << expressions[j] << ")";
+            << " is less than " << "(Expressions[" << j
+            << "] = " << expressions[j] << ")";
       } else {
         EXPECT_PRED2(ExprNotLess, expressions[i], expressions[j])
             << "(Expressions[" << i << "] = " << expressions[i] << ")"
-            << " is less than "
-            << "(Expressions[" << j << "] = " << expressions[j] << ")";
+            << " is less than " << "(Expressions[" << j
+            << "] = " << expressions[j] << ")";
         EXPECT_PRED2(ExprNotLess, expressions[j], expressions[i])
             << "(Expressions[" << j << "] = " << expressions[j] << ")"
-            << " is less than "
-            << "(Expressions[" << i << "] = " << expressions[i] << ")";
+            << " is less than " << "(Expressions[" << i
+            << "] = " << expressions[i] << ")";
       }
     }
   }

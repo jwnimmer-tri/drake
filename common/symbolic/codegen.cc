@@ -207,8 +207,7 @@ void CodeGenDenseData(const string& function_name,
   (*os) << "void " << function_name << "(const double* p, double* m) {\n";
   const CodeGenVisitor visitor{parameters};
   for (int i = 0; i < size; ++i) {
-    (*os) << "    "
-          << "m[" << i << "] = " << visitor.CodeGen(data[i]) << ";\n";
+    (*os) << "    " << "m[" << i << "] = " << visitor.CodeGen(data[i]) << ";\n";
   }
   // Add footer for the main function.
   (*os) << "}\n";

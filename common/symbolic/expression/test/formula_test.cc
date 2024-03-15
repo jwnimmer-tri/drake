@@ -55,31 +55,31 @@ void CheckOrdering(const vector<Formula>& formulas) {
       if (i < j) {
         EXPECT_PRED2(FormulaLess, formulas[i], formulas[j])
             << "(Formulas[" << i << "] = " << formulas[i] << ")"
-            << " is not less than "
-            << "(Formulas[" << j << "] = " << formulas[j] << ")";
+            << " is not less than " << "(Formulas[" << j
+            << "] = " << formulas[j] << ")";
         EXPECT_PRED2(FormulaNotLess, formulas[j], formulas[i])
             << "(Formulas[" << j << "] = " << formulas[j] << ")"
-            << " is less than "
-            << "(Formulas[" << i << "] = " << formulas[i] << ")";
+            << " is less than " << "(Formulas[" << i << "] = " << formulas[i]
+            << ")";
       } else if (i > j) {
         EXPECT_PRED2(FormulaLess, formulas[j], formulas[i])
             << "(Formulas[" << j << "] = " << formulas[j] << ")"
-            << " is not less than "
-            << "(Formulas[" << i << "] = " << formulas[i] << ")";
+            << " is not less than " << "(Formulas[" << i
+            << "] = " << formulas[i] << ")";
         EXPECT_PRED2(FormulaNotLess, formulas[i], formulas[j])
             << "(Formulas[" << i << "] = " << formulas[i] << ")"
-            << " is less than "
-            << "(Formulas[" << j << "] = " << formulas[j] << ")";
+            << " is less than " << "(Formulas[" << j << "] = " << formulas[j]
+            << ")";
       } else {
         // i == j
         EXPECT_PRED2(FormulaNotLess, formulas[i], formulas[j])
             << "(Formulas[" << i << "] = " << formulas[i] << ")"
-            << " is less than "
-            << "(Formulas[" << j << "] = " << formulas[j] << ")";
+            << " is less than " << "(Formulas[" << j << "] = " << formulas[j]
+            << ")";
         EXPECT_PRED2(FormulaNotLess, formulas[j], formulas[i])
             << "(Formulas[" << j << "] = " << formulas[j] << ")"
-            << " is less than "
-            << "(Formulas[" << i << "] = " << formulas[i] << ")";
+            << " is less than " << "(Formulas[" << i << "] = " << formulas[i]
+            << ")";
       }
     }
   }

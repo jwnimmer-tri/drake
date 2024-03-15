@@ -585,15 +585,13 @@ void CharacterizeResultTest<T>::RunCharacterization(
     constexpr double cutoff = 4 * std::numeric_limits<double>::epsilon();
     if (query.error > cutoff) {
       EXPECT_GT(*worst_error, query.error / 4)
-          << "Expected error is too big!"
-          << "\n  " << worst_config->description
+          << "Expected error is too big!" << "\n  " << worst_config->description
           << "\n    Expected error: " << query.error
           << "\n    Observed error: " << (*worst_error)
           << "\n    For distance: " << worst_config->signed_distance;
     }
     EXPECT_LE(*worst_error, query.error)
-        << "Expected error is too small!"
-        << "\n  " << worst_config->description
+        << "Expected error is too small!" << "\n  " << worst_config->description
         << "\n    Expected error: " << query.error
         << "\n    Observed error: " << (*worst_error)
         << "\n    For distance: " << worst_config->signed_distance;

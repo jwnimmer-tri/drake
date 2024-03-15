@@ -120,8 +120,8 @@ class YamlReadArchive final {
 
   // This version applies when Serialize is member method.
   template <typename Serializable>
-  auto DoAccept(Serializable* serializable, int32_t)
-      -> decltype(serializable->Serialize(this)) {
+  auto DoAccept(Serializable* serializable,
+                int32_t) -> decltype(serializable->Serialize(this)) {
     serializable->Serialize(this);
   }
 
