@@ -762,64 +762,107 @@ void RenderEngineGl::UpdateViewpoint(const RigidTransformd& X_WR) {
   X_CW_ = X_WR.inverse();
 }
 
-void RenderEngineGl::ImplementGeometry(const Box& box, void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const Box& box,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
   const int geometry = GetBox();
-  AddGeometryInstance(geometry, user_data,
-                      Vector3d(box.width(), box.depth(), box.height()));
+  const Vector3d scale(box.width(), box.depth(), box.height());
+  AddGeometryInstance(id, geometry, scale, properties, X_WG);
+  return true;
 }
 
-void RenderEngineGl::ImplementGeometry(const Capsule& capsule,
-                                       void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const Capsule& capsule,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
   const int resolution = 50;
   RenderMesh render_mesh =
       MakeCapsule(resolution, capsule.radius(), capsule.length());
 
   const int geometry = CreateGlGeometry(render_mesh);
 
-  AddGeometryInstance(geometry, user_data, Vector3d::Ones());
+  AddGeometryInstance(id, geometry, kUnitScale, properties, X_WG);
+  return true;
 }
 
-void RenderEngineGl::ImplementGeometry(const Convex& convex, void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const Convex& convex,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
+#if 0
   RegistrationData* data = static_cast<RegistrationData*>(user_data);
   CacheConvexHullMesh(convex, *data);
   // Note: CacheConvexHullMesh() either succeeds or throws.
   ImplementMeshesForFile(user_data, kUnitScale * convex.scale(),
                          convex.filename(), /* is_convex=*/true);
+#else
+  const Mesh likewise(convex.filename(), convex.scale());
+  return ImplementGeometry(id, likewise, properties, X_WG);
+#endif
 }
 
-void RenderEngineGl::ImplementGeometry(const Cylinder& cylinder,
-                                       void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const Cylinder& cylinder,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
   const int geometry = GetCylinder();
   const double r = cylinder.radius();
   const double l = cylinder.length();
-  AddGeometryInstance(geometry, user_data, Vector3d(r, r, l));
+  const Vector3d scale(r, r, l);
+  AddGeometryInstance(id, geometry, scale, properties, X_WG);
+  return true;
 }
 
-void RenderEngineGl::ImplementGeometry(const Ellipsoid& ellipsoid,
-                                       void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id,
+                                       const Ellipsoid& ellipsoid,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
   const int geometry = GetSphere();
-  AddGeometryInstance(geometry, user_data,
-                      Vector3d(ellipsoid.a(), ellipsoid.b(), ellipsoid.c()));
+  const Vector3d scale(ellipsoid.a(), ellipsoid.b(), ellipsoid.c());
+  AddGeometryInstance(id, geometry, scale, properties, X_WG);
+  return true;
 }
 
-void RenderEngineGl::ImplementGeometry(const HalfSpace&, void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const HalfSpace&,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
   const int geometry = GetHalfSpace();
-  AddGeometryInstance(geometry, user_data, kUnitScale);
+  AddGeometryInstance(id, geometry, kUnitScale, properties, X_WG);
+  return true;
 }
 
-void RenderEngineGl::ImplementGeometry(const Mesh& mesh, void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const Mesh& mesh,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
+#if 0
+  const bool accepted = GetMeshes(mesh.filename());
+  if (accepted) {
+    const Vector3d scale = Vector3d::Constant(mesh.scale());
+    ImplementMeshesForFile(id, mesh.filename(), scale, properties, X_WG);
+  }
+#else
   RegistrationData* data = static_cast<RegistrationData*>(user_data);
   CacheFileMeshesMaybe(mesh.filename(), data);
   if (data->accepted) {
     ImplementMeshesForFile(user_data, kUnitScale * mesh.scale(),
                            mesh.filename(), /* is_convex=*/false);
-  }
+#endif
+  return accepted;
 }
 
-void RenderEngineGl::ImplementGeometry(const Sphere& sphere, void* user_data) {
+bool RenderEngineGl::ImplementGeometry(GeometryId, const MeshcatCone&,
+                                       const PerceptionProperties&,
+                                       const math::RigidTransformd&) {
+  static const logging::Warn one_time(
+      "RenderEngineGl does not display MeshcatCone shapes");
+  return false;
+}
+
+bool RenderEngineGl::ImplementGeometry(GeometryId id, const Sphere& sphere,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG) {
   const int geometry = GetSphere();
   const double r = sphere.radius();
-  AddGeometryInstance(geometry, user_data, Vector3d(r, r, r));
+  const Vector3d scale(r, r, r);
+  AddGeometryInstance(id, geometry, scale, properties, X_WG);
+  return true;
 }
 
 void RenderEngineGl::InitGlState() {
@@ -838,6 +881,7 @@ void RenderEngineGl::InitGlState() {
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 }
 
+<<<<<<< HEAD
 void RenderEngineGl::ImplementMeshesForFile(void* user_data,
                                             const Vector3<double>& scale,
                                             const std::string& filename,
@@ -848,6 +892,14 @@ void RenderEngineGl::ImplementMeshesForFile(void* user_data,
     const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
     PerceptionProperties temp_props(data.properties);
 
+=======
+void RenderEngineGl::ImplementMeshesForFile(
+    GeometryId id, const std::string& filename, const Vector3<double>& scale,
+    const PerceptionProperties& properties, const math::RigidTransformd& X_WG) {
+  const std::string file_key = GetPathKey(filename);
+  for (const auto& gl_mesh : meshes_.at(file_key)) {
+    PerceptionProperties temp_props(properties);
+>>>>>>> 438ced4748 (WIP render_gl)
     RenderMaterial material;
     // If there is a material associated with the mesh, we will use it.
     // Otherwise, we recreate the fallback material based on user data and
@@ -856,14 +908,13 @@ void RenderEngineGl::ImplementMeshesForFile(void* user_data,
       material = gl_mesh.mesh_material.value();
     } else {
       material = MakeMeshFallbackMaterial(
-          data.properties, filename, parameters_.default_diffuse,
+          properties, filename, parameters_.default_diffuse,
           drake::internal::DiagnosticPolicy(), gl_mesh.uv_state);
     }
     temp_props.UpdateProperty("phong", "diffuse_map",
                               material.diffuse_map.string());
     temp_props.UpdateProperty("phong", "diffuse", material.diffuse);
-    RegistrationData temp_data{data.id, data.X_WG, temp_props};
-    AddGeometryInstance(gl_mesh.mesh_index, &temp_data, scale);
+    AddGeometryInstance(id, gl_mesh.mesh_index, scale, temp_props, X_WG);
   }
 }
 
@@ -871,9 +922,9 @@ bool RenderEngineGl::DoRegisterVisual(GeometryId id, const Shape& shape,
                                       const PerceptionProperties& properties,
                                       const RigidTransformd& X_WG) {
   opengl_context_->MakeCurrent();
-  RegistrationData data{id, RigidTransformd{X_WG}, properties};
-  shape.Reify(this, &data);
-  return data.accepted;
+  return shape.Visit([&](const auto& concrete_shape) {
+    return this->ImplementGeometry(id, concrete_shape, properties, X_WG);
+  });
 }
 
 bool RenderEngineGl::DoRegisterDeformableVisual(
@@ -892,8 +943,8 @@ bool RenderEngineGl::DoRegisterDeformableVisual(
                                    render_mesh.material.diffuse_map.string());
     mesh_properties.UpdateProperty("phong", "diffuse",
                                    render_mesh.material.diffuse);
-    RegistrationData data{id, RigidTransformd::Identity(), mesh_properties};
-    AddGeometryInstance(mesh_index, &data, kUnitScale);
+    AddGeometryInstance(id, mesh_index, kUnitScale, mesh_properties,
+                        RigidTransformd::Identity());
   }
   deformable_meshes_.emplace(id, std::move(gl_mesh_indices));
   return true;
@@ -1160,26 +1211,27 @@ void RenderEngineGl::DoRenderLabelImage(const ColorRenderCamera& camera,
   GetLabelImage(label_image_out, render_target);
 }
 
-void RenderEngineGl::AddGeometryInstance(int geometry_index, void* user_data,
-                                         const Vector3d& scale) {
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
+void RenderEngineGl::AddGeometryInstance(GeometryId id, int geometry_index,
+                                         const Vector3d& scale,
+                                         const PerceptionProperties& properties,
+                                         const math::RigidTransformd& X_WG) {
   std::optional<ShaderProgramData> color_data =
-      GetShaderProgram(data.properties, RenderType::kColor);
+      GetShaderProgram(properties, RenderType::kColor);
   std::optional<ShaderProgramData> depth_data =
-      GetShaderProgram(data.properties, RenderType::kDepth);
+      GetShaderProgram(properties, RenderType::kDepth);
   std::optional<ShaderProgramData> label_data =
-      GetShaderProgram(data.properties, RenderType::kLabel);
+      GetShaderProgram(properties, RenderType::kLabel);
   DRAKE_DEMAND(color_data.has_value() && depth_data.has_value() &&
                label_data.has_value());
 
-  visuals_[data.id].parts.push_back(
-      {.instance = OpenGlInstance(geometry_index, data.X_WG, scale, *color_data,
+  visuals_[id].parts.push_back(
+      {.instance = OpenGlInstance(geometry_index, X_WG, scale, *color_data,
                                   *depth_data, *label_data),
        .T_GN = std::nullopt});
 
-  shader_families_[RenderType::kColor][color_data->shader_id()].insert(data.id);
-  shader_families_[RenderType::kDepth][depth_data->shader_id()].insert(data.id);
-  shader_families_[RenderType::kLabel][label_data->shader_id()].insert(data.id);
+  shader_families_[RenderType::kColor][color_data->shader_id()].insert(id);
+  shader_families_[RenderType::kDepth][depth_data->shader_id()].insert(id);
+  shader_families_[RenderType::kLabel][label_data->shader_id()].insert(id);
 }
 
 int RenderEngineGl::GetSphere() {
@@ -1244,10 +1296,16 @@ int RenderEngineGl::GetBox() {
   return box_;
 }
 
+<<<<<<< HEAD
 void RenderEngineGl::CacheConvexHullMesh(const Convex& convex,
                                          const RegistrationData& data) {
   const std::string file_key =
       GetPathKey(convex.filename(), /*is_convex=*/true);
+=======
+bool RenderEngineGl::GetMeshes(const string& filename_in,
+                               std::vector<int>* indices_out) {
+  vector<int> mesh_indices;
+>>>>>>> 438ced4748 (WIP render_gl)
 
   if (!meshes_.contains(file_key)) {
     const Convex unit_convex(convex.filename(), 1.0);
@@ -1276,8 +1334,12 @@ void RenderEngineGl::CacheFileMeshesMaybe(const std::string& filename,
         "RenderEngineGl only supports Mesh/Convex specifications which use "
         ".obj files. Mesh specifications using other mesh types (e.g., "
         ".gltf, .stl, .dae, etc.) will be ignored.");
+<<<<<<< HEAD
     data->accepted = false;
     return;
+=======
+    return false;
+>>>>>>> 438ced4748 (WIP render_gl)
   }
 
   const std::string file_key = GetPathKey(filename, /*is_convex=*/false);
@@ -1313,6 +1375,19 @@ void RenderEngineGl::CacheFileMeshesMaybe(const std::string& filename,
     }
     meshes_[file_key] = std::move(file_meshes);
   }
+<<<<<<< HEAD
+=======
+
+  for (const auto& index : mesh_indices) {
+    geometries_[index].throw_if_undefined(
+        fmt::format("Error creating object for mesh {}", filename_in).c_str());
+  }
+
+  if (indices_out != nullptr) {
+    *indices_out = std::move(mesh_indices);
+  }
+  return true;
+>>>>>>> 438ced4748 (WIP render_gl)
 }
 
 std::tuple<GLint, GLenum, GLenum> RenderEngineGl::get_texture_format(

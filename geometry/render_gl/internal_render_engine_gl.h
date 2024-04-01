@@ -90,7 +90,7 @@ namespace internal {
  These exceptions to the "shared" data have to be explicitly managed for each
  clone. Furthermore, the work has to be done with the engine's OpenGl context
  bound. Currently, all of this "clean up" work is done in DoClone(). */
-class RenderEngineGl final : public render::RenderEngine, private ShapeReifier {
+class RenderEngineGl final : public render::RenderEngine {
  public:
   /* @name Does not allow public copy, move, or assignment  */
   //@{
@@ -112,19 +112,6 @@ class RenderEngineGl final : public render::RenderEngine, private ShapeReifier {
 
   const RenderEngineGlParams& parameters() const { return parameters_; }
 
-  /* @name    Shape reification  */
-  //@{
-  using ShapeReifier::ImplementGeometry;
-  void ImplementGeometry(const Box& box, void* user_data) final;
-  void ImplementGeometry(const Capsule& capsule, void* user_data) final;
-  void ImplementGeometry(const Convex& convex, void* user_data) final;
-  void ImplementGeometry(const Cylinder& cylinder, void* user_data) final;
-  void ImplementGeometry(const Ellipsoid& ellipsoid, void* user_data) final;
-  void ImplementGeometry(const HalfSpace& half_space, void* user_data) final;
-  void ImplementGeometry(const Mesh& mesh, void* user_data) final;
-  void ImplementGeometry(const Sphere& sphere, void* user_data) final;
-  //@}
-
  private:
   friend class RenderEngineGlTester;
 
@@ -133,23 +120,54 @@ class RenderEngineGl final : public render::RenderEngine, private ShapeReifier {
   // @pre `this` engine's OpenGl context should be bound.
   void InitGlState();
 
-  // Data to pass through the reification process.
-  struct RegistrationData {
-    const GeometryId id;
-    const math::RigidTransformd& X_WG;
-    const PerceptionProperties& properties;
-    bool accepted{true};
-  };
+  // Each of these return a "bool accepted" result.
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const Box& box,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const Capsule& capsule,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const Convex& convex,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const Cylinder& cylinder,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id,
+                                       const Ellipsoid& ellipsoid,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id,
+                                       const HalfSpace& half_space,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const Mesh& mesh,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const MeshcatCone& cone,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementGeometry(GeometryId id, const Sphere& sphere,
+                                       const PerceptionProperties& properties,
+                                       const math::RigidTransformd& X_WG);
 
   // Adds the mesh data associated with the given filename to geometries_.
   // Before adding it outright, it resolves the material heuristic. If the
   // mesh data has no intrinsic material, then considers the geometry properties
   // or existence of an identically named png file.
   //
+<<<<<<< HEAD
   // @pre The file key implied by filename and is_convex is in the meshes_
   // cache.
   void ImplementMeshesForFile(void* user_data, const Vector3<double>& scale,
                               const std::string& filename, bool is_convex);
+=======
+  // @pre GetMeshes() has already been invoked on `filename`.
+  void ImplementMeshesForFile(GeometryId id, const std::string& filename,
+                              const Vector3<double>& scale,
+                              const PerceptionProperties& properties,
+                              const math::RigidTransformd& X_WG);
+>>>>>>> 438ced4748 (WIP render_gl)
 
   // @see RenderEngine::DoRegisterVisual().
   bool DoRegisterVisual(GeometryId id, const Shape& shape,
@@ -209,8 +227,10 @@ class RenderEngineGl final : public render::RenderEngine, private ShapeReifier {
   //
   // @param geometry_index   The index into geometries_ of the geometry used by
   //                         this instance.
-  void AddGeometryInstance(int geometry_index, void* user_data,
-                           const Vector3<double>& scale);
+  void AddGeometryInstance(GeometryId id, int geometry_index,
+                           const Vector3<double>& scale,
+                           const PerceptionProperties& properties,
+                           const math::RigidTransformd& X_WG);
 
   // The set of all geometries. These are the geometries that have the
   // identifiers for the OpenGl geometries on the GPU.
@@ -247,6 +267,14 @@ class RenderEngineGl final : public render::RenderEngine, private ShapeReifier {
   // data->accepted is set to false.
   void CacheFileMeshesMaybe(const std::string& filename,
                             RegistrationData* data);
+
+  // For the given mesh filename, creates `OpenGlGeometry` for geometries
+  // defined in the file and returns true.  If the filename represents an
+  // unsupported file type, no geometry is added and returns false. If
+  // `indices_out` is provided, it will reset to the geometry_index values
+  // that were added.
+  [[nodiscard]] bool GetMeshes(const std::string& filename,
+                               std::vector<int>* indices_out = nullptr);
 
   // Given the render type, returns the texture configuration for that render
   // type. These are the key arguments for glTexImage2D based on the render
