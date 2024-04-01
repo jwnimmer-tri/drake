@@ -9,6 +9,7 @@
 
 #include "drake/common/default_scalars.h"
 #include "drake/common/extract_double.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/value.h"
 #include "drake/geometry/proximity/polygon_to_triangle_mesh.h"
 #include "drake/geometry/proximity/sorted_triplet.h"
@@ -50,11 +51,11 @@ namespace {
  The geometry data message is marked as a MESH, but rather than having a
  path to a parseable file stored in it, the actual mesh data is stored.
 
- This function shares implementation details with the ShapeToLcm reifier (in
+ This function shares implementation details with ConvertShapeToLcm (in
  terms of handling pose and color). Ultimately, when the Mesh shape
  specification supports in-memory mesh definitions, this can be rolled into
- ShapeToLcm and it will more fully share that class's code for handling pose
- and color.
+ ConvertShapeToLcm and it will more fully share that class's code for handling
+ pose and color.
 
  @param surface_mesh  The mesh to encode.
  @param X_PG          The pose of the geometry in the parent frame.
@@ -185,8 +186,8 @@ lcmt_viewer_geometry_data MakeHydroMesh(GeometryId geometry_id,
  world frame.
 
  When the Mesh shape specification supports in-memory mesh definitions, this
- can be rolled into ShapeToLcm and it will more fully share that class's code
- for handling color. */
+ can be rolled into ConvertShapeToLcm and it will more fully share that class's
+ code for handling color. */
 template <typename T>
 lcmt_viewer_geometry_data MakeDeformableSurfaceMesh(
     const VectorX<T>& volume_vertex_positions,
@@ -368,122 +369,109 @@ internal::DeformableMeshData MakeDeformableMeshData(
           std::move(surface_triangles), volume_vertex_count};
 }
 
-// Simple class for converting shape specifications into LCM-compatible shapes.
-class ShapeToLcm : public ShapeReifier {
- public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(ShapeToLcm)
+// Converts a `Shape` into an lcmt_geometry_data message.
+lcmt_viewer_geometry_data ConvertShapeToLcm(const Shape& shape,
+                                            const RigidTransformd& X_PG_in,
+                                            const Rgba& color) {
+  lcmt_viewer_geometry_data geometry_data{};
 
-  ShapeToLcm() = default;
-  ~ShapeToLcm() override = default;
+  // NOTE: We sometimes need to change X_PG based on the shape. For example, the
+  // half-space requires an additional offset to shift the box representing the
+  // plane *to* the plane.
+  RigidTransformd X_PG = X_PG_in;
+  shape.Visit(overloaded{
+      [&](const Box& box) {
+        geometry_data.type = geometry_data.BOX;
+        geometry_data.num_float_data = 3;
+        // Box width, depth, and height.
+        geometry_data.float_data.push_back(static_cast<float>(box.width()));
+        geometry_data.float_data.push_back(static_cast<float>(box.depth()));
+        geometry_data.float_data.push_back(static_cast<float>(box.height()));
+      },
+      [&](const Capsule& capsule) {
+        geometry_data.type = geometry_data.CAPSULE;
+        geometry_data.num_float_data = 2;
+        geometry_data.float_data.push_back(
+            static_cast<float>(capsule.radius()));
+        geometry_data.float_data.push_back(
+            static_cast<float>(capsule.length()));
+      },
+      [&](const Cylinder& cylinder) {
+        geometry_data.type = geometry_data.CYLINDER;
+        geometry_data.num_float_data = 2;
+        geometry_data.float_data.push_back(
+            static_cast<float>(cylinder.radius()));
+        geometry_data.float_data.push_back(
+            static_cast<float>(cylinder.length()));
+      },
+      [&](const Ellipsoid& ellipsoid) {
+        geometry_data.type = geometry_data.ELLIPSOID;
+        geometry_data.num_float_data = 3;
+        geometry_data.float_data.push_back(static_cast<float>(ellipsoid.a()));
+        geometry_data.float_data.push_back(static_cast<float>(ellipsoid.b()));
+        geometry_data.float_data.push_back(static_cast<float>(ellipsoid.c()));
+      },
+      [&](const HalfSpace&) {
+        // Currently representing a half space as a big box. This assumes that
+        // the underlying box representation is centered on the origin.
+        geometry_data.type = geometry_data.BOX;
+        geometry_data.num_float_data = 3;
+        // Box width, height, and thickness.
+        geometry_data.float_data.push_back(50);
+        geometry_data.float_data.push_back(50);
+        const float thickness = 1;
+        geometry_data.float_data.push_back(thickness);
+        // The final pose of the box is the half-space's pose pre-multiplied by
+        // an offset sufficient to move the box down so it's top face lies on
+        // the z = 0 plane. Shift it down so that the origin lies on the top
+        // surface.
+        RigidTransformd box_xform{Eigen::Vector3d{0, 0, -thickness / 2}};
+        X_PG = X_PG * box_xform;
+      },
+      [&](const MeshcatCone&) {
+        throw std::logic_error(
+            "DrakeVisualizer does not support MeshcatCone shapes");
+      },
+      [&](const Sphere& sphere) {
+        geometry_data.type = geometry_data.SPHERE;
+        geometry_data.num_float_data = 1;
+        geometry_data.float_data.push_back(static_cast<float>(sphere.radius()));
+      },
+      // For the purposes of visualization, Mesh and Convex are equivalent.
+      [&](const Mesh& mesh) {
+        geometry_data.type = geometry_data.MESH;
+        geometry_data.num_float_data = 3;
+        geometry_data.float_data.push_back(static_cast<float>(mesh.scale()));
+        geometry_data.float_data.push_back(static_cast<float>(mesh.scale()));
+        geometry_data.float_data.push_back(static_cast<float>(mesh.scale()));
+        geometry_data.string_data = mesh.filename();
+      },
+      [&](const Convex& convex) {
+        const TriangleSurfaceMesh<double> tri_mesh =
+            internal::MakeTriangleFromPolygonMesh(convex.GetConvexHull());
+        // Note: the transform X_PG and color are dummy values; ShapeToLcm will
+        // set them when we return from this Convex-specific callback. We can
+        // ignore the convex.scale() because it is already incorporated in the
+        // convex hull.
+        geometry_data_ =
+            MakeFacetedMeshDataForLcm(tri_mesh, RigidTransformd{}, Rgba());
+      }});
 
-  lcmt_viewer_geometry_data Convert(const Shape& shape,
-                                    const RigidTransformd& X_PG,
-                                    const Rgba& in_color) {
-    X_PG_ = X_PG;
-    // NOTE: Reify *may* change X_PG_ based on the shape. For example, the
-    // half-space requires an additional offset to shift the box representing
-    // the plane *to* the plane.
-    shape.Reify(this);
+  // The location and orientation are specified in the body's frame.
+  Eigen::Map<Eigen::Vector3f>(geometry_data.position) =
+      X_PG.translation().cast<float>();
 
-    // Saves the location and orientation of the visualization geometry in the
-    // `lcmt_viewer_geometry_data` object. The location and orientation are
-    // specified in the body's frame.
-    EigenMapView(geometry_data_.position) = X_PG_.translation().cast<float>();
-    // LCM quaternion must be w, x, y, z.
-    Quaterniond q(X_PG_.rotation().ToQuaternion());
-    geometry_data_.quaternion[0] = q.w();
-    geometry_data_.quaternion[1] = q.x();
-    geometry_data_.quaternion[2] = q.y();
-    geometry_data_.quaternion[3] = q.z();
+  // LCM quaternion must be w, x, y, z.
+  Quaterniond q(X_PG.rotation().ToQuaternion());
+  geometry_data.quaternion[0] = q.w();
+  geometry_data.quaternion[1] = q.x();
+  geometry_data.quaternion[2] = q.y();
+  geometry_data.quaternion[3] = q.z();
 
-    EigenMapView(geometry_data_.color) = in_color.rgba().cast<float>();
+  EigenMapView(geometry_data_.color) = in_color.rgba().cast<float>();
 
-    return geometry_data_;
-  }
-
-  using ShapeReifier::ImplementGeometry;
-
-  void ImplementGeometry(const Box& box, void*) override {
-    geometry_data_.type = geometry_data_.BOX;
-    geometry_data_.num_float_data = 3;
-    // Box width, depth, and height.
-    geometry_data_.float_data.push_back(static_cast<float>(box.width()));
-    geometry_data_.float_data.push_back(static_cast<float>(box.depth()));
-    geometry_data_.float_data.push_back(static_cast<float>(box.height()));
-  }
-
-  void ImplementGeometry(const Capsule& capsule, void*) override {
-    geometry_data_.type = geometry_data_.CAPSULE;
-    geometry_data_.num_float_data = 2;
-    geometry_data_.float_data.push_back(static_cast<float>(capsule.radius()));
-    geometry_data_.float_data.push_back(static_cast<float>(capsule.length()));
-  }
-
-  void ImplementGeometry(const Convex& convex, void*) override {
-    const TriangleSurfaceMesh<double> tri_mesh =
-        internal::MakeTriangleFromPolygonMesh(convex.GetConvexHull());
-    // Note: the transform X_PG and color are dummy values; ShapeToLcm will set
-    // them when we return from this Convex-specific callback.
-    // We can ignore the convex.scale() because it is already incorporated in
-    // the convex hull.
-    geometry_data_ =
-        MakeFacetedMeshDataForLcm(tri_mesh, RigidTransformd{}, Rgba());
-  }
-
-  void ImplementGeometry(const Cylinder& cylinder, void*) override {
-    geometry_data_.type = geometry_data_.CYLINDER;
-    geometry_data_.num_float_data = 2;
-    geometry_data_.float_data.push_back(static_cast<float>(cylinder.radius()));
-    geometry_data_.float_data.push_back(static_cast<float>(cylinder.length()));
-  }
-
-  void ImplementGeometry(const Ellipsoid& ellipsoid, void*) override {
-    geometry_data_.type = geometry_data_.ELLIPSOID;
-    geometry_data_.num_float_data = 3;
-    geometry_data_.float_data.push_back(static_cast<float>(ellipsoid.a()));
-    geometry_data_.float_data.push_back(static_cast<float>(ellipsoid.b()));
-    geometry_data_.float_data.push_back(static_cast<float>(ellipsoid.c()));
-  }
-
-  void ImplementGeometry(const HalfSpace&, void*) override {
-    // Currently representing a half space as a big box. This assumes that the
-    // underlying box representation is centered on the origin.
-    geometry_data_.type = geometry_data_.BOX;
-    geometry_data_.num_float_data = 3;
-    // Box width, height, and thickness.
-    geometry_data_.float_data.push_back(50);
-    geometry_data_.float_data.push_back(50);
-    const float thickness = 1;
-    geometry_data_.float_data.push_back(thickness);
-
-    // The final pose of the box is the half-space's pose pre-multiplied by
-    // an offset sufficient to move the box down so it's top face lies on the
-    // z = 0 plane.
-    // Shift it down so that the origin lies on the top surface.
-    RigidTransformd box_xform{Eigen::Vector3d{0, 0, -thickness / 2}};
-    X_PG_ = X_PG_ * box_xform;
-  }
-
-  void ImplementGeometry(const Mesh& mesh, void*) override {
-    geometry_data_.type = geometry_data_.MESH;
-    geometry_data_.num_float_data = 3;
-    geometry_data_.float_data.push_back(static_cast<float>(mesh.scale()));
-    geometry_data_.float_data.push_back(static_cast<float>(mesh.scale()));
-    geometry_data_.float_data.push_back(static_cast<float>(mesh.scale()));
-    geometry_data_.string_data = mesh.filename();
-  }
-
-  void ImplementGeometry(const Sphere& sphere, void*) override {
-    geometry_data_.type = geometry_data_.SPHERE;
-    geometry_data_.num_float_data = 1;
-    geometry_data_.float_data.push_back(static_cast<float>(sphere.radius()));
-  }
-
- private:
-  lcmt_viewer_geometry_data geometry_data_{};
-  // The transform from the geometry frame to its parent frame.
-  RigidTransformd X_PG_;
-};
+  return geometry_data;
+}
 
 }  // namespace
 
@@ -690,7 +678,7 @@ void DrakeVisualizer<T>::SendLoadNonDeformableMessage(
                              color);
       }
     }
-    return ShapeToLcm().Convert(shape, inspector.GetPoseInFrame(g_id), color);
+    return ConvertShapeToLcm(shape, inspector.GetPoseInFrame(g_id), color);
   };
 
   int link_index = 0;
