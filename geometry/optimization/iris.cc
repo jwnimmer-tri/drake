@@ -146,99 +146,64 @@ HPolyhedron Iris(const ConvexSets& obstacles, const Ref<const VectorXd>& sample,
 }
 
 namespace {
-// Constructs a ConvexSet for each supported Shape and adds it to the set.
-class IrisConvexSetMaker final : public ShapeReifier {
- public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(IrisConvexSetMaker)
 
-  IrisConvexSetMaker(const QueryObject<double>& query,
-                     std::optional<FrameId> reference_frame)
-      : query_{query}, reference_frame_{reference_frame} {};
+// Mapping from a Shape type subclass to its preferred ConvexSet type subclass.
+// Shapes types not listed will throw if passed to MakeIrisConvexSet.
+//
+// Note: For Box we choose HPolyhedron over VPolytope, but the IRIS paper
+// discusses a significant performance improvement using a "least-distance
+// programming" instance from CVXGEN that exploited the VPolytope
+// representation.  So we may wish to revisit this.
+//
+// clang-format off
+template <typename ShapeType>
+using ConvexSetTypeFor =
+    std::conditional_t<std::is_same_v<ShapeType, Box>, HPolyhedron,
+    std::conditional_t<std::is_same_v<ShapeType, Capsule>, MinkowskiSum,
+    std::conditional_t<std::is_same_v<ShapeType, Cylinder>, CartesianProduct,
+    std::conditional_t<std::is_same_v<ShapeType, Ellipsoid>, Hyperellipsoid,
+    std::conditional_t<std::is_same_v<ShapeType, HalfSpace>, HPolyhedron,
+    std::conditional_t<std::is_same_v<ShapeType, Sphere>, Hyperellipsoid,
+    std::conditional_t<std::is_same_v<ShapeType, Convex>, VPolytope,
+    std::conditional_t<std::is_same_v<ShapeType, Mesh>, VPolytope,
+    void>>>>>>>>;
+// clang-format on
 
-  void set_reference_frame(const FrameId& reference_frame) {
-    DRAKE_DEMAND(reference_frame.is_valid());
-    *reference_frame_ = reference_frame;
+// Creates a ConvexSet for the given shape.
+std::unique_ptr<ConvexSet> MakeIrisConvexSet(
+    const QueryObject<double>& query, GeometryId geometry_id,
+    std::optional<FrameId> reference_frame) {
+  DRAKE_DEMAND(geometry_id.is_valid());
+  if (reference_frame.has_value()) {
+    DRAKE_DEMAND(reference_frame->is_valid());
   }
-
-  void set_geometry_id(const GeometryId& geom_id) { geom_id_ = geom_id; }
-
-  using ShapeReifier::ImplementGeometry;
-
-  void ImplementGeometry(const Box&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    // Note: We choose HPolyhedron over VPolytope here, but the IRIS paper
-    // discusses a significant performance improvement using a "least-distance
-    // programming" instance from CVXGEN that exploited the VPolytope
-    // representation.  So we may wish to revisit this.
-    set = std::make_unique<HPolyhedron>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const Capsule&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set = std::make_unique<MinkowskiSum>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const Cylinder&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set =
-        std::make_unique<CartesianProduct>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const Ellipsoid&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set = std::make_unique<Hyperellipsoid>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const HalfSpace&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set = std::make_unique<HPolyhedron>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const Sphere&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set = std::make_unique<Hyperellipsoid>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const Convex&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set = std::make_unique<VPolytope>(query_, geom_id_, reference_frame_);
-  }
-
-  void ImplementGeometry(const Mesh&, void* data) {
-    DRAKE_DEMAND(geom_id_.is_valid());
-    auto& set = *static_cast<copyable_unique_ptr<ConvexSet>*>(data);
-    set = std::make_unique<VPolytope>(query_, geom_id_, reference_frame_);
-  }
-
- private:
-  const QueryObject<double>& query_{};
-  std::optional<FrameId> reference_frame_{};
-  GeometryId geom_id_{};
-};
+  const Shape& shape = query.inspector().GetShape(geometry_id);
+  return shape.Visit([&](const auto& derived) -> std::unique_ptr<ConvexSet> {
+    using Derived = decltype(derived);
+    using ShapeType = std::remove_const_t<std::remove_reference_t<Derived>>;
+    using ReturnType = ConvexSetTypeFor<ShapeType>;
+    if constexpr (std::is_void_v<ReturnType>) {
+      throw std::logic_error(
+          fmt::format("IRIS does not suport {} shapes", shape.type_name()));
+    } else {
+      return std::make_unique<ReturnType>(query, geometry_id, reference_frame);
+    }
+  });
+}
 
 }  // namespace
 
 ConvexSets MakeIrisObstacles(const QueryObject<double>& query_object,
                              std::optional<FrameId> reference_frame) {
-  const SceneGraphInspector<double>& inspector = query_object.inspector();
-  const std::vector<GeometryId> geom_ids =
-      inspector.GetAllGeometryIds(Role::kProximity);
-  ConvexSets sets(geom_ids.size());
-
-  IrisConvexSetMaker maker(query_object, reference_frame);
-  int count = 0;
-  for (GeometryId geom_id : geom_ids) {
-    maker.set_geometry_id(geom_id);
-    inspector.GetShape(geom_id).Reify(&maker, &sets[count++]);
+  const std::vector<GeometryId> geometry_ids =
+      query_object.inspector().GetAllGeometryIds(Role::kProximity);
+  ConvexSets result;
+  result.reserve(geometry_ids.size());
+  for (const GeometryId& geometry_id : geometry_ids) {
+    result.emplace_back(
+        MakeIrisConvexSet(query_object, geometry_id, reference_frame));
   }
-  return sets;
+  return result;
 }
 
 namespace {
@@ -510,20 +475,17 @@ HPolyhedron IrisInConfigurationSpace(const MultibodyPlant<double>& plant,
   auto query_object =
       plant.get_geometry_query_input_port().Eval<QueryObject<double>>(context);
   const SceneGraphInspector<double>& inspector = query_object.inspector();
-  IrisConvexSetMaker maker(query_object, inspector.world_frame_id());
   std::unordered_map<GeometryId, copyable_unique_ptr<ConvexSet>> sets{};
   std::unordered_map<GeometryId, const multibody::Frame<double>*> frames{};
-  const std::vector<GeometryId> geom_ids =
+  const std::vector<GeometryId> geometry_ids =
       inspector.GetAllGeometryIds(Role::kProximity);
-  copyable_unique_ptr<ConvexSet> temp_set;
-  for (GeometryId geom_id : geom_ids) {
+  for (GeometryId geometry_id : geometry_ids) {
     // Make all sets in the local geometry frame.
-    FrameId frame_id = inspector.GetFrameId(geom_id);
-    maker.set_reference_frame(frame_id);
-    maker.set_geometry_id(geom_id);
-    inspector.GetShape(geom_id).Reify(&maker, &temp_set);
-    sets.emplace(geom_id, std::move(temp_set));
-    frames.emplace(geom_id, &plant.GetBodyFromFrameId(frame_id)->body_frame());
+    const FrameId frame_id = inspector.GetFrameId(geometry_id);
+    sets.emplace(geometry_id,
+                 MakeIrisConvexSet(query_object, geometry_id, frame_id));
+    frames.emplace(geometry_id,
+                   &plant.GetBodyFromFrameId(frame_id)->body_frame());
   }
 
   auto pairs = inspector.GetCollisionCandidates();
