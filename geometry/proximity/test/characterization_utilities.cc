@@ -6,6 +6,7 @@
 
 #include "drake/common/fmt_eigen.h"
 #include "drake/common/nice_type_name.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/temp_directory.h"
 #include "drake/common/test_utilities/expect_throws_message.h"
 #include "drake/geometry/proximity/proximity_utilities.h"
@@ -92,12 +93,14 @@ std::string QueryInstanceName(
 
 template <typename T>
 ShapeConfigurations<T>::ShapeConfigurations(const Shape& shape, double distance)
-    : ShapeReifier(), distance_(distance) {
-  shape.Reify(this);
+    : distance_(distance) {
+  shape.Visit([this](const auto& concrete_shape) {
+    this->MakeConfigs(concrete_shape);
+  });
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Box& box, void*) {
+void ShapeConfigurations<T>::MakeConfigs(const Box& box) {
   const Vector3d half_size = box.size() * 0.5;
   // By default, we'll position the face point near the vertex, but removed
   // based on the box's minimum measurement.
@@ -127,7 +130,7 @@ void ShapeConfigurations<T>::ImplementGeometry(const Box& box, void*) {
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Capsule& capsule, void*) {
+void ShapeConfigurations<T>::MakeConfigs(const Capsule& capsule) {
   if (distance_ < 0) {
     const double depth = -distance_;
     if (depth > capsule.radius()) {
@@ -156,14 +159,13 @@ void ShapeConfigurations<T>::ImplementGeometry(const Capsule& capsule, void*) {
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Convex&, void*) {
+void ShapeConfigurations<T>::MakeConfigs(const Convex&) {
   const Box box = CharacterizeResultTest<double>::box();
-  ImplementGeometry(box, nullptr);
+  MakeConfigs(box);
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Cylinder& cylinder,
-                                               void*) {
+void ShapeConfigurations<T>::MakeConfigs(const Cylinder& cylinder) {
   double distance_to_edge = cylinder.radius() * 0.1;
   if (distance_ < 0) {
     const double depth = -distance_;
@@ -202,8 +204,7 @@ void ShapeConfigurations<T>::ImplementGeometry(const Cylinder& cylinder,
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Ellipsoid& ellipsoid,
-                                               void*) {
+void ShapeConfigurations<T>::MakeConfigs(const Ellipsoid& ellipsoid) {
   const double min_axis =
       std::min({ellipsoid.a(), ellipsoid.b(), ellipsoid.c()});
   if (distance_ < 0) {
@@ -246,21 +247,26 @@ void ShapeConfigurations<T>::ImplementGeometry(const Ellipsoid& ellipsoid,
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const HalfSpace&, void*) {
+void ShapeConfigurations<T>::MakeConfigs(const HalfSpace&) {
   configs_ = vector<ShapeTangentPlane<T>>{
       {Vector3<T>{0.3, 0.7, 0}, Vector3<T>{0, 0, 1},
        std::numeric_limits<double>::infinity(), "near half space's origin"}};
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Mesh&, void*) {
+void ShapeConfigurations<T>::MakeConfigs(const Mesh&) {
   throw std::logic_error(
       "We're assuming that Mesh is Convex; implement this when Mesh is "
       "represented as its own thing");
 }
 
 template <typename T>
-void ShapeConfigurations<T>::ImplementGeometry(const Sphere& sphere, void*) {
+void ShapeConfigurations<T>::MakeConfigs(const MeshcatCone&) {
+  DRAKE_UNREACHABLE();
+}
+
+template <typename T>
+void ShapeConfigurations<T>::MakeConfigs(const Sphere& sphere) {
   const double r = sphere.radius();
   if (distance_ < 0) {
     const double depth = -distance_;
@@ -281,82 +287,80 @@ void ShapeConfigurations<T>::ImplementGeometry(const Sphere& sphere, void*) {
                                    {p2, n2, r, "sphere's +x/-y/+z octant"}};
 }
 
-MakeFclShape::MakeFclShape(const Shape& shape) : ShapeReifier() {
-  shape.Reify(this);
-}
-
-void MakeFclShape::ImplementGeometry(const Box& box, void*) {
-  object_ = std::make_shared<fcl::Boxd>(box.size());
-}
-
-void MakeFclShape::ImplementGeometry(const Capsule& capsule, void*) {
-  object_ = std::make_shared<fcl::Capsuled>(capsule.radius(), capsule.length());
-}
-
-void MakeFclShape::ImplementGeometry(const Convex&, void*) {
-  /* Note: we're ignoring the contents of the convex declaration. Instead,
-    we're outputting a mesh representing a box with known dimensions.
-
-                   3 ──────────────────┐ 7
-                   ╱│                 ╱│
-                  ╱ │                ╱ │             z    y
-                 ╱  │             5 ╱  │              │  ╱
-              1 ┌──────────────────┐   │              │ ╱
-                │   │              │   │              │╱
-                │   │              │   │              └───── x
-                │  2│──────────────│───│ 6
-                │  ╱               │  ╱
-                │ ╱                │ ╱
-                │╱                 │╱
-                └──────────────────┘
-                0                  4
-  */
-  const Box box = CharacterizeResultTest<double>::box();
-  const Vector3d half_size = box.size() / 2;
-  auto vertices = std::make_shared<vector<Vector3d>>();
-  for (double x : {-1, 1}) {
-    for (double y : {-1, 1}) {
-      for (double z : {-1, 1}) {
-        vertices->push_back(half_size.cwiseProduct(Vector3d{x, y, z}));
-      }
-    }
-  }
-  // clang-format off
-    auto faces = std::make_shared<vector<int>>(vector<int>{
-      4, 0, 4, 5, 1,   // -y face
-      4, 5, 7, 3, 1,   // +z face
-      4, 3, 7, 6, 2,   // +y face
-      4, 0, 2, 6, 4,   // -z face
-      4, 4, 6, 7, 5,   // +x face
-      4, 1, 3, 2, 0    // -x face.
-    });
-  // clang-format on
-
-  object_ = std::make_shared<fcl::Convexd>(vertices, 6, faces);
-}
-
-void MakeFclShape::ImplementGeometry(const Cylinder& cylinder, void*) {
-  object_ =
-      std::make_shared<fcl::Cylinderd>(cylinder.radius(), cylinder.length());
-}
-
-void MakeFclShape::ImplementGeometry(const Ellipsoid& ellipsoid, void*) {
-  object_ = std::make_shared<fcl::Ellipsoidd>(ellipsoid.a(), ellipsoid.b(),
-                                              ellipsoid.c());
-}
-
-void MakeFclShape::ImplementGeometry(const HalfSpace&, void*) {
-  object_ = std::make_shared<fcl::Halfspaced>(Vector3d{0, 0, 1}, 0);
-}
-
-void MakeFclShape::ImplementGeometry(const Mesh&, void*) {
-  throw std::logic_error(
-      "We're assuming that Mesh is Convex; implement this when Mesh is "
-      "represented as its own thing");
-}
-
-void MakeFclShape::ImplementGeometry(const Sphere& sphere, void*) {
-  object_ = std::make_shared<fcl::Sphered>(sphere.radius());
+std::shared_ptr<fcl::CollisionGeometry<double>> MakeFclShape(
+    const Shape& shape) {
+  return shape.Visit<
+      std::shared_ptr<fcl::CollisionGeometry<double>>>(overloaded{
+      [](const Box& box) {
+        return std::make_shared<fcl::Boxd>(box.size());
+      },
+      [](const Capsule& capsule) {
+        return std::make_shared<fcl::Capsuled>(capsule.radius(),
+                                               capsule.length());
+      },
+      [](const Convex&) {
+        /* Note: we're ignoring the contents of the convex declaration.
+          Instead, we're outputting a mesh representing a box with known
+          dimensions.
+                         3 ──────────────────┐ 7
+                         ╱│                 ╱│
+                        ╱ │                ╱ │             z    y
+                       ╱  │             5 ╱  │              │  ╱
+                    1 ┌──────────────────┐   │              │ ╱
+                      │   │              │   │              │╱
+                      │   │              │   │              └───── x
+                      │  2│──────────────│───│ 6
+                      │  ╱               │  ╱
+                      │ ╱                │ ╱
+                      │╱                 │╱
+                      └──────────────────┘
+                      0                  4
+        */
+        const Box box = CharacterizeResultTest<double>::box();
+        const Vector3d half_size = box.size() / 2;
+        auto vertices = std::make_shared<vector<Vector3d>>();
+        for (double x : {-1, 1}) {
+          for (double y : {-1, 1}) {
+            for (double z : {-1, 1}) {
+              vertices->push_back(half_size.cwiseProduct(Vector3d{x, y, z}));
+            }
+          }
+        }
+        // clang-format off
+        auto faces = std::make_shared<vector<int>>(vector<int>{
+          4, 0, 4, 5, 1,   // -y face
+          4, 5, 7, 3, 1,   // +z face
+          4, 3, 7, 6, 2,   // +y face
+          4, 0, 2, 6, 4,   // -z face
+          4, 4, 6, 7, 5,   // +x face
+          4, 1, 3, 2, 0    // -x face.
+        });
+        // clang-format on
+        return std::make_shared<fcl::Convexd>(vertices, 6, faces);
+      },
+      [](const Cylinder& cylinder) {
+        return std::make_shared<fcl::Cylinderd>(cylinder.radius(),
+                                                cylinder.length());
+      },
+      [](const Ellipsoid& ellipsoid) {
+        return std::make_shared<fcl::Ellipsoidd>(ellipsoid.a(), ellipsoid.b(),
+                                                 ellipsoid.c());
+      },
+      [](const HalfSpace&) {
+        return std::make_shared<fcl::Halfspaced>(Vector3d{0, 0, 1}, 0);
+      },
+      [](const Mesh&) -> std::nullptr_t {
+        // We're assuming that Mesh is Convex; implement this when Mesh is
+        // represented as its own thing.
+        DRAKE_UNREACHABLE();
+      },
+      [](const MeshcatCone&) -> std::nullptr_t {
+        // MeshcatCone is not supported for proximity.
+        DRAKE_UNREACHABLE();
+      },
+      [](const Sphere& sphere) {
+        return std::make_shared<fcl::Sphered>(sphere.radius());
+      }});
 }
 
 /* Allow a sneak peek into ProximityEngine's inner workings so we can detect
@@ -525,10 +529,10 @@ template <typename T>
 void CharacterizeResultTest<T>::RunCharacterization(
     const QueryInstance& query, const Shape& shape_A, const Shape& shape_B,
     const vector<Configuration<T>>& configs, bool is_symmetric) {
-  fcl::CollisionObjectd object_A = MakeFclShape(shape_A).object();
+  fcl::CollisionObjectd object_A = MakeFclShape(shape_A);
   const GeometryId id_A = EncodeData(&object_A);
 
-  fcl::CollisionObjectd object_B = MakeFclShape(shape_B).object();
+  fcl::CollisionObjectd object_B = MakeFclShape(shape_B);
   const GeometryId id_B = EncodeData(&object_B);
 
   const auto& X_WAs = this->X_WAs();

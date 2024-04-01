@@ -34,21 +34,21 @@ namespace {
 
 GTEST_TEST(MakeFclShapeTest, Box) {
   const Box box(1, 2, 3);
-  auto fcl_geometry = MakeFclShape(box).object();
+  auto fcl_geometry = MakeFclShape(box);
   const auto& fcl_box = dynamic_cast<fcl::Boxd&>(*fcl_geometry);
   EXPECT_EQ(fcl_box.side, box.size());
 }
 
 GTEST_TEST(MakeFclShapeTest, Capsule) {
   const Capsule capsule(0.25, 0.75);
-  auto fcl_geometry = MakeFclShape(capsule).object();
+  auto fcl_geometry = MakeFclShape(capsule);
   const auto& fcl_capsule = dynamic_cast<fcl::Capsuled&>(*fcl_geometry);
   EXPECT_EQ(fcl_capsule.radius, capsule.radius());
   EXPECT_EQ(fcl_capsule.lz, capsule.length());
 }
 
 GTEST_TEST(MakeFclShapeTest, Convex) {
-  auto fcl_geometry = MakeFclShape(Convex("ignored", 1.0)).object();
+  auto fcl_geometry = MakeFclShape(Convex("ignored", 1.0));
   const auto& fcl_convex = dynamic_cast<fcl::Convexd&>(*fcl_geometry);
   /* The convex shape is actually a box with fixed dimensions. We won't *prove*
    it's the expected box. But we'll confirm:
@@ -76,7 +76,7 @@ GTEST_TEST(MakeFclShapeTest, Convex) {
 
 GTEST_TEST(MakeFclShapeTest, Cylinder) {
   const Cylinder cylinder(0.25, 0.75);
-  auto fcl_geometry = MakeFclShape(cylinder).object();
+  auto fcl_geometry = MakeFclShape(cylinder);
   const auto& fcl_cylinder = dynamic_cast<fcl::Cylinderd&>(*fcl_geometry);
   EXPECT_EQ(fcl_cylinder.radius, cylinder.radius());
   EXPECT_EQ(fcl_cylinder.lz, cylinder.length());
@@ -84,7 +84,7 @@ GTEST_TEST(MakeFclShapeTest, Cylinder) {
 
 GTEST_TEST(MakeFclShapeTest, Ellipsoid) {
   const Ellipsoid ellipsoid(0.25, 0.75, 0.6);
-  auto fcl_geometry = MakeFclShape(ellipsoid).object();
+  auto fcl_geometry = MakeFclShape(ellipsoid);
   const auto& fcl_ellipsoid = dynamic_cast<fcl::Ellipsoidd&>(*fcl_geometry);
   EXPECT_EQ(fcl_ellipsoid.radii[0], ellipsoid.a());
   EXPECT_EQ(fcl_ellipsoid.radii[1], ellipsoid.b());
@@ -92,7 +92,7 @@ GTEST_TEST(MakeFclShapeTest, Ellipsoid) {
 }
 
 GTEST_TEST(MakeFclShapeTest, HalfSpace) {
-  auto fcl_geometry = MakeFclShape(HalfSpace{}).object();
+  auto fcl_geometry = MakeFclShape(HalfSpace{});
   const auto& fcl_half_space = dynamic_cast<fcl::Halfspaced&>(*fcl_geometry);
   EXPECT_EQ(fcl_half_space.n, Vector3d(0, 0, 1));
   EXPECT_EQ(fcl_half_space.d, 0);
@@ -100,7 +100,7 @@ GTEST_TEST(MakeFclShapeTest, HalfSpace) {
 
 GTEST_TEST(MakeFclShapeTest, Sphere) {
   const Sphere sphere(0.7);
-  auto fcl_geometry = MakeFclShape(sphere).object();
+  auto fcl_geometry = MakeFclShape(sphere);
   const auto& fcl_sphere = dynamic_cast<fcl::Sphered&>(*fcl_geometry);
   EXPECT_EQ(fcl_sphere.radius, sphere.radius());
 }

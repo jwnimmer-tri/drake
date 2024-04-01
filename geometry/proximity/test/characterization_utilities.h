@@ -156,13 +156,18 @@ struct ShapeTangentPlane {
  can change what the samples are. See the various implementations for details.
  */
 template <typename T>
-class ShapeConfigurations : public ShapeReifier {
+class ShapeConfigurations {
  public:
   /* Constructs the configurations for the given shape and requested distance.
    */
   ShapeConfigurations(const Shape& shape, double distance);
 
-  /* @name Implementation of ShapeReifier interface
+  /* For test code, it's easier to return a copy than to expect our caller to
+   keep us alive indefinitey. */
+  std::vector<ShapeTangentPlane<T>> configs() const { return configs_; }
+
+ private:
+  /* @name Per-shape implementations
 
    Where meaningful, each of these implementations will test the geometry
    against *negative* signed distance to confirm the shape is large enough to be
@@ -170,77 +175,53 @@ class ShapeConfigurations : public ShapeReifier {
    fails, the method throws.  */
   //@{
 
-  using ShapeReifier::ImplementGeometry;
-
   /* Sample a face near a vertex, a vertex, and on an edge. */
-  void ImplementGeometry(const Box& box, void*) final;
+  void MakeConfigs(const Box& box);
 
   /* The capsule samples do *not* depend on `signed_distance`. One is located on
    one of the spherical caps, the other on the barrel.  */
-  void ImplementGeometry(const Capsule& capsule, void*) final;
+  void MakeConfigs(const Capsule& capsule);
 
   /* For the purpose of *this* test, the Convex is actually just a box. Its
    sampling is that of the Box's sampling (see above).  */
-  void ImplementGeometry(const Convex& convex, void*) final;
+  void MakeConfigs(const Convex& convex);
 
   /* Sample the cylinder on one cap face (near its edge), one sample on a
    circular edge, and one on the barrel. The sample on the top face is
    guaranteed to be positioned so that it is closest to all points up to the
    requested penetration depth (assuming the cylinder is large enough).  */
-  void ImplementGeometry(const Cylinder& cylinder, void*) final;
+  void MakeConfigs(const Cylinder& cylinder);
 
   /* The sampling of the ellipsoid does *not* depend on `signed_distance`.
    The samples are simply two arbitrary points on the surface of the ellipsoid
    in different octants.  */
-  void ImplementGeometry(const Ellipsoid& ellipsoid, void*) final;
+  void MakeConfigs(const Ellipsoid& ellipsoid);
 
   /* The sampling of the half space does *not* depend on `signed_distance`.
    The sample is at a single point near the origin. We keep it near the origin
    so that precision problems don't get exacerbated by distance-to-origin
    issues, but not *at* the origin so we don't get trivial zeros.  */
-  void ImplementGeometry(const HalfSpace& half_space, void*) final;
+  void MakeConfigs(const HalfSpace& half_space);
 
   /* Simply throws; we'll defer mesh computations until they are supported
    directly (instead of being represented by a Convex.  */
-  void ImplementGeometry(const Mesh& mesh, void*) final;
+  void MakeConfigs(const Mesh& mesh);
+
+  /* MeshcatCone is not supported for proximity. */
+  void MakeConfigs(const drake::geometry::MeshcatCone&);
 
   /* The samples are at two arbitrary points in different octants of the sphere.
    */
-  void ImplementGeometry(const Sphere& sphere, void*) final;
+  void MakeConfigs(const Sphere& sphere);
   //@}
 
-  /* We're returning a *copy* because we're using this in a manner in which the
-   owning reifier may not stay alive. */
-  std::vector<ShapeTangentPlane<T>> configs() const { return configs_; }
-
- private:
   double distance_{};
   std::vector<ShapeTangentPlane<T>> configs_;
 };
 
-/* @name Fcl geometry from drake shape specifications. */
-class DRAKE_NO_EXPORT MakeFclShape : public ShapeReifier {
- public:
-  explicit MakeFclShape(const Shape& shape);
-
-  /* Implementation of ShapeReifier interface  */
-  using ShapeReifier::ImplementGeometry;
-  void ImplementGeometry(const Box& box, void*) final;
-  void ImplementGeometry(const Capsule& capsule, void*) final;
-  void ImplementGeometry(const Convex& convex, void*) final;
-  void ImplementGeometry(const Cylinder& cylinder, void*) final;
-  void ImplementGeometry(const Ellipsoid& ellipsoid, void*) final;
-  void ImplementGeometry(const HalfSpace& half_space, void*) final;
-  void ImplementGeometry(const Mesh& mesh, void*) final;
-  void ImplementGeometry(const Sphere& sphere, void*) final;
-
-  std::shared_ptr<fcl::CollisionGeometry<double>> object() const {
-    return object_;
-  }
-
- private:
-  std::shared_ptr<fcl::CollisionGeometry<double>> object_{};
-};
+/* Creates Fcl geometry from drake shape specifications. */
+std::shared_ptr<fcl::CollisionGeometry<double>> MakeFclShape(
+    const Shape& shape);
 
 /* Reports if the Mesh shape is represented as a Convex shape under the hood. */
 ::testing::AssertionResult MeshIsConvex();
