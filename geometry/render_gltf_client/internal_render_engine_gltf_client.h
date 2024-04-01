@@ -93,23 +93,16 @@ class DRAKE_NO_EXPORT RenderEngineGltfClient
   void DoUpdateVisualPose(GeometryId id,
                           const math::RigidTransformd& X_WG) override;
   bool DoRemoveGeometry(GeometryId id) override;
-  using RenderEngineVtk::ImplementGeometry;
-  void ImplementGeometry(const Convex& convex, void* user_data) override;
-  void ImplementGeometry(const Mesh& mesh, void* user_data) override;
 
-  void ImplementMesh(const std::filesystem::path& mesh_path, double scale,
-                     void* user_data);
-  /* Adds a .gltf to the scene for the id currently being reified (data->id).
-   Returns true if added, false if ignored (for whatever reason).
-
-   Note: Even though RenderEngineVtk supports consuming and rendering glTF
+  /* Note: Even though RenderEngineVtk supports consuming and rendering glTF
    files, GltfClient handles glTF files in its own way because vtkGLTFImporter
    and vtkGLTFExporter have limited support for glTF extensions -- useful,
    common extensions. So, by injecting the files directly into the exported glTF
    file, we maintain whatever declarations the source glTF had without the lossy
    filter provided by VTK. */
-  bool ImplementGltf(const std::filesystem::path& gltf_path, double scale,
-                     const RenderEngineVtk::RegistrationData& data);
+  [[nodiscard]] bool ImplementGltf(GeometryId, const Mesh& mesh,
+                                   const PerceptionProperties& properties,
+                                   const math::RigidTransformd& X_WG) final;
 
   std::unique_ptr<RenderClient> render_client_;
 

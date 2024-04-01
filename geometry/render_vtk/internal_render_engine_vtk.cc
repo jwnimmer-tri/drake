@@ -204,17 +204,22 @@ void RenderEngineVtk::UpdateViewpoint(const RigidTransformd& X_WC) {
   }
 }
 
-void RenderEngineVtk::ImplementGeometry(const Box& box, void* user_data) {
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
-  ImplementPolyData(CreateVtkBox(box, data.properties).GetPointer(),
-                    DefineMaterial(data.properties, default_diffuse_), data);
+bool RenderEngineVtk::ImplementShape(GeometryId id, const Box& box,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
+  ImplementPolyData(id, CreateVtkBox(box, properties).GetPointer(),
+                    DefineMaterial(properties, default_diffuse_), properties,
+                    X_WG);
+  return true;
 }
 
-void RenderEngineVtk::ImplementGeometry(const Capsule& capsule,
-                                        void* user_data) {
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
-  ImplementPolyData(CreateVtkCapsule(capsule).GetPointer(),
-                    DefineMaterial(data.properties, default_diffuse_), data);
+bool RenderEngineVtk::ImplementShape(GeometryId id, const Capsule& capsule,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
+  ImplementPolyData(id, CreateVtkCapsule(capsule).GetPointer(),
+                    DefineMaterial(properties, default_diffuse_), properties,
+                    X_WG);
+  return true;
 }
 
 void RenderEngineVtk::ImplementGeometry(const Convex& convex, void* user_data) {
@@ -229,28 +234,35 @@ void RenderEngineVtk::ImplementGeometry(const Convex& convex, void* user_data) {
   ImplementRenderMesh(std::move(render_mesh), /* scale =*/1.0, data);
 }
 
-void RenderEngineVtk::ImplementGeometry(const Cylinder& cylinder,
-                                        void* user_data) {
+bool RenderEngineVtk::ImplementShape(GeometryId id, const Cylinder& cylinder,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
   vtkNew<vtkCylinderSource> vtk_cylinder;
   SetCylinderOptions(vtk_cylinder, cylinder.length(), cylinder.radius());
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
-  ImplementPolyData(TransformToDrakeCylinder(vtk_cylinder),
-                    DefineMaterial(data.properties, default_diffuse_), data);
+  ImplementPolyData(id, TransformToDrakeCylinder(vtk_cylinder),
+                    DefineMaterial(properties, default_diffuse_), properties,
+                    X_WG);
+  return true;
 }
 
-void RenderEngineVtk::ImplementGeometry(const Ellipsoid& ellipsoid,
-                                        void* user_data) {
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
-  ImplementPolyData(CreateVtkEllipsoid(ellipsoid).GetPointer(),
-                    DefineMaterial(data.properties, default_diffuse_), data);
+bool RenderEngineVtk::ImplementShape(GeometryId id, const Ellipsoid& ellipsoid,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
+  ImplementPolyData(id, CreateVtkEllipsoid(ellipsoid).GetPointer(),
+                    DefineMaterial(properties, default_diffuse_), properties,
+                    X_WG);
+  return true;
 }
 
-void RenderEngineVtk::ImplementGeometry(const HalfSpace&, void* user_data) {
+bool RenderEngineVtk::ImplementShape(GeometryId id, const HalfSpace&,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
   vtkSmartPointer<vtkPlaneSource> vtk_plane = CreateSquarePlane(kTerrainSize);
 
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
-  ImplementPolyData(vtk_plane.GetPointer(),
-                    DefineMaterial(data.properties, default_diffuse_), data);
+  ImplementPolyData(id, vtk_plane.GetPointer(),
+                    DefineMaterial(properties, default_diffuse_), properties,
+                    X_WG);
+  return true;
 }
 
 void RenderEngineVtk::ImplementGeometry(const Mesh& mesh, void* user_data) {
@@ -268,23 +280,51 @@ void RenderEngineVtk::ImplementGeometry(const Mesh& mesh, void* user_data) {
         "(e.g., .stl, .dae, etc.) will be ignored.");
     data.accepted = false;
   }
+#if 0
+bool RenderEngineVtk::ImplementShape(GeometryId id, const Mesh& mesh,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
+  const std::string extension = mesh.extension();
+  if (extension == ".obj") {
+    return ImplementObj(id, mesh, properties, X_WG);
+  }
+  if (extension == ".gltf") {
+    return ImplementGltf(id, mesh, properties, X_WG);
+  }
+  static const logging::Warn one_time(
+      "RenderEngineVtk and RenderEngineGltfClient only support Mesh/Convex "
+      "specifications which use .obj and .gltf files. Mesh specifications "
+      "using other mesh types (e.g., .stl, .dae, etc.) will be ignored.");
+  return false;
+#endif
 }
 
-void RenderEngineVtk::ImplementGeometry(const Sphere& sphere, void* user_data) {
+bool RenderEngineVtk::ImplementShape(GeometryId, const MeshcatCone&,
+                                     const PerceptionProperties&,
+                                     const math::RigidTransformd&) {
+  static const logging::Warn one_time(
+      "RenderEngineVtk and RenderEngineGltfClient do not display MeshcatCone "
+      "shapes");
+  return false;
+}
+
+bool RenderEngineVtk::ImplementShape(GeometryId id, const Sphere& sphere,
+                                     const PerceptionProperties& properties,
+                                     const math::RigidTransformd& X_WG) {
   vtkNew<vtkTexturedSphereSource> vtk_sphere;
   SetSphereOptions(vtk_sphere.GetPointer(), sphere.radius());
-  const RegistrationData& data = *static_cast<RegistrationData*>(user_data);
-  ImplementPolyData(vtk_sphere.GetPointer(),
-                    DefineMaterial(data.properties, default_diffuse_), data);
+  ImplementPolyData(id, vtk_sphere.GetPointer(),
+                    DefineMaterial(properties, default_diffuse_), properties,
+                    X_WG);
+  return true;
 }
 
 bool RenderEngineVtk::DoRegisterVisual(GeometryId id, const Shape& shape,
                                        const PerceptionProperties& properties,
                                        const RigidTransformd& X_WG) {
-  // Note: the user_data interface on reification requires a non-const pointer.
-  RegistrationData data{properties, X_WG, id};
-  shape.Reify(this, &data);
-  return data.accepted;
+  return shape.Visit([&](const auto& concrete_shape) {
+    return this->ImplementShape(id, concrete_shape, properties, X_WG);
+  });
 }
 
 void RenderEngineVtk::DoUpdateVisualPose(GeometryId id,
@@ -551,18 +591,9 @@ void RenderEngineVtk::ImplementRenderMesh(RenderMesh&& mesh, double scale,
   ImplementPolyData(transform_filter.GetPointer(), material, data);
 }
 
-bool RenderEngineVtk::ImplementObj(const std::string& file_name, double scale,
-                                   const RegistrationData& data) {
-  std::vector<RenderMesh> meshes = LoadRenderMeshesFromObj(
-      file_name, data.properties, default_diffuse_, diagnostic_);
-  for (auto& render_mesh : meshes) {
-    ImplementRenderMesh(std::move(render_mesh), scale, data);
-  }
-  return true;
-}
-
-bool RenderEngineVtk::ImplementGltf(const std::string& file_name, double scale,
-                                    const RegistrationData& data) {
+bool RenderEngineVtk::ImplementGltf(GeometryId id, const Mesh& mesh,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG) {
   vtkNew<VtkDiagnosticEventObserver> observer;
   observer->set_diagnostic(&diagnostic_);
   auto observe = [&observer](const auto& vtk_object) {
@@ -570,43 +601,41 @@ bool RenderEngineVtk::ImplementGltf(const std::string& file_name, double scale,
     vtk_object->AddObserver(vtkCommand::WarningEvent, observer);
   };
 
-  // TODO(SeanCurtis-TRI): introduce VtkDiagnosticEventObserver on the gltf
-  // importer (see systems/sensors/image_io_load.cc).
   vtkNew<vtkGLTFImporter> importer;
   observe(importer);
-  importer->SetFileName(file_name.c_str());
+  importer->SetFileName(mesh.filename().c_str());
   importer->Update();
 
   auto* renderer = importer->GetRenderer();
   DRAKE_DEMAND(renderer != nullptr);
 
   if (renderer->VisibleActorCount() == 0) {
-    log()->warn("No visible meshes found in glTF file: {}", file_name);
+    log()->warn("No visible meshes found in glTF file: {}", mesh.filename());
     return false;
   }
 
   // The pose of the geometry in Drake's world. This is a component of the final
   // UserMatrix value.
-  vtkSmartPointer<vtkTransform> vtk_X_WG = ConvertToVtkTransform(data.X_WG);
+  vtkSmartPointer<vtkTransform> vtk_X_WG = ConvertToVtkTransform(X_WG);
 
   // The relative transform from the file's frame F to the geometry's frame G.
   // This includes the rotation from y-up to z-up and the requested scale.
   const RigidTransformd X_GF(RotationMatrixd::MakeXRotation(M_PI / 2));
   vtkSmartPointer<vtkTransform> T_GF_transform =
-      ConvertToVtkTransform(X_GF, scale);
+      ConvertToVtkTransform(X_GF, mesh.scale());
   vtkMatrix4x4* T_GF = T_GF_transform->GetMatrix();
 
   // Color.
-  if (data.properties.HasProperty("phong", "diffuse") ||
-      data.properties.HasProperty("phong", "diffuse_map")) {
+  if (properties.HasProperty("phong", "diffuse") ||
+      properties.HasProperty("phong", "diffuse_map")) {
     log()->warn(
         "Drake materials have been assigned to a glTF file. glTF defines its "
         "own materials, so post hoc materials will be ignored and should be "
         "removed from the model specification. glTF file: '{}'",
-        file_name);
+        mesh.filename());
   }
 
-  const RenderLabel label = GetRenderLabelOrThrow(data.properties);
+  const RenderLabel label = GetRenderLabelOrThrow(properties);
   const Rgba label_color = RenderEngine::MakeRgbFromLabel(label);
 
   // The final assemblies associated with the GeometryId.
@@ -670,7 +699,7 @@ bool RenderEngineVtk::ImplementGltf(const std::string& file_name, double scale,
     }
   }
 
-  props_.insert({data.id, std::move(prop_array)});
+  props_.insert({id, std::move(prop_array)});
 
   // Successfully parsing a glTF should require all materials to be PBR.
   SetPbrMaterials();
@@ -923,9 +952,11 @@ void RenderEngineVtk::InitializePipelines() {
   renderer->SetPass(fxaa_pass);
 }
 
-void RenderEngineVtk::ImplementPolyData(vtkPolyDataAlgorithm* source,
+void RenderEngineVtk::ImplementPolyData(GeometryId id,
+                                        vtkPolyDataAlgorithm* source,
                                         const RenderMaterial& material,
-                                        const RegistrationData& data) {
+                                        const PerceptionProperties& properties,
+                                        const math::RigidTransformd& X_WG) {
   std::array<vtkSmartPointer<vtkActor>, kNumPipelines> actors{
       vtkSmartPointer<vtkActor>::New(), vtkSmartPointer<vtkActor>::New(),
       vtkSmartPointer<vtkActor>::New()};
@@ -946,7 +977,7 @@ void RenderEngineVtk::ImplementPolyData(vtkPolyDataAlgorithm* source,
     mapper->SetInputConnection(source->GetOutputPort());
   }
 
-  vtkSmartPointer<vtkTransform> vtk_X_WG = ConvertToVtkTransform(data.X_WG);
+  vtkSmartPointer<vtkTransform> vtk_X_WG = ConvertToVtkTransform(X_WG);
 
   // Adds the actor into the specified pipeline.
   PropArray props;
@@ -960,7 +991,7 @@ void RenderEngineVtk::ImplementPolyData(vtkPolyDataAlgorithm* source,
   };
 
   // Label actor.
-  const RenderLabel label = GetRenderLabelOrThrow(data.properties);
+  const RenderLabel label = GetRenderLabelOrThrow(properties);
   if (label != RenderLabel::kDoNotRender) {
     // NOTE: We only configure the label actor if it doesn't have to "do not
     // render" label applied. We *have* created an actor and connected it to
@@ -1000,7 +1031,7 @@ void RenderEngineVtk::ImplementPolyData(vtkPolyDataAlgorithm* source,
     texture->SetInputConnection(caster->GetOutputPort());
     // TODO(SeanCurtis-TRI): It doesn't seem like the scale is used to actually
     // *scale* the image.
-    const Vector2d uv_scale = data.properties.GetPropertyOrDefault(
+    const Vector2d uv_scale = properties.GetPropertyOrDefault(
         "phong", "diffuse_scale", Vector2d{1, 1});
     const bool need_repeat = uv_scale[0] > 1 || uv_scale[1] > 1;
     texture->SetRepeat(need_repeat);
@@ -1031,7 +1062,7 @@ void RenderEngineVtk::ImplementPolyData(vtkPolyDataAlgorithm* source,
     // into RenderEngineVtk::props_, it may be one of many parts for the same
     // geometry id.
     DRAKE_DEMAND(props[i].parts.size() == 1);
-    props_[data.id][i].parts.push_back(std::move(props[i].parts[0]));
+    props_[id][i].parts.push_back(std::move(props[i].parts[0]));
   }
 }
 

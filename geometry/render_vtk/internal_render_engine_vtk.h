@@ -96,19 +96,6 @@ class DRAKE_NO_EXPORT RenderEngineVtk : public render::RenderEngine,
   /* @see RenderEngine::UpdateViewpoint().  */
   void UpdateViewpoint(const math::RigidTransformd& X_WR) override;
 
-  /* @name    Shape reification  */
-  //@{
-  using ShapeReifier::ImplementGeometry;
-  void ImplementGeometry(const Box& box, void* user_data) override;
-  void ImplementGeometry(const Capsule& capsule, void* user_data) override;
-  void ImplementGeometry(const Convex& convex, void* user_data) override;
-  void ImplementGeometry(const Cylinder& cylinder, void* user_data) override;
-  void ImplementGeometry(const Ellipsoid& ellipsoid, void* user_data) override;
-  void ImplementGeometry(const HalfSpace& half_space, void* user_data) override;
-  void ImplementGeometry(const Mesh& mesh, void* user_data) override;
-  void ImplementGeometry(const Sphere& sphere, void* user_data) override;
-  //@}
-
   /* @name    Access the default properties
 
    Provides access to the default values this instance of the render engine is
@@ -153,15 +140,6 @@ class DRAKE_NO_EXPORT RenderEngineVtk : public render::RenderEngine,
    valid. */
   RenderingPipeline& get_mutable_pipeline(ImageType image_type) const;
 
-  /* A package of data required to register a visual geometry. This is passed as
-   the void* user_data in the `ShapeReifier::ImplementGeometry()` methods. */
-  struct RegistrationData {
-    const PerceptionProperties& properties;
-    const math::RigidTransformd& X_WG;
-    const GeometryId id;
-    bool accepted{true};
-  };
-
   // @see RenderEngine::DoRegisterVisual().
   bool DoRegisterVisual(GeometryId id, const Shape& shape,
                         const PerceptionProperties& properties,
@@ -193,19 +171,19 @@ class DRAKE_NO_EXPORT RenderEngineVtk : public render::RenderEngine,
       systems::sensors::ImageLabel16I* label_image_out) const override;
 
   // Helper function for mapping a RenderMesh instance into the appropriate VTK
-  // polydata.
-  void ImplementRenderMesh(geometry::internal::RenderMesh&& mesh, double scale,
-                           const RegistrationData& data);
+  // polydata. Returns a "bool accepted" result.
+  [[nodiscard]] bool ImplementRenderMesh(GeometryId id,
+                                         geometry::internal::RenderMesh&& mesh,
+                                         double scale,
+                                         const PerceptionProperties& properties,
+                                         const math::RigidTransformd& X_WG);
 
-  // Adds an .obj to the scene for the id currently being reified (data->id).
-  // Returns true if added, false if ignored (for whatever reason).
-  bool ImplementObj(const std::string& file_name, double scale,
-                    const RegistrationData& data);
-
-  // Adds a .gltf to the scene for the id currently being reified (data->id).
-  // Returns true if added, false if ignored (for whatever reason).
-  bool ImplementGltf(const std::string& file_name, double scale,
-                     const RegistrationData& data);
+  // Adds a .gltf to the scene.
+  // Marked virtual to allow RenderEngineGltfClient to customize it.
+  // Returns a "bool accepted" result.
+  [[nodiscard]] virtual bool ImplementGltf(
+      GeometryId id, const Mesh& mesh, const PerceptionProperties& properties,
+      const math::RigidTransformd& X_WG);
 
  private:
   friend class RenderEngineVtkTester;
@@ -216,12 +194,42 @@ class DRAKE_NO_EXPORT RenderEngineVtk : public render::RenderEngine,
   // Initializes the VTK pipelines.
   void InitializePipelines();
 
+  // Each of these return a "bool accepted" result.
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Box& box,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Capsule& capsule,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Convex& convex,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Cylinder& cylinder,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Ellipsoid& ellipsoid,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const HalfSpace& half_space,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Mesh& mesh,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const MeshcatCone& cone,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+  [[nodiscard]] bool ImplementShape(GeometryId id, const Sphere& sphere,
+                                    const PerceptionProperties& properties,
+                                    const math::RigidTransformd& X_WG);
+
   // Performs the common setup for all shape types. Note, this can be called
   // multiple times for a single value of data.id. It will simply accumulate
   // multiple parts in the Prop associated with the geometry id.
-  void ImplementPolyData(vtkPolyDataAlgorithm* source,
+  void ImplementPolyData(GeometryId id, vtkPolyDataAlgorithm* source,
                          const geometry::internal::RenderMaterial& material,
-                         const RegistrationData& data);
+                         const PerceptionProperties& properties,
+                         const math::RigidTransformd& X_WG);
 
   void SetDefaultLightPosition(const Vector3<double>& p_DL) override;
 

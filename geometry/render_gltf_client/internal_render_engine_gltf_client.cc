@@ -533,50 +533,23 @@ bool RenderEngineGltfClient::DoRemoveGeometry(GeometryId id) {
   }
 }
 
-void RenderEngineGltfClient::ImplementGeometry(const Convex& convex,
-                                               void* user_data) {
-  ImplementMesh(convex.filename(), convex.scale(), user_data);
-}
-
-void RenderEngineGltfClient::ImplementGeometry(const Mesh& mesh,
-                                               void* user_data) {
-  ImplementMesh(mesh.filename(), mesh.scale(), user_data);
-}
-
-void RenderEngineGltfClient::ImplementMesh(
-    const std::filesystem::path& mesh_path, double scale, void* user_data) {
-  auto& data = *static_cast<RegistrationData*>(user_data);
-  const std::string extension = Mesh(mesh_path.string()).extension();
-  if (extension == ".obj") {
-    data.accepted = ImplementObj(mesh_path.string(), scale, data);
-  } else if (extension == ".gltf") {
-    data.accepted = ImplementGltf(mesh_path, scale, data);
-  } else {
-    static const logging::Warn one_time(
-        "RenderEngineGltfClient only supports Mesh/Convex specifications which "
-        "use .obj or .gltf files. Mesh specifications using other mesh types "
-        "(e.g., .stl, .dae, etc.) will be ignored.");
-    data.accepted = false;
-  }
-}
-
 bool RenderEngineGltfClient::ImplementGltf(
-    const std::filesystem::path& gltf_path, double scale,
-    const RenderEngineVtk::RegistrationData& data) {
-  nlohmann::json mesh_data = ReadJsonFile(gltf_path);
+    GeometryId id, const Mesh& mesh, const PerceptionProperties& properties,
+    const math::RigidTransformd& X_WG) {
+  nlohmann::json mesh_data = ReadJsonFile(mesh.filename());
 
   // TODO(SeanCurtis-TRI) What to do about a gltf that has no materials? We need
-  // to apply the same logic of the data.properties as we do to OBJ. We'll
-  // defer for now because the expectation is that the gltf is used *because*
-  // of materials.
+  // to apply the same logic of the properties as we do to OBJ. We'll defer for
+  // now because the expectation is that the gltf is used *because* of
+  // materials.
 
   std::map<int, Matrix4<double>> root_nodes = FindRootNodes(mesh_data);
-  SetRootPoses(&mesh_data, root_nodes, data.X_WG, scale, true);
+  SetRootPoses(&mesh_data, root_nodes, X_WG, mesh.scale(), true);
 
   DRAKE_DEMAND(!gltfs_.contains(data.id));
-  gltfs_.insert({data.id,
-                 {gltf_path, std::move(mesh_data), std::move(root_nodes), scale,
-                  GetRenderLabelOrThrow(data.properties)}});
+  gltfs_.insert({id,
+                 {mesh.filename(), std::move(mesh_data), std::move(root_nodes),
+                  mesh.scale(), GetRenderLabelOrThrow(properties)}});
   return true;
 }
 
