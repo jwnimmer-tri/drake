@@ -272,7 +272,7 @@ drake_lcm_cc_library(
 drake_lcm_py_library(
     name = "_generated_lcmtypes_drake_py",
     # We'll rely on the //:module_py path munging instead.
-    add_current_package_to_imports = False,
+    add_current_package_to_imports = True,
     lcm_package = "drake",
     lcm_srcs = ALL_LCM_SRCS,
     visibility = ["//visibility:private"],
