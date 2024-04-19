@@ -139,7 +139,9 @@ bool HasRunfiles() {
   return GetRunfilesSingleton().runfiles.get() != nullptr;
 }
 
-RlocationOrError FindRunfile(const std::string& resource_path) {
+RlocationOrError FindRunfile(
+    const std::string& resource_path,
+    const std::string& source_repository) {
   const auto& singleton = GetRunfilesSingleton();
 
   // Check for HasRunfiles.
@@ -161,9 +163,24 @@ RlocationOrError FindRunfile(const std::string& resource_path) {
     return result;
   }
 
+  // Check for the bzlmod "_main" special case.
+  std::string main_relative_path;
+  if (!source_repository.empty() &&
+      resource_path.starts_with(source_repository)) {
+    auto remainder =
+        std::string_view{resource_path}.substr(source_repository.size());
+    if (remainder.starts_with("/")) {
+      main_relative_path = remainder.substr(1);
+    }
+  }
+
   // Locate the file on the manifest and in the directory.
-  const std::string by_man = singleton.runfiles->Rlocation(resource_path);
-  const std::string by_dir = singleton.runfiles_dir + "/" + resource_path;
+  const std::string by_man =
+      singleton.runfiles->Rlocation(resource_path /*, source_repository */);
+  const std::string by_dir =
+      main_relative_path.empty()
+          ? singleton.runfiles_dir + "/" + resource_path
+          : singleton.runfiles_dir + "/_main/" + main_relative_path;
   const bool by_man_ok = fs::is_regular_file({by_man});
   const bool by_dir_ok = fs::is_regular_file({by_dir});
   drake::log()->debug(
@@ -193,7 +210,7 @@ RlocationOrError FindRunfile(const std::string& resource_path) {
   } else {
     DRAKE_DEMAND(by_man_ok && !by_dir_ok);
     detail =
-        "and it is on the manifest"
+        "and it is on the manifest "
         "but the file does not exist at that location";
   }
   result.error = fmt::format(

@@ -15,7 +15,7 @@ namespace {
 GTEST_TEST(FindRunfilesTest, AcceptanceTest) {
   EXPECT_TRUE(HasRunfiles());
   const auto result = FindRunfile(
-      "drake/common/test/find_resource_test_data.txt");
+      "drake/common/test/find_resource_test_data.txt", "drake");
   drake::log()->debug("result.abspath: {}", result.abspath);
   EXPECT_GT(result.abspath.size(), 0);
   EXPECT_TRUE(std::filesystem::is_regular_file({result.abspath}));

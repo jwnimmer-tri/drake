@@ -269,8 +269,8 @@ Result FindResource(const string& resource_path) {
   // have runfiles but not Drake's runfiles; in that case we should skip this
   // option and continue to option (3) instead.
   if (HasRunfiles()) {
-    if (FindRunfile(kSentinelRelpath).error.empty()) {
-      return MakeResultFrom(resource_path, FindRunfile(resource_path));
+    if (FindRunfile(kSentinelRelpath, "drake").error.empty()) {
+      return MakeResultFrom(resource_path, FindRunfile(resource_path, "drake"));
     } else {
       log()->debug(
           "FindResource ignoring Bazel runfiles with no sentinel file {}.",
