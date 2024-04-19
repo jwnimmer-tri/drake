@@ -26,9 +26,6 @@ namespace multibody {
 namespace internal {
 
 namespace fs = std::filesystem;
-#if 0
-namespace pxr = drake_vendor_pxr;
-#endif
 
 struct UsdStageMetadata {
     double meters_per_unit = 1.0;
