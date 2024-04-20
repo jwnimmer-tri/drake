@@ -17,7 +17,14 @@ workspace(name = "drake")
 
 load("//tools/workspace:default.bzl", "add_default_workspace")
 
-add_default_workspace()
+add_default_workspace(
+    repository_excludes = [
+        "bazel_skylib",
+        "rules_cc",
+        "rules_license",
+        "rules_python",
+    ],
+)
 
 load("@build_bazel_apple_support//crosstool:setup.bzl", "apple_cc_configure")
 
