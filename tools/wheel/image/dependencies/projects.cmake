@@ -27,7 +27,7 @@ set(lapack_md5 "d70fc27a8bdebe00481c97c728184f09")
 list(APPEND ALL_PROJECTS lapack)
 
 # ipopt (requires mumps)
-if(APPLE)
+if(APPLE_ARM64)
     set(mumps_version 5.4.1)  # Latest available in Ubuntu.
     set(mumps_url
         "http://archive.ubuntu.com/ubuntu/pool/universe/m/mumps/mumps_${mumps_version}.orig.tar.gz"
@@ -39,9 +39,9 @@ if(APPLE)
 
     # This must match the version in tools/workspace/ipopt_internal_fromsource.
     # The matching is automatically enforced by a linter script.
-    set(ipopt_version 3.14.14)
+    set(ipopt_version 3.14.16)
     set(ipopt_url "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/${ipopt_version}.tar.gz")
-    set(ipopt_md5 "75c288ff392e95db0ac6b296b2b3b367")
+    set(ipopt_md5 "f94822be08b1f6e109261f305799b0ae")
     set(ipopt_dlname "ipopt-${ipopt_version}.tar.gz")
     list(APPEND ALL_PROJECTS ipopt)
 endif()

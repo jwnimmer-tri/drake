@@ -290,7 +290,7 @@ void DoScalarIndependentDefinitions(py::module m) {
             cls_doc.GetTrackedCameraPose.doc)
         .def("SetTransform",
             py::overload_cast<std::string_view, const math::RigidTransformd&,
-                const std::optional<double>&>(&Class::SetTransform),
+                std::optional<double>>(&Class::SetTransform),
             py::arg("path"), py::arg("X_ParentPath"),
             py::arg("time_in_recording") = std::nullopt,
             cls_doc.SetTransform.doc_RigidTransform)
@@ -305,19 +305,19 @@ void DoScalarIndependentDefinitions(py::module m) {
             cls_doc.GetRealtimeRate.doc)
         .def("SetProperty",
             py::overload_cast<std::string_view, std::string, bool,
-                const std::optional<double>&>(&Class::SetProperty),
+                std::optional<double>>(&Class::SetProperty),
             py::arg("path"), py::arg("property"), py::arg("value"),
             py::arg("time_in_recording") = std::nullopt,
             cls_doc.SetProperty.doc_bool)
         .def("SetProperty",
             py::overload_cast<std::string_view, std::string, double,
-                const std::optional<double>&>(&Class::SetProperty),
+                std::optional<double>>(&Class::SetProperty),
             py::arg("path"), py::arg("property"), py::arg("value"),
             py::arg("time_in_recording") = std::nullopt,
             cls_doc.SetProperty.doc_double)
         .def("SetProperty",
             py::overload_cast<std::string_view, std::string,
-                const std::vector<double>&, const std::optional<double>&>(
+                const std::vector<double>&, std::optional<double>>(
                 &Class::SetProperty),
             py::arg("path"), py::arg("property"), py::arg("value"),
             py::arg("time_in_recording") = std::nullopt,
@@ -370,17 +370,17 @@ void DoScalarIndependentDefinitions(py::module m) {
     // the GIL during the call (because the member function blocks to wait for a
     // worker thread) and then copies the result into py::bytes while holding
     // the GIL.
-    auto wrap_get_packed_foo = []<typename... Args>(
-        std::string(Class::*member_function)(Args...) const) {
-      return [member_function](const Class& self, Args... args) {
-        std::string result;
-        {
-          py::gil_scoped_release unlock;
-          result = (self.*member_function)(args...);
-        }
-        return py::bytes(result);
-      };
-    };  // NOLINT(readability/braces)
+    auto wrap_get_packed_foo =
+        []<typename... Args>(std::string (Class::*member_func)(Args...) const) {
+          return [member_func](const Class& self, Args... args) {
+            std::string result;
+            {
+              py::gil_scoped_release unlock;
+              result = (self.*member_func)(args...);
+            }
+            return py::bytes(result);
+          };
+        };  // NOLINT(readability/braces)
 
     // The remaining methods are intended to primarily for testing. Because they
     // are excluded from C++ Doxygen, we bind them privately here.
@@ -438,7 +438,7 @@ void DoScalarIndependentDefinitions(py::module m) {
     constexpr auto& cls_doc = doc.MeshcatAnimation;
     py::class_<Class> cls(m, "MeshcatAnimation", cls_doc.doc);
     cls  // BR
-        .def(py::init<double>(), py::arg("frames_per_second") = 32.0,
+        .def(py::init<double>(), py::arg("frames_per_second") = 64.0,
             cls_doc.ctor.doc)
         .def("frames_per_second", &Class::frames_per_second,
             cls_doc.frames_per_second.doc)
@@ -461,19 +461,18 @@ void DoScalarIndependentDefinitions(py::module m) {
             py::arg("path"), py::arg("X_ParentPath"), cls_doc.SetTransform.doc)
         .def("SetProperty",
             // Note: overload_cast and overload_cast_explicit did not work here.
-            static_cast<void (Class::*)(int, const std::string&,
-                const std::string&, bool)>(&Class::SetProperty),
+            static_cast<void (Class::*)(int, std::string_view, std::string_view,
+                bool)>(&Class::SetProperty),
             py::arg("frame"), py::arg("path"), py::arg("property"),
             py::arg("value"), cls_doc.SetProperty.doc_bool)
         .def("SetProperty",
-            static_cast<void (Class::*)(int, const std::string&,
-                const std::string&, double)>(&Class::SetProperty),
+            static_cast<void (Class::*)(int, std::string_view, std::string_view,
+                double)>(&Class::SetProperty),
             py::arg("frame"), py::arg("path"), py::arg("property"),
             py::arg("value"), cls_doc.SetProperty.doc_double)
         .def("SetProperty",
-            static_cast<void (Class::*)(int, const std::string&,
-                const std::string&, const std::vector<double>&)>(
-                &Class::SetProperty),
+            static_cast<void (Class::*)(int, std::string_view, std::string_view,
+                const std::vector<double>&)>(&Class::SetProperty),
             py::arg("frame"), py::arg("path"), py::arg("property"),
             py::arg("value"), cls_doc.SetProperty.doc_vector_double);
     // Note: We don't bind get_key_frame and get_javascript_type (at least

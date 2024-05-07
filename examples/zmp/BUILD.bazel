@@ -4,13 +4,15 @@ load(
     "drake_cc_binary",
 )
 
+package(default_visibility = ["//visibility:private"])
+
 drake_cc_binary(
     name = "zmp_example",
     testonly = 1,
     srcs = ["zmp_example.cc"],
     deps = [
         "//common/proto:call_python",
-        "//systems/controllers:zmp_test_util",
+        "//planning/locomotion/test_utilities",
     ],
 )
 

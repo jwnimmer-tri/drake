@@ -9,15 +9,11 @@ load("//tools/workspace:generate_file.bzl", "generate_file")
 _JUPYTER_PY_TEMPLATE = """
 import sys
 
-from bazel_tools.tools.python.runfiles import runfiles
-
 from drake.tools.jupyter.jupyter_bazel import _jupyter_bazel_notebook_main
 
 
 def main():
-    manifest = runfiles.Create()
-    notebook_path = manifest.Rlocation({notebook_respath})
-    _jupyter_bazel_notebook_main(notebook_path, sys.argv[1:])
+    _jupyter_bazel_notebook_main({notebook_respath}, sys.argv[1:])
 
 
 if __name__ == "__main__":
@@ -72,7 +68,7 @@ def drake_jupyter_py_binary(
         main = main,
         data = data + [notebook],
         deps = depset(deps + [
-            "@bazel_tools//tools/python/runfiles",
+            "@rules_python//python/runfiles",
             "@drake//tools/jupyter:jupyter_bazel_py",
         ]).to_list(),
         # `generate_file` output is still marked as executable :(

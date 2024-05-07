@@ -515,9 +515,9 @@ class Meshcat {
 
   @pydrake_mkdoc_identifier{RigidTransform}
   */
-  void SetTransform(
-      std::string_view path, const math::RigidTransformd& X_ParentPath,
-      const std::optional<double>& time_in_recording = std::nullopt);
+  void SetTransform(std::string_view path,
+                    const math::RigidTransformd& X_ParentPath,
+                    std::optional<double> time_in_recording = std::nullopt);
 
   /** Set the homogeneous transform for a given path in the scene tree relative
   to its parent path. An object's pose is the concatenation of all of the
@@ -578,9 +578,8 @@ class Meshcat {
 
   @pydrake_mkdoc_identifier{bool}
   */
-  void SetProperty(
-      std::string_view path, std::string property, bool value,
-      const std::optional<double>& time_in_recording = std::nullopt);
+  void SetProperty(std::string_view path, std::string property, bool value,
+                   std::optional<double> time_in_recording = std::nullopt);
 
   /** Sets a single named property of the object at the given path. For example,
   @verbatim
@@ -600,9 +599,8 @@ class Meshcat {
 
   @pydrake_mkdoc_identifier{double}
   */
-  void SetProperty(
-      std::string_view path, std::string property, double value,
-      const std::optional<double>& time_in_recording = std::nullopt);
+  void SetProperty(std::string_view path, std::string property, double value,
+                   std::optional<double> time_in_recording = std::nullopt);
 
   /** Sets a single named property of the object at the given path. For example,
   @verbatim
@@ -622,10 +620,9 @@ class Meshcat {
 
   @pydrake_mkdoc_identifier{vector_double}
   */
-  void SetProperty(
-      std::string_view path, std::string property,
-      const std::vector<double>& value,
-      const std::optional<double>& time_in_recording = std::nullopt);
+  void SetProperty(std::string_view path, std::string property,
+                   const std::vector<double>& value,
+                   std::optional<double> time_in_recording = std::nullopt);
 
   /** Sets the *environment* texture. For objects with physically-based
    rendering (PBR) material properties (e.g., metallic surfaces), this defines
@@ -841,7 +838,7 @@ class Meshcat {
 
   /** Sets a flag to pause/stop recording.  When stopped, publish events will
   not add frames to the animation. */
-  void StopRecording() { recording_ = false; }
+  void StopRecording();
 
   /** Sends the recording to Meshcat as an animation. The published animation
   only includes transforms and properties; the objects that they modify must be
@@ -854,16 +851,16 @@ class Meshcat {
   *not* currently remove the animation from Meshcat. */
   void DeleteRecording();
 
-  /** Returns a mutable pointer to this Meshcat's unique MeshcatAnimation
-  object, if it exists, in which the frames will be recorded. This pointer can
-  be used to set animation properties (like autoplay, the loop mode, number of
-  repetitions, etc).
+  /** Returns a const reference to this Meshcat's MeshcatAnimation object. This
+  can be used to check animation properties (e.g., autoplay). The return value
+  will only remain valid for the lifetime of `this` or until DeleteRecording()
+  is called. */
+  const MeshcatAnimation& get_recording() const;
 
-  The MeshcatAnimation object will only remain valid for the lifetime of `this`
-  or until DeleteRecording() is called.
-
-  @throws std::exception if meshcat does not have a recording.
-  */
+  /** Returns a mutable reference to this Meshcat's MeshcatAnimation object.
+  This can be used to set animation properties (like autoplay, the loop mode,
+  number of repetitions, etc). The return value will only remain valid for the
+  lifetime of `this` or until DeleteRecording() is called. */
   MeshcatAnimation& get_mutable_recording();
 
   /* These remaining public methods are intended to primarily for testing. These
