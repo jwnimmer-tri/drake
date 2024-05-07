@@ -56,7 +56,7 @@ class UsdParser {
 
 namespace {
 void InitializeOpenUsdLibrary() {
-#if 0
+#if 1
   // Register all relevant plugins.
   auto& registry = pxr::PlugRegistry::PlugRegistry::GetInstance();
   std::vector<std::string> json_paths{{
