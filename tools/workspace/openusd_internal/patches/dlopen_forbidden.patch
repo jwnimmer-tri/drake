@@ -1,0 +1,27 @@
+WIP
+
+--- pxr/base/arch/library.cpp
++++ pxr/base/arch/library.cpp
+@@ -52,9 +52,8 @@ void* ArchLibraryOpen(const std::string &filename, int flag)
+         return nullptr;
+     }
+ #else
+-    // Clear any unchecked error first.
+-    (void)dlerror();
+-    return dlopen(filename.c_str(), flag);
++    // This is nerfed. Drake forbids dlopen as a policy.
++    return nullptr;
+ #endif
+ }
+ 
+@@ -64,8 +63,8 @@ std::string ArchLibraryError()
+     const DWORD error = arch_lastLibraryError;
+     return error ? ArchStrSysError(error) : std::string();
+ #else
+-    const char* const error = dlerror();
+-    return error ? std::string(error) : std::string();
++    // This is nerfed. Drake forbids dlopen as a policy.
++    return std::string();
+ #endif
+ }
+ 
