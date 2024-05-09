@@ -704,8 +704,16 @@ class Meshcat::Impl {
       throw std::logic_error("The web_url_pattern must be http:// or https://");
     }
 
-    // Fetch the index once to be sure that we preload the content.
-    DRAKE_DEMAND(internal::GetMeshcatStaticResource("/").has_value());
+    // Load the javascript into CAS. This also serves to cross-check that none
+    // of our static resources have gone missing.
+    auto maybe_meshcat_js = internal::GetMeshcatStaticResource("/meshcat.js");
+    auto maybe_stats_js = internal::GetMeshcatStaticResource("/stats.min.js");
+    DRAKE_DEMAND(maybe_meshcat_js.has_value());
+    DRAKE_DEMAND(maybe_stats_js.has_value());
+    meshcat_js_ = file_storage_.Insert(  // BR
+        std::string{*maybe_meshcat_js}, "/meshcat.js");
+    stats_min_js_ = file_storage_.Insert(  // BR
+        std::string{*maybe_stats_js}, "/stats.min.js");
 
     std::promise<std::tuple<int, bool>> app_promise;
     std::future<std::tuple<int, bool>> app_future = app_promise.get_future();
@@ -1710,6 +1718,12 @@ class Meshcat::Impl {
     std::vector<std::shared_ptr<const FileStorage::Handle>> assets =
         file_storage_.DumpEverything();
     for (const auto& asset : assets) {
+      if (asset->sha256 == meshcat_js_->sha256 ||
+          asset->sha256 == stats_min_js_->sha256) {
+        // We already directly inserted this JS resource using `js_paths` above,
+        // so there's no need to dump it as part of the CAS.
+        continue;
+      }
       javascript += fmt::format("// {}\n", asset->filename_hint);
       javascript += fmt::format(
           "casAssets[\"{}\"] = "
@@ -2291,6 +2305,8 @@ class Meshcat::Impl {
   uWS::App* app_{nullptr};
   us_listen_socket_t* listen_socket_{nullptr};
   std::set<WebSocket*> websockets_{};
+  std::shared_ptr<const FileStorage::Handle> meshcat_js_;
+  std::shared_ptr<const FileStorage::Handle> stats_min_js_;
 
   // This variable may be accessed from any thread, but should only be modified
   // in the websocket thread.
