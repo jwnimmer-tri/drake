@@ -706,14 +706,29 @@ class Meshcat::Impl {
 
     // Load the javascript into CAS. This also serves to cross-check that none
     // of our static resources have gone missing.
+    auto maybe_meshcat_html = internal::GetMeshcatStaticResource("/");
     auto maybe_meshcat_js = internal::GetMeshcatStaticResource("/meshcat.js");
     auto maybe_stats_js = internal::GetMeshcatStaticResource("/stats.min.js");
+    DRAKE_DEMAND(maybe_meshcat_html.has_value());
     DRAKE_DEMAND(maybe_meshcat_js.has_value());
     DRAKE_DEMAND(maybe_stats_js.has_value());
     meshcat_js_ = file_storage_.Insert(  // BR
         std::string{*maybe_meshcat_js}, "/meshcat.js");
     stats_min_js_ = file_storage_.Insert(  // BR
         std::string{*maybe_stats_js}, "/stats.min.js");
+    // Insert the javascript directly into the html.
+    std::vector<std::pair<std::string, std::string>> js_paths{
+        {" src=\"meshcat.js\"", "/meshcat.js"},
+        {" src=\"stats.min.js\"", "/stats.min.js"},
+    };
+    for (const auto& [src_link, url] : js_paths) {
+      const std::string_view url_data =
+          internal::GetMeshcatStaticResource(url).value();
+      const size_t js_pos = html.find(src_link);
+      DRAKE_DEMAND(js_pos != std::string::npos);
+      html.erase(js_pos, src_link.size());
+      html.insert(js_pos + 1, url_data);
+    }
 
     std::promise<std::tuple<int, bool>> app_promise;
     std::future<std::tuple<int, bool>> app_future = app_promise.get_future();
