@@ -1690,6 +1690,9 @@ class Meshcat::Impl {
     DRAKE_DEMAND(IsThread(websocket_thread_id_));
     std::string html{internal::GetMeshcatStaticResource("/").value()};
 
+    // XXX
+    // https://github.com/ctabin/libzippp/blob/7e65f6cd173da8f20393d331ceb697482b206edf/src/libzippp.h#L267
+
     // Bundle the js resource files.
     std::vector<std::pair<std::string, std::string>> js_paths{
         {" src=\"meshcat.js\"", "/meshcat.js"},
