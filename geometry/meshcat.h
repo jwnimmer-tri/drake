@@ -814,17 +814,33 @@ class Meshcat {
 
   //@}
 
-  /** Returns an HTML string that can be saved to a file for a snapshot of the
-  visualizer and its contents. The HTML can be viewed in the browser
-  without any connection to a Meshcat "server" (e.g. `this`). This is a great
-  way to save and share your 3D content.
+  /** Returns a standalone HTML snapshot of the visualizer and its contents,
+  including the current animation (if any). The snapshot can be viewed in the
+  browser without any connection to a Meshcat "server" (e.g. `this`). This is a
+  great way to save and share your 3D content.
+
+  The return value is a byte string; typically you would save it to a file, or
+  maybe upload it to a web server.
+
+  When `zip` is false (the default), the data is a standalone HTML page (media
+  type `text/html`). The standalone HTML page can be opened directly by a
+  browser from disk.
+
+  When `zip` is true, the data is a ZIP file (media type `application/x-zip`)
+  containing a thin `meshcat.html` page and the assets (meshes, textures, etc.)
+  contained as separate files. When you are uploading the files to a website,
+  this will typically be a more efficient representation as compared to the
+  standalone (i.e., non-zip) option.
 
   Note that controls (e.g. sliders and buttons) are not included in the HTML
   output, because their usefulness relies on a connection to the server.
 
   You can also use your browser to download this file, by typing "/download"
-  on the end of the URL (i.e., accessing `web_url() + "/download"`). */
-  std::string StaticHtml();
+  on the end of the URL (i.e., accessing `web_url() + "/download"`) for the
+  standalone pagea, or "/download.zip" for the ZIP file.
+
+  See also StaticHtmlZip(). */
+  std::string StaticHtml(bool zip = false);
 
   /** Sets a flag indicating that subsequent calls to SetTransform and
   SetProperty should also be "recorded" into a MeshcatAnimation when their

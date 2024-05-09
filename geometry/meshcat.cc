@@ -1686,11 +1686,11 @@ class Meshcat::Impl {
 
   // This function is for use by the websocket thread. The Meshcat::StaticHtml()
   // outer function calls into here using appropriate deferred handling.
-  std::string CalcStandaloneHtml() const {
+  std::string CalcStandaloneHtml(bool zip) const {
     DRAKE_DEMAND(IsThread(websocket_thread_id_));
     std::string html{internal::GetMeshcatStaticResource("/").value()};
 
-    // Insert the javascript directly into the html.
+    // Bundle the js resource files.
     std::vector<std::pair<std::string, std::string>> js_paths{
         {" src=\"meshcat.js\"", "/meshcat.js"},
         {" src=\"stats.min.js\"", "/stats.min.js"},
@@ -1698,35 +1698,56 @@ class Meshcat::Impl {
     for (const auto& [src_link, url] : js_paths) {
       const std::string_view url_data =
           internal::GetMeshcatStaticResource(url).value();
-      const size_t js_pos = html.find(src_link);
-      DRAKE_DEMAND(js_pos != std::string::npos);
-      html.erase(js_pos, src_link.size());
-      html.insert(js_pos + 1, url_data);
+      if (zip) {
+        // XXX
+        DRAKE_UNREACHABLE();
+      } else {
+        // Insert the javascript directly into the html.
+        const size_t js_pos = html.find(src_link);
+        DRAKE_DEMAND(js_pos != std::string::npos);
+        html.erase(js_pos, src_link.size());
+        html.insert(js_pos + 1, url_data);
+      }
     }
 
-    // Insert a JavaScript URL hook that knows how to serve the CAS database.
-    // (See FileStorage and GetCasUrl for details about CAS.)
-    std::string javascript("casAssets = {};\n");
+    // Bundle the CAS resource files. (See FileStorage and GetCasUrl for details
+    // about CAS.)
+    std::string javascript;
     std::vector<std::shared_ptr<const FileStorage::Handle>> assets =
         file_storage_.DumpEverything();
-    for (const auto& asset : assets) {
-      javascript += fmt::format("// {}\n", asset->filename_hint);
-      javascript += fmt::format(
-          "casAssets[\"{}\"] = "
-          "\"data:application/octet-binary;base64,{}\";\n",
-          FileStorage::GetCasUrl(*asset),
-          common_robotics_utilities::base64_helpers::Encode(
-              std::vector<uint8_t>(asset->content.begin(),
-                                   asset->content.end())));
-    }
-    javascript += R"""(
-        MeshCat.THREE.DefaultLoadingManager.setURLModifier(url => {
-            if (url in casAssets) {
-                return casAssets[url];
-            }
-            return url;
-        });
+    if (zip) {
+      for (const auto& asset : assets) {
+        // XXX
+        DRAKE_UNREACHABLE();
+        FileStorage::GetCasUrl(*asset);
+      }
+      javascript += R"""(
+          MeshCat.THREE.DefaultLoadingManager.setURLModifier(url => {
+              return url.replace("cas-v1-", "cas-v1/");
+          });
 )""";
+    } else {
+      // Insert a JavaScript URL hook that knows how to serve the CAS database.
+      javascript += "casAssets = {};\n";
+      for (const auto& asset : assets) {
+        javascript += fmt::format("// {}\n", asset->filename_hint);
+        javascript += fmt::format(
+            "casAssets[\"{}\"] = "
+            "\"data:application/octet-binary;base64,{}\";\n",
+            FileStorage::GetCasUrl(*asset),
+            common_robotics_utilities::base64_helpers::Encode(
+                std::vector<uint8_t>(asset->content.begin(),
+                                     asset->content.end())));
+      }
+      javascript += R"""(
+          MeshCat.THREE.DefaultLoadingManager.setURLModifier(url => {
+              if (url in casAssets) {
+                  return casAssets[url];
+              }
+              return url;
+          });
+)""";
+    }
 
     // Replace the javascript code in the original html file which connects via
     // websockets with the static javascript commands.
@@ -1745,13 +1766,13 @@ class Meshcat::Impl {
   }
 
   // This function is public via the PIMPL.
-  std::string StaticHtml() {
+  std::string StaticHtml(bool zip) {
     DRAKE_DEMAND(IsThread(main_thread_id_));
     std::promise<std::string> p;
     std::future<std::string> f = p.get_future();
-    Defer([this, p = std::move(p)]() mutable {
+    Defer([this, zip, p = std::move(p)]() mutable {
       DRAKE_DEMAND(IsThread(websocket_thread_id_));
-      p.set_value(CalcStandaloneHtml());
+      p.set_value(CalcStandaloneHtml(zip));
     });
     return f.get();
   }
@@ -2074,12 +2095,20 @@ class Meshcat::Impl {
                      uWS::HttpResponse<kSsl>* response) const {
     DRAKE_DEMAND(IsThread(websocket_thread_id_));
     drake::log()->debug("Meshcat: GET {}", url_path);
-    // Handle the magic download URL.
+    // Handle the magic download URLs.
     if (url_path == "/download") {
-      const std::string content = CalcStandaloneHtml();
+      const std::string content = CalcStandaloneHtml(/* zip = */ false);
       response->writeHeader("Content-Type", "text/html; charset=utf-8");
       response->writeHeader("Content-Disposition",
                             "attachment; filename=\"meshcat.html\"");
+      response->end(content);
+      return;
+    }
+    if (url_path == "/download.zip") {
+      const std::string content = CalcStandaloneHtml(/* zip = */ true);
+      response->writeHeader("Content-Type", "application/x-zip");
+      response->writeHeader("Content-Disposition",
+                            "attachment; filename=\"meshcat.zip\"");
       response->end(content);
       return;
     }
@@ -2684,8 +2713,8 @@ Meshcat::Gamepad Meshcat::GetGamepad() const {
   return impl().GetGamepad();
 }
 
-std::string Meshcat::StaticHtml() {
-  return impl().StaticHtml();
+std::string Meshcat::StaticHtml(bool zip) {
+  return impl().StaticHtml(zip);
 }
 
 void Meshcat::StartRecording(double frames_per_second,
