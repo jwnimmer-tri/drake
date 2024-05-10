@@ -221,7 +221,7 @@ class SceneTreeElement {
   // This is intended for use in generating a "static html" of the scene. Any
   // resources required by the commands will appended to `assets`.
   std::string CreateCommands(
-      std::vector<std::shared_ptr<const FileStorage::Handle>>* assets) const {
+      std::map<Sha256, std::shared_ptr<const FileStorage::Handle>>* assets) const {
     // N.B. The string::operator+= here might look like a performance problem,
     // but string appending actually uses exponential growth (i.e., similar to
     // how std::vector<char> works) so the overhead here is not bad.
