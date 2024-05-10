@@ -218,14 +218,18 @@ class SceneTreeElement {
   }
 
   // Returns a string which implements the entire tree directly in javascript.
-  // This is intended for use in generating a "static html" of the scene.
-  std::string CreateCommands() const {
+  // This is intended for use in generating a "static html" of the scene. Any
+  // resources required by the commands will appended to `assets`.
+  std::string CreateCommands(
+      std::vector<std::shared_ptr<const FileStorage::Handle>>* assets) const {
     // N.B. The string::operator+= here might look like a performance problem,
     // but string appending actually uses exponential growth (i.e., similar to
     // how std::vector<char> works) so the overhead here is not bad.
     std::string html;
     if (object_) {
       html += CreateCommand(object_->bytes);
+      assets->insert(assets->end(), object_->assets.begin(),
+                     object_->assets.end());
     }
     if (transform_) {
       html += CreateCommand(transform_->bytes);
@@ -234,7 +238,7 @@ class SceneTreeElement {
       html += CreateCommand(property.bytes);
     }
     for (const auto& [_, child] : children_) {
-      html += child->CreateCommands();
+      html += child->CreateCommands(assets);
     }
     return html;
   }
@@ -1713,7 +1717,8 @@ class Meshcat::Impl {
     DRAKE_DEMAND(IsThread(websocket_thread_id_));
     std::string html{internal::GetMeshcatStaticResource("/").value()};
 
-    // Insert the javascript directly into the html.
+    // Insert the meshcat code directly into the html, instead of using
+    // hyperlinks.
     std::vector<std::pair<std::string, std::string>> js_paths{
         {" src=\"meshcat.js\"", "/meshcat.js"},
         {" src=\"stats.min.js\"", "/stats.min.js"},
@@ -1726,6 +1731,10 @@ class Meshcat::Impl {
       html.erase(js_pos, src_link.size());
       html.insert(js_pos + 1, url_data);
     }
+
+    // Create javascript code that replays all of the messages.
+    std::vector<std::shared_ptr<const FileStorage::Handle>> assets;
+    std::string javascript = scene_tree_root_.CreateCommands(&assets);
 
     // Insert a JavaScript URL hook that knows how to serve the CAS database.
     // (See FileStorage and GetCasUrl for details about CAS.)
