@@ -156,7 +156,6 @@ drake_cc_library(
         ":osqp_solver",
         ":scs_solver",
         ":snopt_solver",
-        "@abseil_cpp_internal//absl/container:inlined_vector",
     ],
 )
 
