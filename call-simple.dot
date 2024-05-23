@@ -1,0 +1,99 @@
+digraph call {
+rankdir=TB
+
+# This is what visualization uses.
+
+MultibodyPlant_contact_results_output_port [style=filled,fillcolor=lightgreen]
+
+MultibodyPlant_contact_results_output_port -> MultibodyPlant_CopyContactResultsOutput
+MultibodyPlant_CopyContactResultsOutput -> MultibodyPlant_EvalContactResults
+MultibodyPlant_EvalContactResults -> DiscreteUpdateManager_EvalContactResults
+DiscreteUpdateManager_EvalContactResults -> DiscreteUpdateManager_CalcContactResults
+
+DiscreteUpdateManager_CalcContactResults -> DiscreteUpdateManager_AppendContactResultsForPointContact
+DiscreteUpdateManager_CalcContactResults -> DiscreteUpdateManager_AppendContactResultsForHydroelasticContact
+
+DiscreteUpdateManager_AppendContactResultsForPointContact -> MultibodyPlant_EvalPointPairPenetrations
+DiscreteUpdateManager_AppendContactResultsForPointContact -> DiscreteUpdateManager_EvalDiscreteContactPairs
+DiscreteUpdateManager_AppendContactResultsForPointContact -> DiscreteUpdateManager_EvalContactSolverResults
+
+DiscreteUpdateManager_AppendContactResultsForHydroelasticContact -> DiscreteUpdateManager_EvalHydroelasticContactInfo
+DiscreteUpdateManager_EvalHydroelasticContactInfo -> DiscreteUpdateManager_CalcHydroelasticContactInfo
+
+DiscreteUpdateManager_CalcHydroelasticContactInfo -> DiscreteUpdateManager_EvalContactSurfaces
+DiscreteUpdateManager_CalcHydroelasticContactInfo -> DiscreteUpdateManager_EvalDiscreteContactPairs
+DiscreteUpdateManager_CalcHydroelasticContactInfo -> DiscreteUpdateManager_EvalContactSolverResults
+
+# This is what the LPF consumes.
+
+MultibodyPlant_generalized_contact_forces_output_port [style=filled,fillcolor=pink]
+
+MultibodyPlant_generalized_contact_forces_output_port -> DiscreteUpdateManager_EvalContactSolverResults
+DiscreteUpdateManager_EvalContactSolverResults -> DiscreteUpdateManager_CalcContactSolverResults
+
+# This is the timestep solve.
+
+MultibodyPlant_CalcDiscreteStep [style=filled,fillcolor=lightgreen]
+
+MultibodyPlant_CalcDiscreteStep -> DiscreteUpdateManager_CalcDiscreteValues
+
+DiscreteUpdateManager_CalcDiscreteValues -> DiscreteUpdateManager_SampleDiscreteInputPortForces
+
+DiscreteUpdateManager_CalcDiscreteValues -> DiscreteUpdateManager_DoCalcDiscreteValues
+DiscreteUpdateManager_DoCalcDiscreteValues -> DiscreteUpdateManager_EvalContactSolverResults
+
+DiscreteUpdateManager_CalcContactSolverResults -> CompliantContactManager_DoCalcContactSolverResults
+
+CompliantContactManager_DoCalcContactSolverResults -> SapDriver_CalcContactSolverResults
+
+SapDriver_CalcContactSolverResults -> SapDriver_EvalSapSolverResults
+SapDriver_CalcContactSolverResults -> DiscreteUpdateManager_EvalDiscreteContactPairs
+SapDriver_CalcContactSolverResults -> SapDriver_EvalContactProblemCache
+
+SapDriver_EvalSapSolverResults -> SapDriver_CalcSapSolverResults
+
+SapDriver_CalcSapSolverResults -> SapDriver_EvalContactProblemCache
+SapDriver_CalcSapSolverResults -> SapSolver_SolveWithGuess
+
+SapDriver_EvalContactProblemCache -> SapDriver_CalcContactProblemCache
+
+DiscreteUpdateManager_EvalDiscreteContactPairs -> DiscreteUpdateManager_CalcDiscreteContactPairs
+DiscreteUpdateManager_CalcDiscreteContactPairs -> DiscreteUpdateManager_AppendDiscreteContactPairsForPointContact
+DiscreteUpdateManager_CalcDiscreteContactPairs -> DiscreteUpdateManager_AppendDiscreteContactPairsForHydroelasticContact
+
+DiscreteUpdateManager_AppendDiscreteContactPairsForPointContact -> MultibodyPlant_EvalPointPairPenetrations
+
+DiscreteUpdateManager_AppendDiscreteContactPairsForHydroelasticContact -> DiscreteUpdateManager_EvalContactSurfaces
+DiscreteUpdateManager_EvalContactSurfaces -> MultibodyPlant_EvalContactSurfaces
+
+MultibodyPlant_EvalContactSurfaces -> MultibodyPlant_CalcHydroelasticWithFallback
+MultibodyPlant_CalcHydroelasticWithFallback -> MultibodyPlant_EvalGeometryQueryInput
+MultibodyPlant_CalcHydroelasticWithFallback -> QueryObject_ComputeContactSurfacesWithFallback
+
+QueryObject_ComputeContactSurfacesWithFallback [style=filled,fillcolor=orange]
+
+# Color eval functions that depend only on the current configuration ticket in
+# the context (presuming no changes to geometry version nor other Parameters).
+
+DiscreteUpdateManager_EvalContactSurfaces [style=filled,fillcolor=cyan]
+MultibodyPlant_EvalContactSurfaces [style=filled,fillcolor=cyan]
+MultibodyPlant_EvalGeometryQueryInput [style=filled,fillcolor=cyan]
+MultibodyPlant_EvalPointPairPenetrations [style=filled,fillcolor=cyan]
+
+# Color eval functions that depend only on the current kinematics ticket in
+# the context (presuming no changes to geometry version nor other Parameters).
+
+DiscreteUpdateManager_EvalContactResults [style=filled,fillcolor=pink]
+DiscreteUpdateManager_EvalDiscreteContactPairs [style=filled,fillcolor=pink]
+DiscreteUpdateManager_EvalHydroelasticContactInfo [style=filled,fillcolor=pink]
+
+# These depend on the configuration AND sampled input forces.
+
+DiscreteUpdateManager_EvalContactSolverResults [style=filled,fillcolor=lightblue]
+
+# These depend on the configuration and ALL INPUTS.
+
+SapDriver_EvalSapSolverResults [style=filled,fillcolor=lightgreen]
+SapDriver_EvalContactProblemCache [style=filled,fillcolor=lightgreen]
+
+}

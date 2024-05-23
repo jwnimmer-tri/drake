@@ -1,0 +1,122 @@
+digraph call {
+rankdir=TB
+
+# ========== OUTPUT PORTS (following doxygen order) ==========
+
+MbP_state_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: state</TD></TR>
+<TR><TD><FONT COLOR="blue">all_state</FONT></TD></TR>
+</TABLE>>]
+
+MbP_body_poses_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: body_poses</TD></TR>
+<TR><TD><FONT COLOR="blue">configuration</FONT></TD></TR>
+</TABLE>>]
+
+MbP_body_spatial_velocities_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: body_spatial_velocities</TD></TR>
+<TR><TD><FONT COLOR="blue">kinematics</FONT></TD></TR>
+</TABLE>>]
+
+MbP_body_spatial_accelerations_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: body_spatial_accelerations</TD></TR>
+<TR><TD><FONT COLOR="red">all_sources</FONT> (currently (is wrong))</TD></TR>
+<TR><TD><FONT COLOR="red">acceleration_kinematics_cache</FONT> (future)</TD></TR>
+</TABLE>>]
+
+MbP_generalized_acceleration_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: generalized_acceleration</TD></TR>
+<TR><TD><FONT COLOR="red">acceleration_kinematics_cache</FONT></TD></TR>
+</TABLE>>]
+
+MbP_model_instance_generalized_contact_forces [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: i'th_generalized_contact_forces</TD></TR>
+<TR><TD><FONT COLOR="blue">xd</FONT> <FONT COLOR="gray">(when discrete time)</FONT></TD></TR>
+<TR><TD>generalized_contact_forces_continuous_cache <FONT COLOR="gray">(when continuous time)</FONT></TD></TR>
+</TABLE>>]
+
+MbP_net_actuation_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: net_actuation</TD></TR>
+<TR><TD><FONT COLOR="blue">kinematics</FONT> <FONT COLOR="gray">(when continuous time)</FONT></TD></TR>
+<TR><TD><FONT COLOR="blue">xd</FONT> <FONT COLOR="gray">(when discrete time)</FONT></TD></TR>
+<TR><TD><FONT COLOR="orangered">all_input</FONT></TD></TR>
+<!-- all_parameters -->
+</TABLE>>]
+
+MbP_reaction_forces_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: reaction_forces</TD></TR>
+<TR><TD><FONT COLOR="red">acceleration_kinematics_cache</FONT></TD></TR>
+</TABLE>>]
+
+MbP_contact_results_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: contact_results</TD></TR>
+<TR><TD><FONT COLOR="blue">kinematics</FONT> <FONT COLOR="gray">(when continuous time)</FONT></TD></TR>
+<TR><TD><FONT COLOR="blue">xd</FONT> <FONT COLOR="gray">(when discrete time)</FONT></TD></TR>
+<TR><TD><FONT COLOR="orangered">all_input</FONT> <FONT COLOR="gray">(when discrete time)</FONT></TD></TR>
+<!-- all_parameters (when discrete time) -->
+</TABLE>>]
+
+MbP_geometry_pose_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: geometry_pose</TD></TR>
+<TR><TD><FONT COLOR="blue">configuration</FONT></TD></TR>
+</TABLE>>]
+
+MbP_deformable_body_configuration_output_port [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant output: deformable_body_configuration</TD></TR>
+<TR><TD><FONT COLOR="blue">xd</FONT></TD></TR>
+</TABLE>>]
+
+# ========== OUTPUT PORT GRAPH
+
+MbP_body_spatial_accelerations_output_port -> MbP_CalcBodySpatialAccelerationsOutput
+MbP_CalcBodySpatialAccelerationsOutput -> MbTS_EvalForwardDynamics
+MbTS_EvalForwardDynamics -> MbTS_acceleration_kinematics_cache
+
+MbP_model_instance_generalized_contact_forces -> DUM_EvalContactSolverResults
+
+MbP_contact_results_output_port -> MbP_CopyContactResultsOutput
+
+# ========== EVENTS ==========
+
+MbP_time_derivatives [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant: time derivatives</TD></TR>
+<TR><TD><FONT COLOR="gray">(when continuous time)</FONT></TD></TR>
+</TABLE>>]
+
+MbP_discrete_update [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyPlant: periodic discrete update</TD></TR>
+<TR><TD><FONT COLOR="gray">(when discrete time)</FONT></TD></TR>
+</TABLE>>]
+
+# ========== CACHE ENTRIES ==========
+
+MbTS_acceleration_kinematics_cache [shape=none, border=0, label=<<TABLE BORDER="1" CELLSPACING="0">
+<TR><TD>MultibodyTree cache: acceleration_kinematics</TD></TR>
+<TR><TD><FONT COLOR="red">all_sources</FONT></TD></TR>
+</TABLE>>]
+
+## OMG THERE ARE SO MANY IN MBT; DON'T FORGET THOSE
+## ...
+
+# ==========
+
+## TODO -- for the red output ports, figure out what they are touching
+## and what of that we can copy into state as part of the discrete
+## update.
+
+
+
+}
+
+# Maybe we are overthinking this.
+#
+# For a discrete time MbP, imagine we promote its periodic state update event from discrete to unrestricted, so that we're not limited to plain vectors as our state.  (Any approach that samples the input ports would basically end up doing this anyway, since plenty of the inputs are abstract already.  Not just the stuff like applied spatial forces, but remember that contact surfaces are also part of the input we need to sample.)  Under this assumption, we have abstract state available as a tool.
+#
+# Next, imagine we change the MbP's state from just `{VectorXd}` (the q,v kinematics) to instead be `{VectorXd, internal::ContactSolverResults}`, and have the update event copy out the SAP solver results into state.
+#
+# Then, change all of the output ports that currently depend on `EvalContactSolverResults` to depend on the memorized results from the state, instead.
+#
+# Later: Okay, in the periodic update it looks like it will suffice to memorize:
+# - acceleration kinematics cache (7 * num_mobods)
+# - contact solver results (2 * num_velocities + 6 * num_contacts)
+# - contact surfaces / points
