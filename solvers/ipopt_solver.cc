@@ -32,7 +32,7 @@ void SetAppOptions(const SolverOptions& options, Ipopt::IpoptApplication* app) {
   // it would correctly determine that MUMPS was the only available solver, but
   // its behavior changed to instead error having unsuccessfully tried to dlopen
   // a nonexistent hsl library that would contain MA27.
-  app->Options()->SetStringValue("linear_solver", "mumps");
+  app->Options()->SetStringValue("linear_solver", "spral");
 
   // The default tolerance.
   const double tol = 1.05e-10;  // Note: SNOPT is only 1e-6, but in #3712 we
