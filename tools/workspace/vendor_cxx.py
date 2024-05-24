@@ -162,14 +162,14 @@ def _rewrite_one_text(*, text, inline_namespace):
 
     # If we are only changing namespaces (not adding new ones), do that now:
     if not inline_namespace:
-        # Match either 'namespace foo' or 'namespace foo {'.
-        regex = re.compile(r'^\s*namespace\s+([^{]+?)(\s*{)?$')
+        # Match either 'namespace foo\n' or 'namespace foo {'.
+        regex = re.compile(r'^\s*namespace\s+([A-Za-z0-9_]+)(\s*)({.*|$)')
         for i, line in enumerate(lines):
             match = regex.match(line)
             if not match:
                 continue
-            name, brace = match.groups()
-            lines[i] = f'namespace {name} {hidden}{brace or ""}'
+            name, space, brace = match.groups()
+            lines[i] = f'namespace {name} {hidden}{space}{brace}'
         text = '\n'.join(lines) + '\n'
         return text
 

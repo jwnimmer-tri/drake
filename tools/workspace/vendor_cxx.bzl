@@ -7,6 +7,7 @@ def cc_library_vendored(
         hdrs_vendored = None,
         srcs = None,
         srcs_vendored = None,
+        srcs_unadulterated = None,
         vendor_tool_args = None,
         **kwargs):
     """
@@ -52,7 +53,7 @@ def cc_library_vendored(
     cc_library(
         name = name,
         hdrs = hdrs_vendored,
-        srcs = srcs_vendored,
+        srcs = srcs_vendored + (srcs_unadulterated or []),
         **kwargs
     )
 
