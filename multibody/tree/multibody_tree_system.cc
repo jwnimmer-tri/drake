@@ -248,7 +248,6 @@ void MultibodyTreeSystem<T>::Finalize() {
       &MultibodyTreeSystem<T>::CalcVelocityKinematicsCache,
       {this->kinematics_ticket()}).cache_index();
 
-
   // Allocate cache entry to store Fb_Bo_W(q, v) for each body.
   cache_indexes_.dynamic_bias = this->DeclareCacheEntry(
       std::string("dynamic bias (Fb_Bo_W)"),
@@ -294,6 +293,7 @@ void MultibodyTreeSystem<T>::Finalize() {
               {this->kinematics_ticket(), this->all_parameters_ticket()})
           .cache_index();
 
+  // XXX depends on input; needs sampling
   // Articulated Body Algorithm (ABA) force cache.
   cache_indexes_.articulated_body_forces = this->DeclareCacheEntry(
       std::string("ABA force cache"),
@@ -301,6 +301,7 @@ void MultibodyTreeSystem<T>::Finalize() {
       &MultibodyTreeSystem<T>::CalcArticulatedBodyForceCache,
       {this->all_sources_ticket()}).cache_index();
 
+  // XXX depends on input; needs sampling
   // Acceleration kinematics must be calculated for forward dynamics,
   // regardless of whether that is done in continuous mode (as the last pass
   // of ABA) or in discrete mode (explicitly by MultibodyPlant).
