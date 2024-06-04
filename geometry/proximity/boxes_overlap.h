@@ -1,7 +1,6 @@
 #pragma once
 
-#include "drake/common/eigen_types.h"
-#include "drake/math/rigid_transform.h"
+#include <Eigen/Core>
 
 namespace drake {
 namespace geometry {
@@ -17,9 +16,10 @@ namespace internal {
  @param half_size_a   The half size of box A expressed in A's canonical frame.
  @param half_size_b   The half size of box B expressed in B's canonical frame.
  @param X_AB          The relative pose between boxes A and B. */
-bool BoxesOverlap(const Vector3<double>& half_size_a,
-                  const Vector3<double>& half_size_b,
-                  const math::RigidTransformd& X_AB);
+bool BoxesOverlap(const Eigen::Vector3d& half_size_a,
+                  const Eigen::Vector3d& half_size_b,
+                  const Eigen::Vector3d& p_AB,
+		  const Eigen::Matrix3d& R_AB);
 
 }  // namespace internal
 }  // namespace geometry
