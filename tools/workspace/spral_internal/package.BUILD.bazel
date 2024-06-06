@@ -2,9 +2,7 @@
 
 load("@drake//tools/install:install.bzl", "install")
 load("@drake//tools/skylark:cc.bzl", "cc_library")
-load("@drake//tools/skylark:cc_hidden.bzl", "cc_wrap_static_archive_hidden")
 load("@drake//tools/workspace/snopt:fortran.bzl", "fortran_module")
-load("@drake//tools/workspace:vendor_cxx.bzl", "cc_library_vendored")
 
 licenses(["notice"])  # BSD-3-Clause
 
@@ -12,34 +10,10 @@ package(default_visibility = ["//visibility:public"])
 
 # XXX See "Fortran 90 dependencies" in upstream Makefile.am for details.
 
-# module spral_ssids_contrib_free
-#   use spral_ssids_contrib, only : contrib_type
-#   use spral_ssids_cpu_subtree, only : cpu_free_contrib
-#   use spral_ssids_gpu_subtree, only : gpu_free_contrib
-
-# module spral_ssids_cpu_subtree
-#   use, intrinsic :: iso_c_binding
-#   use spral_ssids_contrib, only : contrib_type
-#   use spral_ssids_cpu_iface ! fixme only
-#   use spral_ssids_datatypes
-#   use spral_ssids_inform, only : ssids_inform
-#   use spral_ssids_subtree, only : symbolic_subtree_base, numeric_subtree_base
-# => calls C code
-
-# .-> @@spral_internal//:spral_ssids_cpu_subtree (7205d8b04d3722c1a4b8086775fbaba8eed6c6b5a9cad71c521b7a381bf83e9c)
-# |   @@spral_internal//:cpu_kernels (7205d8b04d3722c1a4b8086775fbaba8eed6c6b5a9cad71c521b7a381bf83e9c)
-# |   @@spral_internal//:cpu_kernels_detail (7205d8b04d3722c1a4b8086775fbaba8eed6c6b5a9cad71c521b7a381bf83e9c)
-# |   @@spral_internal//:spral_ssids_contrib_free (7205d8b04d3722c1a4b8086775fbaba8eed6c6b5a9cad71c521b7a381bf83e9c)
-# `-- @@spral_internal//:spral_ssids_cpu_subtree (7205d8b04d3722c1a4b8086775fbaba8eed6c6b5a9cad71c521b7a38
-
-_VEND_ARGS = ["--no-inline-namespace"]
-
-cc_library_vendored(
+cc_library(
     name = "compat",
-    vendor_tool_args = _VEND_ARGS,
     hdrs = ["src/compat.hxx"],
-    hdrs_vendored = ["drake_src/compat.hxx"],
-    includes = ["drake_src"],
+    includes = ["src"],
     linkstatic = True,
 )
 
@@ -52,33 +26,14 @@ cc_library(
     ],
 )
 
-# cc_wrap_static_archive_hidden(
-#     name = "cpu_kernels",
-#     static_archive_name = "cpu_kernels_detail",
-# )
-
-_CPU_KERNELS_HDRS = glob(["src/ssids/cpu/**/*.hxx"], allow_empty = False)
-
-_CPU_KERNELS_SRCS = glob(["src/ssids/cpu/**/*.cxx"], allow_empty = False)
-
-cc_library_vendored(
+cc_library(
     name = "cpu_kernels",
-    vendor_tool_args = _VEND_ARGS,
-    srcs = _CPU_KERNELS_SRCS,
-    srcs_vendored = [
-        x.replace("src/", "drake_src/")
-        for x in _CPU_KERNELS_SRCS
-    ],
-    srcs_unadulterated = [
-        # This is some crazy dependency cycle hellscape between C and Fortran.
+    srcs = glob(["src/ssids/cpu/**/*.cxx"], allow_empty = False) + [
+        # This is some crazy hellscape where C calls Fortran calls C.
         # There is no other way to denote this to a single-pass linker.
         "src/ssids/contrib_free.f90.pic.o",
     ],
-    hdrs = _CPU_KERNELS_HDRS,
-    hdrs_vendored = [
-        x.replace("src/", "drake_src/")
-        for x in _CPU_KERNELS_HDRS
-    ],
+    hdrs = glob(["src/ssids/cpu/**/*.hxx"], allow_empty = False),
     includes = ["src"],
     copts = ["-w"],
     linkstatic = True,
@@ -89,22 +44,14 @@ cc_library_vendored(
     ],
 )
 
-cc_library_vendored(
+cc_library(
     name = "guess_topology",
-    vendor_tool_args = _VEND_ARGS,
     srcs = [
         "src/hw_topology/guess_topology.cxx",
         "src/hw_topology/hwloc_wrapper.hxx",
     ],
-    srcs_vendored = [
-        "drake_src/hw_topology/guess_topology.cxx",
-        "drake_src/hw_topology/hwloc_wrapper.hxx",
-    ],
     hdrs = [
         "src/hw_topology/guess_topology.hxx",
-    ],
-    hdrs_vendored = [
-        "drake_src/hw_topology/guess_topology.hxx",
     ],
     includes = ["src"],
     copts = ["-w"],
@@ -114,26 +61,20 @@ cc_library_vendored(
     ],
 )
 
-cc_library_vendored(
+cc_library(
     name = "omp",
-    vendor_tool_args = _VEND_ARGS,
     srcs = ["src/omp.cxx"],
-    srcs_vendored = ["drake_src/omp.cxx"],
     hdrs = ["src/omp.hxx"],
-    hdrs_vendored = ["drake_src/omp.hxx"],
-    includes = ["drake_src"],
+    includes = ["src"],
     copts = ["-w"],
     linkstatic = True,
 )
 
-cc_library_vendored(
+cc_library(
     name = "profile",
-    vendor_tool_args = _VEND_ARGS,
-    # srcs = ["src/ssids/profile.cxx"],
-    # srcs_vendored = ["drake_src/ssids/profile.cxx"],
+    srcs = ["src/ssids/profile.cxx"],
     hdrs = ["src/ssids/profile.hxx"],
-    hdrs_vendored = ["drake_src/ssids/profile.hxx"],
-    includes = ["drake_src"],
+    includes = ["src"],
     linkstatic = True,
     copts = ["-w"],
     deps = [
