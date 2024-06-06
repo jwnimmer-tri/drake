@@ -2312,6 +2312,8 @@ void MultibodyPlant<T>::CalcHydroelasticContactForcesContinuous(
     }
 
     // Add the information for contact reporting.
+    // XXX this borrowed pointer is not necessarily safe to alias;
+    // we should be using COW refcounting everywhere
     contact_info.emplace_back(&surface, F_Ac_W, std::move(traction_output));
   }
 }
