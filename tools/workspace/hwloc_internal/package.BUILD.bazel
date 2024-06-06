@@ -1,0 +1,20 @@
+# -*- bazel -*-
+
+load("@drake//tools/install:install.bzl", "install")
+load("@drake//tools/skylark:cc.bzl", "cc_library")
+
+licenses(["notice"])  # BSD-3-Clause
+
+package(default_visibility = ["//visibility:private"])
+
+cc_library(
+    name = "hwloc",
+    visibility = ["//visibility:public"],
+)
+
+# Install the license file.
+install(
+    name = "install",
+    docs = ["COPYING"],
+    visibility = ["//visibility:public"],
+)
