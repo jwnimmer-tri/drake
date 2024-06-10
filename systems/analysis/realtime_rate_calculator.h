@@ -28,7 +28,7 @@ class RealtimeRateCalculator {
    call to UpdateAndRecalculate() will re-seed the rate calculation as if it was
    the first call.
    */
-  void Reset() { prev_sim_time_ = std::nullopt; }
+  void Reset() { initialized_ = false; }
 
   /* (Internal use for unit testing only) Used to mock the monotonic wall time
      source to control time during unit testing.  */
@@ -37,8 +37,11 @@ class RealtimeRateCalculator {
 #endif
 
  private:
-  std::optional<double> prev_sim_time_;
+  bool initialized_{false};
   std::unique_ptr<Timer> timer_{std::make_unique<SteadyTimer>()};
+  int next_report_{};
+  double prev_sim_time_{};
+  double prev_wall_time_{};
 };
 }  // namespace internal
 }  // namespace systems
