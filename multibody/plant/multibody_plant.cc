@@ -3234,6 +3234,23 @@ template <typename T>
 void MultibodyPlant<T>::DeclareCacheEntries() {
   DRAKE_DEMAND(this->is_finalized());
 
+  // ===========================================================================
+  // IMPORTANT: The rule for declaring the correct DependencyTicket annotations
+  // for Calc functions is to survey them for lines that touch the `context`
+  // argument, and ensure that every use of that argument has a corresponding
+  // mention in its declaration here. That includes places where the Calc
+  // function passes the `context` along to a helper function. We must follow
+  // the trail transitively to cover all accesses to the `context`.
+  // ===========================================================================
+
+  const bool use_hydroelastic =
+      contact_model_ == ContactModel::kHydroelastic ||
+      contact_model_ == ContactModel::kHydroelasticWithFallback;
+
+  const bool use_point =
+      contact_model_ == ContactModel::kPoint ||
+      contact_model_ == ContactModel::kHydroelasticWithFallback;
+
   // TODO(joemasterjohn): Create more granular parameter tickets for finer
   // control over cache dependencies on parameters. For example,
   // all_rigid_body_parameters, etc.
@@ -3262,64 +3279,112 @@ void MultibodyPlant<T>::DeclareCacheEntries() {
   cache_indices_.contact_surfaces = contact_surfaces_cache_entry.cache_index();
 
   // Cache entry for HydroelasticContactForcesContinuous.
-  const bool use_hydroelastic =
-      contact_model_ == ContactModel::kHydroelastic ||
-      contact_model_ == ContactModel::kHydroelasticWithFallback;
   if (!is_discrete() && use_hydroelastic) {
+    // We must itemize the uses of `context` by this Calc function:
+    std::set<systems::DependencyTicket> tickets;
+    // - EvalPoseInWorld
+    tickets.insert(this->position_kinematics_cache_entry().ticket());
+    // - EvalSpatialVelocityInWorld
+    tickets.insert(this->velocity_kinematics_cache_entry().ticket());
+    // - EvalGeometryQueryInput
+    const auto& geometry_query = get_geometry_query_input_port();
+    tickets.insert(this->input_port_ticket(geometry_query.get_index()));
+    // EvalContactSurfaces
+    tickets.insert(
+        this->get_cache_entry(
+                (contact_model_ == ContactModel::kHydroelasticWithFallback)
+                    ? cache_indices_.hydroelastic_with_fallback
+                    : cache_indices_.contact_surfaces)
+            .ticket());
     auto& hydroelastic_contact_forces_continuous_cache_entry =
         this->DeclareCacheEntry(
             std::string("HydroelasticContactForcesContinuous"),
             internal::HydroelasticContactForcesContinuousCacheData<T>(
                 this->num_bodies()),
             &MultibodyPlant<T>::CalcHydroelasticContactForcesContinuous,
-            // Compliant contact forces due to hydroelastics with Hunt &
-            // Crosseley are function of the kinematic variables q & v only.
-            {this->kinematics_ticket(), this->all_parameters_ticket()});
+            tickets);
     cache_indices_.hydroelastic_contact_forces_continuous =
         hydroelastic_contact_forces_continuous_cache_entry.cache_index();
   }
 
   // Cache entry for ContactResultsContinuous.
   if (!is_discrete()) {
-    std::set<systems::DependencyTicket> dependency_ticket =
-        [this, use_hydroelastic]() {
-          std::set<systems::DependencyTicket> tickets;
-          tickets.insert(this->kinematics_ticket());
-          if (use_hydroelastic) {
-            tickets.insert(this->cache_entry_ticket(
-                cache_indices_.hydroelastic_contact_forces_continuous));
-          }
-          tickets.insert(this->all_parameters_ticket());
-          return tickets;
-        }();
+    // We must itemize the uses of `context` by this Calc function:
+    std::set<systems::DependencyTicket> tickets;
+    if (use_point) {
+      // - AppendContactResultsPointPairContinuous
+      //   - EvalPointPairPenetrations
+      tickets.insert(
+          this->get_cache_entry((contact_model_ == ContactModel::kPoint)
+                                    ? cache_indices_.point_pairs
+                                    : cache_indices_.hydroelastic_with_fallback)
+              .ticket());
+      //   - EvalPositionKinematics
+      tickets.insert(this->position_kinematics_cache_entry().ticket());
+      //   - EvalVelocityKinematics
+      tickets.insert(this->velocity_kinematics_cache_entry().ticket());
+      //   - EvalGeometryQueryInput
+      const auto& geometry_query = get_geometry_query_input_port();
+      tickets.insert(this->input_port_ticket(geometry_query.get_index()));
+    }
+    if (use_hydroelastic) {
+      // - AppendContactResultsHydroelasticContinuous
+      //   - EvalHydroelasticContactForcesContinuous
+      tickets.insert(
+          this->get_cache_entry(
+                  cache_indices_.hydroelastic_contact_forces_continuous)
+              .ticket());
+    }
     auto& contact_results_continuous_cache_entry = this->DeclareCacheEntry(
         std::string("ContactResultsContinuous"),
-        &MultibodyPlant<T>::CalcContactResultsContinuous, dependency_ticket);
+        &MultibodyPlant<T>::CalcContactResultsContinuous, tickets);
     cache_indices_.contact_results_continuous =
         contact_results_continuous_cache_entry.cache_index();
   }
 
   // Cache entry for SpatialContactForcesContinuous.
   if (!is_discrete()) {
+    // We must itemize the uses of `context` by this Calc function:
+    std::set<systems::DependencyTicket> tickets;
+    // - CalcAndAddSpatialContactForcesContinuous
+    //   - CalcAndAddPointContactForcesContinuous
+    //     - EvalContactResults
+    //     - EvalPositionKinematics
+    if (use_point) {
+      tickets.insert(
+          this->get_cache_entry(cache_indices_.contact_results_continuous)
+              .ticket());
+      tickets.insert(this->position_kinematics_cache_entry().ticket());
+    }
+    //   - EvalHydroelasticContactForcesContinuous
+    if (use_hydroelastic) {
+      tickets.insert(
+          this->get_cache_entry(
+                  cache_indices_.hydroelastic_contact_forces_continuous)
+              .ticket());
+    }
     auto& spatial_contact_forces_continuous_cache_entry =
         this->DeclareCacheEntry(
             "SpatialContactForcesContinuous",
             std::vector<SpatialForce<T>>(num_bodies()),
-            &MultibodyPlant::CalcSpatialContactForcesContinuous,
-            {this->kinematics_ticket(), this->all_parameters_ticket()});
+            &MultibodyPlant::CalcSpatialContactForcesContinuous, tickets);
     cache_indices_.spatial_contact_forces_continuous =
         spatial_contact_forces_continuous_cache_entry.cache_index();
   }
 
   // Cache entry for GeneralizedContactForcesContinuous.
   if (!is_discrete()) {
+    // We must itemize the uses of `context` by this Calc function:
+    std::set<systems::DependencyTicket> tickets;
+    // - EvalSpatialContactForcesContinuous
+    tickets.insert(this->cache_entry_ticket(
+        cache_indices_.spatial_contact_forces_continuous));
+    // - CalcInverseDynamics
+    tickets.insert(this->kinematics_ticket());
     auto& generalized_contact_forces_continuous_cache_entry =
         this->DeclareCacheEntry(
             "GeneralizedContactForcesContinuous", VectorX<T>(num_velocities()),
-            &MultibodyPlant::CalcGeneralizedContactForcesContinuous,
-            {this->cache_entry_ticket(
-                 cache_indices_.spatial_contact_forces_continuous),
-             this->all_parameters_ticket()});
+            &MultibodyPlant::CalcGeneralizedContactForcesContinuous, tickets);
     cache_indices_.generalized_contact_forces_continuous =
         generalized_contact_forces_continuous_cache_entry.cache_index();
   }
