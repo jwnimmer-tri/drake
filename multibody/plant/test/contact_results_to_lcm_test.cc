@@ -142,7 +142,9 @@ constexpr int kNumPointPerTri = 3;
  meshes. */
 template <typename T>
 ContactSurface<T> MakeContactSurface(GeometryId id_M, GeometryId id_N,
-                                     const Vector3<T>& offset) {
+                                     const Vector3<T>& offset)
+  requires scalar_predicate<T>::is_bool
+{
   /* Create the surface mesh first. It is simply two triangles (make sure we're
    looping through elements). The position of the vertices is offset by offset.
    The position of the vertices is irrelevant -- the mesh is just a collection
@@ -175,7 +177,9 @@ ContactSurface<T> MakeContactSurface(GeometryId id_M, GeometryId id_N,
  MakeContactSurface(). */
 template <typename T>
 vector<HydroelasticQuadraturePointData<T>> MakeQuadratureData(
-    const Vector3<T>& offset) {
+    const Vector3<T>& offset)
+  requires scalar_predicate<T>::is_bool
+{
   /* We'll pick *three* quadrature points per triangle, to make sure we get
    proper loop iteration. For simplicity, we'll explicitly define the first
    quadrature point and then express the others in terms of the first. */
@@ -364,26 +368,39 @@ class ContactResultsToLcmTest : public ::testing::Test {
      can be meaningless garbage. All that matters is that they are unique values
      such that we can confirm that the right value got written to the right
      field. */
-    static const never_destroyed<ContactSurface<U>> surface1(
-        MakeContactSurface<U>(ids[0], ids[1], Vector3<U>{1, 2, 3}));
-    static const never_destroyed<HydroelasticContactInfo<U>> pair1(
-        &surface1.access(),
-        SpatialForce<U>(Vector3<U>(1.1, 2.2, 3.3), Vector3<U>(4.4, 5.5, 6.6)),
-        MakeQuadratureData<U>(Vector3<U>{1, 2, 3}));
-    results->AddContactInfo(&pair1.access());
+    if constexpr (scalar_predicate<U>::is_bool) {
+      static const never_destroyed<ContactSurface<U>> surface1(
+          MakeContactSurface<U>(ids[0], ids[1], Vector3<U>{1, 2, 3}));
+      static const never_destroyed<HydroelasticContactInfo<U>> pair1(
+          &surface1.access(),
+          SpatialForce<U>(Vector3<U>(1.1, 2.2, 3.3), Vector3<U>(4.4, 5.5, 6.6)),
+          MakeQuadratureData<U>(Vector3<U>{1, 2, 3}));
+      results->AddContactInfo(&pair1.access());
 
-    static const never_destroyed<ContactSurface<U>> surface2(
-        MakeContactSurface<U>(ids[2], ids[3], Vector3<U>{-3, -1, 2}));
-    static const never_destroyed<HydroelasticContactInfo<U>> pair2(
-        &surface2.access(),
-        SpatialForce<U>(Vector3<U>(1.2, 2.3, 3.4), Vector3<U>(4.5, 5.6, 6.7)),
-        MakeQuadratureData<U>(Vector3<U>{-3, -1, -2}));
-    results->AddContactInfo(&pair2.access());
+      static const never_destroyed<ContactSurface<U>> surface2(
+          MakeContactSurface<U>(ids[2], ids[3], Vector3<U>{-3, -1, 2}));
+      static const never_destroyed<HydroelasticContactInfo<U>> pair2(
+          &surface2.access(),
+          SpatialForce<U>(Vector3<U>(1.2, 2.3, 3.4), Vector3<U>(4.5, 5.6, 6.7)),
+          MakeQuadratureData<U>(Vector3<U>{-3, -1, -2}));
+      results->AddContactInfo(&pair2.access());
+    } else {
+      static const never_destroyed<HydroelasticContactInfo<U>> info1;
+      results->AddContactInfo(&info1.access());
+      static const never_destroyed<HydroelasticContactInfo<U>> info2;
+      results->AddContactInfo(&info2.access());
+    }
   }
 };
 
 using ScalarTypes = ::testing::Types<double, AutoDiffXd, Expression>;
 TYPED_TEST_SUITE(ContactResultsToLcmTest, ScalarTypes);
+
+template <typename T>
+class NonsymbolicContactResultsToLcmTest : public ContactResultsToLcmTest<T> {};
+
+using NonsymbolicScalarTypes = ::testing::Types<double, AutoDiffXd>;
+TYPED_TEST_SUITE(NonsymbolicContactResultsToLcmTest, NonsymbolicScalarTypes);
 
 /* We construct a plant with known contents, instantiate an instance of
  ContactResultsToLcmSystem on it and confirm the internal tables are populated
@@ -611,7 +628,7 @@ TYPED_TEST(ContactResultsToLcmTest, PointPairContactOnly) {
 
  As such, we don't need much for this test. We'll do two hydroelastic contacts
  with unique values to confirm successful iteration and copying. */
-TYPED_TEST(ContactResultsToLcmTest, HydroContactOnly) {
+TYPED_TEST(NonsymbolicContactResultsToLcmTest, HydroContactOnly) {
   using T = TypeParam;
 
   /* We're not going to populate the plant, because we're going to set the
