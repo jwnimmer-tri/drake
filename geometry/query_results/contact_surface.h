@@ -158,6 +158,7 @@ enum class HydroelasticContactRepresentation { kTriangle, kPolygon };
   @tparam_nonsymbolic_scalar
  */
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 class ContactSurface {
  public:
   DRAKE_DECLARE_COPY_AND_MOVE_AND_ASSIGN(ContactSurface);
@@ -414,8 +415,10 @@ class ContactSurface {
 
 // These are cheap enough to be inline for performance.
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 ContactSurface<T>::ContactSurface(ContactSurface&&) = default;
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 ContactSurface<T>& ContactSurface<T>::operator=(ContactSurface&&) = default;
 
 }  // namespace geometry

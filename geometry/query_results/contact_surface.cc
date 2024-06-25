@@ -10,6 +10,7 @@ using std::unique_ptr;
 using std::vector;
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 ContactSurface<T>::ContactSurface(
     GeometryId id_M, GeometryId id_N, MeshVariant mesh_W, FieldVariant e_MN,
     std::unique_ptr<std::vector<Vector3<T>>> grad_eM_W,
@@ -42,6 +43,7 @@ ContactSurface<T>::ContactSurface(
 }
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 void ContactSurface<T>::SwapMAndN() {
   std::swap(id_M_, id_N_);
 
@@ -59,11 +61,13 @@ void ContactSurface<T>::SwapMAndN() {
 }
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 ContactSurface<T>::ContactSurface(const ContactSurface& surface) {
   *this = surface;
 }
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 ContactSurface<T>& ContactSurface<T>::operator=(const ContactSurface& surface) {
   if (&surface == this) return *this;
 
@@ -92,9 +96,11 @@ ContactSurface<T>& ContactSurface<T>::operator=(const ContactSurface& surface) {
 }
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 ContactSurface<T>::~ContactSurface() {}
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 const Vector3<T>& ContactSurface<T>::EvaluateGradE_M_W(int index) const {
   if (grad_eM_W_ == nullptr) {
     throw std::runtime_error(
@@ -106,6 +112,7 @@ const Vector3<T>& ContactSurface<T>::EvaluateGradE_M_W(int index) const {
 }
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 const Vector3<T>& ContactSurface<T>::EvaluateGradE_N_W(int index) const {
   if (grad_eN_W_ == nullptr) {
     throw std::runtime_error(
@@ -117,6 +124,7 @@ const Vector3<T>& ContactSurface<T>::EvaluateGradE_N_W(int index) const {
 }
 
 template <typename T>
+  requires is_default_nonsymbolic_scalar_v<T>
 bool ContactSurface<T>::Equal(const ContactSurface<T>& surface) const {
   // Confirm we have the same representation. Technically, mesh and field
   // representations are linked, but we'll test both to be safe.

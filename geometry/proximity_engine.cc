@@ -1090,23 +1090,24 @@ ProximityEngine<T>::ComputePointPairPenetration(
 }
 
 template <typename T>
-template <typename T1>
-typename std::enable_if_t<scalar_predicate<T1>::is_bool,
-                          std::vector<ContactSurface<T>>>
-ProximityEngine<T>::ComputeContactSurfaces(
+  requires is_default_scalar_v<T>
+std::vector<ContactSurface<T>> ProximityEngine<T>::ComputeContactSurfaces(
     HydroelasticContactRepresentation representation,
-    const std::unordered_map<GeometryId, RigidTransform<T>>& X_WGs) const {
+    const std::unordered_map<GeometryId, RigidTransform<T>>& X_WGs) const
+  requires is_default_nonsymbolic_scalar_v<T>
+{
   return impl_->ComputeContactSurfaces(representation, X_WGs);
 }
 
 template <typename T>
-template <typename T1>
-typename std::enable_if_t<scalar_predicate<T1>::is_bool, void>
-ProximityEngine<T>::ComputeContactSurfacesWithFallback(
+  requires is_default_scalar_v<T>
+void ProximityEngine<T>::ComputeContactSurfacesWithFallback(
     HydroelasticContactRepresentation representation,
     const std::unordered_map<GeometryId, RigidTransform<T>>& X_WGs,
     std::vector<ContactSurface<T>>* surfaces,
-    std::vector<PenetrationAsPointPair<T>>* point_pairs) const {
+    std::vector<PenetrationAsPointPair<T>>* point_pairs) const
+  requires is_default_nonsymbolic_scalar_v<T>
+{
   return impl_->ComputeContactSurfacesWithFallback(representation, X_WGs,
                                                    surfaces, point_pairs);
 }

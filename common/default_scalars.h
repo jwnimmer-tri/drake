@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "drake/common/autodiff.h"
 #include "drake/common/symbolic/expression.h"
 
@@ -230,3 +232,16 @@ static constexpr auto Function_Templates_Nonsym __attribute__((used)) = \
         ::drake::AutoDiffXd>()
 
 /// @}
+
+namespace drake {
+
+template <typename T>
+constexpr bool is_default_scalar_v =
+    std::is_same_v<T, double> || std::is_same_v<T, AutoDiffXd> ||
+    std::is_same_v<T, symbolic::Expression>;
+
+template <typename T>
+constexpr bool is_default_nonsymbolic_scalar_v =
+    std::is_same_v<T, double> || std::is_same_v<T, AutoDiffXd>;
+
+}  // namespace drake

@@ -42,6 +42,7 @@ namespace drake {
  * @tparam_default_scalar
  */
 template <typename T = double>
+  requires is_default_scalar_v<T>
 class Polynomial {
  public:
   DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(Polynomial);

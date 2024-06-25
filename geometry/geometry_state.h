@@ -540,22 +540,21 @@ class GeometryState {
   }
 
   /** Implementation of QueryObject::ComputeContactSurfaces().  */
-  template <typename T1 = T>
-  typename std::enable_if_t<scalar_predicate<T1>::is_bool,
-                            std::vector<ContactSurface<T>>>
-  ComputeContactSurfaces(
-      HydroelasticContactRepresentation representation) const {
+  std::vector<ContactSurface<T>> ComputeContactSurfaces(
+      HydroelasticContactRepresentation representation) const
+    requires is_default_nonsymbolic_scalar_v<T>
+  {
     return geometry_engine_->ComputeContactSurfaces(representation,
                                                     kinematics_data_.X_WGs);
   }
 
   /** Implementation of QueryObject::ComputeContactSurfacesWithFallback().  */
-  template <typename T1 = T>
-  typename std::enable_if_t<scalar_predicate<T1>::is_bool, void>
-  ComputeContactSurfacesWithFallback(
+  void ComputeContactSurfacesWithFallback(
       HydroelasticContactRepresentation representation,
       std::vector<ContactSurface<T>>* surfaces,
-      std::vector<PenetrationAsPointPair<T>>* point_pairs) const {
+      std::vector<PenetrationAsPointPair<T>>* point_pairs) const
+    requires is_default_nonsymbolic_scalar_v<T>
+  {
     DRAKE_DEMAND(surfaces != nullptr);
     DRAKE_DEMAND(point_pairs != nullptr);
     return geometry_engine_->ComputeContactSurfacesWithFallback(

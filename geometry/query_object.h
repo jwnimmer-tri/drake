@@ -379,11 +379,9 @@ class QueryObject {
             contact surfaces. The ordering of the results is guaranteed to be
             consistent -- for fixed geometry poses, the results will remain
             the same.  */
-  template <typename T1 = T>
-  typename std::enable_if_t<scalar_predicate<T1>::is_bool,
-                            std::vector<ContactSurface<T>>>
-  ComputeContactSurfaces(
-      HydroelasticContactRepresentation representation) const;
+  std::vector<ContactSurface<T>> ComputeContactSurfaces(
+      HydroelasticContactRepresentation representation) const
+    requires is_default_nonsymbolic_scalar_v<T>;
 
   /** Reports pairwise intersections and characterizes each non-empty
    intersection as a ContactSurface _where possible_ and as a
@@ -419,12 +417,11 @@ class QueryObject {
                           and ComputePointPairPenetration().
    @note The `surfaces` and `point_pairs` are output pointers in C++, but are
    return values in the Python bindings. */
-  template <typename T1 = T>
-  typename std::enable_if_t<scalar_predicate<T1>::is_bool, void>
-  ComputeContactSurfacesWithFallback(
+  void ComputeContactSurfacesWithFallback(
       HydroelasticContactRepresentation representation,
       std::vector<ContactSurface<T>>* surfaces,
-      std::vector<PenetrationAsPointPair<T>>* point_pairs) const;
+      std::vector<PenetrationAsPointPair<T>>* point_pairs) const
+    requires is_default_nonsymbolic_scalar_v<T>;
 
   /** Reports contact information among all deformable geometries. It includes
    contacts between two deformable geometries or contacts between a

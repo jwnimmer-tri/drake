@@ -254,24 +254,21 @@ class ProximityEngine {
   /* Implementation of GeometryState::ComputeContactSurfaces().
    @param X_WGs the current poses of all geometries in World in the
                 current scalar type, keyed on each geometry's GeometryId.  */
-  template <typename T1 = T>
-  typename std::enable_if_t<scalar_predicate<T1>::is_bool,
-                            std::vector<ContactSurface<T>>>
-  ComputeContactSurfaces(
+  std::vector<ContactSurface<T>> ComputeContactSurfaces(
       HydroelasticContactRepresentation representation,
       const std::unordered_map<GeometryId, math::RigidTransform<T>>& X_WGs)
-      const;
+      const
+    requires is_default_nonsymbolic_scalar_v<T>;
 
   /* Implementation of GeometryState::ComputeContactSurfacesWithFallback().
    @param X_WGs the current poses of all geometries in World in the
                 current scalar type, keyed on each geometry's GeometryId.  */
-  template <typename T1 = T>
-  typename std::enable_if_t<scalar_predicate<T1>::is_bool, void>
-  ComputeContactSurfacesWithFallback(
+  void ComputeContactSurfacesWithFallback(
       HydroelasticContactRepresentation representation,
       const std::unordered_map<GeometryId, math::RigidTransform<T>>& X_WGs,
       std::vector<ContactSurface<T>>* surfaces,
-      std::vector<PenetrationAsPointPair<T>>* point_pairs) const;
+      std::vector<PenetrationAsPointPair<T>>* point_pairs) const
+    requires is_default_nonsymbolic_scalar_v<T>;
 
   /* Implementation of GeometryState::ComputeDeformableContact(). Assumes
    the poses of rigid bodies and the vertex positions of the deformable bodies
