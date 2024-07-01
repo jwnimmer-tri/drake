@@ -20,6 +20,7 @@ scenario.h.
 import argparse
 import dataclasses as dc
 import math
+import time
 import typing
 
 from pydrake.common import RandomGenerator
@@ -32,7 +33,9 @@ from pydrake.manipulation import (
     ZeroForceDriver,
 )
 from pydrake.geometry import (
-    SceneGraphConfig
+    Meshcat,
+    MeshcatParams,
+    SceneGraphConfig,
 )
 from pydrake.multibody.plant import (
     AddMultibodyPlant,
@@ -48,7 +51,10 @@ from pydrake.systems.analysis import (
     Simulator,
     SimulatorConfig,
 )
-from pydrake.systems.framework import DiagramBuilder
+from pydrake.systems.framework import (
+    DiagramBuilder,
+    LeafSystem,
+)
 from pydrake.systems.lcm import ApplyLcmBusConfig
 from pydrake.systems.sensors import (
     ApplyCameraConfig,
@@ -58,6 +64,20 @@ from pydrake.visualization import (
     ApplyVisualizationConfig,
     VisualizationConfig,
 )
+
+
+class SleepSystem(LeafSystem):
+
+    def __init__(self, *, sleep_sec, period_sec, offset_sec=0):
+        LeafSystem.__init__(self)
+        self._sleep_sec = sleep_sec
+        self.DeclarePeriodicPublishEvent(
+            period_sec=period_sec,
+            offset_sec=offset_sec,
+            publish=self._publish)
+
+    def _publish(self, *_):
+        time.sleep(self._sleep_sec)
 
 
 @dc.dataclass
@@ -169,7 +189,21 @@ def run(*, scenario, graphviz=None):
             lcm_buses=lcm_buses)
 
     # Add visualization.
-    ApplyVisualizationConfig(scenario.visualization, builder, lcm_buses)
+    meshcat_params = MeshcatParams(
+        realtime_rate_period=0.125,
+        period_in_sim_time=True,
+    )
+    meshcat = Meshcat(meshcat_params)
+    ApplyVisualizationConfig(scenario.visualization, builder, lcm_buses,
+                             meshcat=meshcat)
+
+    # Add sleeping.
+    builder.AddSystem(SleepSystem(
+        period_sec=0.100,
+        sleep_sec=0.035))
+    builder.AddSystem(SleepSystem(
+        period_sec=0.010,
+        sleep_sec=0.04))
 
     # Build the diagram and its simulator.
     diagram = builder.Build()
