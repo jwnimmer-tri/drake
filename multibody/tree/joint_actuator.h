@@ -39,7 +39,7 @@ struct PdControllerGains {
 template <typename T>
 class JointActuator final : public MultibodyElement<T> {
  public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(JointActuator)
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(JointActuator);
 
   /// Creates an actuator for `joint` with the given `name`.
   /// The name must be unique within the given multibody model. This is
@@ -57,6 +57,8 @@ class JointActuator final : public MultibodyElement<T> {
   ///   for prismatic joints.
   JointActuator(const std::string& name, const Joint<T>& joint,
                 double effort_limit = std::numeric_limits<double>::infinity());
+
+  ~JointActuator() final;
 
   /// Returns this element's unique index.
   JointActuatorIndex index() const {
@@ -406,4 +408,4 @@ class JointActuator final : public MultibodyElement<T> {
 }  // namespace drake
 
 DRAKE_DECLARE_CLASS_TEMPLATE_INSTANTIATIONS_ON_DEFAULT_SCALARS(
-    class ::drake::multibody::JointActuator)
+    class ::drake::multibody::JointActuator);

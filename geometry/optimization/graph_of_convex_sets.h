@@ -26,19 +26,24 @@ struct GraphOfConvexSetsOptions {
   /** Flag to solve the relaxed version of the problem.  As discussed in the
   paper, we know that this relaxation cannot solve the original NP-hard problem
   for all instances, but there are also many instances for which the convex
-  relaxation is tight. */
+  relaxation is tight. If convex_relaxation=nullopt, then each GCS method is
+  free to choose an appropriate default. */
   std::optional<bool> convex_relaxation{std::nullopt};
 
   /** Maximum number of distinct paths to compare during random rounding; only
   the lowest cost path is returned. If convex_relaxation is false or this is
-  less than or equal to zero, rounding is not performed. */
+  less than or equal to zero, rounding is not performed. If
+  max_rounded_paths=nullopt, then each GCS method is free to choose an
+  appropriate default. */
   std::optional<int> max_rounded_paths{std::nullopt};
 
   /** Performs a preprocessing step to remove edges that cannot lie on the
   path from source to target. In most cases, preprocessing causes a net
   reduction in computation by reducing the size of the optimization solved.
   Note that this preprocessing is not exact. There may be edges that cannot
-  lie on the path from source to target that this does not detect. */
+  lie on the path from source to target that this does not detect. If
+  preprocessing=nullopt, then each GCS method is free to choose an appropriate
+  default. */
   std::optional<bool> preprocessing{std::nullopt};
 
   /** Maximum number of trials to find a novel path during random rounding. If
@@ -157,7 +162,7 @@ approximate the original non-convex problem.
 */
 class GraphOfConvexSets {
  public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(GraphOfConvexSets)
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(GraphOfConvexSets);
 
   /** Specify the transcription of the optimization problem to which a
   constraint or cost should be added, or from which they should be retrieved.*/
@@ -182,7 +187,7 @@ class GraphOfConvexSets {
   name. */
   class Vertex final {
    public:
-    DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Vertex)
+    DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Vertex);
 
     ~Vertex();
 
@@ -332,7 +337,7 @@ class GraphOfConvexSets {
   variables. */
   class Edge final {
    public:
-    DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Edge)
+    DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Edge);
 
     ~Edge();
 
@@ -638,11 +643,19 @@ class GraphOfConvexSets {
 
   Note that one can specify additional non-convex constraints, which may be
   not supported by all solvers. In this case, the provided solver will throw
-  an exception.*/
+  an exception.
+
+  If an @p initial_guess is provided, the solution inside this result will be
+  used to set the initial guess for the convex restriction. Typically, this will
+  be the result obtained by solving the convex relaxation.
+
+  @throws std::exception if the @p initial_guess does not contain solutions for
+  the decision variables required in this convex restriction.
+  */
   solvers::MathematicalProgramResult SolveConvexRestriction(
       const std::vector<const Edge*>& active_edges,
-      const GraphOfConvexSetsOptions& options =
-          GraphOfConvexSetsOptions()) const;
+      const GraphOfConvexSetsOptions& options = GraphOfConvexSetsOptions(),
+      const solvers::MathematicalProgramResult* initial_guess = nullptr) const;
 
  private: /* Facilitates testing. */
   friend class PreprocessShortestPathTest;

@@ -210,7 +210,7 @@ template<typename T> class BodyNode;
 template <typename T>
 class Mobilizer : public MultibodyElement<T> {
  public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Mobilizer)
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Mobilizer);
 
   // The minimum amount of information that we need to define a %Mobilizer is
   // the knowledge of the inboard and outboard frames it connects.
@@ -227,6 +227,8 @@ class Mobilizer : public MultibodyElement<T> {
           "The provided inboard and outboard frames reference the same object");
     }
   }
+
+  ~Mobilizer() override;
 
   /// Returns this element's unique index.
   MobilizerIndex index() const {

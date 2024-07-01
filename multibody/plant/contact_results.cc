@@ -53,6 +53,9 @@ ContactResults<T>& ContactResults<T>::operator=(
 }
 
 template <typename T>
+ContactResults<T>::~ContactResults() = default;
+
+template <typename T>
 const MultibodyPlant<T>* ContactResults<T>::plant() const {
   return plant_;
 }
@@ -149,4 +152,4 @@ ContactResults<T> ContactResults<T>::SelectHydroelastic(
 }  // namespace drake
 
 DRAKE_DEFINE_CLASS_TEMPLATE_INSTANTIATIONS_ON_DEFAULT_SCALARS(
-    class ::drake::multibody::ContactResults)
+    class ::drake::multibody::ContactResults);

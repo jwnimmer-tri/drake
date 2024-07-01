@@ -100,6 +100,7 @@ drake_cc_library(
         "physical_model.cc",
         "physical_model_collection.cc",
         "sap_driver.cc",
+        "scalar_convertible_component.cc",
         "tamsi_driver.cc",
     ],
     hdrs = [
@@ -109,6 +110,7 @@ drake_cc_library(
         "deformable_model.h",
         "discrete_update_manager.h",
         "dummy_physical_model.h",
+        "geometry_contact_data.h",
         "make_discrete_update_manager.h",
         "multibody_plant.h",
         "multibody_plant_discrete_update_manager_attorney.h",
@@ -1168,7 +1170,6 @@ drake_cc_googletest(
     name = "multibody_plant_scalar_conversion_test",
     shard_count = 4,
     deps = [
-        ":multibody_plant_core",
         ":plant",
         "//common/test_utilities:expect_no_throw",
         "//common/test_utilities:expect_throws_message",

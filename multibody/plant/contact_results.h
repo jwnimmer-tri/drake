@@ -38,6 +38,7 @@ class ContactResults {
   ContactResults(ContactResults&&) = default;
   ContactResults& operator=(const ContactResults&);
   ContactResults& operator=(ContactResults&&) = default;
+  ~ContactResults();
 
   /** Returns the number of point pair contacts. */
   int num_point_pair_contacts() const {
@@ -173,4 +174,4 @@ class ContactResults {
 }  // namespace drake
 
 DRAKE_DECLARE_CLASS_TEMPLATE_INSTANTIATIONS_ON_DEFAULT_SCALARS(
-    class ::drake::multibody::ContactResults)
+    class ::drake::multibody::ContactResults);
