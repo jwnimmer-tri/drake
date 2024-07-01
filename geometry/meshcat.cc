@@ -687,7 +687,7 @@ class Meshcat::Impl {
       : prefix_("/drake"),
         main_thread_id_(std::this_thread::get_id()),
         params_(params),
-        rate_calculator_(params_.realtime_rate_period, /* sim time */ true) {
+        rate_calculator_(params_.realtime_rate_period, params.period_in_sim_time) {
     DRAKE_THROW_UNLESS(!params.port.has_value() || *params.port == 0 ||
                        *params.port >= 1024);
     if (!drake::internal::IsNetworkingAllowed("meshcat")) {

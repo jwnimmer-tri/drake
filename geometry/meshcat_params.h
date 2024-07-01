@@ -22,6 +22,7 @@ struct MeshcatParams {
     a->Visit(DRAKE_NVP(initial_properties));
     a->Visit(DRAKE_NVP(show_stats_plot));
     a->Visit(DRAKE_NVP(realtime_rate_period));
+    a->Visit(DRAKE_NVP(period_in_sim_time));
   }
 
   /** Meshcat will listen only on the given hostname (e.g., "localhost").
@@ -89,6 +90,8 @@ struct MeshcatParams {
    become visually noisy. Too long, and acute changes in performance may be
    masked. */
   double realtime_rate_period{0.25};
+
+  bool period_in_sim_time{true};
 };
 
 }  // namespace geometry
