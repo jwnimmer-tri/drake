@@ -152,7 +152,6 @@ drake_cc_library(
 
 drake_cc_googletest(
     name = "constraint_relaxing_ik_test",
-    srcs = ["test/constraint_relaxing_ik_test.cc"],
     data = [
         "@drake_models//:iiwa_description",
     ],

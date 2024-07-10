@@ -5,14 +5,18 @@ def amend(
         default = None,
         prepend = None,
         append = None,
-        update = None):
+        append_nodup = None,
+        update = None,
+        implicit_value = None):
     """Changes one specific option_name in kwargs, using the mnemonically-named
     mutation operation(s) given by our optional arguments as follows:
     - `default` sets the option iff it is currently missing or set to None.
       It's an error is the option is already set to this exact value.
     - `prepend` adds a list to the front of a list-valued option.
     - `append` adds a list to the back of a list-valued option.
+    - `append_nodup` like append, but skips things that are already there.
     - `update` updates a dict-valued option.
+    - `implicit_value` ... XXX
     If no optional arguments are provided, then kwargs is returned unchanged.
 
     As with most functions in the file, this takes a kwargs dict as the first
@@ -29,10 +33,23 @@ def amend(
         kwargs[option_name] = prepend + kwargs.get(option_name, [])
     if append != None:
         kwargs[option_name] = kwargs.get(option_name, []) + append
+    if append_nodup != None:
+        working = kwargs.get(option_name, [])
+        for item in append_nodup:
+            if item not in working:
+                working = working + [item]
+        kwargs[option_name] = working
     if update != None:
         item = kwargs.get(option_name, {})
         item.update(update)
         kwargs[option_name] = item
+    if implicit_value != None:
+        if kwargs.get(option_name) != None:
+            fail(("The {} cannot be specified; it is hard coded to {}").format(
+                option_name,
+                implicit_value,
+            ))
+        kwargs[option_name] = implicit_value
     return kwargs
 
 def _bump_cpu_tag(kwargs, *, new_size):

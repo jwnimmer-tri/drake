@@ -2,6 +2,7 @@ load("@cc//:compiler.bzl", "COMPILER_ID", "COMPILER_VERSION_MAJOR")
 load("//tools/skylark:cc.bzl", "cc_binary", "cc_library", "cc_test")
 load(
     "//tools/skylark:kwargs.bzl",
+    "amend",
     "incorporate_allow_network",
     "incorporate_num_threads",
 )
@@ -89,58 +90,54 @@ GCC_VERSION_SPECIFIC_FLAGS = {
     ],
 }
 
-def _platform_copts(rule_copts, rule_gcc_copts, rule_clang_copts, cc_test = 0):
-    """Returns both the rule_copts (plus rule_{cc}_copts iff under the
-    specified compiler), and platform-specific copts.
+def _amend_copts(kwargs, *, cc_test = False):
+    """Given the kwargs from a drake_cc_foo macro, returns a modified copy of
+    those kwargs with updated copts:
 
-    When cc_test=1, the GCC_CC_TEST_FLAGS will be added.  It should only be set
-    to 1 from cc_test rules or rules that are boil down to cc_test rules.
+    - Merges the SCREAM_CAPS baseline options from the above constants into
+      copts, based on which compiler is currently being used. Note that which
+      SCREAM_CAPS constants are used is affeted by cc_test.
+
+    - Merges the rule's acute gcc_copts (if any) or clang_copts (if any) into
+      copts, based on which  compiler is currently being used.
+
+    The cc_test flag should only be set to True only from drake_cc_test rules
+    (or equivalent).
     """
+    kwargs = dict(kwargs)
+    rule_copts = kwargs.pop("copts", [])
+    rule_gcc_copts = kwargs.pop("gcc_copts", [])
+    rule_clang_copts = kwargs.pop("clang_copts", [])
     if COMPILER_ID == "AppleClang":
-        result = APPLECLANG_FLAGS + rule_copts + rule_clang_copts
+        copts = APPLECLANG_FLAGS + rule_copts + rule_clang_copts
         if COMPILER_VERSION_MAJOR in APPLECLANG_VERSION_SPECIFIC_FLAGS:
-            result += APPLECLANG_VERSION_SPECIFIC_FLAGS[COMPILER_VERSION_MAJOR]
+            copts += APPLECLANG_VERSION_SPECIFIC_FLAGS[COMPILER_VERSION_MAJOR]
     elif COMPILER_ID == "Clang":
-        result = CLANG_FLAGS + rule_copts + rule_clang_copts
+        copts = CLANG_FLAGS + rule_copts + rule_clang_copts
         if COMPILER_VERSION_MAJOR in CLANG_VERSION_SPECIFIC_FLAGS:
-            result += CLANG_VERSION_SPECIFIC_FLAGS[COMPILER_VERSION_MAJOR]
+            copts += CLANG_VERSION_SPECIFIC_FLAGS[COMPILER_VERSION_MAJOR]
     elif COMPILER_ID == "GNU":
         extra_gcc_flags = GCC_CC_TEST_FLAGS if cc_test else []
-        result = GCC_FLAGS + extra_gcc_flags + rule_copts + rule_gcc_copts
+        copts = GCC_FLAGS + extra_gcc_flags + rule_copts + rule_gcc_copts
         if COMPILER_VERSION_MAJOR in GCC_VERSION_SPECIFIC_FLAGS:
-            result += GCC_VERSION_SPECIFIC_FLAGS[COMPILER_VERSION_MAJOR]
+            copts += GCC_VERSION_SPECIFIC_FLAGS[COMPILER_VERSION_MAJOR]
     else:
-        result = rule_copts
+        copts = rule_copts
 
     # We can't handle select() yet.
     # TODO(jwnimmer-tri) We should handle select.
-    if type(result) != "list":
-        return result
-    return select({
-        "//tools:drake_werror": result,
-        "//conditions:default": [
-            x.replace("-Werror=", "-W")
-            for x in result
-        ],
-    })
+    if type(copts) == "list":
+        # Disable Werror unless drake_werror is turned on.
+        copts = select({
+            "//tools:drake_werror": copts,
+            "//conditions:default": [
+                x.replace("-Werror=", "-W")
+                for x in copts
+            ],
+        })
 
-def _dsym_command(name):
-    """Returns the command to produce .dSYM on macOS, or a no-op on Linux."""
-    return select({
-        "//tools/cc_toolchain:apple_debug": (
-            "dsymutil -f $(location :" + name + ") -o $@ 2> /dev/null"
-        ),
-        "//conditions:default": (
-            "touch $@"
-        ),
-    })
-
-def _dsym_srcs(name):
-    """Returns the input for making a .dSYM on macOS, or a no-op on Linux."""
-    return select({
-        "//tools/cc_toolchain:apple_debug": [":" + name],
-        "//conditions:default": [],
-    })
+    kwargs["copts"] = copts
+    return kwargs
 
 def _check_library_deps_blacklist(name, deps):
     """Report an error if a library should not use something from deps."""
@@ -374,7 +371,7 @@ i.e., include paths and preprocessor definitions.
 
 def _raw_drake_cc_library(
         name,
-        srcs = None,  # Cannot list any headers here.
+        srcs = [],  # Cannot list any headers here.
         hdrs = None,
         textual_hdrs = None,
         strip_include_prefix = None,
@@ -382,8 +379,8 @@ def _raw_drake_cc_library(
         copts = None,
         defines = None,
         data = None,
-        interface_deps = None,
-        implementation_deps = None,
+        interface_deps = [],
+        implementation_deps = [],
         linkstatic = None,
         linkopts = None,
         alwayslink = None,
@@ -492,12 +489,12 @@ def _raw_drake_cc_library(
             deprecation = deprecation,
         )
 
-def _maybe_add_pruned_private_hdrs_dep(
-        base_name,
-        srcs,
-        deps,
-        **kwargs):
-    """Given some srcs, prunes any header files into a separate cc_library, and
+def _amend_private_hdrs(
+        kwargs,
+        *,
+        base_name):
+    """XXX
+    Given some srcs, prunes any header files into a separate cc_library, and
     appends that new library to deps, returning new_srcs (sans headers) and
     add_deps.  The separate cc_library is private with linkstatic = 1.
 
@@ -505,38 +502,35 @@ def _maybe_add_pruned_private_hdrs_dep(
     want to fiddle with include paths, we *must* have all header files listed
     as hdrs; the include_prefix does not apply to srcs.
     """
-    new_srcs, private_hdrs = _prune_private_hdrs(srcs)
-    if private_hdrs:
-        name = "_" + base_name + "_private_headers_cc_impl"
-        kwargs.pop("env", "")
-        kwargs.pop("linkshared", "")
-        kwargs.pop("linkstatic", "")
-        kwargs.pop("visibility", "")
-        _raw_drake_cc_library(
-            name = name,
-            hdrs = private_hdrs,
-            srcs = [],
-            interface_deps = deps,
-            implementation_deps = [],
-            linkstatic = 1,
-            visibility = ["//visibility:private"],
-            **kwargs
-        )
-        add_deps = [":" + name]
-    else:
-        add_deps = []
-    return new_srcs, add_deps
+    new_srcs, private_hdrs = _prune_private_hdrs(kwargs.get("srcs", []))
+    if not private_hdrs:
+        return kwargs
+
+    # Create the separate cc_library.
+    private_name = "_" + base_name + "_private_headers_cc_impl"
+    private_kwargs = dict(kwargs)
+    private_kwargs["hdrs"] = private_hdrs
+    private_kwargs["linkstatic"] = True
+    private_kwargs["visibility"] = ["//visibility:private"]
+    private_kwargs = amend(
+        private_kwargs,
+        "interface_deps",
+        append = private_kwargs.pop("deps", []),
+    )
+    private_kwargs.pop("env", None)
+    private_kwargs.pop("linkshared", None)
+    private_kwargs.pop("size", None)
+    private_kwargs.pop("srcs", None)
+    _raw_drake_cc_library(
+        name = private_name,
+        **private_kwargs
+    )
+    return amend(kwargs, "implementation_deps", append = [":" + private_name])
 
 def drake_cc_library(
         name,
-        hdrs = [],
-        srcs = [],
+        *,
         interface_deps = None,
-        deps = [],
-        copts = [],
-        clang_copts = [],
-        gcc_copts = [],
-        linkstatic = 1,
         internal = False,
         declare_installed_headers = 1,
         install_hdrs_exclude = [],
@@ -585,18 +579,26 @@ def drake_cc_library(
     deps of _other_ libraries marked as internal, or as "implementation deps"
     (see paragraphs above) of non-internal libraries.
     """
-    new_copts = _platform_copts(copts, gcc_copts, clang_copts)
+    if "implementation_deps" in kwargs:
+        fail("Invalid argument")
+    kwargs = _amend_copts(kwargs)
     if interface_deps != None:
-        implementation_deps = (deps or [])
+        kwargs["interface_deps"] = interface_deps
+        kwargs["implementation_deps"] = kwargs.pop("deps", [])
     else:
-        interface_deps = deps
-        implementation_deps = []
-    new_tags = kwargs.pop("tags", None) or []
+        kwargs["interface_deps"] = kwargs.pop("deps", [])
+        kwargs["implementation_deps"] = []
+
+        hdrs = [],
+        srcs = [],
+        linkstatic = 1,
+
+
     if internal:
         if install_hdrs_exclude != []:
             fail("When using internal = True, hdrs are automatically excluded")
         if kwargs.get("testonly", False):
-            fail("Using internal = True is already implied under testonly = 1")
+            fail("Using internal = True is already implied under testonly = False")
         if len(kwargs.get("visibility") or []) == 0:
             fail("When using internal = True, you must set visibility. " +
                  "In most cases, visibility = [\"//visibility:private\"] " +
@@ -605,10 +607,10 @@ def drake_cc_library(
             if item == "//visibility:public":
                 fail("When using internal = True, visibility can't be public")
         install_hdrs_exclude = hdrs
-        new_tags = new_tags + [
+        kwargs = amend(kwargs, "tags", append = [
             "exclude_from_libdrake",
             "exclude_from_package",
-        ]
+        ])
 
     # We install private_hdrs by default, because Bazel's visibility denotes
     # whether headers can be *directly* included when using cc_library; it does
@@ -620,7 +622,6 @@ def drake_cc_library(
         base_name = name,
         srcs = srcs,
         deps = interface_deps + implementation_deps,
-        copts = new_copts,
         declare_installed_headers = declare_installed_headers,
         tags = new_tags,
         **kwargs
@@ -631,7 +632,6 @@ def drake_cc_library(
         srcs = new_srcs,
         interface_deps = interface_deps + add_deps,
         implementation_deps = implementation_deps,
-        copts = new_copts,
         linkstatic = linkstatic,
         declare_installed_headers = declare_installed_headers,
         install_hdrs_exclude = install_hdrs_exclude,
@@ -649,7 +649,7 @@ def _check_package_library_name(name):
 def drake_cc_package_library(
         name,
         deps = [],
-        testonly = 0,
+        testonly = False,
         visibility = None):
     """Creates a rule to declare a C++ "package" library -- a library whose
     name matches the current Bazel package name (i.e., directory name) and
@@ -690,23 +690,14 @@ def drake_cc_package_library(
 
 def drake_cc_binary(
         name,
-        srcs = [],
-        data = [],
-        deps = [],
-        copts = [],
-        linkopts = [],
-        gcc_copts = [],
-        clang_copts = [],
-        linkshared = 0,
-        linkstatic = 1,
-        testonly = 0,
-        add_test_rule = 0,
-        test_rule_args = [],
-        test_rule_data = [],
-        test_rule_tags = None,
+        *,
+        add_test_rule = False,
+        test_rule_args = None,
+        test_rule_data = None,
+        test_rule_flaky = False,
         test_rule_size = None,
+        test_rule_tags = None,
         test_rule_timeout = None,
-        test_rule_flaky = 0,
         **kwargs):
     """Creates a rule to declare a C++ binary.
 
@@ -723,201 +714,129 @@ def drake_cc_binary(
     tests. The smoke-test will be named <name>_test. You may override cc_test
     defaults using test_rule_args=["-f", "--bar=42"] or test_rule_size="baz".
     """
-    new_copts = _platform_copts(copts, gcc_copts, clang_copts)
-    new_srcs, add_deps = _maybe_add_pruned_private_hdrs_dep(
-        base_name = name,
-        srcs = srcs,
-        deps = deps,
-        copts = new_copts,
-        testonly = testonly,
-        **kwargs
-    )
-
+    if "@gtest//:main" in kwargs.get("deps", []):
+        fail("Use drake_cc_googletest to declare %s as a test" % name)
+    orig_copts = kwargs.get("copts", [])
+    kwargs = amend(kwargs, "linkshared", default = False)
+    kwargs = amend(kwargs, "linkstatic", default = True)
+    kwargs = _amend_copts(kwargs)
+    kwargs = _amend_private_hdrs(kwargs, base_name = name)
+    # We should deduplicate symbols while linking (for a ~6% reduction in disk
+    # use), to conserve space in CI; see #18545 for details.
+    kwargs = amend(kwargs, "features", append = [
+        "-no_deduplicate",
+    ])
     cc_binary(
         name = name,
-        srcs = new_srcs,
-        data = data,
-        deps = deps + add_deps,
-        copts = new_copts,
-        testonly = testonly,
-        linkshared = linkshared,
-        linkstatic = linkstatic,
-        linkopts = linkopts,
-        features = [
-            # We should deduplicate symbols while linking (for a ~6% reduction
-            # in disk use), to conserve space in CI; see #18545 for details.
-            "-no_deduplicate",
-        ],
         **kwargs
     )
-
-    # Also generate the OS X debug symbol file for this binary.
-    tags = kwargs.pop("tags", [])
-    native.genrule(
-        name = name + "_dsym",
-        srcs = _dsym_srcs(name),
-        outs = [name + ".dSYM"],
-        output_to_bindir = 1,
-        testonly = testonly,
-        tags = tags + ["dsym"],
-        visibility = ["//visibility:private"],
-        cmd = _dsym_command(name),
-    )
-
-    if "@gtest//:main" in deps:
-        fail("Use drake_cc_googletest to declare %s as a test" % name)
-
     if add_test_rule:
+        kwargs = amend(kwargs, "data", append = test_rule_data)
+        kwargs = amend(kwargs, "tags", append = test_rule_tags)
+        kwargs = amend(kwargs, "tags", append = ["nolint"])
+        kwargs["copts"] = orig_copts
+        kwargs.pop("testonly", None)
         drake_cc_test(
             name = name + "_test",
-            srcs = new_srcs,
-            data = data + test_rule_data,
-            deps = deps + add_deps,
-            copts = copts,
-            gcc_copts = gcc_copts,
+            args = test_rule_args,
+            flaky = test_rule_flaky,
             size = test_rule_size,
             timeout = test_rule_timeout,
-            flaky = test_rule_flaky,
-            linkstatic = linkstatic,
-            args = test_rule_args,
-            tags = (test_rule_tags or []) + ["nolint"],
             **kwargs
         )
 
 def drake_cc_test(
         name,
-        size = None,
-        srcs = [],
-        args = [],
-        deps = [],
-        copts = [],
-        gcc_copts = [],
-        clang_copts = [],
+        *,
         allow_network = None,
         num_threads = None,
+        disable_in_compilation_mode_dbg = False,
         **kwargs):
     """Creates a rule to declare a C++ unit test.  Note that for almost all
     cases, drake_cc_googletest should be used, instead of this rule.
 
     By default, sets size="small" because that indicates a unit test.
     By default, sets name="test/${name}.cc" per Drake's filename convention.
-    Unconditionally forces testonly=1.
+    Unconditionally forces testonly=True.
 
     @param allow_network (optional, default is ["meshcat"])
         See drake/tools/skylark/README.md for details.
 
     @param num_threads (optional, default is 1)
         See drake/tools/skylark/README.md for details.
+
+    @param disable_in_compilation_mode_dbg (optional, default is False)
+        If set, then in debug-mode builds all test cases will be suppressed, so
+        the test will trivially pass. This option should be used only rarely,
+        and the reason should always be documented.
+
+    @param gcc_copts, clang_copts (optional, default is []).
+        See drake/tools/skylark/README.md for details.
     """
-    if size == None:
-        size = "small"
-    if not srcs:
-        srcs = ["test/%s.cc" % name]
-    kwargs["testonly"] = 1
+    kwargs = amend(kwargs, "size", default = "small")
+    kwargs = amend(kwargs, "srcs", default = ["test/%s.cc" % name])
+    kwargs = amend(kwargs, "testonly", implicit_value = True)
     kwargs = incorporate_allow_network(kwargs, allow_network = allow_network)
     kwargs = incorporate_num_threads(kwargs, num_threads = num_threads)
-    new_copts = _platform_copts(copts, gcc_copts, clang_copts, cc_test = 1)
-    new_srcs, add_deps = _maybe_add_pruned_private_hdrs_dep(
-        base_name = name,
-        srcs = srcs,
-        deps = deps,
-        copts = new_copts,
-        **kwargs
-    )
-    cc_test(
-        name = name,
-        size = size,
-        srcs = new_srcs,
-        args = args,
-        deps = deps + add_deps,
-        copts = new_copts,
-        features = [
-            # We should deduplicate symbols while linking (for a ~6% reduction
-            # in disk use), to conserve space in CI; see #18545 for details.
-            "-no_deduplicate",
-        ],
-        **kwargs
-    )
-
-    # Also generate the OS X debug symbol file for this test.
-    native.genrule(
-        name = name + "_dsym",
-        srcs = _dsym_srcs(name),
-        outs = [name + ".dSYM"],
-        output_to_bindir = 1,
-        testonly = kwargs["testonly"],
-        tags = ["dsym"],
-        visibility = ["//visibility:private"],
-        cmd = _dsym_command(name),
-    )
-
-def drake_cc_googletest(
-        name,
-        args = [],
-        tags = [],
-        deps = [],
-        disable_in_compilation_mode_dbg = False,
-        use_default_main = True,
-        **kwargs):
-    """Creates a rule to declare a C++ unit test using googletest.
-
-    By default, sets size="small" because that indicates a unit test.
-    By default, sets name="test/${name}.cc" per Drake's filename convention.
-    By default, sets use_default_main=True to use a default main() function.
-    Otherwise, it will depend on @gtest//:without_main.
-
-    If disable_in_compilation_mode_dbg is True, then in debug-mode builds all
-    test cases will be suppressed, so the test will trivially pass. This option
-    should be used only rarely, and the reason should always be documented.
-    """
-    if use_default_main:
-        deps = deps + [
-            "//common/test_utilities:drake_cc_googletest_main",
-        ]
-    else:
-        deps = deps + ["@gtest//:without_main"]
-    new_args = args
-    new_tags = tags
+    kwargs = _amend_copts(kwargs, cc_test = True)
+    kwargs = _amend_private_hdrs(kwargs, base_name = name)
     if disable_in_compilation_mode_dbg:
-        # If we're in debug compilation mode, then skip all test cases so that
-        # the test will trivially pass.
-        new_args = args + select({
+        kwargs = amend(kwargs, "args", append = select({
             "//tools/cc_toolchain:debug": ["--gtest_filter=-*"],
             "//conditions:default": [],
-        })
-
-        # Skip this test when run under various dynamic tools that use
-        # debug-like compiler flags.
-        new_tags = new_tags + [
+        }))
+        kwargs = amend(kwargs, "tags", append_nodup = [
             "no_asan",
             "no_kcov",
             "no_lsan",
             "no_memcheck",
             "no_tsan",
             "no_ubsan",
-        ]
-    else:
-        # kcov is only appropriate for small-sized unit tests. If a test needs
-        # a shard_count or a special timeout, we assume it is not small.
-        if "shard_count" in kwargs or "timeout" in kwargs:
-            new_tags = new_tags + ["no_kcov"]
+        ])
+    # We should deduplicate symbols while linking (for a ~6% reduction in disk
+    # use), to conserve space in CI; see #18545 for details.
+    kwargs = amend(kwargs, "features", append = [
+        "-no_deduplicate",
+    ])
+    # kcov is only appropriate for small-sized unit tests. If a test needs a
+    # shard_count or a special timeout, we assume it is not small.
+    if "shard_count" in kwargs or "timeout" in kwargs:
+        kwargs = amend(kwargs, "tags", append_nodup = ["no_kcov"])
+    cc_test(
+        name = name,
+        **kwargs
+    )
 
+def drake_cc_googletest(
+        name,
+        *,
+        use_default_main = True,
+        **kwargs):
+    """Creates a rule to declare a C++ unit test using googletest.
+
+    This suports all of the same options that drake_cc_test, as well as one
+    more googletest-specific option:
+    - When use_default_main is True, this links a default C++ main() function.
+      Otherwise, this only links @gtest//:without_main and you need to write
+      or link your own custom main() function.
+    """
+    if use_default_main:
+        gtest = "//common/test_utilities:drake_cc_googletest_main"
+    else:
+        gtest = "@gtest//:without_main"
+    kwargs = amend(kwargs, "deps", append = [gtest])
     drake_cc_test(
         name = name,
-        args = new_args,
-        tags = new_tags,
-        deps = deps,
         **kwargs
     )
 
 def drake_cc_library_linux_only(
         name,
-        srcs = [],
+        *,
         interface_deps = None,
         deps = [],
         linkopts = [],
-        tags = [],
-        visibility = ["//visibility:private"],
+        enable_condition = "@drake//tools/skylark:linux",
         **kwargs):
     """Declares a platform-specific drake_cc_library.
 
@@ -925,39 +844,36 @@ def drake_cc_library_linux_only(
     nulled out. Note that we do NOT null out srcs; using a select() on srcs
     would cause the linter to skip them, even on Linux builds.
 
-    The tags will be forced to have "manual" set so that the library compile is
-    skipped on macOS.
+    The tags will have "manual" added so that the library compile is skipped
+    unless some other target depends on this library.
 
     Because this library is not cross-platform, the visibility defaults to
     private and internal is forced to True (so that, e.g., the headers are
     excluded from the installation).
     """
-    new_tags = tags or []
-    if "manual" not in new_tags:
-        new_tags.append("manual")
+    kwargs = amend(kwargs, "tags", append_nodup = ["manual"])
+    kwargs = amend(kwargs, "visibility", default = ["//visibility:private"])
+    kwargs = amend(kwargs, "internal", implicit_value = True)
     drake_cc_library(
         name = name,
-        srcs = srcs,
         interface_deps = None if interface_deps == None else select({
-            "@drake//tools/skylark:linux": interface_deps,
+            enable_condition: interface_deps,
             "//conditions:default": [],
         }),
         deps = select({
-            "@drake//tools/skylark:linux": deps,
+            enable_condition: deps,
             "//conditions:default": [],
         }),
         linkopts = select({
-            "@drake//tools/skylark:linux": linkopts,
+            enable_condition: linkopts,
             "//conditions:default": [],
         }),
-        tags = new_tags,
-        visibility = visibility,
-        internal = True,
         **kwargs
     )
 
 def drake_cc_googletest_linux_only(
         name,
+        *,
         data = [],
         deps = [],
         linkopts = [],
@@ -972,6 +888,11 @@ def drake_cc_googletest_linux_only(
     Because this test is not cross-platform, the visibility defaults to
     private.
     """
+    # Note that we do NOT allow any kwargs-based forwarding in this macro,
+    # unlike our other drake_cc_foo wrappers. That's because we must very
+    # carefully consider how each argument should map into the "linux only"
+    # regime, so any time we need to support a new option we want to force
+    # ourselves to write out the logic for it specifically.
 
     # We need add the source file to an intermediate cc_library so that our
     # linters will find it. The library will not be compiled on non-Linux.

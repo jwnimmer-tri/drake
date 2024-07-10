@@ -303,9 +303,6 @@ drake_cc_googletest(
 
 drake_cc_googletest(
     name = "free_rotating_body_test",
-    srcs = [
-        "test/free_rotating_body_test.cc",
-    ],
     deps = [
         ":free_rotating_body_plant",
         "//common/test_utilities:eigen_matrix_compare",

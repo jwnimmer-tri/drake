@@ -52,3 +52,10 @@ work correctly in the presence of sub-processes.
 (Aside: Besides the two named environment variables, the function also sets
 several other environment variables using alternative spellings of the same
 concept; the overall effect should be the same.)
+
+**gcc_copts, clang_copts**
+
+Can be None (the default), or else a list of strings.
+
+When given, these options will be appended to `copts` if we can detect that
+GCC or Clang is currently being used.
