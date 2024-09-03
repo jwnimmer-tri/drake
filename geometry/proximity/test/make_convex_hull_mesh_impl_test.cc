@@ -589,16 +589,16 @@ GTEST_TEST(MakeConvexHullMeshTest, MakeFromMeshSource) {
 
   // The rainbow_box.gltf has embedded data *and* has a non-trivial hierarchy
   // with transformations.
-  const std::string embedded_gltf_path =
+  const fs::path embedded_gltf_path =
       FindResourceOrThrow("drake/geometry/render/test/meshes/rainbow_box.gltf");
   const MeshSource gltf_embedded_source(
       InMemoryMesh(MemoryFile::Make(embedded_gltf_path)));
 
   // The fully_textured_pyramid.gltf references external files. Specifically,
   // the .bin file is necessary to know vertex positions.
-  const std::string pyramid_path = FindResourceOrThrow(
+  const fs::path pyramid_path = FindResourceOrThrow(
       "drake/geometry/render/test/meshes/fully_textured_pyramid.gltf");
-  const std::string pyramid_bin_path = FindResourceOrThrow(
+  const fs::path pyramid_bin_path = FindResourceOrThrow(
       "drake/geometry/render/test/meshes/fully_textured_pyramid.bin");
   const MeshSource gltf_pyramid_source(InMemoryMesh(
       MemoryFile::Make(pyramid_path),
