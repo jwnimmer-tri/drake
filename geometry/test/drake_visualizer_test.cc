@@ -395,10 +395,12 @@ class DrakeVisualizerTest : public ::testing::Test {
       string_map<FileSource> alt_files;
       for (const auto& name : mesh_data.SupportingFileNames()) {
         const FileSource* file_source = mesh_data.supporting_file(name);
-        DRAKE_DEMAND(file_source != nullptr && file_source->is_path());
+        DRAKE_DEMAND(file_source != nullptr);
+        const auto* path = std::get_if<std::filesystem::path>(file_source);
+        DRAKE_DEMAND(path != nullptr);
         if (name == kSupportingPngAsMemory) {
           alt_files[kSupportingPngAsMemory] =
-              MemoryFile::Make(file_source->path());
+              MemoryFile::Make(*path);
         } else {
           alt_files.insert(
               {std::string(name), *mesh_data.supporting_file(name)});
@@ -528,10 +530,9 @@ class DrakeVisualizerTest : public ::testing::Test {
           ASSERT_TRUE(files.contains(kSupportingPngAsPath));
           ASSERT_TRUE(files[kSupportingPngAsPath].contains("path"));
           EXPECT_EQ(files[kSupportingPngAsPath]["path"].get<std::string_view>(),
-                    mesh->source()
-                        .in_memory()
-                        .supporting_file(kSupportingPngAsPath)
-                        ->path());
+                    std::get<std::filesystem::path>(
+                        *mesh->source().in_memory().supporting_file(
+                            kSupportingPngAsPath)));
 
           ASSERT_TRUE(files.contains(kSupportingPngAsMemory));
           const nlohmann::json& mem_file = files[kSupportingPngAsMemory];

@@ -13,6 +13,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/find_resource.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/ssize.h"
 #include "drake/common/text_logging.h"
 
@@ -63,12 +64,12 @@ RenderMaterial MakeMaterialFromMtl(const tinyobj::material_t& mat,
       DRAKE_DEMAND(mesh_source.is_in_memory());
       const InMemoryMesh& data = mesh_source.in_memory();
       const FileSource* file_source = data.supporting_file(mat.diffuse_texname);
-      if (file_source != nullptr && !file_source->empty()) {
-        if (file_source->is_path()) {
-          result.diffuse_map = file_source->path();
-        } else {
-          result.diffuse_map = file_source->memory_file();
-        }
+
+      if (file_source != nullptr) {
+        std::visit(overloaded{[&map = result.diffuse_map](const auto source) {
+                     map = source;
+                   }},
+                   *file_source);
       } else {
         policy.Warning(fmt::format(
             "The OBJ file's material requested an unavailable diffuse texture "
@@ -162,7 +163,7 @@ class MaterialLibraryServer final : public tinyobj::MaterialReader {
     const FileSource* file_source = source_.in_memory().supporting_file(matId);
     // matId is the filename that appears after mtllib. There may be multiple
     // such files named.
-    if (file_source == nullptr || file_source->empty()) {
+    if (file_source == nullptr) {
       policy_.Warning(fmt::format(
           "An in-memory OBJ ('{}') a mtllib called '{}' which was not in its "
           "supporting files. The declaration will be ignored which may lead to "
@@ -170,15 +171,18 @@ class MaterialLibraryServer final : public tinyobj::MaterialReader {
           source_.description(), matId));
       return false;
     }
-    if (file_source->is_path()) {
-      std::ifstream mtl_stream(file_source->path());
-      tinyobj::LoadMtl(matMap, materials, &mtl_stream, warn, err);
-    } else {
-      DRAKE_DEMAND(file_source->is_memory_file());
-      AliasingStringReadBuf mat_buf(file_source->memory_file().contents());
-      std::istream mtl_stream(&mat_buf);
-      tinyobj::LoadMtl(matMap, materials, &mtl_stream, warn, err);
-    }
+    std::visit(overloaded{[&](const std::filesystem::path& path) {
+                            std::ifstream mtl_stream(path);
+                            tinyobj::LoadMtl(matMap, materials, &mtl_stream,
+                                             warn, err);
+                          },
+                          [&](const MemoryFile& file) {
+                            AliasingStringReadBuf mat_buf(file.contents());
+                            std::istream mtl_stream(&mat_buf);
+                            tinyobj::LoadMtl(matMap, materials, &mtl_stream,
+                                             warn, err);
+                          }},
+               *file_source);
     return true;
   }
 

@@ -30,10 +30,7 @@ from drake import (
     lcmt_viewer_link_data,
     lcmt_viewer_load_robot,
 )
-from pydrake.common import (
-    FileSource,
-    MemoryFile,
-)
+from pydrake.common import MemoryFile
 from pydrake.geometry import (
     DrakeVisualizer,
     DrakeVisualizerParams,
@@ -477,9 +474,8 @@ Kd 1 1 0
                         mesh_file=MemoryFile(obj_contents, ".obj",
                                              "from_test.obj"),
                     supporting_files={
-                        "meldis_test.mtl": FileSource(
-                            MemoryFile(mtl_contents, ".mtl",
-                                       "meldis_test.mtl"))}))
+                        "meldis_test.mtl": MemoryFile(mtl_contents, ".mtl",
+                                                      "meldis_test.mtl")}))
         g_id = scene_graph.RegisterAnchoredGeometry(
             plant.get_source_id(),
             GeometryInstance(X_PG=RigidTransform(), shape=mesh,

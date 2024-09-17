@@ -12,6 +12,7 @@
 
 #include "drake/common/default_scalars.h"
 #include "drake/common/extract_double.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/scope_exit.h"
 #include "drake/common/value.h"
 #include "drake/geometry/proximity/polygon_to_triangle_mesh.h"
@@ -401,13 +402,14 @@ class ShapeToLcm : public ShapeReifier {
       auto json_file_source =
           [&json_memory_file](const FileSource& file_source) {
             json mesh_file_j;
-            if (file_source.is_path()) {
-              mesh_file_j["path"] = file_source.path().string();
-            } else {
-              DRAKE_DEMAND(file_source.is_memory_file());
-              const MemoryFile& file = file_source.memory_file();
-              mesh_file_j = json_memory_file(file);
-            }
+            std::visit(overloaded{
+              [&mesh_file_j](const std::filesystem::path& path) {
+                mesh_file_j["path"] = path.string();
+              },
+              [&json_memory_file, &mesh_file_j](const MemoryFile& file) {
+                mesh_file_j = json_memory_file(file);
+              }
+            }, file_source);
             return mesh_file_j;
           };
 
@@ -419,7 +421,7 @@ class ShapeToLcm : public ShapeReifier {
 
       for (const auto& name : mem_mesh.SupportingFileNames()) {
         const FileSource* file_source = mem_mesh.supporting_file(name);
-        if (file_source == nullptr || file_source->empty()) continue;
+        if (file_source == nullptr) continue;
         in_memory["in_memory_mesh"]["supporting_files"][name] =
             json_file_source(*file_source);
       }

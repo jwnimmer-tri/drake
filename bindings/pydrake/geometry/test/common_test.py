@@ -9,10 +9,7 @@ import unittest
 
 import numpy as np
 
-from pydrake.common import (
-    FileSource,
-    MemoryFile,
-)
+from pydrake.common import MemoryFile
 from pydrake.common.test_utilities import numpy_compare
 from pydrake.common.test_utilities.deprecation import catch_drake_warnings
 from pydrake.common.test_utilities.pickle_compare import assert_pickle
@@ -272,8 +269,7 @@ class TestGeometryCore(unittest.TestCase):
                          only_mesh.mesh_file().contents())
 
         supporting_files = {
-            "file": FileSource(MemoryFile(contents="a", extension=".a",
-                                          filename_hint="a"))
+            "file": MemoryFile(contents="a", extension=".a", filename_hint="a")
         }
         full_mesh = mut.InMemoryMesh(mesh_file=file,
                                      supporting_files=supporting_files)
@@ -281,7 +277,7 @@ class TestGeometryCore(unittest.TestCase):
                          file.contents())
         self.assertIsNotNone(full_mesh.supporting_file("file"))
         full_mesh.AddSupportingFile(
-            name="fileb", file_source=FileSource(MemoryFile("b", ".b", "bb")))
+            name="fileb", file_source=MemoryFile("b", ".b", "bb"))
         self.assertIsNotNone(full_mesh.supporting_file("fileb"))
         self.assertEqual(full_mesh.num_supporting_files(), 2)
         self.assertIsNone(full_mesh.supporting_file("c"))
@@ -289,8 +285,7 @@ class TestGeometryCore(unittest.TestCase):
         representation = repr(full_mesh)
         self.assertIsInstance(eval(representation,
                                    {"InMemoryMesh": mut.InMemoryMesh,
-                                    "MemoryFile": MemoryFile,
-                                    "FileSource": FileSource}),
+                                    "MemoryFile": MemoryFile}),
                               mut.InMemoryMesh)
         self.assertRegex(representation,
                          re.compile("mesh_file=MemoryFile.*stuff", re.DOTALL))
@@ -305,12 +300,9 @@ class TestGeometryCore(unittest.TestCase):
         # Without keyword arguments, the right overload is found.
         mesh.AddSupportingFile("a", 'a.txt')
         mesh.AddSupportingFile("b", file)
-        mesh.AddSupportingFile("c", FileSource('b.txt'))
         # The right keyword arguments go with the right parameter types.
         mesh.AddSupportingFile(name="a2", filepath='a.txt')
         mesh.AddSupportingFile(name="b2", memory_file=file)
-        mesh.AddSupportingFile(name="c2",
-                               file_source=FileSource('b.txt'))
         # TODO: Test pickling with supporting files.
 
     def test_mesh_source(self):

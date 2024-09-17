@@ -4,6 +4,8 @@
 
 #include <fmt/format.h>
 
+#include "drake/common/overloaded.h"
+
 namespace drake {
 namespace geometry {
 
@@ -17,10 +19,14 @@ InMemoryMesh::InMemoryMesh(MemoryFile mesh_file,
 void InMemoryMesh::AddSupportingFile(std::string_view name,
                                      FileSource file_source) {
   if (supporting_files_.contains(name)) {
+    const std::string description = std::visit(overloaded{
+      [](const std::filesystem::path& path) {return path.string(); },
+      [](const MemoryFile& file) { return file.filename_hint();}
+    }, *this->supporting_file(name));
     throw std::runtime_error(
         fmt::format("InMemoryMesh cannot add supporting file '{}', that name "
                     "has already been used for file '{}'.",
-                    name, this->supporting_file(name)->description()));
+                    name, description));
   }
   supporting_files_.emplace(name, std::move(file_source));
 }

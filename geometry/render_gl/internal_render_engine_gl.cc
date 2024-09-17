@@ -10,6 +10,7 @@
 #include <tiny_gltf.h>
 
 #include "drake/common/diagnostic_policy.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/pointer_cast.h"
 #include "drake/common/scope_exit.h"
 #include "drake/common/ssize.h"
@@ -1487,7 +1488,7 @@ class RenderEngineGl::GltfMeshExtractor {
                   const std::string& filepath, void*) {
                 DRAKE_DEMAND(out != nullptr);
                 const FileSource* file_source = mesh.supporting_file(filepath);
-                if (file_source == nullptr || file_source->empty()) {
+                if (file_source == nullptr) {
                   if (err) {
                     *err += fmt::format(
                         "In-memory glTF referenced a URI that is not part of "
@@ -1496,17 +1497,18 @@ class RenderEngineGl::GltfMeshExtractor {
                   }
                   return false;
                 }
-                if (file_source->is_memory_file()) {
-                  const std::string& contents =
-                      file_source->memory_file().contents();
-                  *out = std::vector<unsigned char>(contents.begin(),
-                                                    contents.end());
-                  return true;
-                } else {
-                  DRAKE_DEMAND(file_source->is_path());
-                  return tinygltf::ReadWholeFile(
-                      out, err, file_source->path().string(), nullptr);
-                }
+                return std::visit(
+                    overloaded{[&out, &err](const std::filesystem::path& path) {
+                                 return tinygltf::ReadWholeFile(
+                                     out, err, path.string(), nullptr);
+                               },
+                               [&out](const MemoryFile& file) {
+                                 const std::string& contents = file.contents();
+                                 *out = std::vector<unsigned char>(
+                                     contents.begin(), contents.end());
+                                 return true;
+                               }},
+                    *file_source);
               },
           .WriteWholeFile = tinygltf::WriteWholeFile,
           .GetFileSizeInBytes =
@@ -1515,20 +1517,24 @@ class RenderEngineGl::GltfMeshExtractor {
                   const std::string& filepath, void*) {
                 DRAKE_DEMAND(filesize_out != nullptr);
                 const FileSource* file_source = mesh.supporting_file(filepath);
-                if (file_source == nullptr || file_source->empty()) {
+                if (file_source == nullptr) {
                   if (err) {
                     *err += fmt::format(
                         "Error reading in-memory glTF file '{}'\n", filepath);
                   }
                   return false;
                 }
-                if (file_source->is_memory_file()) {
-                  *filesize_out = file_source->memory_file().contents().size();
-                  return true;
-                } else {
-                  return tinygltf::GetFileSizeInBytes(
-                      filesize_out, err, file_source->path().string(), nullptr);
-                }
+                return std::visit(
+                    overloaded{[&filesize_out,
+                                &err](const std::filesystem::path& path) {
+                                 return tinygltf::GetFileSizeInBytes(
+                                     filesize_out, err, path.string(), nullptr);
+                               },
+                               [&filesize_out](const MemoryFile& file) {
+                                 *filesize_out = file.contents().size();
+                                 return true;
+                               }},
+                    *file_source);
               }};
       loader.SetFsCallbacks(std::move(callbacks));
 
@@ -1940,7 +1946,7 @@ class RenderEngineGl::GltfMeshExtractor {
         DRAKE_DEMAND(source_->is_in_memory());
         const InMemoryMesh& mesh = source_->in_memory();
         const FileSource* image_source = mesh.supporting_file(image.uri);
-        if (image_source == nullptr || image_source->empty()) {
+        if (image_source == nullptr) {
           // Warning; glTF named a URI that wasn't available for the in-memory
           policy_.Warning(fmt::format(
               "An in-memory glTF file referenced a texture as a URI ('{}') but "
@@ -1948,20 +1954,24 @@ class RenderEngineGl::GltfMeshExtractor {
               image.uri));
           material.diffuse_map.set_empty();
         } else {
-          if (image_source->is_path()) {
-            material.diffuse_map = image_source->path().lexically_normal();
-          } else {
-            DRAKE_DEMAND(image_source->is_memory_file());
-            const MemoryFile& image_file = image_source->memory_file();
-            // In-memory images need to be loaded into the library directly.
-            const std::string image_key =
-                fmt::format("{}{}", TextureLibrary::InMemoryPrefix(),
-                            image_file.sha256().to_string());
-            // Note: if multiple materials reference the same in-memory image,
-            // it will still only be added to the texture library once.
-            texture_library_.AddInMemoryImage(image_key, image_file.contents());
-            material.diffuse_map = image_key;
-          }
+          std::visit(overloaded{[&material](const std::filesystem::path& path) {
+                                  material.diffuse_map =
+                                      path.lexically_normal();
+                                },
+                                [this, &material](const MemoryFile& file) {
+                                  // In-memory images need to be loaded into the
+                                  // library directly.
+                                  const std::string image_key = fmt::format(
+                                      "{}{}", TextureLibrary::InMemoryPrefix(),
+                                      file.sha256().to_string());
+                                  // Note: if multiple materials reference the
+                                  // same in-memory image, it will still only be
+                                  // added to the texture library once.
+                                  texture_library_.AddInMemoryImage(
+                                      image_key, file.contents());
+                                  material.diffuse_map = image_key;
+                                }},
+                     *image_source);
         }
       }
     }

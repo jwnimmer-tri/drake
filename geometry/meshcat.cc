@@ -396,13 +396,15 @@ class MeshcatShapeReifier : public ShapeReifier {
       } else {
         const FileSource* mtl_source =
             mesh_source.in_memory().supporting_file(mtllib);
-        if (mtl_source != nullptr && !mtl_source->empty()) {
-          if (mtl_source->is_path()) {
-            maybe_mtl_data = ReadFile(mtl_source->path());
-          } else {
-            DRAKE_DEMAND(mtl_source->is_memory_file());
-            maybe_mtl_data = mtl_source->memory_file().contents();
-          }
+        if (mtl_source != nullptr) {
+          std::visit(overloaded{
+            [&maybe_mtl_data](const std::filesystem::path& path) {
+              maybe_mtl_data = ReadFile(path);
+            },
+            [&maybe_mtl_data](const MemoryFile& file) {
+              maybe_mtl_data = file.contents();
+            }
+          }, *mtl_source);
         }
       }
 
@@ -435,19 +437,22 @@ class MeshcatShapeReifier : public ShapeReifier {
           if (mesh_source.is_in_memory()) {
             const FileSource* map_file_source =
                 mesh_source.in_memory().supporting_file(map);
-            if (map_file_source != nullptr && !map_file_source->empty()) {
+            if (map_file_source != nullptr) {
               // Load it.
-              if (map_file_source->is_memory_file()) {
-                const MemoryFile& map_file = map_file_source->memory_file();
-                map_data = std::vector<uint8_t>(map_file.contents().begin(),
-                                                map_file.contents().end());
-              } else {
-                // Note: paths to supporting files in an in-memory mesh have no
-                // "base directory". The path must be sufficiently well defined
-                // so that it can be read directly.
-                DRAKE_DEMAND(map_file_source->is_path());
-                maybe_map_path = map_file_source->path();
-              }
+              std::visit(
+                  overloaded{
+                      [&maybe_map_path](const std::filesystem::path& path) {
+                        // Note: paths to supporting files in an in-memory mesh
+                        // have no "base directory". The path must be
+                        // sufficiently well defined so that it can be read
+                        // directly.
+                        maybe_map_path = path;
+                      },
+                      [&map_data](const MemoryFile& file) {
+                        map_data = std::vector<uint8_t>(file.contents().begin(),
+                                                        file.contents().end());
+                      }},
+                  *map_file_source);
             }
           } else {
             DRAKE_DEMAND(mesh_source.is_path());

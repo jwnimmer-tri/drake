@@ -198,43 +198,6 @@ void InitLowLevelModules(py::module m) {
     DefCopyAndDeepCopy(&cls);
   }
 
-  {
-    using Class = FileSource;
-    constexpr auto& cls_doc = doc.FileSource;
-    py::class_<Class> cls(m, "FileSource", cls_doc.doc);
-    py::object ctor = m.attr("FileSource");
-    cls  // BR
-        .def(py::init<>(
-                 [](const std::filesystem::path& path) { return Class(path); }),
-            py::arg("path"), cls_doc.ctor.doc_1args_path)
-        .def(py::init<MemoryFile>(), py::arg("file"),
-            cls_doc.ctor.doc_1args_file)
-        .def(py::init<const FileSource&>(), py::arg("other"))
-        .def("is_path", &Class::is_path, cls_doc.is_path.doc)
-        .def("is_memory_file", &Class::is_memory_file,
-            cls_doc.is_memory_file.doc)
-        .def("empty", &Class::empty, cls_doc.empty.doc)
-        .def("description", &Class::description, cls_doc.description.doc)
-        .def("extension", &Class::extension, cls_doc.extension.doc)
-        .def("path", &Class::path, cls_doc.path.doc)
-        .def("memory_file", &Class::memory_file, py_rvp::reference_internal,
-            cls_doc.memory_file.doc)
-        .def("clear", &Class::clear, cls_doc.clear.doc)
-        .def(py::pickle(
-            [](const FileSource& self) {
-              if (self.is_path()) {
-                return py::dict(py::arg("path") = self.path());
-              }
-              DRAKE_DEMAND(self.is_memory_file());
-              return py::dict(py::arg("file") = self.memory_file());
-            },
-            [ctor](const py::dict& kwargs) {
-              return ctor(**kwargs).cast<FileSource>();
-            }));
-    // Note: __repr__ is defined in _common_extra.py.
-    DefCopyAndDeepCopy(&cls);
-  }
-
   ExecuteExtraPythonCode(m, true);
 
   py::enum_<drake::ToleranceType>(m, "ToleranceType", doc.ToleranceType.doc)

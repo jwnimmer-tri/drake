@@ -119,10 +119,10 @@ GTEST_TEST(UnbundleGltfAssetsTest, InMemoryData) {
   const json gltf_json = json::parse(gltf_contents);
 
   // The in-memory file URI was updated in the gltf and placed into storage.
-  const Sha256 bin_sha = source.in_memory()
-                             .supporting_file("fully_textured_pyramid.bin")
-                             ->memory_file()
-                             .sha256();
+  const Sha256 bin_sha =
+      std::get<MemoryFile>(
+          *source.in_memory().supporting_file("fully_textured_pyramid.bin"))
+          .sha256();
   // File storage provides a version-based prefix to the sha.
   EXPECT_THAT(gltf_json["buffers"][0]["uri"],
               testing::EndsWith(bin_sha.to_string()));

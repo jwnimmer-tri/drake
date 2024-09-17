@@ -477,9 +477,9 @@ TEST_F(RenderEngineGltfClientGltfTest, FileToDataUris) {
         const std::string& name =
             ref_contents[array][i]["uri"].get<std::string>();
         const FileSource& file_source = files[name];
-        DRAKE_DEMAND(file_source.is_memory_file());
-        const std::string ref_string =
-            make_data_uri(file_source.memory_file().contents());
+        const MemoryFile* memory_file = std::get_if<MemoryFile>(&file_source);
+        DRAKE_DEMAND(memory_file != nullptr);
+        const std::string ref_string = make_data_uri(memory_file->contents());
         for (const json* test : {&disk_contents, &memory_contents}) {
           SCOPED_TRACE(fmt::format("{}[{}] from {}", array, i,
                                    test == &disk_contents ? "disk" : "memory"));

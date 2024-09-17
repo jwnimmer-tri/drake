@@ -186,12 +186,9 @@ drake_cc_library(
 
 drake_cc_library(
     name = "file_source",
-    srcs = ["file_source.cc"],
     hdrs = ["file_source.h"],
     deps = [
-        ":essential",
         ":memory_file",
-        ":reset_after_move",
     ],
 )
 
@@ -1080,13 +1077,6 @@ drake_cc_googletest(
     deps = [
         ":essential",
         ":is_approx_equal_abstol",
-    ],
-)
-
-drake_cc_googletest(
-    name = "file_source_test",
-    deps = [
-        ":file_source",
     ],
 )
 

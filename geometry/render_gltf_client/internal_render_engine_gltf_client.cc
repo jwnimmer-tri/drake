@@ -19,6 +19,7 @@
 
 #include "drake/common/find_resource.h"
 #include "drake/common/never_destroyed.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/ssize.h"
 #include "drake/common/text_logging.h"
 
@@ -584,19 +585,20 @@ void MaybeEmbedDataUri(nlohmann::json* item_inout,
     DRAKE_DEMAND(mesh_source.is_in_memory());
     const FileSource* file_source =
         mesh_source.in_memory().supporting_file(uri);
-    if (file_source == nullptr || file_source->empty()) {
+    if (file_source == nullptr) {
       throw std::runtime_error(fmt::format(
           "RenderEngineGltfClient cannot add an in-memory Mesh. The Mesh's "
           "glTF ('{}') file names an item in {} file that is not contained "
           "within the supporting files.",
           mesh_source.in_memory().mesh_file().filename_hint(), array_name));
     }
-    if (file_source->is_memory_file()) {
-      content = file_source->memory_file().contents();
-    } else {
-      DRAKE_DEMAND(file_source->is_path());
-      filepath = file_source->path();
-    }
+    std::visit(overloaded{[&filepath](const std::filesystem::path& path) {
+                            filepath = path;
+                          },
+                          [&content](const MemoryFile& file) {
+                            content = file.contents();
+                          }},
+               *file_source);
   }
 
   if (content.empty() && !filepath.empty()) {

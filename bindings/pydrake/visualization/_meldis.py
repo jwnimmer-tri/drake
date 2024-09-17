@@ -23,7 +23,6 @@ from drake import (
 )
 from pydrake.common import (
     configure_logging,
-    FileSource,
     MemoryFile,
 )
 from pydrake.common.eigen_geometry import (
@@ -383,12 +382,12 @@ class _ViewerApplet:
 
     @staticmethod
     def _json_to_file_source(json):
-        """Converts the json representation of a FileSource to an instance of
+        """Converts the json representation of a file source to an instance of
         same."""
         if "path" in json:
-            return FileSource(path=json["path"])
+            return json["path"]
         else:
-            return FileSource(file=_ViewerApplet._json_to_memory_file(json))
+            return _ViewerApplet._json_to_memory_file(json)
 
     def _convert_geom(self, geom):
         """Given an lcmt_viewer_geometry_data, parses it into a tuple of

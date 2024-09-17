@@ -59,22 +59,23 @@ std::string MeshToString(std::string_view class_name, const MeshSource& source,
             file.contents(), file.extension(), file.filename_hint());
       };
 
-      auto format_file_source = [&format_file](const FileSource& file_source) {
-        if (file_source.is_path()) {
-          return fmt::format("FileSource(path='{}')",
-                             file_source.path().string());
-        }
-        DRAKE_DEMAND(file_source.is_memory_file());
-        const MemoryFile& file = file_source.memory_file();
-        return fmt::format("FileSource(file={})", format_file(file));
-      };
-
       std::vector<std::string> supporting;
       for (const auto& name : data.SupportingFileNames()) {
         const FileSource* file = data.supporting_file(name);
-        if (file->empty()) continue;
+        DRAKE_DEMAND(file != nullptr);
+        const auto& file_source_str = std::visit(
+            overloaded{
+                [](const std::filesystem::path& path) -> std::string {
+                  return fmt::format("FileSource(path='{}')", path.string());
+                },
+                [&format_file](const MemoryFile& mem_file) -> std::string {
+                  return fmt::format("FileSource(file={})",
+                                     format_file(mem_file));
+                }},
+            *file);
+        if (file_source_str.empty()) continue;
         supporting.push_back(
-            fmt::format("{{'{}', {}}}", name, format_file_source(*file)));
+            fmt::format("{{'{}', {}}}", name, file_source_str));
       }
       std::string supporting_str =
           supporting.size() > 0 ? fmt::format(", supporting_files={{{}}}",

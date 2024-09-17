@@ -12,6 +12,7 @@
 #include "drake/common/drake_export.h"
 #include "drake/common/find_resource.h"
 #include "drake/common/never_destroyed.h"
+#include "drake/common/overloaded.h"
 #include "drake/common/text_logging.h"
 
 namespace drake {
@@ -172,14 +173,17 @@ std::vector<std::shared_ptr<const MemoryFile>> UnbundleGltfAssets(
                      const fs::path& gltf_dir,
                      std::string_view uri) -> std::optional<std::string> {
       const FileSource* file_source = memory_mesh.supporting_file(uri);
-      if (file_source == nullptr || file_source->empty()) {
+      if (file_source == nullptr) {
         return std::nullopt;
       }
-      if (file_source->is_path()) {
-        return LoadUriFromDisk(gltf_dir, uri);
-      }
-      DRAKE_DEMAND(file_source->is_memory_file());
-      return file_source->memory_file().contents();
+      return std::visit(overloaded{
+        [&gltf_dir, &uri](const std::filesystem::path&) {
+          return LoadUriFromDisk(gltf_dir, uri);
+        },
+        [](const MemoryFile& file) -> std::optional<std::string> {
+          return file.contents();
+        }
+      }, *file_source);
     };
   }
 

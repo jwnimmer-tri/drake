@@ -283,6 +283,7 @@ drake_cc_library(
     deps = [
         "//common:file_source",
         "//common:memory_file",
+        "//common:overloaded",
         "//common:string_container",
     ],
 )

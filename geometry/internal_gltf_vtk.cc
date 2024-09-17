@@ -9,6 +9,7 @@
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/memory_file.h"
+#include "drake/common/overloaded.h"
 
 namespace drake {
 namespace geometry {
@@ -52,24 +53,30 @@ vtkSmartPointer<vtkResourceStream> MeshMemoryLoader::DoLoad(const vtkURI& uri) {
     }
     const std::string name = path.substr(pos + kBaseUriPrefxLength);
     const FileSource* file_source = mesh_.supporting_file(name);
-    if (file_source == nullptr || file_source->empty()) {
+    if (file_source == nullptr) {
       // If the glTF file refers to a file that isn't in our set of
       // supporting files, we won't immediately throw. We'll let the parser yell
       // about it later, when it's actually needed.
       return nullptr;
     }
-    if (file_source->is_path()) {
-      vtkNew<vtkFileResourceStream> stream;
-      stream->Open(file_source->path().c_str());
-      return stream;
-    } else {
-      DRAKE_DEMAND(file_source->is_memory_file());
-      const MemoryFile& file = file_source->memory_file();
-      vtkNew<vtkMemoryResourceStream> stream;
-      stream->SetBuffer(file.contents().c_str(), file.contents().size(),
-                        /* copy= */ false);
-      return stream;
-    }
+
+    return std::visit(
+        overloaded{
+            [](const std::filesystem::path& source_path)
+                -> vtkSmartPointer<vtkResourceStream> {
+              vtkNew<vtkFileResourceStream> stream;
+              if (!stream->Open(source_path.c_str())) {
+                throw std::runtime_error("Unable to open file");
+              }
+              return stream;
+            },
+            [](const MemoryFile& file) -> vtkSmartPointer<vtkResourceStream> {
+              vtkNew<vtkMemoryResourceStream> stream;
+              stream->SetBuffer(file.contents().c_str(), file.contents().size(),
+                                /* copy= */ false);
+              return stream;
+            }},
+        *file_source);
   } else if (scheme == "data") {
     // For data URIs, we'll let VTK's infrastructure handle it.
     return this->LoadData(uri);
