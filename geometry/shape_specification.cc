@@ -58,12 +58,35 @@ std::string MeshToString(std::string_view class_name, const MeshSource& source,
             "filename_hint='{}')",
             file.contents(), file.extension(), file.filename_hint());
       };
-      return fmt::format("mesh_data=InMemoryMesh(mesh_file={})",
-                         format_file(data.mesh_file()));
+
+      auto format_file_source = [&format_file](const FileSource& file_source) {
+        if (file_source.is_path()) {
+          return fmt::format("FileSource(path='{}')",
+                             file_source.path().string());
+        }
+        DRAKE_DEMAND(file_source.is_memory_file());
+        const MemoryFile& file = file_source.memory_file();
+        return fmt::format("FileSource(file={})", format_file(file));
+      };
+
+      std::vector<std::string> supporting;
+      for (const auto& name : data.SupportingFileNames()) {
+        const FileSource* file = data.supporting_file(name);
+        if (file->empty()) continue;
+        supporting.push_back(
+            fmt::format("{{'{}', {}}}", name, format_file_source(*file)));
+      }
+      std::string supporting_str =
+          supporting.size() > 0 ? fmt::format(", supporting_files={{{}}}",
+                                              fmt::join(supporting, ", "))
+                                : std::string();
+      return fmt::format("mesh_data=InMemoryMesh(mesh_file={}{})",
+                         format_file(data.mesh_file()), supporting_str);
     }
   }();
   return fmt::format("{}({}, scale={})", class_name, mesh_parameter, scale);
 }
+
 
 }  // namespace
 
