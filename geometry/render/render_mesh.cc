@@ -66,10 +66,11 @@ RenderMaterial MakeMaterialFromMtl(const tinyobj::material_t& mat,
       const FileSource* file_source = data.supporting_file(mat.diffuse_texname);
 
       if (file_source != nullptr) {
-        std::visit(overloaded{[&map = result.diffuse_map](const auto source) {
-                     map = source;
-                   }},
-                   *file_source);
+        result.diffuse_map = std::visit<TextureSource>(
+            [](auto source) {
+              return TextureSource{source};
+            },
+            *file_source);
       } else {
         policy.Warning(fmt::format(
             "The OBJ file's material requested an unavailable diffuse texture "

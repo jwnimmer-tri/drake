@@ -399,20 +399,6 @@ class ShapeToLcm : public ShapeReifier {
         return mesh_file_j;
       };
 
-      auto json_file_source =
-          [&json_memory_file](const FileSource& file_source) {
-            json mesh_file_j;
-            std::visit(overloaded{
-              [&mesh_file_j](const std::filesystem::path& path) {
-                mesh_file_j["path"] = path.string();
-              },
-              [&json_memory_file, &mesh_file_j](const MemoryFile& file) {
-                mesh_file_j = json_memory_file(file);
-              }
-            }, file_source);
-            return mesh_file_j;
-          };
-
       DRAKE_DEMAND(mesh_source.is_in_memory());
       const InMemoryMesh& mem_mesh = mesh_source.in_memory();
       json in_memory;
@@ -422,8 +408,16 @@ class ShapeToLcm : public ShapeReifier {
       for (const auto& name : mem_mesh.SupportingFileNames()) {
         const FileSource* file_source = mem_mesh.supporting_file(name);
         if (file_source == nullptr) continue;
-        in_memory["in_memory_mesh"]["supporting_files"][name] =
-            json_file_source(*file_source);
+        in_memory["in_memory_mesh"]["supporting_files"][name] = std::visit(
+            overloaded{[](const std::filesystem::path& path) {
+                         json json_filesystem_file;
+                         json_filesystem_file["path"] = path.string();
+                         return json_filesystem_file;
+                       },
+                       [&json_memory_file](const MemoryFile& file) {
+                         return json_memory_file(file);
+                       }},
+            *file_source);
       }
       geometry_data_.string_data = in_memory.dump();
     }

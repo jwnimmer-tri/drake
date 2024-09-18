@@ -60,22 +60,21 @@ vtkSmartPointer<vtkResourceStream> MeshMemoryLoader::DoLoad(const vtkURI& uri) {
       return nullptr;
     }
 
-    return std::visit(
-        overloaded{
-            [](const std::filesystem::path& source_path)
-                -> vtkSmartPointer<vtkResourceStream> {
-              vtkNew<vtkFileResourceStream> stream;
-              if (!stream->Open(source_path.c_str())) {
-                throw std::runtime_error("Unable to open file");
-              }
-              return stream;
-            },
-            [](const MemoryFile& file) -> vtkSmartPointer<vtkResourceStream> {
-              vtkNew<vtkMemoryResourceStream> stream;
-              stream->SetBuffer(file.contents().c_str(), file.contents().size(),
-                                /* copy= */ false);
-              return stream;
-            }},
+    return std::visit<vtkSmartPointer<vtkResourceStream>>(
+        overloaded{[](const std::filesystem::path& source_path) {
+                     vtkNew<vtkFileResourceStream> stream;
+                     if (!stream->Open(source_path.c_str())) {
+                       throw std::runtime_error("Unable to open file");
+                     }
+                     return stream;
+                   },
+                   [](const MemoryFile& file) {
+                     vtkNew<vtkMemoryResourceStream> stream;
+                     stream->SetBuffer(file.contents().c_str(),
+                                       file.contents().size(),
+                                       /* copy= */ false);
+                     return stream;
+                   }},
         *file_source);
   } else if (scheme == "data") {
     // For data URIs, we'll let VTK's infrastructure handle it.

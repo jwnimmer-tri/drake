@@ -397,14 +397,14 @@ class MeshcatShapeReifier : public ShapeReifier {
         const FileSource* mtl_source =
             mesh_source.in_memory().supporting_file(mtllib);
         if (mtl_source != nullptr) {
-          std::visit(overloaded{
-            [&maybe_mtl_data](const std::filesystem::path& path) {
-              maybe_mtl_data = ReadFile(path);
-            },
-            [&maybe_mtl_data](const MemoryFile& file) {
-              maybe_mtl_data = file.contents();
-            }
-          }, *mtl_source);
+          maybe_mtl_data = std::visit<std::optional<std::string>>(
+              overloaded{[](const std::filesystem::path& path) {
+                           return ReadFile(path);
+                         },
+                         [](const MemoryFile& file) {
+                           return file.contents();
+                         }},
+              *mtl_source);
         }
       }
 
