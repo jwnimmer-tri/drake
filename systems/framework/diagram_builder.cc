@@ -45,7 +45,7 @@ void DiagramBuilder<T>::RemoveSystem(const System<T>& system) {
   const size_t system_index = std::distance(
       registered_systems_.begin(),
       std::find_if(registered_systems_.begin(), registered_systems_.end(),
-                   [&system](const std::unique_ptr<System<T>>& item) {
+                   [&system](const std::shared_ptr<System<T>>& item) {
                      return item.get() == &system;
                    }));
   DRAKE_DEMAND(system_index < registered_systems_.size());

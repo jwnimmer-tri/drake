@@ -91,7 +91,7 @@ class DiagramBuilder {
   ///
   /// @tparam S The type of system to add.
   template<class S>
-  S* AddSystem(std::unique_ptr<S> system) {
+  S* AddSystem(std::shared_ptr<S> system) {
     ThrowIfAlreadyBuilt();
     if (system->get_name().empty()) {
       system->set_name(system->GetMemoryObjectName());
@@ -100,6 +100,11 @@ class DiagramBuilder {
     systems_.insert(raw_sys_ptr);
     registered_systems_.push_back(std::move(system));
     return raw_sys_ptr;
+  }
+
+  template<class S>
+  S* AddSystem(std::unique_ptr<S> system) {
+    return this->AddSystem<S>(std::shared_ptr<S>(std::move(system)));
   }
 
   /// Constructs a new system with the given @p args, and adds it to the
@@ -175,10 +180,15 @@ class DiagramBuilder {
   /// @tparam S The type of system to add.
   /// @post The system's name is @p name.
   template<class S>
-  S* AddNamedSystem(const std::string& name, std::unique_ptr<S> system) {
+  S* AddNamedSystem(const std::string& name, std::shared_ptr<S> system) {
     ThrowIfAlreadyBuilt();
     system->set_name(name);
     return AddSystem(std::move(system));
+  }
+
+  template<class S>
+  S* AddNamedSystem(const std::string& name, std::unique_ptr<S> system) {
+    return this->AddNamedSystem(name, std::shared_ptr<S>(std::move(system)));
   }
 
   /// Constructs a new system with the given @p args, applies @p name to it,
