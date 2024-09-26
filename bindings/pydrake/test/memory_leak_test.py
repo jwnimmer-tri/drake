@@ -46,6 +46,7 @@ class RepetitionDetail:
     the count of allocated memory blocks."""
     i: int
     blocks: int | None = None
+    blocks_delta: int | None = None
 
 
 def _dut_simple_source():
@@ -205,6 +206,8 @@ def _repeat(*, dut: callable, count: int) -> list[RepetitionDetail]:
         dut()
         gc.collect()
         details[i].blocks = sys.getallocatedblocks() - tare_blocks
+    for i in range(1, count):
+        details[i].blocks_delta = details[i].blocks - details[i - 1].blocks
     return details
 
 
