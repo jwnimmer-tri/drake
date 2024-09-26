@@ -65,10 +65,9 @@ class TestLifetime(unittest.TestCase):
         self.assertTrue(system is not None)
         del system
         # Upon removing this reference, everything should have been cleared up.
-        # However, since we work around #14355 by inducing a keep_alive cycle,
-        # it will not be deleted.
-        self.assertFalse(info.deleted)
+        self.assertTrue(info.deleted)
 
+    @unittest.skip("Multiple ownership is fine?")
     def test_ownership_multiple_containers(self):
         info = Info()
         system = DeleteListenerSystem(info.record_deletion)

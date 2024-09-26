@@ -856,6 +856,8 @@ class TestGeneral(unittest.TestCase):
 
     def test_diagram_builder_remove(self):
         builder = DiagramBuilder()
+        builder.extracrap = "hello"
+        print(builder.__dict__)
         source = builder.AddSystem(ConstantVectorSource([0.0]))
         adder = builder.AddSystem(Adder(1, 1))
         builder.ExportOutput(source.get_output_port())

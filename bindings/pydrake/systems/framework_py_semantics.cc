@@ -590,36 +590,26 @@ void DefineEventAndEventSubclasses(py::module m) {
 
 template <typename T>
 void DoDefineFrameworkDiagramBuilder(py::module m) {
-  DefineTemplateClassWithDefault<DiagramBuilder<T>>(
-      m, "DiagramBuilder", GetPyParam<T>(), doc.DiagramBuilder.doc)
+  DefineTemplateClassWithDefault<DiagramBuilder<T>>(m, "DiagramBuilder",
+      GetPyParam<T>(), doc.DiagramBuilder.doc, std::nullopt, py::dynamic_attr())
       .def(py::init<>(), doc.DiagramBuilder.ctor.doc)
       .def(
-          "AddSystem",
-          [](DiagramBuilder<T>* self, unique_ptr<System<T>> system) {
-            return self->AddSystem(std::move(system));
+          "_AddSystem",
+          [](DiagramBuilder<T>* self, System<T>* system) {
+            std::shared_ptr<System<T>> shared(std::shared_ptr<void>{}, system);
+            self->AddSystem(std::move(shared));
+            return system;
           },
-          py::arg("system"),
-          // TODO(eric.cousineau): These two keep_alive's purposely form a
-          // reference cycle as a workaround for #14355. We should find a
-          // better way?
-          // Keep alive, reference: `self` keeps `return` alive.
-          py::keep_alive<1, 0>(),
-          // Keep alive, ownership: `system` keeps `self` alive.
-          py::keep_alive<2, 1>(), doc.DiagramBuilder.AddSystem.doc)
+          py::arg("system"), doc.DiagramBuilder.AddSystem.doc)
       .def(
-          "AddNamedSystem",
-          [](DiagramBuilder<T>* self, std::string& name,
-              unique_ptr<System<T>> system) {
-            return self->AddNamedSystem(name, std::move(system));
+          "_AddNamedSystem",
+          [](DiagramBuilder<T>* self, const std::string& name,
+              System<T>* system) {
+            std::shared_ptr<System<T>> shared(std::shared_ptr<void>{}, system);
+            return self->AddNamedSystem(name, std::move(shared));
           },
           py::arg("name"), py::arg("system"),
-          // TODO(eric.cousineau): These two keep_alive's purposely form a
-          // reference cycle as a workaround for #14355. We should find a
-          // better way?
-          // Keep alive, reference: `self` keeps `return` alive.
-          py::keep_alive<1, 0>(),
-          // Keep alive, ownership: `system` keeps `self` alive.
-          py::keep_alive<3, 1>(), doc.DiagramBuilder.AddNamedSystem.doc)
+          doc.DiagramBuilder.AddNamedSystem.doc)
       .def("RemoveSystem", &DiagramBuilder<T>::RemoveSystem, py::arg("system"),
           doc.DiagramBuilder.RemoveSystem.doc)
       .def("empty", &DiagramBuilder<T>::empty, doc.DiagramBuilder.empty.doc)
@@ -694,9 +684,18 @@ void DoDefineFrameworkDiagramBuilder(py::module m) {
       .def("ExportOutput", &DiagramBuilder<T>::ExportOutput, py::arg("output"),
           py::arg("name") = kUseDefaultName, py_rvp::reference_internal,
           doc.DiagramBuilder.ExportOutput.doc)
-      .def("Build", &DiagramBuilder<T>::Build,
-          // Keep alive, ownership (tr.): `self` keeps `return` alive.
-          py::keep_alive<1, 0>(), doc.DiagramBuilder.Build.doc)
+      .def("_Build", &DiagramBuilder<T>::Build, doc.DiagramBuilder.Build.doc)
+      .def(
+          "Build",
+          [](DiagramBuilder<T>* self) {
+            std::unique_ptr<Diagram<T>> result = self->Build();
+            py::object self_py = py::cast(self, py_rvp::reference);
+            py::object result_py = py::cast(self, py_rvp::reference);
+            result_py.attr("__registered_systems") =
+                self_py.attr("__registered_systems");
+            return result;
+          },
+          doc.DiagramBuilder.Build.doc)
       .def("BuildInto", &DiagramBuilder<T>::BuildInto, py::arg("target"),
           // Keep alive, ownership (tr.): `target` keeps `self` alive.
           py::keep_alive<2, 1>(), doc.DiagramBuilder.BuildInto.doc)

@@ -948,8 +948,9 @@ Note: The above is for the C++ documentation. For Python, use
   }
 
   static void DefineDiagram(py::module m) {
-    DefineTemplateClassWithDefault<Diagram<T>, PyDiagram, System<T>>(
-        m, "Diagram", GetPyParam<T>(), doc.Diagram.doc)
+    DefineTemplateClassWithDefault<Diagram<T>, PyDiagram, System<T>>(m,
+        "Diagram", GetPyParam<T>(), doc.Diagram.doc, std::nullopt,
+        py::dynamic_attr())
         .def(py::init<>(), doc.Diagram.ctor.doc_0args)
         .def(
             "connection_map",
