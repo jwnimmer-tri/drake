@@ -240,8 +240,10 @@ PYBIND11_MODULE(analysis, m) {
     cls  // BR
         .def(py::init<const System<T>&, unique_ptr<Context<T>>>(),
             py::arg("system"), py::arg("context") = nullptr,
+#if 0
             // Keep alive, reference: `self` keeps `system` alive.
             py::keep_alive<1, 2>(),
+#endif
             // Keep alive, ownership: `context` keeps `self` alive.
             py::keep_alive<3, 1>(), doc.Simulator.ctor.doc)
         .def("Initialize", &Simulator<T>::Initialize,
