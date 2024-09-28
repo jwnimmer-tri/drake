@@ -16,7 +16,7 @@ apt-get -y install --no-install-recommends \
     libssl-dev
 
 readonly ARCHIVE=Python-$VERSION.tar.xz
-readonly URL=https://www.python.org/ftp/python/$VERSION/$ARCHIVE
+readonly URL=https://www.python.org/ftp/python/3.13.0/$ARCHIVE
 readonly SRC_DIR=/opt/drake-wheel-build/python
 
 mkdir -p $SRC_DIR
