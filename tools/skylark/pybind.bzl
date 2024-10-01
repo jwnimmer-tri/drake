@@ -6,7 +6,7 @@ load("//tools/skylark:drake_cc.bzl", "drake_cc_binary", "drake_cc_googletest")
 load("//tools/skylark:drake_py.bzl", "drake_py_library", "drake_py_test")
 load("//tools/skylark:py.bzl", "py_library")
 
-EXTRA_PYBIND_COPTS = [
+CLANG_EXTRA_PYBIND_COPTS = [
     # GCC and Clang don't always agree / succeed when inferring storage
     # duration (#9600). Workaround it for now.
     "-Wno-unused-lambda-capture",
@@ -15,6 +15,11 @@ EXTRA_PYBIND_COPTS = [
     # compiling pybind11 modules.
     "-Wno-self-assign-overloaded",
 ] if COMPILER_ID.endswith("Clang") else []
+
+EXTRA_PYBIND_COPTS = CLANG_EXTRA_PYBIND_COPTS + [
+    # See tools/workspace/pybind11/patches/check_signature_infection.patch.
+    "-DDRAKE_PYBIND11_CHECK_SIGNATURE_INFECTION=1",
+]
 
 def pybind_py_library(
         name,
