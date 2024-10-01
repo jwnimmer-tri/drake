@@ -1403,9 +1403,18 @@ class RenderEngineGl::GltfMeshExtractor {
   The extractor does *not* automatically register the final RenderGlMesh
   instances. Those are created by calling ExtractMeshes() and the caller is
   responsible for taking ownership. */
-  GltfMeshExtractor(std::vector<OpenGlGeometry>* geometries,
+  GltfMeshExtractor(const MeshSource* mesh_source,
+                    std::vector<OpenGlGeometry>* geometries,
                     TextureLibrary* texture_library)
-      : geometries_(*geometries), texture_library_(*texture_library) {
+      : mesh_source_(*mesh_source),
+        description_(mesh_source_.is_path()
+                         ? fmt::format("the on-disk glTF file: '{}'",
+                                       mesh_source_.description())
+                         : fmt::format("the in-memory glTF file: '{}'",
+                                       mesh_source_.description())),
+        geometries_(*geometries),
+        texture_library_(*texture_library) {
+    DRAKE_DEMAND(mesh_source != nullptr);
     DRAKE_DEMAND(geometries != nullptr);
     DRAKE_DEMAND(texture_library != nullptr);
   }
@@ -1415,22 +1424,17 @@ class RenderEngineGl::GltfMeshExtractor {
    registered with the containers passed into the constructor, the caller is
    responsible for taking ownership of the collection of RenderGlMesh
    instances returned. */
-  vector<RenderGlMesh> ExtractMeshes(const MeshSource& mesh_source,
-                                     const RegistrationData& data) {
+  vector<RenderGlMesh> ExtractMeshes(const RegistrationData& data) {
     std::string embedded_prefix;
-    if (mesh_source.is_path()) {
-      embedded_prefix = mesh_source.path().string();
-      description_ =
-          fmt::format("the on-disk glTF file: '{}'", mesh_source.description());
+    if (mesh_source_.is_path()) {
+      embedded_prefix = mesh_source_.path().string();
     } else {
-      DRAKE_DEMAND(mesh_source.is_in_memory());
+      DRAKE_DEMAND(mesh_source_.is_in_memory());
       // TODO(SeanCurtis-TRI): If the same image is embedded in multiple glTF
       // files, this will redundantly create them in the texture library.
       // It would probably be better to create the sha of the texture contents
       // instead.
-      embedded_prefix = mesh_source.in_memory().mesh_file.sha256().to_string();
-      description_ = fmt::format("the in-memory glTF file: '{}'",
-                                 mesh_source.description());
+      embedded_prefix = mesh_source_.in_memory().mesh_file.sha256().to_string();
     }
 
     tinygltf::TinyGLTF loader;
@@ -1469,80 +1473,33 @@ class RenderEngineGl::GltfMeshExtractor {
     };
     loader.SetImageLoader(load_image_callback, nullptr);
 
-    if (mesh_source.is_path()) {
+    if (mesh_source_.is_path()) {
       valid_parse = loader.LoadASCIIFromFile(&model, &error, &warn,
-                                             mesh_source.path().string());
+                                             mesh_source_.path().string());
     } else {
-      DRAKE_DEMAND(mesh_source.is_in_memory());
+      DRAKE_DEMAND(mesh_source_.is_in_memory());
 
-      tinygltf::FsCallbacks callbacks{
+      loader.SetFsCallbacks(tinygltf::FsCallbacks{
           .FileExists =
-              [&mesh = mesh_source.in_memory()](const std::string& abs_filename,
-                                                void*) {
-                return mesh.supporting_files.contains(abs_filename);
+              [this](const std::string& abs_filename, void*) {
+                return TinyGltfInMemoryCallbackFileExists(abs_filename);
               },
           .ExpandFilePath = tinygltf::ExpandFilePath,
           .ReadWholeFile =
-              [&mesh = mesh_source.in_memory()](
-                  std::vector<unsigned char>* out, std::string* err,
-                  const std::string& filepath, void*) {
-                DRAKE_DEMAND(out != nullptr);
-                const auto file_source_iter =
-                    mesh.supporting_files.find(filepath);
-                if (file_source_iter == mesh.supporting_files.end()) {
-                  if (err) {
-                    *err += fmt::format(
-                        "In-memory glTF referenced a URI that is not part of "
-                        "its supporting files: '{}'\n",
-                        filepath);
-                  }
-                  return false;
-                }
-                return std::visit(
-                    overloaded{[out, err](const std::filesystem::path& path) {
-                                 return tinygltf::ReadWholeFile(
-                                     out, err, path.string(), nullptr);
-                               },
-                               [out](const MemoryFile& file) {
-                                 const std::string& contents = file.contents();
-                                 *out = std::vector<unsigned char>(
-                                     contents.begin(), contents.end());
-                                 return true;
-                               }},
-                    file_source_iter->second);
+              [this](std::vector<unsigned char>* out, std::string* err,
+                     const std::string& filepath, void*) {
+                return TinyGltfInMemoryCallbackReadWholeFile(out, err,
+                                                             filepath);
               },
           .WriteWholeFile = tinygltf::WriteWholeFile,
           .GetFileSizeInBytes =
-              [&mesh = mesh_source.in_memory()](
-                  size_t* filesize_out, std::string* err,
-                  const std::string& filepath, void*) {
-                DRAKE_DEMAND(filesize_out != nullptr);
-                const auto file_source_iter =
-                    mesh.supporting_files.find(filepath);
-                if (file_source_iter == mesh.supporting_files.end()) {
-                  if (err) {
-                    *err += fmt::format(
-                        "In-memory glTF referenced a URI that is not part of "
-                        "its supporting files: '{}'\n",
-                        filepath);
-                  }
-                  return false;
-                }
-                return std::visit(
-                    overloaded{
-                        [filesize_out, err](const std::filesystem::path& path) {
-                          return tinygltf::GetFileSizeInBytes(
-                              filesize_out, err, path.string(), nullptr);
-                        },
-                        [filesize_out](const MemoryFile& file) {
-                          *filesize_out = file.contents().size();
-                          return true;
-                        }},
-                    file_source_iter->second);
-              }};
-      loader.SetFsCallbacks(std::move(callbacks));
+              [this](size_t* filesize_out, std::string* err,
+                     const std::string& filepath, void*) {
+                return TinyGltfInMemoryCallbackGetFileSizeInBytes(
+                    filesize_out, err, filepath);
+              }});
 
-      const std::string& gltf = mesh_source.in_memory().mesh_file.contents();
+      const std::string& gltf = mesh_source_.in_memory().mesh_file.contents();
       const std::string kEmptyBaseDir;
       valid_parse = loader.LoadASCIIFromString(
           &model, &error, &warn, gltf.c_str(), ssize(gltf), kEmptyBaseDir);
@@ -1563,7 +1520,7 @@ class RenderEngineGl::GltfMeshExtractor {
     vector<int> root_indices = FindTargetRootNodes(model);
 
     vector<RenderGlMesh> meshes =
-        BuildGeometriesFromRootNodes(mesh_source, root_indices, model, data);
+        BuildGeometriesFromRootNodes(root_indices, model, data);
 
     /* Identify which embedded textures are actually referenced by materials
      and load them into the texture library. */
@@ -1695,8 +1652,8 @@ class RenderEngineGl::GltfMeshExtractor {
 
    @pre There is an active OpenGl context. */
   vector<RenderGlMesh> BuildGeometriesFromRootNodes(
-      const MeshSource& mesh_source, const vector<int>& root_indices,
-      const tinygltf::Model& model, const RegistrationData& data) {
+      const vector<int>& root_indices, const tinygltf::Model& model,
+      const RegistrationData& data) {
     vector<RenderGlMesh> result;
     /* glTF is y-up, Drake's models are z-up. So, we'll start with a rotation
      around the x-axis. */
@@ -1706,7 +1663,7 @@ class RenderEngineGl::GltfMeshExtractor {
                 Vector3d{1, 0, 0}, Vector3d{0, 0, 1}, Vector3d{0, -1, 0}))
             .GetAsMatrix4();
     for (int root_index : root_indices) {
-      WalkNodeTree(mesh_source, root_index, model, X_MGltf, data, &result);
+      WalkNodeTree(root_index, model, X_MGltf, data, &result);
     }
     return result;
   }
@@ -1778,9 +1735,8 @@ class RenderEngineGl::GltfMeshExtractor {
    @param[out] result      Newly instantiated RenderGlMesh instances will be
                            appended. For a single node, zero or more
                            RenderGlMesh instances will be added. */
-  void WalkNodeTree(const MeshSource& mesh_source, int node_index,
-                    const tinygltf::Model& model, const Matrix4d& T_FP,
-                    const RegistrationData& data,
+  void WalkNodeTree(int node_index, const tinygltf::Model& model,
+                    const Matrix4d& T_FP, const RegistrationData& data,
                     vector<RenderGlMesh>* result) {
     DRAKE_DEMAND(result != nullptr);
     const tinygltf::Node& node = model.nodes.at(node_index);
@@ -1789,10 +1745,10 @@ class RenderEngineGl::GltfMeshExtractor {
     const Matrix4d T_FN = T_FP * T_PN;
     if (node.mesh >= 0) {
       const Matrix4f T_FN_float = T_FN.cast<float>();
-      InstantiateMesh(mesh_source, node.mesh, model, T_FN_float, data, result);
+      InstantiateMesh(node.mesh, model, T_FN_float, data, result);
     }
     for (int child_index : node.children) {
-      WalkNodeTree(mesh_source, child_index, model, T_FN, data, result);
+      WalkNodeTree(child_index, model, T_FN, data, result);
     }
   }
 
@@ -1801,9 +1757,8 @@ class RenderEngineGl::GltfMeshExtractor {
    T_MN (where the file frame is also the "model" frame M -- as documented for
    OpenGlGeometry). New RenderGlMesh instances (one per OpenGlGeometry) are
    appended to the provided `result` container.*/
-  void InstantiateMesh(const MeshSource& mesh_source, int mesh_index,
-                       const tinygltf::Model& model, const Matrix4f& T_MN,
-                       const RegistrationData& data,
+  void InstantiateMesh(int mesh_index, const tinygltf::Model& model,
+                       const Matrix4f& T_MN, const RegistrationData& data,
                        vector<RenderGlMesh>* result) {
     DRAKE_DEMAND(result != nullptr);
     const tinygltf::Mesh& mesh = model.meshes.at(mesh_index);
@@ -1857,14 +1812,13 @@ class RenderEngineGl::GltfMeshExtractor {
       const int g_index = ssize(geometries_);
       geometries_.push_back(geometry);
 
-      result->push_back(MakeRenderGlMesh(mesh_source, g_index, mesh_index, prim,
-                                         model, data));
+      result->push_back(
+          MakeRenderGlMesh(g_index, mesh_index, prim, model, data));
     }
   }
 
   /* Creates the RenderGlMesh associated with the OpenGlGeometry. */
-  RenderGlMesh MakeRenderGlMesh(const MeshSource& mesh_source,
-                                int geometry_index, int mesh_index,
+  RenderGlMesh MakeRenderGlMesh(int geometry_index, int mesh_index,
                                 const tinygltf::Primitive& prim,
                                 const tinygltf::Model& model,
                                 const RegistrationData& data) {
@@ -1875,15 +1829,14 @@ class RenderEngineGl::GltfMeshExtractor {
                            ? UvState::kNone
                            : UvState::kFull;
 
-    gl_mesh.mesh_material = MakePrimitiveMaterial(mesh_source, prim, model,
-                                                  gl_mesh, mesh_index, data);
+    gl_mesh.mesh_material =
+        MakePrimitiveMaterial(prim, model, gl_mesh, mesh_index, data);
     return gl_mesh;
   }
 
   /* Makes the RenderMaterial for the material associated with the primitive,
    if it exists. Otherwise, returns a fallback material. */
-  RenderMaterial MakePrimitiveMaterial(const MeshSource& mesh_source,
-                                       const tinygltf::Primitive& prim,
+  RenderMaterial MakePrimitiveMaterial(const tinygltf::Primitive& prim,
                                        const tinygltf::Model& model,
                                        const RenderGlMesh& render_mesh,
                                        int gltf_mesh_index,
@@ -1899,7 +1852,7 @@ class RenderEngineGl::GltfMeshExtractor {
       // An empty file path (for in-memory meshes) will short-circuit the
       // texture logic and not look for a texture at that path.
       const fs::path& file_path =
-          mesh_source.is_path() ? mesh_source.path() : fs::path();
+          mesh_source_.is_path() ? mesh_source_.path() : fs::path();
       return *MaybeMakeMeshFallbackMaterial(data.properties, file_path,
                                             data.default_diffuse, policy_,
                                             render_mesh.uv_state);
@@ -1949,12 +1902,12 @@ class RenderEngineGl::GltfMeshExtractor {
       material.flip_y = false;
     } else {
       material.flip_y = true;
-      if (mesh_source.is_path()) {
-        fs::path image_path = mesh_source.path().parent_path() / image.uri;
+      if (mesh_source_.is_path()) {
+        fs::path image_path = mesh_source_.path().parent_path() / image.uri;
         material.diffuse_map = image_path.lexically_normal();
       } else {
-        DRAKE_DEMAND(mesh_source.is_in_memory());
-        const InMemoryMesh& mesh = mesh_source.in_memory();
+        DRAKE_DEMAND(mesh_source_.is_in_memory());
+        const InMemoryMesh& mesh = mesh_source_.in_memory();
         const auto image_source_iter = mesh.supporting_files.find(image.uri);
         if (image_source_iter == mesh.supporting_files.end()) {
           policy_.Warning(fmt::format(
@@ -1964,7 +1917,7 @@ class RenderEngineGl::GltfMeshExtractor {
           material.diffuse_map = std::monostate{};
         } else {
           material.diffuse_map = std::visit<TextureSource>(
-              overloaded{[](const std::filesystem::path& path) {
+              overloaded{[](const fs::path& path) {
                            return TextureSource(path.lexically_normal());
                          },
                          [&library = texture_library_](const MemoryFile& file) {
@@ -2107,6 +2060,82 @@ class RenderEngineGl::GltfMeshExtractor {
     return T;
   }
 
+  // During ExtractMeshes when reading an InMemoryMesh, tinygltf uses this
+  // callback to check if a file exists.
+  bool TinyGltfInMemoryCallbackFileExists(const std::string& abs_filename) {
+    const InMemoryMesh& mesh = mesh_source_.in_memory();
+    return mesh.supporting_files.contains(abs_filename);
+  }
+
+  // During ExtractMeshes when reading an InMemoryMesh, tinygltf uses this
+  // callback to check a file size.
+  bool TinyGltfInMemoryCallbackGetFileSizeInBytes(size_t* filesize_out,
+                                                  std::string* err,
+                                                  const std::string& filepath) {
+    DRAKE_DEMAND(filesize_out != nullptr);
+    const InMemoryMesh& mesh = mesh_source_.in_memory();
+    const auto file_source_iter = mesh.supporting_files.find(filepath);
+    if (file_source_iter == mesh.supporting_files.end()) {
+      if (err) {
+        *err += fmt::format(
+            "In-memory glTF referenced a URI that is not part of its "
+            "supporting files: '{}'\n",
+            filepath);
+      }
+      return false;
+    }
+    return std::visit(overloaded{[filesize_out, err](const fs::path& path) {
+                                   return tinygltf::GetFileSizeInBytes(
+                                       filesize_out, err, path.string(),
+                                       nullptr);
+                                 },
+                                 [filesize_out](const MemoryFile& file) {
+                                   *filesize_out = file.contents().size();
+                                   return true;
+                                 }},
+                      file_source_iter->second);
+  }
+
+  // During ExtractMeshes when reading an InMemoryMesh, tinygltf uses this
+  // callback to read a file.
+  bool TinyGltfInMemoryCallbackReadWholeFile(std::vector<unsigned char>* out,
+                                             std::string* err,
+                                             const std::string& filepath) {
+    DRAKE_DEMAND(out != nullptr);
+    const InMemoryMesh& mesh = mesh_source_.in_memory();
+    const auto file_source_iter = mesh.supporting_files.find(filepath);
+    if (file_source_iter == mesh.supporting_files.end()) {
+      if (err != nullptr) {
+        *err += fmt::format(
+            "In-memory glTF referenced a URI that is not part of its "
+            "supporting files: '{}'\n",
+            filepath);
+      }
+      return false;
+    }
+    return std::visit(  // BR
+        overloaded{[out, err](const fs::path& path) {
+                     return tinygltf::ReadWholeFile(out, err, path.string(),
+                                                    nullptr);
+                   },
+                   [out](const MemoryFile& file) {
+                     const std::string& contents = file.contents();
+                     *out = std::vector<unsigned char>(contents.begin(),
+                                                       contents.end());
+                     return true;
+                   }},
+        file_source_iter->second);
+  }
+
+  const MeshSource& mesh_source_;
+
+  /* A description to use for warnings and error messages. If the mesh source
+   is a file, it includes the file name, otherwise it uses the MemoryFile
+   filename hint. This value will always be non-empty, at least communicating
+   the source of the glTF file. However, it may indicate that no filename
+   hint was provided. */
+  const std::string description_;
+
   /* We load an entire glTF buffer into an OpenGl buffer object. This maps the
    glTF buffer (named by its index) to its OpenGl object. */
   map<int, GLuint> buffers_;
@@ -2115,13 +2144,6 @@ class RenderEngineGl::GltfMeshExtractor {
   // *throws* on invocation of Error(). Overriding the default throwing
   // behavior with non-throwing behavior can lead to undefined behavior.
   drake::internal::DiagnosticPolicy policy_;
-
-  /* A description to use for warnings and error messages. If the mesh source
-   is a file, it includes the file name, otherwise it uses the MemoryFile
-   filename hint. This value will always be non-empty, at least communicating
-   the source of the glTF file. However, it may indicate that no filename
-   hint was provided. */
-  std::string description_;
 
   /* A map from a glTF accessor (named by its index) used as a primitive indices
    to the corresponding OpenGL index buffer. */
@@ -2208,8 +2230,9 @@ void RenderEngineGl::CacheFileMeshesMaybe(const MeshSource& mesh_source,
         }
       }
     } else {
-      file_meshes = GltfMeshExtractor(&geometries_, texture_library_.get())
-                        .ExtractMeshes(mesh_source, *data);
+      file_meshes =
+          GltfMeshExtractor(&mesh_source, &geometries_, texture_library_.get())
+              .ExtractMeshes(*data);
     }
     meshes_[file_key] = std::move(file_meshes);
   }
