@@ -3242,7 +3242,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// B in the world frame W.
   /// @param[in] context
   ///   The context to store the pose `X_WB` of `body_B`.
-  /// @param[in] body_B
+  /// @param[in] body
   ///   The _floating base_ body B corresponding to the pose `X_WB` to be stored
   ///   in `context`.
   /// @retval X_WB
@@ -4161,7 +4161,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// Bp's position vector from _any_ point fixed to A.
   /// @param[in] frame_E The frame in which `v_ABp` is expressed on input and
   /// the frame in which the Jacobian `J𝑠_V_ABp` is expressed on output.
-  /// @param[out] J𝑠_V_ABp_E Point Bp's spatial velocity Jacobian in frame A
+  /// @param[out] Js_V_ABp_E Point Bp's spatial velocity Jacobian in frame A
   /// with respect to speeds 𝑠 (which is either q̇ or v), expressed in frame E.
   /// `J𝑠_V_ABp_E` is a `6 x n` matrix, where n is the number of elements in 𝑠.
   /// The Jacobian is a function of only generalized positions q (which are
@@ -4211,7 +4211,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// @param[in] frame_A The frame A in `w_AB` (B's angular velocity in A).
   /// @param[in] frame_E The frame in which `w_AB` is expressed on input and
   /// the frame in which the Jacobian `J𝑠_w_AB` is expressed on output.
-  /// @param[out] J𝑠_w_AB_E Frame B's angular velocity Jacobian in frame A with
+  /// @param[out] Js_w_AB_E Frame B's angular velocity Jacobian in frame A with
   /// respect to speeds 𝑠 (which is either q̇ or v), expressed in frame E.
   /// The Jacobian is a function of only generalized positions q (which are
   /// pulled from the context).  The previous definition shows `J𝑠_w_AB_E` is
@@ -4257,7 +4257,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// Bi's position vector from _any_ point affixed to A.
   /// @param[in] frame_E The frame in which `v_ABi` is expressed on input and
   /// the frame in which the Jacobian `J𝑠_v_ABi` is expressed on output.
-  /// @param[out] J𝑠_v_ABi_E Point Bi's velocity Jacobian in frame A with
+  /// @param[out] Js_v_ABi_E Point Bi's velocity Jacobian in frame A with
   /// respect to speeds 𝑠 (which is either q̇ or v), expressed in frame E.
   /// `J𝑠_v_ABi_E` is a `3*p x n` matrix, where p is the number of points Bi and
   /// n is the number of elements in 𝑠.  The Jacobian is a function of only
@@ -4350,7 +4350,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// v_ACcm and its Jacobian J𝑠_v_ACcm are measured.
   /// @param[in] frame_E The frame in which the Jacobian J𝑠_v_ACcm is
   /// expressed on output.
-  /// @param[out] J𝑠_v_ACcm_E Point Ccm's translational velocity Jacobian in
+  /// @param[out] Js_v_ACcm_E Point Ccm's translational velocity Jacobian in
   /// frame A with respect to speeds 𝑠 (𝑠 = q̇ or 𝑠 = v), expressed in frame E.
   /// J𝑠_v_ACcm_E is a 3 x n matrix, where n is the number of elements in 𝑠.
   /// The Jacobian is a function of only generalized positions q (which are
@@ -4386,7 +4386,7 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// v_ACcm and its Jacobian J𝑠_v_ACcm are measured.
   /// @param[in] frame_E The frame in which the Jacobian J𝑠_v_ACcm is
   /// expressed on output.
-  /// @param[out] J𝑠_v_ACcm_E Point Ccm's translational velocity Jacobian in
+  /// @param[out] Js_v_ACcm_E Point Ccm's translational velocity Jacobian in
   /// frame A with respect to speeds 𝑠 (𝑠 = q̇ or 𝑠 = v), expressed in frame E.
   /// J𝑠_v_ACcm_E is a 3 x n matrix, where n is the number of elements in 𝑠.
   /// The Jacobian is a function of only generalized positions q (which are

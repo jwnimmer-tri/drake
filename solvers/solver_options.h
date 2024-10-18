@@ -172,13 +172,13 @@ class SolverOptions {
 
   /**
    * Check if for a given solver_id, the option keys are included in
-   * double_keys, int_keys and str_keys.
+   * allowable_double_keys, allowable_int_keys and allowable_str_keys.
    * @param solver_id If this SolverOptions has set options for this solver_id,
    * then we check if the option keys are a subset of `double_keys`, `int_keys`
    * and `str_keys`.
-   * @param double_keys The set of allowable keys for double options.
-   * @param int_keys The set of allowable keys for int options.
-   * @param str_keys The set of allowable keys for string options.
+   * @param allowable_double_keys The set of allowable keys for double options.
+   * @param allowable_int_keys The set of allowable keys for int options.
+   * @param allowable_str_keys The set of allowable keys for string options.
    * @throws std::exception if the solver contains un-allowed options.
    */
   void CheckOptionKeysForSolver(

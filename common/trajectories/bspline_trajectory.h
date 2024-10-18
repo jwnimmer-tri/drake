@@ -51,7 +51,7 @@ class BsplineTrajectory final : public trajectories::Trajectory<T> {
   std::unique_ptr<trajectories::Trajectory<T>> Clone() const override;
 
   /** Evaluates the BsplineTrajectory at the given time t.
-  @param t The time at which to evaluate the %BsplineTrajectory.
+  @param time The time at which to evaluate the %BsplineTrajectory.
   @return The matrix of evaluated values.
   @pre If T == symbolic::Expression, `t.is_constant()` must be true.
   @warning If t does not lie in the range [start_time(), end_time()], the

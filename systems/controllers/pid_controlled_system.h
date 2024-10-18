@@ -105,7 +105,7 @@ class PidControlledSystem : public Diagram<T> {
                       const Eigen::VectorXd& Kp, const Eigen::VectorXd& Ki,
                       const Eigen::VectorXd& Kd,
                       int state_output_port_index = 0,
-                      int plant_output_port_index = 0);
+                      int plant_input_port_index = 0);
 
   /// A constructor where the gains are scalar values and some of the plant's
   /// output is part of the feedback signal as specified by
