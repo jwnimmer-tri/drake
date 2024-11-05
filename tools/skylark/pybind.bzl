@@ -66,6 +66,9 @@ def pybind_py_library(
         # This is how you tell Bazel to create a shared library.
         linkshared = 1,
         linkstatic = 1,
+	defines = [
+            "DRAKE_ENABLE_HOLDER=0",
+        ],
         copts = cc_copts + EXTRA_PYBIND_COPTS,
         # Always link to pybind11.
         deps = [
