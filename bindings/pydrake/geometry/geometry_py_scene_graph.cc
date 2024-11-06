@@ -229,6 +229,7 @@ void DefineSceneGraph(py::module m, T) {
             cls_doc.RegisterFrame.doc_3args)
         .def("RenameFrame", &Class::RenameFrame, py::arg("frame_id"),
             py::arg("name"), cls_doc.RenameFrame.doc)
+#if 0
         .def("RegisterGeometry",
             py::overload_cast<SourceId, FrameId,
                 std::unique_ptr<GeometryInstance>>(&Class::RegisterGeometry),
@@ -245,6 +246,7 @@ void DefineSceneGraph(py::module m, T) {
                 &Class::RegisterAnchoredGeometry),
             py::arg("source_id"), py::arg("geometry"),
             cls_doc.RegisterAnchoredGeometry.doc)
+#endif
         .def("RenameGeometry", &Class::RenameGeometry, py::arg("geometry_id"),
             py::arg("name"), cls_doc.RenameGeometry.doc)
         .def("ChangeShape",
@@ -278,6 +280,7 @@ void DefineSceneGraph(py::module m, T) {
             overload_cast_explicit<CollisionFilterManager>(
                 &Class::collision_filter_manager),
             cls_doc.collision_filter_manager.doc_0args)
+#if 0
         .def("AddRenderer",
             overload_cast_explicit<void, std::string,
                 std::unique_ptr<render::RenderEngine>>(&Class::AddRenderer),
@@ -287,6 +290,7 @@ void DefineSceneGraph(py::module m, T) {
                 std::unique_ptr<render::RenderEngine>>(&Class::AddRenderer),
             py::arg("context"), py::arg("name"), py::arg("renderer"),
             cls_doc.AddRenderer.doc_3args)
+#endif
         .def("RemoveRenderer",
             overload_cast_explicit<void, const std::string&>(
                 &Class::RemoveRenderer),

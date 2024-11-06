@@ -211,15 +211,21 @@ struct Impl {
 
     std::unique_ptr<Trajectory<T>> DoMakeDerivative(
         int derivative_order) const override {
+#if 0
       PYBIND11_OVERLOAD_INT(std::unique_ptr<Trajectory<T>>, Trajectory<T>,
           "DoMakeDerivative", derivative_order);
+#endif
       // If the macro did not return, use default functionality.
       return Base::DoMakeDerivative(derivative_order);
     }
 
     std::unique_ptr<Trajectory<T>> Clone() const override {
+#if 0
       PYBIND11_OVERLOAD_PURE(
           std::unique_ptr<Trajectory<T>>, Trajectory<T>, Clone);
+#else
+      return nullptr;
+#endif
     }
   };
 

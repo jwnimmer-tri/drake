@@ -63,7 +63,11 @@ class PyRenderEngine : public py::wrapper<RenderEngine> {
   }
 
   std::unique_ptr<RenderEngine> DoClone() const override {
+#if 0
     PYBIND11_OVERLOAD_PURE(std::unique_ptr<RenderEngine>, Base, DoClone);
+#else
+    return nullptr;
+#endif
   }
 
   void DoRenderColorImage(ColorRenderCamera const& camera,

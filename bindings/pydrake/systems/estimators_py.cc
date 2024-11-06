@@ -50,13 +50,16 @@ PYBIND11_MODULE(estimators, m) {
       py::arg("A"), py::arg("C"), py::arg("W"), py::arg("V"),
       doc.SteadyStateKalmanFilter.doc_ACWV);
 
+#if 0
   m.def("SteadyStateKalmanFilter",
       py::overload_cast<std::unique_ptr<systems::LinearSystem<double>>,
           const Eigen::Ref<const Eigen::MatrixXd>&,
           const Eigen::Ref<const Eigen::MatrixXd>&>(&SteadyStateKalmanFilter),
       py::arg("system"), py::arg("W"), py::arg("V"),
       doc.SteadyStateKalmanFilter.doc_linear_system);
+#endif
 
+#if 0
   m.def("SteadyStateKalmanFilter",
       py::overload_cast<std::unique_ptr<System<double>>,
           std::unique_ptr<Context<double>>,
@@ -64,6 +67,7 @@ PYBIND11_MODULE(estimators, m) {
           const Eigen::Ref<const Eigen::MatrixXd>&>(&SteadyStateKalmanFilter),
       py::arg("system"), py::arg("context"), py::arg("W"), py::arg("V"),
       doc.SteadyStateKalmanFilter.doc_system);
+#endif
 }
 
 }  // namespace pydrake
