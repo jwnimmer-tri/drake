@@ -4,6 +4,7 @@
 #include "drake/bindings/pydrake/documentation_pybind.h"
 #include "drake/bindings/pydrake/polynomial_types_pybind.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
+#include "drake/common/pointer_cast.h"
 #include "drake/common/polynomial.h"
 #include "drake/common/trajectories/bezier_curve.h"
 #include "drake/common/trajectories/bspline_trajectory.h"
@@ -211,15 +212,36 @@ struct Impl {
 
     std::unique_ptr<Trajectory<T>> DoMakeDerivative(
         int derivative_order) const override {
-      PYBIND11_OVERLOAD_INT(std::unique_ptr<Trajectory<T>>, Trajectory<T>,
-          "DoMakeDerivative", derivative_order);
-      // If the macro did not return, use default functionality.
-      return Base::DoMakeDerivative(derivative_order);
+      py::object py_result = DoMakeDerivativePython(derivative_order);
+      // When the python class did not override this method, defer to the C++
+      // base class method.
+      if (py_result.is_none()) {
+	return Base::DoMakeDerivative(derivative_order);
+      }
+      DRAKE_THROW_UNLESS(py_result.ref_count() == 1);
+      Trajectory<T>* bare = py_result.template cast<Trajectory<T>*>();
+      // XXX This destroys the python side of the object.
+      py_result.release();
+      return std::unique_ptr<Trajectory<T>>(bare);
+    }
+
+    py::object DoMakeDerivativePython(int derivative_order) const {
+      PYBIND11_OVERLOAD_INT(
+          py::object, Trajectory<T>, "DoMakeDerivative", derivative_order);
+      return py::none();
     }
 
     std::unique_ptr<Trajectory<T>> Clone() const override {
-      PYBIND11_OVERLOAD_PURE(
-          std::unique_ptr<Trajectory<T>>, Trajectory<T>, Clone);
+      py::object py_result = ClonePython();
+      DRAKE_THROW_UNLESS(!py_result.is_none());
+      DRAKE_THROW_UNLESS(py_result.ref_count() == 1);
+      Trajectory<T>* bare = py_result.template cast<Trajectory<T>*>();
+      py_result.release();
+      return std::unique_ptr<Trajectory<T>>(bare);
+    }
+
+    py::object ClonePython() const {
+      PYBIND11_OVERLOAD_PURE(py::object, Trajectory<T>, Clone);
     }
   };
 
@@ -233,8 +255,8 @@ struct Impl {
     {
       using Class = Trajectory<T>;
       constexpr auto& cls_doc = doc.Trajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, PyTrajectory>(
-          m, "Trajectory", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, PyTrajectory,
+          std::shared_ptr<Class>>(m, "Trajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init<>())
           .def("value", &Class::value, py::arg("t"), cls_doc.value.doc)
@@ -246,7 +268,12 @@ struct Impl {
               cls_doc.has_derivative.doc)
           .def("EvalDerivative", &Class::EvalDerivative, py::arg("t"),
               py::arg("derivative_order") = 1, cls_doc.EvalDerivative.doc)
-          .def("MakeDerivative", &Class::MakeDerivative,
+          .def(
+              "MakeDerivative",
+              [](const Class& self,
+                  int derivative_order) -> std::shared_ptr<Class> {
+                return self.MakeDerivative(derivative_order);
+              },
               py::arg("derivative_order") = 1, cls_doc.MakeDerivative.doc)
           .def("start_time", &Class::start_time, cls_doc.start_time.doc)
           .def("end_time", &Class::end_time, cls_doc.end_time.doc)
@@ -257,8 +284,8 @@ struct Impl {
     {
       using Class = BezierCurve<T>;
       constexpr auto& cls_doc = doc.BezierCurve;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
-          m, "BezierCurve", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(m, "BezierCurve", param, cls_doc.doc);
       cls  // BR
           .def(py::init<>(), cls_doc.ctor.doc_0args)
           .def(py::init<double, double, const Eigen::Ref<const MatrixX<T>>&>(),
@@ -283,8 +310,8 @@ struct Impl {
     {
       using Class = BsplineTrajectory<T>;
       constexpr auto& cls_doc = doc.BsplineTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
-          m, "BsplineTrajectory", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(m, "BsplineTrajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init<>())
           // This overload will match 2d numpy arrays before
@@ -298,7 +325,12 @@ struct Impl {
               py::arg("basis"), py::arg("control_points"), cls_doc.ctor.doc)
           .def(py::init<math::BsplineBasis<T>, std::vector<MatrixX<T>>>(),
               py::arg("basis"), py::arg("control_points"), cls_doc.ctor.doc)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc)
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc)
           .def("num_control_points", &Class::num_control_points,
               cls_doc.num_control_points.doc)
           .def("control_points", &Class::control_points,
@@ -326,19 +358,26 @@ struct Impl {
     {
       using Class = DerivativeTrajectory<T>;
       constexpr auto& cls_doc = doc.DerivativeTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(
           m, "DerivativeTrajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init<const Trajectory<T>&, int>(), py::arg("nominal"),
               py::arg("derivative_order") = 1, cls_doc.ctor.doc)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc);
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc);
       DefCopyAndDeepCopy(&cls);
     }
 
     {
       using Class = FunctionHandleTrajectory<T>;
       constexpr auto& cls_doc = doc.FunctionHandleTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(
           m, "FunctionHandleTrajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init<const std::function<MatrixX<T>(const T&)>&, int, int,
@@ -347,19 +386,30 @@ struct Impl {
               py::arg("start_time") = -std::numeric_limits<double>::infinity(),
               py::arg("end_time") = std::numeric_limits<double>::infinity(),
               cls_doc.ctor.doc)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc);
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc);
       DefCopyAndDeepCopy(&cls);
     }
 
     {
       using Class = PathParameterizedTrajectory<T>;
       constexpr auto& cls_doc = doc.PathParameterizedTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(
           m, "PathParameterizedTrajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init<const Trajectory<T>&, const Trajectory<T>&>(),
               py::arg("path"), py::arg("time_scaling"), cls_doc.ctor.doc)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc)
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc)
           .def("path", &Class::path, py_rvp::reference_internal,
               cls_doc.path.doc)
           .def("time_scaling", &Class::time_scaling, py_rvp::reference_internal,
@@ -370,8 +420,8 @@ struct Impl {
     {
       using Class = PiecewiseTrajectory<T>;
       constexpr auto& cls_doc = doc.PiecewiseTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
-          m, "PiecewiseTrajectory", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(m, "PiecewiseTrajectory", param, cls_doc.doc);
       cls  // BR
           .def("get_number_of_segments", &Class::get_number_of_segments,
               cls_doc.get_number_of_segments.doc)
@@ -399,8 +449,8 @@ struct Impl {
     {
       using Class = PiecewisePolynomial<T>;
       constexpr auto& cls_doc = doc.PiecewisePolynomial;
-      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>>(
-          m, "PiecewisePolynomial", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>,
+          std::shared_ptr<Class>>(m, "PiecewisePolynomial", param, cls_doc.doc);
       cls  // BR
           .def(py::init<>(), cls_doc.ctor.doc_0args)
           .def(py::init<const Eigen::Ref<const MatrixX<T>>&>(),
@@ -411,7 +461,12 @@ struct Impl {
           .def(py::init<std::vector<Polynomial<T>> const&,
                    std::vector<T> const&>(),
               cls_doc.ctor.doc_2args_polynomials_breaks)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc)
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc)
           .def_static(
               "ZeroOrderHold",
               // This serves the same purpose as the C++
@@ -585,8 +640,8 @@ struct Impl {
     {
       using Class = CompositeTrajectory<T>;
       constexpr auto& cls_doc = doc.CompositeTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>>(
-          m, "CompositeTrajectory", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>,
+          std::shared_ptr<Class>>(m, "CompositeTrajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init([](std::vector<const Trajectory<T>*> py_segments) {
             std::vector<copyable_unique_ptr<Trajectory<T>>> segments;
@@ -618,7 +673,8 @@ struct Impl {
     if constexpr (std::is_same_v<T, double>) {
       using Class = ExponentialPlusPiecewisePolynomial<T>;
       constexpr auto& cls_doc = doc.ExponentialPlusPiecewisePolynomial;
-      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>>(
+      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>,
+          std::shared_ptr<Class>>(
           m, "ExponentialPlusPiecewisePolynomial", param, cls_doc.doc);
       cls  // BR
           .def(
@@ -630,7 +686,12 @@ struct Impl {
                   }),
               py::arg("K"), py::arg("A"), py::arg("alpha"),
               py::arg("piecewise_polynomial_part"), cls_doc.ctor.doc)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc)
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc)
           .def("shiftRight", &Class::shiftRight, py::arg("offset"),
               cls_doc.shiftRight.doc);
       DefCopyAndDeepCopy(&cls);
@@ -639,7 +700,8 @@ struct Impl {
     {
       using Class = PiecewiseQuaternionSlerp<T>;
       constexpr auto& cls_doc = doc.PiecewiseQuaternionSlerp;
-      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>>(
+      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>,
+          std::shared_ptr<Class>>(
           m, "PiecewiseQuaternionSlerp", param, cls_doc.doc);
       cls  // BR
           .def(py::init<>(), cls_doc.ctor.doc_0args)
@@ -684,8 +746,8 @@ struct Impl {
     {
       using Class = PiecewisePose<T>;
       constexpr auto& cls_doc = doc.PiecewisePose;
-      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>>(
-          m, "PiecewisePose", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, PiecewiseTrajectory<T>,
+          std::shared_ptr<Class>>(m, "PiecewisePose", param, cls_doc.doc);
       cls  // BR
           .def(py::init<>(), cls_doc.ctor.doc_0args)
           .def(py::init<const PiecewisePolynomial<T>&,
@@ -717,11 +779,16 @@ struct Impl {
     {
       using Class = StackedTrajectory<T>;
       constexpr auto& cls_doc = doc.StackedTrajectory;
-      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>>(
-          m, "StackedTrajectory", param, cls_doc.doc);
+      auto cls = DefineTemplateClassWithDefault<Class, Trajectory<T>,
+          std::shared_ptr<Class>>(m, "StackedTrajectory", param, cls_doc.doc);
       cls  // BR
           .def(py::init<bool>(), py::arg("rowwise") = true, cls_doc.ctor.doc)
-          .def("Clone", &Class::Clone, cls_doc.Clone.doc)
+          .def(
+              "Clone",
+              [](const Class& self) -> std::shared_ptr<Class> {
+                return dynamic_pointer_cast<Class>(self.Clone());
+              },
+              cls_doc.Clone.doc)
           .def("Append",
               py::overload_cast<const Trajectory<T>&>(&Class::Append),
               /* N.B. We choose to omit any py::arg name here. */
