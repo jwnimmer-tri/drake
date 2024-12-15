@@ -93,7 +93,7 @@ drake_cc_library(
         ":vector",
         "//common:essential",
         "//common:value",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

@@ -131,7 +131,7 @@ cc_library_vendored(
     linkstatic = True,
     deps = [
         "@ccd_internal//:ccd",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
     ],
 )
 

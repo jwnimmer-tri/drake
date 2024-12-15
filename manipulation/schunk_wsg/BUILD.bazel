@@ -130,7 +130,7 @@ drake_cc_library(
         "//multibody/plant",
         "//systems/framework:diagram_builder",
         "//systems/lcm",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 

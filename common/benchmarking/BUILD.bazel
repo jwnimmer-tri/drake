@@ -22,7 +22,7 @@ drake_cc_googlebench_binary(
         "//common/symbolic:polynomial",
         "//tools/performance:fixture_common",
         "//tools/performance:gflags_main",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

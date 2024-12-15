@@ -103,7 +103,7 @@ drake_cc_library(
     srcs = ["integer_inequality_solver.cc"],
     hdrs = ["integer_inequality_solver.h"],
     deps = [
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
     implementation_deps = [
         "//common:essential",
@@ -835,7 +835,7 @@ drake_cc_variant_library(
         "//common:scope_exit",
         "//common:scoped_singleton",
         "//math:eigen_sparse_triplet",
-        "@fmt",
+        "//tools/workspace/fmt",
         "@gurobi//:gurobi_c",
     ],
 )

@@ -688,7 +688,7 @@ drake_cc_googletest(
         ":plant",
         "//common/test_utilities:expect_throws_message",
         "//multibody/parsing",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

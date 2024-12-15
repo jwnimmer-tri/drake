@@ -79,8 +79,8 @@ drake_cc_library(
     ],
     visibility = ["//common/test_utilities:__pkg__"],
     deps = [
-        "@eigen",
-        "@fmt",
+        "//tools/workspace/eigen",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -107,9 +107,9 @@ drake_cc_library(
     ],
     deps = [
         ":fmt",
-        "@eigen",
-        "@fmt",
-        "@spdlog",
+        "//tools/workspace/eigen",
+        "//tools/workspace/fmt",
+        "//tools/workspace/spdlog",
     ],
 )
 
@@ -1231,7 +1231,7 @@ drake_cc_googletest(
     ],
     use_default_main = False,
     deps = [
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -1251,7 +1251,7 @@ drake_cc_googletest(
     ],
     use_default_main = False,
     deps = [
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

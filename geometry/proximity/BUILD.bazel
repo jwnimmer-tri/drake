@@ -81,7 +81,7 @@ drake_cc_library(
     ],
     deps = [
         "//math:geometric_transform",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
     implementation_deps = [
         "//common:hwy_dynamic",
@@ -367,8 +367,8 @@ drake_cc_library(
         ":proximity_utilities",
         "//common:drake_export",
         "//common:sorted_pair",
+        "//tools/workspace/fmt",
         "@fcl_internal//:fcl",
-        "@fmt",
     ],
 )
 
@@ -434,7 +434,7 @@ drake_cc_library(
         "//geometry:geometry_roles",
         "//geometry:proximity_properties",
         "//geometry:shape_specification",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -770,7 +770,7 @@ drake_cc_library(
         ":mesh_field",
         ":triangle_surface_mesh",
         ":volume_mesh",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -884,8 +884,8 @@ drake_cc_library(
         "//common:sorted_pair",
         "//geometry:geometry_ids",
         "//geometry:shape_specification",
+        "//tools/workspace/fmt",
         "@fcl_internal//:fcl",
-        "@fmt",
     ],
 )
 
@@ -1004,7 +1004,7 @@ drake_cc_library(
         "//geometry:mesh_source",
     ],
     implementation_deps = [
-        "@fmt",
+        "//tools/workspace/fmt",
         "@vtk_internal//:vtkCommonCore",
         "@vtk_internal//:vtkCommonDataModel",
         "@vtk_internal//:vtkIOLegacy",
@@ -1318,7 +1318,7 @@ drake_cc_googletest(
         "//common/test_utilities:eigen_matrix_compare",
         "//common/test_utilities:expect_no_throw",
         "//common/test_utilities:expect_throws_message",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

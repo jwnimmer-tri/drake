@@ -52,7 +52,7 @@ cc_library(
     copts = ["-w"],
     linkstatic = True,
     deps = [
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@zlib",
     ],
     linkopts = [
@@ -71,7 +71,7 @@ cc_test(
     ],
     deps = [
         ":common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@gtest//:without_main",
     ],
 )
@@ -82,7 +82,7 @@ cc_test(
     tags = ["no_kcov"],
     deps = [
         ":common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@gtest//:without_main",
     ],
 )
@@ -117,7 +117,7 @@ cc_test(
     ],
     deps = [
         ":common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@gtest//:without_main",
     ],
 )
@@ -140,7 +140,7 @@ cc_test(
     tags = ["no_kcov"],
     deps = [
         ":common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@gtest//:without_main",
     ],
 )
@@ -151,7 +151,7 @@ cc_test(
     tags = ["no_kcov"],
     deps = [
         ":common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@gtest//:without_main",
     ],
 )
