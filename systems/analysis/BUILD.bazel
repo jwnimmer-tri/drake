@@ -117,7 +117,7 @@ drake_cc_library(
     deps = [
         "//common:default_scalars",
         "//common:essential",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -166,7 +166,7 @@ drake_cc_library(
         ":scalar_dense_output",
         "//common:default_scalars",
         "//common:essential",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -416,7 +416,7 @@ drake_cc_library(
         ":implicit_integrator",
         ":integrator_base",
         ":simulator",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -426,7 +426,7 @@ drake_cc_library(
     hdrs = ["simulator_status.h"],
     deps = [
         "//systems/framework:system_base",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

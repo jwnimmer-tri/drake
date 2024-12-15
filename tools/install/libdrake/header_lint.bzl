@@ -10,13 +10,10 @@ load("//tools/skylark:sh.bzl", "sh_test")
 # without consulting Drake's build system maintainers (see #7451). Keep this
 # list in sync with test/header_dependency_test.py.
 _ALLOWED_EXTERNALS = [
-    "eigen",
-    "fmt",
+    "+_repo_rules+pkgconfig_eigen",
+    "+_repo_rules2+pkgconfig_fmt",
+    "+_repo_rules3+pkgconfig_spdlog",
     "lcm",
-    "spdlog",
-
-    # The entries that follow are defects; we should work to remove them.
-    "zlib",
 ]
 
 # Drake's allowed list of public preprocessor definitions. The only things

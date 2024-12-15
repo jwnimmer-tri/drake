@@ -92,8 +92,8 @@ drake_cc_library(
         "//geometry/proximity:hydroelastic_calculator",
         "//geometry/proximity:obj_to_surface_mesh",
         "//geometry/proximity:penetration_as_point_pair_callback",
+        "//tools/workspace/fmt",
         "@fcl_internal//:fcl",
-        "@fmt",
     ],
 )
 
@@ -222,7 +222,7 @@ drake_cc_library(
         ":rgba",
         "//common:essential",
         "//common:value",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -438,12 +438,12 @@ drake_cc_library(
     deps = [
         ":mesh_source",
         "//common:diagnostic_policy",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
     implementation_deps = [
         "//common:essential",
         "//common:memory_file",
-        "@fmt",
+        "//tools/workspace/fmt",
         "@tinyobjloader_internal//:tinyobjloader",
     ],
 )
@@ -484,7 +484,7 @@ drake_cc_library(
     hdrs = ["rgba.h"],
     deps = [
         "//common",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

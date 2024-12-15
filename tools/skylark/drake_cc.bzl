@@ -140,6 +140,13 @@ def _check_library_deps_blacklist(name, deps):
         if name == "drake_cc_googletest_main":
             # This library-with-main is a special case.
             continue
+        if dep in ["@eigen", "@fmt", "@spdlog"]:
+            fail(("The {name} library declares a deps on \"@{foo}\" but " +
+                  "that spelling is no longer allowed; instead, change the " +
+                  "line to say \"//tools/workspace/{foo}\"").format(
+                name = name,
+                foo = dep[1:],
+            ))
         if dep.endswith(":add_text_logging_gflags"):
             fail("The cc_library '" + name + "' must not depend on " +
                  "//common:add_text_logging_gflags; only cc_binary targets " +
@@ -212,7 +219,10 @@ def installed_headers_for_drake_deps(deps):
             not x.startswith("@") and
             not x.startswith("//drake/lcmtypes:") and
             not x == "//:drake_shared_library" and
-            not x.startswith("//third_party")
+            not x.startswith("//third_party") and
+            not x == "//tools/workspace/eigen" and
+            not x == "//tools/workspace/fmt" and
+            not x == "//tools/workspace/spdlog"
         )
     ]
 
@@ -356,6 +366,35 @@ cc_linkonly_library = rule(
     doc = """
 Links the given dependencies but discards the entire compilation context,
 i.e., include paths and preprocessor definitions.
+""",
+    attrs = {
+        "deps": attr.label_list(providers = [CcInfo]),
+    },
+    fragments = ["cpp"],
+)
+
+def _cc_nolink_library_impl(ctx):
+    deps_cc_infos = cc_common.merge_cc_infos(
+        cc_infos = [dep[CcInfo] for dep in ctx.attr.deps],
+    )
+    return [
+        DefaultInfo(
+            runfiles = ctx.runfiles(
+                collect_data = True,
+                collect_default = True,
+            ),
+        ),
+        CcInfo(
+            compilation_context = deps_cc_infos.compilation_context,
+            linking_context = None,
+        ),
+    ]
+
+cc_nolink_library = rule(
+    implementation = _cc_nolink_library_impl,
+    doc = """
+Provides access to the header files and preprocess definitions from the given
+dependencies but discards all linked libraries and linker options.
 """,
     attrs = {
         "deps": attr.label_list(providers = [CcInfo]),

@@ -53,9 +53,9 @@ drake_cc_library(
         "//common:reset_after_move",
     ],
     implementation_deps = [
+        "//tools/workspace/fmt",
         "@abseil_cpp_internal//absl/container:flat_hash_set",
         "@abseil_cpp_internal//absl/container:inlined_vector",
-        "@fmt",
     ],
 )
 
