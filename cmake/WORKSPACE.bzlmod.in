@@ -10,6 +10,3 @@ python_repository(
     macos_interpreter_path = "@Python_EXECUTABLE@",
     requirements_flavor = "build",
 )
-
-# Custom repository rules injected by CMake.
-@BAZEL_WORKSPACE_EXTRA@

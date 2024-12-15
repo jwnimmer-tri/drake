@@ -1,3 +1,4 @@
+load("//tools/workspace:alias.bzl", "alias_repository")
 load("//tools/workspace:mirrors.bzl", "DEFAULT_MIRRORS")
 load("//tools/workspace/abseil_cpp_internal:repository.bzl", "abseil_cpp_internal_repository")  # noqa
 load("//tools/workspace/bazel_skylib:repository.bzl", "bazel_skylib_repository")  # noqa
@@ -115,17 +116,20 @@ load("//tools/workspace/zlib:repository.bzl", "zlib_repository")
 # This is the list of modules that our MODULE.bazel already incorporates.
 # It is cross-checked by the workspace_bzlmod_sync_test.py test.
 REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES = [
-    "build_bazel_apple_support",
     "bazel_features",
     "bazel_skylib",
+    "build_bazel_apple_support",
+    "eigen",
+    "fmt",
     "platforms",
-    "rust_toolchain",
     "rules_cc",
     "rules_java",
     "rules_license",
     "rules_python",
     "rules_rust",
     "rules_shell",
+    "rust_toolchain",
+    "spdlog",
 ]
 
 def add_default_repositories(
@@ -439,5 +443,20 @@ crate_universe_repositories = module_extension(
     doc = """
 (Internal use only) Wraps the crate_universe repository rules to be usable as a
 bzlmod module extension.
+""",
+)
+
+def _public_dep_repositories_impl(module_ctx):
+    for name in ["eigen", "fmt", "spdlog"]:
+        alias_repository(
+            name = name,
+            aliases = {name: "@drake//tools/workspace/" + name},
+        )
+
+# For our public dependencies, by default we'll provide aliases for
+# downstream projects to continue using.
+public_dep_repositories = module_extension(
+    implementation = _public_dep_repositories_impl,
+    doc = """OK to use downstream XXX
 """,
 )
