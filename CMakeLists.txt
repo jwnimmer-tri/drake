@@ -14,7 +14,7 @@ project(drake
 #
 # We'll do that by converting the settings to generated Bazel inputs:
 # - a tweaked copy of our `MODULE.bazel` to opt-out of some dependencies; and
-# - a completely new `WORKSPACE.bzlmod` to replace what we opted-out of; and
+# - a `WORKSPACE.bzlmod` file that plumbs the python interpreter path; and
 # - a `.bazelrc` file that specifies configuration choices.
 # and then running the `@drake//:install` program from that temporary workspace.
 
@@ -307,89 +307,95 @@ set(BAZEL_OUTPUT_BASE
 
 function(generate_external_repository_file OUTPUT)
   set(out_path
-    ${CMAKE_CURRENT_BINARY_DIR}/external/workspace/${OUTPUT})
+    ${CMAKE_CURRENT_BINARY_DIR}/external/module/${OUTPUT})
   if(ARGN)
     file(GENERATE OUTPUT ${out_path}
-      INPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/external/workspace/${ARGN})
+      INPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/external/module/${ARGN})
   else()
     file(GENERATE OUTPUT ${out_path} CONTENT "")
   endif()
 endfunction()
 
-# Symlinks the C++ include path for TARGET as workspace/NAME/include, e.g.
-#  workspace/eigen/include -> .../build/install/include/eigen3
+# Symlinks the C++ include path for TARGET as module/NAME/include, e.g.
+#  module/eigen/include -> .../build/install/include/eigen3
 function(symlink_external_repository_includes NAME TARGET)
   get_target_property(include_dir ${TARGET} INTERFACE_INCLUDE_DIRECTORIES)
-  set(workspace ${CMAKE_CURRENT_BINARY_DIR}/external/workspace)
-  file(MAKE_DIRECTORY ${workspace}/${NAME})
-  file(CREATE_LINK ${include_dir} ${workspace}/${NAME}/include SYMBOLIC)
+  set(module ${CMAKE_CURRENT_BINARY_DIR}/external/module)
+  file(MAKE_DIRECTORY ${module}/${NAME})
+  file(CREATE_LINK ${include_dir} ${module}/${NAME}/include SYMBOLIC)
 endfunction()
 
-# Symlinks the C++ libraries for TARGET as workspace/NAME/lib/*, e.g.
-#  workspace/fmt/lib/libfmt.so.6.1.2 -> .../build/install/lib/fmt/libfmt.so.6.1.2
-#  workspace/fmt/lib/libfmt.so.6 -> .../build/install/lib/fmt/libfmt.so.6.1.2
+# Symlinks the C++ libraries for TARGET as module/NAME/lib/*, e.g.
+#  module/fmt/lib/libfmt.so.6.1.2 -> .../build/install/lib/fmt/libfmt.so.6.1.2
+#  module/fmt/lib/libfmt.so.6 -> .../build/install/lib/fmt/libfmt.so.6.1.2
 function(symlink_external_repository_libs NAME TARGET)
-  set(workspace "${CMAKE_CURRENT_BINARY_DIR}/external/workspace")
-  file(MAKE_DIRECTORY "${workspace}/${NAME}/lib")
+  set(module "${CMAKE_CURRENT_BINARY_DIR}/external/module")
+  file(MAKE_DIRECTORY "${module}/${NAME}/lib")
   # Link the full library name (i.e., libfmt.so.6.1.2 in the case of shared).
   get_target_property(location ${TARGET} LOCATION_${CMAKE_BUILD_TYPE})
   if(NOT location)
     message(FATAL_ERROR "Target ${TARGET} has no library in LOCATION_${CMAKE_BUILD_TYPE}")
   endif()
   get_filename_component(basename "${location}" NAME)
-  file(CREATE_LINK "${location}" "${workspace}/${NAME}/lib/${basename}" SYMBOLIC)
+  file(CREATE_LINK "${location}" "${module}/${NAME}/lib/${basename}" SYMBOLIC)
   # Link the SONAME spelling in case of shared libraries.
   # If the basename does not match this pattern, this part is all a no-op.
   string(REGEX REPLACE "(\\.so\\.[0-9]+)\\.[0-9]+\\.[0-9]+$" "\\1"
       other_basename "${basename}")
   string(REGEX REPLACE "(\\.[0-9]+)\\.[0-9]+\\.[0-9]+\\.dylib$" "\\1.dylib"
       other_basename "${other_basename}")
-  file(CREATE_LINK "${location}" "${workspace}/${NAME}/lib/${other_basename}" SYMBOLIC)
+  file(CREATE_LINK "${location}" "${module}/${NAME}/lib/${other_basename}" SYMBOLIC)
 endfunction()
 
-set(BAZEL_WORKSPACE_EXTRA)
-set(BAZEL_WORKSPACE_EXCLUDES)
-
-# Our cmake/WORKSPACE.bzlmod always provides @python.
-list(APPEND BAZEL_WORKSPACE_EXCLUDES "python")
-
-macro(override_repository NAME)
-  set(repo "${CMAKE_CURRENT_BINARY_DIR}/external/workspace/${NAME}")
-  string(APPEND BAZEL_WORKSPACE_EXTRA
-    "local_repository(name = '${NAME}', path = '${repo}')\n")
-  list(APPEND BAZEL_WORKSPACE_EXCLUDES "${NAME}")
+macro(override_module NAME)
+  set(local_path "${CMAKE_CURRENT_BINARY_DIR}/external/module/${NAME}")
+  string(APPEND BAZEL_REPO_ENV
+    " --override_module=${NAME}=${local_path}"
+  )
 endmacro()
 
-option(WITH_USER_EIGEN "Use user-provided Eigen3" OFF)
+option(WITH_USER_EIGEN "Use user-provided Eigen3" ON)
 
 if(WITH_USER_EIGEN)
   find_package(Eigen3 CONFIG REQUIRED)
 
   symlink_external_repository_includes(eigen Eigen3::Eigen)
-  generate_external_repository_file(eigen/WORKSPACE)
+  generate_external_repository_file(
+    eigen/MODULE.bazel
+    eigen/MODULE.bazel.in)
   generate_external_repository_file(
     eigen/BUILD.bazel
     eigen/BUILD.bazel.in)
+  file(CREATE_LINK
+    ${PROJECT_SOURCE_DIR}/cmake/external/module/conversion.bzl
+    ${CMAKE_CURRENT_BINARY_DIR}/external/module/eigen/conversion.bzl
+    SYMBOLIC)
 
-  override_repository(eigen)
+  override_module(eigen)
 endif()
 
-option(WITH_USER_FMT "Use user-provided fmt" OFF)
+option(WITH_USER_FMT "Use user-provided fmt" ON)
 
 if(WITH_USER_FMT)
   find_package(fmt CONFIG REQUIRED)
 
   symlink_external_repository_includes(fmt fmt::fmt)
   symlink_external_repository_libs(fmt fmt::fmt)
-  generate_external_repository_file(fmt/WORKSPACE)
+  generate_external_repository_file(
+    fmt/MODULE.bazel
+    fmt/MODULE.bazel.in)
   generate_external_repository_file(
     fmt/BUILD.bazel
     fmt/BUILD.bazel.in)
+  file(CREATE_LINK
+    ${PROJECT_SOURCE_DIR}/cmake/external/module/conversion.bzl
+    ${CMAKE_CURRENT_BINARY_DIR}/external/module/fmt/conversion.bzl
+    SYMBOLIC)
 
-  override_repository(fmt)
+  override_module(fmt)
 endif()
 
-option(WITH_USER_SPDLOG "Use user-provided spdlog" OFF)
+option(WITH_USER_SPDLOG "Use user-provided spdlog" ON)
 
 if(WITH_USER_SPDLOG)
   if(NOT WITH_USER_FMT)
@@ -402,12 +408,18 @@ if(WITH_USER_SPDLOG)
 
   symlink_external_repository_includes(spdlog spdlog::spdlog)
   symlink_external_repository_libs(spdlog spdlog::spdlog)
-  generate_external_repository_file(spdlog/WORKSPACE)
+  generate_external_repository_file(
+    spdlog/MODULE.bazel
+    spdlog/MODULE.bazel.in)
   generate_external_repository_file(
     spdlog/BUILD.bazel
     spdlog/BUILD.bazel.in)
+  file(CREATE_LINK
+    ${PROJECT_SOURCE_DIR}/cmake/external/module/conversion.bzl
+    ${CMAKE_CURRENT_BINARY_DIR}/external/module/spdlog/conversion.bzl
+    SYMBOLIC)
 
-  override_repository(spdlog)
+  override_module(spdlog)
 endif()
 
 set(BAZEL_CONFIG)
@@ -562,11 +574,6 @@ file(CREATE_LINK "${PROJECT_SOURCE_DIR}/WORKSPACE" drake_build_cwd/WORKSPACE SYM
 find_package(Git)
 
 set(GIT_DIR "${PROJECT_SOURCE_DIR}/.git")
-
-execute_process(
-  COMMAND "${Bazel_EXECUTABLE}" info --announce_rc
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/drake_build_cwd"
-)
 
 set(GENERATE_DRAKE_VERSION_ARGS)
 if(DEFINED DRAKE_VERSION_OVERRIDE)
