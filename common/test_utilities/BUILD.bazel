@@ -86,8 +86,8 @@ drake_cc_library(
     visibility = ["@gtest//:__pkg__"],
     deps = [
         "//common:fmt",
-        "@eigen",
-        "@fmt",
+        "//tools/workspace/eigen",
+        "//tools/workspace/fmt",
     ],
 )
 

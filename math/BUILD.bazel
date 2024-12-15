@@ -266,7 +266,7 @@ drake_cc_library(
     name = "evenly_distributed_pts_on_sphere",
     srcs = ["evenly_distributed_pts_on_sphere.cc"],
     hdrs = ["evenly_distributed_pts_on_sphere.h"],
-    deps = ["@eigen"],
+    deps = ["//tools/workspace/eigen"],
 )
 
 drake_cc_library(
@@ -275,7 +275,7 @@ drake_cc_library(
     hdrs = ["gray_code.h"],
     deps = [
         "//common:essential",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 
@@ -296,7 +296,7 @@ drake_cc_library(
     deps = [
         ":matrix_util",
         "//common:essential",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 
@@ -577,7 +577,7 @@ drake_cc_googletest(
     deps = [
         ":soft_min_max",
         "//common/test_utilities:eigen_matrix_compare",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 

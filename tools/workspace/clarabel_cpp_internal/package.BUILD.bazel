@@ -55,7 +55,7 @@ cc_library(
         ":hdrs",
         ":clarabel_cpp_rust_wrapper_hidden",
         "@blas",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@lapack",
     ],
     visibility = ["//visibility:public"],

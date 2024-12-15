@@ -86,8 +86,8 @@ drake_cc_library(
         "//geometry/render/shaders:depth_shaders",
         "//geometry/render_vtk:render_engine_vtk_params",
         "//systems/sensors:vtk_diagnostic_event_observer",
+        "//tools/workspace/eigen",
         "//tools/workspace/vtk_internal:vtk_opengl_init",
-        "@eigen",
         "@vtk_internal//:vtkCommonCore",
         "@vtk_internal//:vtkCommonExecutionModel",
         "@vtk_internal//:vtkCommonTransforms",
@@ -131,7 +131,7 @@ drake_cc_library(
     deps = [
         "//common:essential",
         "//math:geometric_transform",
-        "@eigen",
+        "//tools/workspace/eigen",
         "@vtk_internal//:vtkCommonCore",
         "@vtk_internal//:vtkCommonTransforms",
         "@vtk_internal//:vtkFiltersSources",

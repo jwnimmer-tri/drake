@@ -142,7 +142,7 @@ drake_cc_library(
         "//common:polynomial",
         "//math:binomial_coefficient",
         "//math:matrix_util",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

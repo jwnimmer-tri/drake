@@ -29,7 +29,7 @@ drake_cc_library(
     ],
     deps = [
         "//common:essential",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 
@@ -63,7 +63,7 @@ drake_cc_library(
     ],
     deps = [
         "//common:essential",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 
@@ -79,7 +79,7 @@ drake_cc_library(
         ":max_clique_solver_via_mip",
         ":min_clique_cover_solver_base",
         "//common:essential",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 
@@ -91,7 +91,7 @@ drake_cc_library(
     ],
     deps = [
         "//common:essential",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 
@@ -105,7 +105,7 @@ drake_cc_library(
     visibility = ["//visibility:private"],
     deps = [
         ":graph_algorithms_internal",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 

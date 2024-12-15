@@ -558,7 +558,7 @@ MODULE_SETTINGS = {
             "VTK_MODULE_USE_EXTERNAL_VTK_fmt=1",
         ],
         "deps_extra": [
-            "@fmt",
+            "@drake//tools/workspace/fmt",
         ],
     },
     "VTK::jpeg": {

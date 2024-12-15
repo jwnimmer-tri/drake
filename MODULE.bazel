@@ -6,6 +6,8 @@
 
 module(name = "drake")
 
+# Add starlark rules.
+
 bazel_dep(name = "apple_support", version = "1.17.1", repo_name = "build_bazel_apple_support")  # noqa
 bazel_dep(name = "bazel_features", version = "1.22.0")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
@@ -17,6 +19,8 @@ bazel_dep(name = "rules_python", version = "0.40.0")
 bazel_dep(name = "rules_rust", version = "0.56.0")
 bazel_dep(name = "rules_shell", version = "0.3.0")
 
+# Customize our toolchains.
+
 cc_configure = use_extension(
     "@rules_cc//cc:extensions.bzl",
     "cc_configure_extension",
@@ -27,6 +31,48 @@ register_toolchains(
     "//tools/py_toolchain:toolchain",
     "//tools/py_toolchain:exec_tools_toolchain",
 )
+
+# Add C++ dependencies that are part of our public API.
+#
+# We declare these dependencies twice -- as modules (bazel_dep) and repository
+# rules (pkgconfig). The choice of whether module vs pkgconfig will be used is
+# governed by the flags declared at drake/tools/flags/BUILD.bazel.
+#
+# For our CMake builds from source, the "WITH_USER_..." CMake options to choose
+# the flavor are translated into the matching Bazel flags.
+#
+# For wheel builds, the module flavor is always used.
+#
+# For Bazel builds using Drake as an external, the module flavor is used by
+# default but can be changed using the Bazel flags.
+#
+# For first-party Bazel builds (by Drake Developres), the pkgconfig flavor is
+# used by default but can be changed using the Bazel flags.
+
+bazel_dep(name = "eigen", version = "3.4.0.bcr.2", repo_name = "module_eigen")
+bazel_dep(name = "spdlog", version = "1.15.0.bcr.3", repo_name = "module_spdlog")  # noqa
+bazel_dep(name = "fmt", version = "11.0.2.bcr.1", repo_name = "module_fmt")
+
+eigen_repository = use_repo_rule(
+    "@drake//tools/workspace/eigen:repository.bzl",
+    "eigen_repository",
+)
+
+eigen_repository(name = "pkgconfig_eigen")
+
+fmt_repository = use_repo_rule(
+    "@drake//tools/workspace/fmt:repository.bzl",
+    "fmt_repository",
+)
+
+fmt_repository(name = "pkgconfig_fmt")
+
+spdlog_repository = use_repo_rule(
+    "@drake//tools/workspace/spdlog:repository.bzl",
+    "spdlog_repository",
+)
+
+spdlog_repository(name = "pkgconfig_spdlog")
 
 # TODO(#20731) Move all of our dependencies from WORKSPACE.bzlmod into this
 # file, so that downstream projects can consume Drake exclusively via bzlmod

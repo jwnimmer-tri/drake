@@ -40,7 +40,7 @@ cc_library(
     linkstatic = True,
     deps = [
         "@common_robotics_utilities_internal//:common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@zlib",
     ],
     linkopts = [
@@ -62,7 +62,7 @@ cc_library(
     linkstatic = True,
     deps = [
         "@common_robotics_utilities_internal//:common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
     ],
 )
 
@@ -81,7 +81,7 @@ cc_library(
     deps = [
         ":cl_hpp",
         "@common_robotics_utilities_internal//:common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
     ],
 )
 
@@ -108,7 +108,7 @@ cc_library(
         ":cuda_voxelization_helpers",
         ":opencl_voxelization_helpers",
         "@common_robotics_utilities_internal//:common_robotics_utilities",
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@zlib",
     ],
 )
