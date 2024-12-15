@@ -16,7 +16,7 @@ bazel_dep(name = "apple_support", version = "1.17.1", repo_name = "build_bazel_a
 bazel_dep(name = "bazel_features", version = "1.22.0")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "rules_cc", version = "0.0.17")
+bazel_dep(name = "rules_cc", version = "0.1.0")
 bazel_dep(name = "rules_java", version = "8.6.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_python", version = "0.40.0")
@@ -35,6 +35,48 @@ register_toolchains(
     "@drake//tools/py_toolchain:toolchain",
     "@drake//tools/py_toolchain:exec_tools_toolchain",
 )
+
+# Add C++ dependencies that are part of our public API.
+#
+# We declare these dependencies twice -- as modules (bazel_dep) and repository
+# rules (pkgconfig). The choice of whether module vs pkgconfig will be used is
+# governed by the flags declared at drake/tools/flags/BUILD.bazel.
+#
+# For our CMake builds from source, the "WITH_USER_..." CMake options to choose
+# the flavor are translated into the matching Bazel flags.
+#
+# For wheel builds, the module flavor is always used.
+#
+# For Bazel builds using Drake as an external, the module flavor is used by
+# default but can be changed using the Bazel flags.
+#
+# For first-party Bazel builds (by Drake Developres), the pkgconfig flavor is
+# used by default but can be changed using the Bazel flags.
+
+bazel_dep(name = "eigen", version = "3.4.0.bcr.2", repo_name = "module_eigen")
+bazel_dep(name = "fmt", version = "11.0.2.bcr.1", repo_name = "module_fmt")
+bazel_dep(name = "spdlog", version = "1.15.0.bcr.3", repo_name = "module_spdlog")  # noqa
+
+eigen_repository = use_repo_rule(
+    "@drake//tools/workspace/eigen:repository.bzl",
+    "eigen_repository",
+)
+
+eigen_repository(name = "pkgconfig_eigen")
+
+fmt_repository = use_repo_rule(
+    "@drake//tools/workspace/fmt:repository.bzl",
+    "fmt_repository",
+)
+
+fmt_repository(name = "pkgconfig_fmt")
+
+spdlog_repository = use_repo_rule(
+    "@drake//tools/workspace/spdlog:repository.bzl",
+    "spdlog_repository",
+)
+
+spdlog_repository(name = "pkgconfig_spdlog")
 
 # Load dependencies which are "public", i.e., made available to downstream
 # projects.
@@ -214,8 +256,4 @@ use_repo(
     "crate__unicode-ident-1.0.14",
 )
 
-# TODO(#20731) More improvements are still needed to our MODULE organization:
-# - Switch public API dependencies (e.g., eigen) to use modules.
-# - Provide better configuation options for choosing dependencies.
-# - Adjust the wheel build to build more dependencies as Bazel modules.
-# - Deprecate non-bzlmod use of Drake downstream.
+# TODO(#20731) Deprecate non-bzlmod use of Drake downstream.

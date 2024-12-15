@@ -14,7 +14,7 @@ project(drake
 #
 # We'll do that by converting the settings to generated Bazel inputs:
 # - a tweaked copy of our `MODULE.bazel` to opt-out of some dependencies; and
-# - a completely new `WORKSPACE.bzlmod` to replace what we opted-out of; and
+# - a `WORKSPACE.bzlmod` file that plumbs the python interpreter path; and
 # - a `.bazelrc` file that specifies configuration choices.
 # and then running the `@drake//:install` program from that temporary workspace.
 
@@ -347,49 +347,53 @@ function(symlink_external_repository_libs NAME TARGET)
   file(CREATE_LINK "${location}" "${workspace}/${NAME}/lib/${other_basename}" SYMBOLIC)
 endfunction()
 
-set(BAZEL_WORKSPACE_EXTRA)
-set(BAZEL_WORKSPACE_EXCLUDES)
-
-# Our cmake/WORKSPACE.bzlmod always provides @python.
-list(APPEND BAZEL_WORKSPACE_EXCLUDES "python")
-
-macro(override_repository NAME)
-  set(repo "${CMAKE_CURRENT_BINARY_DIR}/external/workspace/${NAME}")
-  string(APPEND BAZEL_WORKSPACE_EXTRA
-    "local_repository(name = '${NAME}', path = '${repo}')\n")
-  list(APPEND BAZEL_WORKSPACE_EXCLUDES "${NAME}")
+macro(override_module NAME)
+  set(local_path "${CMAKE_CURRENT_BINARY_DIR}/external/workspace/${NAME}")
+  string(APPEND BAZEL_REPO_ENV " --override_module=${NAME}=${local_path}")
 endmacro()
 
-option(WITH_USER_EIGEN "Use user-provided Eigen3" OFF)
+option(WITH_USER_EIGEN "Use user-provided Eigen3" ON)
 
 if(WITH_USER_EIGEN)
   find_package(Eigen3 CONFIG REQUIRED)
 
   symlink_external_repository_includes(eigen Eigen3::Eigen)
-  generate_external_repository_file(eigen/WORKSPACE)
+  generate_external_repository_file(
+    eigen/MODULE.bazel
+    eigen/MODULE.bazel.in)
   generate_external_repository_file(
     eigen/BUILD.bazel
     eigen/BUILD.bazel.in)
+  file(CREATE_LINK
+    ${PROJECT_SOURCE_DIR}/cmake/external/workspace/conversion.bzl
+    ${CMAKE_CURRENT_BINARY_DIR}/external/workspace/eigen/conversion.bzl
+    SYMBOLIC)
 
-  override_repository(eigen)
+  override_module(eigen)
 endif()
 
-option(WITH_USER_FMT "Use user-provided fmt" OFF)
+option(WITH_USER_FMT "Use user-provided fmt" ON)
 
 if(WITH_USER_FMT)
   find_package(fmt CONFIG REQUIRED)
 
   symlink_external_repository_includes(fmt fmt::fmt)
   symlink_external_repository_libs(fmt fmt::fmt)
-  generate_external_repository_file(fmt/WORKSPACE)
+  generate_external_repository_file(
+    fmt/MODULE.bazel
+    fmt/MODULE.bazel.in)
   generate_external_repository_file(
     fmt/BUILD.bazel
     fmt/BUILD.bazel.in)
+  file(CREATE_LINK
+    ${PROJECT_SOURCE_DIR}/cmake/external/workspace/conversion.bzl
+    ${CMAKE_CURRENT_BINARY_DIR}/external/workspace/fmt/conversion.bzl
+    SYMBOLIC)
 
-  override_repository(fmt)
+  override_module(fmt)
 endif()
 
-option(WITH_USER_SPDLOG "Use user-provided spdlog" OFF)
+option(WITH_USER_SPDLOG "Use user-provided spdlog" ON)
 
 if(WITH_USER_SPDLOG)
   if(NOT WITH_USER_FMT)
@@ -402,12 +406,18 @@ if(WITH_USER_SPDLOG)
 
   symlink_external_repository_includes(spdlog spdlog::spdlog)
   symlink_external_repository_libs(spdlog spdlog::spdlog)
-  generate_external_repository_file(spdlog/WORKSPACE)
+  generate_external_repository_file(
+    spdlog/MODULE.bazel
+    spdlog/MODULE.bazel.in)
   generate_external_repository_file(
     spdlog/BUILD.bazel
     spdlog/BUILD.bazel.in)
+  file(CREATE_LINK
+    ${PROJECT_SOURCE_DIR}/cmake/external/workspace/conversion.bzl
+    ${CMAKE_CURRENT_BINARY_DIR}/external/workspace/spdlog/conversion.bzl
+    SYMBOLIC)
 
-  override_repository(spdlog)
+  override_module(spdlog)
 endif()
 
 set(BAZEL_CONFIG)
@@ -562,11 +572,6 @@ file(CREATE_LINK "${PROJECT_SOURCE_DIR}/WORKSPACE" drake_build_cwd/WORKSPACE SYM
 find_package(Git)
 
 set(GIT_DIR "${PROJECT_SOURCE_DIR}/.git")
-
-execute_process(
-  COMMAND "${Bazel_EXECUTABLE}" info --announce_rc
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/drake_build_cwd"
-)
 
 set(GENERATE_DRAKE_VERSION_ARGS)
 if(DEFINED DRAKE_VERSION_OVERRIDE)
