@@ -256,6 +256,7 @@ cc_library_vendored(
     includes = ["drake_hdr"],
     visibility = ["//visibility:public"],
     deps = [
+        "@drake//tools/vendor_iostream",
         "@gz_utils_internal//:gz_utils",
     ],
 )

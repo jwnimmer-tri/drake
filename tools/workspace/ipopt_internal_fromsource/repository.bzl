@@ -14,5 +14,9 @@ def ipopt_internal_fromsource_repository(
         commit = "releases/3.14.16",
         sha256 = "cc8c217991240db7eb14189eee0dff88f20a89bac11958b48625fa512fe8d104",  # noqa
         build_file = ":package.BUILD.bazel",
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_cout_cerr.h>|;' $(find src -name '*.[ch]*')",  # noqa
+        ],
         mirrors = mirrors,
     )

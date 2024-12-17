@@ -269,6 +269,7 @@ cc_library_vendored(
     linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
+        "@drake//tools/vendor_iostream",
         "@gz_math_internal//:gz_math",
         "@gz_utils_internal//:gz_utils",
         "@tinyxml2_internal//:tinyxml2",

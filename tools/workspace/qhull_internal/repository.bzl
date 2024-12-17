@@ -17,5 +17,10 @@ def qhull_internal_repository(
             ":patches/disable_dead_code.patch",
             ":patches/vendor.patch",
         ],
+        patch_cmds = [
+            # XXX document me
+            # XXX ship the patch in our release FML stupid fucking license
+            "sed -i -e 's|<iostream>|<drake_cout_cerr.h>|;' $(find src/libqhullcpp -name '*.[ch]*')",  # noqa
+        ],
         mirrors = mirrors,
     )

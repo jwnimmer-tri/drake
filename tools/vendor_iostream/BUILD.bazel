@@ -1,0 +1,13 @@
+load("//tools/lint:lint.bzl", "add_lint_tests")
+load("//tools/skylark:cc.bzl", "cc_library")
+
+cc_library(
+    name = "vendor_iostream",
+    srcs = ["drake_cout_cerr.cc"],
+    hdrs = ["drake_cout_cerr.h"],
+    includes = ["."],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+)
+
+add_lint_tests()

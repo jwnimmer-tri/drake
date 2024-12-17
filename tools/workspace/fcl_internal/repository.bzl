@@ -12,5 +12,9 @@ def fcl_internal_repository(
         patches = [
             ":patches/upstream/cassert.patch",
         ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_cout_cerr.h>|;' $(find include src -name '*.[ch]*')",  # noqa
+        ],
         mirrors = mirrors,
     )

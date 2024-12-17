@@ -1,0 +1,16 @@
+XXX incomplete
+
+--- absl/strings/cord.cc
++++ absl/strings/cord.cc
+@@ -25,3 +25,2 @@
+ #include <ios>
+-#include <iostream>
+ #include <limits>
+
+--- absl/strings/internal/charconv_bigint.h
++++ absl/strings/internal/charconv_bigint.h
+@@ -19,3 +19,3 @@
+ #include <cstdint>
+-#include <iostream>
++#include <ostream>
+ #include <string>
