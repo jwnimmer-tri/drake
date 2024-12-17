@@ -3,6 +3,11 @@ load("//tools/skylark:drake_py.bzl", "drake_py_binary", "drake_py_unittest")
 
 package(default_visibility = ["//visibility:public"])
 
+alias(
+    name = "_pybind11",
+    actual = "@pybind11//:pybind11",
+)
+
 config_setting(
     name = "linux",
     constraint_values = ["@platforms//os:linux"],

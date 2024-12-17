@@ -53,7 +53,7 @@ cc_library(
     linkstatic = True,
     deps = [
         "@drake//tools/workspace/eigen",
-        "@zlib",
+        "@drake//tools/workspace/zlib",
     ],
     linkopts = [
         "-pthread",

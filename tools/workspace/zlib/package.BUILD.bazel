@@ -7,3 +7,9 @@ cc_library(
     linkopts = ["-lz"],
     visibility = ["//visibility:public"],
 )
+
+alias(
+    name = "pkgconfig_zlib",
+    actual = ":zlib",
+    visibility = ["//visibility:public"],
+)

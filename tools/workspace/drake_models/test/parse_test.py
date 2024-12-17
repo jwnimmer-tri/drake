@@ -26,26 +26,28 @@ class TestDrakeModels(unittest.TestCase):
         manifest = runfiles.Create()
         inventory = Path(manifest.Rlocation(
             "drake/tools/workspace/drake_models/inventory.txt"))
+        repo_name = "+non_module_dependencies+drake_models/"
         with open(inventory, encoding="utf-8") as f:
             for line in f.readlines():
-                assert line.startswith("drake_models/")
-                yield line.strip()
+                assert line.startswith(repo_name), line
+                filename = line[len(repo_name):].strip()
+                resource_path = f"drake_models/{filename}"
+                yield resource_path, Path(manifest.Rlocation(resource_path))
 
     @staticmethod
     def get_all_models() -> Iterator[str]:
         """Generates the Paths of all top-level model files in @drake_models.
         The result is URLs like "package://drake_models/veggies/pepper.sdf".
         """
-        for path in TestDrakeModels.inventory():
-            url = f"package://{path}"
-            if any([path.endswith(".dmd.yaml"),
-                    path.endswith(".sdf"),
-                    path.endswith(".urdf")]):
+        for resource_path, filesystem_path in TestDrakeModels.inventory():
+            url = f"package://{resource_path}"
+            if any([resource_path.endswith(".dmd.yaml"),
+                    resource_path.endswith(".sdf"),
+                    resource_path.endswith(".urdf")]):
                 yield url
-            elif path.endswith(".xml"):
+            elif resource_path.endswith(".xml"):
                 # We can't tell a MuJoCo file just by its suffix.
-                runfiles = TestDrakeModels.package_xml().parent.parent
-                if "<mujoco" in (runfiles / path).open().read():
+                if "<mujoco" in filesystem_path.read_text(encoding="utf-8"):
                     yield url
         return
 

@@ -15,7 +15,7 @@ cc_library(
     includes = ["src"],
     deps = [
         "@usockets_internal//:usockets",
-        "@zlib",
+        "@drake//tools/workspace/zlib",
     ],
     linkopts = ["-pthread"],
     linkstatic = 1,

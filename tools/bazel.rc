@@ -3,8 +3,9 @@ common --enable_workspace=true
 
 # When compiling Drake as the main module (i.e., not as a Bazel dependency of
 # something else) we will default to using pkg-config to locate our public
-# C++ dependencies (eigen, fmt, spdlog).
+# C++ dependencies (eigen, fmt, spdlog) and private dependencies (zlib, etc.).
 common --@drake//tools/flags:public_repo_default=pkgconfig
+common --@drake//tools/flags:private_repo_default=pkgconfig
 
 # Otherwise, if we are using spdlog from a Bazel module, we want to use its
 # compiled mode for build speed and substantially (20%+) smaller binary sizes.

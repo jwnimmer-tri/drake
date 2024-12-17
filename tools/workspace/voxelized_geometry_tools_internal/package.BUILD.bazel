@@ -41,7 +41,7 @@ cc_library(
     deps = [
         "@common_robotics_utilities_internal//:common_robotics_utilities",
         "@drake//tools/workspace/eigen",
-        "@zlib",
+        "@drake//tools/workspace/zlib",
     ],
     linkopts = [
         "-pthread",
@@ -109,7 +109,7 @@ cc_library(
         ":opencl_voxelization_helpers",
         "@common_robotics_utilities_internal//:common_robotics_utilities",
         "@drake//tools/workspace/eigen",
-        "@zlib",
+        "@drake//tools/workspace/zlib",
     ],
 )
 

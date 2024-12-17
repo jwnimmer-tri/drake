@@ -74,7 +74,226 @@ spdlog_repository = use_repo_rule(
 
 spdlog_repository(name = "pkgconfig_spdlog")
 
-# TODO(#20731) Move all of our dependencies from WORKSPACE.bzlmod into this
-# file, so that downstream projects can consume Drake exclusively via bzlmod
-# (and so that we can delete our WORKSPACE files prior to Bazel 9 which drops
-# suppose for it).
+# Add C++ dependencies that are private (i.e., linked to but not used in API).
+#
+# Where possible, we declare these modules but we also still allow the choice
+# of using pkgconfig, similar to the public C++ dependencies above.
+
+bazel_dep(name = "zlib", version = "1.3.1.bcr.4")
+
+zlib_repository = use_repo_rule(
+    "@drake//tools/workspace/zlib:repository.bzl",
+    "zlib_repository",
+)
+
+zlib_repository(name = "pkgconfig_zlib")
+
+# We'll use the non_module_dependencies wrapper to load dependencies that are
+# still phrased as repository rules.
+
+non_module_dependencies = use_extension(
+    "//tools/workspace:default.bzl",
+    "non_module_dependencies",
+)
+
+# Add more build tools and related configuration repositories.
+# TODO(jwnimmer-tri) Try to cite https://registry.bazel.build for:
+# - nasm
+
+use_repo(
+    non_module_dependencies,
+    "cc",
+    "gfortran",
+    "nasm",
+    "python",
+    "rules_python_drake_constants",
+)
+
+# Add C++ dependencies that are part of our public API but should not be.
+# TODO(jwnimmer-tri) Try to cite https://registry.bazel.build for:
+# - pybind11_bazel or nanobind_bazel
+
+use_repo(
+    non_module_dependencies,
+    "lcm",
+    "pybind11",
+)
+
+# Add vendored C++ and Fortran build dependencies.
+
+use_repo(
+    non_module_dependencies,
+    "abseil_cpp_internal",
+    "ccd_internal",
+    "clarabel_cpp_internal",
+    "clp_internal",
+    "coinutils_internal",
+    "common_robotics_utilities_internal",
+    "conex_internal",
+    "csdp_internal",
+    "curl_internal",
+    "fcl_internal",
+    "gklib_internal",
+    "gz_math_internal",
+    "gz_utils_internal",
+    "highway_internal",
+    "ipopt_internal",
+    "libjpeg_turbo_internal",
+    "libpng_internal",
+    "libtiff_internal",
+    "metis_internal",
+    "msgpack_internal",
+    "nanoflann_internal",
+    "nlohmann_internal",
+    "nlopt_internal",
+    "onetbb_internal",
+    "openusd_internal",
+    "osqp_internal",
+    "picosha2_internal",
+    "poisson_disk_sampling_internal",
+    "qdldl_internal",
+    "qhull_internal",
+    "scs_internal",
+    "sdformat_internal",
+    "snopt",  # XXX rename
+    "spgrid_internal",
+    "spral_internal",
+    "stduuid_internal",
+    "suitesparse_internal",
+    "tinygltf_internal",
+    "tinyobjloader_internal",
+    "tinyxml2_internal",
+    "usockets_internal",
+    "uwebsockets_internal",
+    "voxelized_geometry_tools_internal",
+    "vtk_internal",
+    "yaml_cpp_internal",
+)
+
+# Add shared library C++ build dependencies.
+
+use_repo(
+    non_module_dependencies,
+    # XXX Move this into "private dependencies" above and add flags for
+    # default, pkgconfig, apple_framework.
+    "blas",
+    "lapack",
+    "opencl",
+    "opengl",
+    # XXX Move this into "private dependencies" above and add flags for
+    # default, pkgconfig.
+    "glx",
+    "x11",
+    # XXX Hopefully this will be dropped from Drake pretty soon.
+    "mumps_internal",
+    # LGPL dependencies, so we'll always just use the OS's shared library.
+    "glib",
+    # Closed-source commercial solvers distributed solely as shared libraries.
+    "gurobi",
+    "mosek",
+)
+
+# Add Python build dependencies.
+
+use_repo(
+    non_module_dependencies,
+    "clang_cindex_python3_internal",
+    "gymnasium_py",
+    "mypy_extensions_internal",
+    "mypy_internal",
+    "ros_xacro_internal",
+    "stable_baselines3_internal",
+    "tomli_internal",
+    "typing_extensions_internal",
+)
+
+# Add Java build dependencies.
+
+use_repo(
+    non_module_dependencies,
+    "com_jidesoft_jide_oss",
+    "commons_io",
+    "net_sf_jchart2d",
+    "org_apache_xmlgraphics_commons",
+)
+
+# Add data build dependencies.
+
+use_repo(
+    non_module_dependencies,
+    "drake_models",
+    "meshcat",
+    "statsjs",
+)
+
+# Add test-only / doc-only / maintainer-only dependencies.
+
+use_repo(
+    non_module_dependencies,
+    "bazelisk",
+    "buildifier",
+    "dm_control_internal",
+    "doxygen",
+    "gflags",
+    "github3_py_internal",
+    "googlebenchmark",
+    "gtest",
+    "mpmath_py_internal",
+    "mujoco_menagerie_internal",
+    "pycodestyle",
+    "styleguide",
+    "sympy_py_internal",
+    "uritemplate_py_internal",
+    "xmlrunner_py",
+)
+
+# Add crate_universe dependencies.
+non_module_crate_universe_dependencies = use_extension(
+    "//tools/workspace:default.bzl",
+    "non_module_crate_universe_dependencies",
+)
+use_repo(
+    non_module_crate_universe_dependencies,
+    "crate__amd-0.2.2",
+    "crate__autocfg-1.4.0",
+    "crate__blas-0.22.0",
+    "crate__blas-sys-0.7.1",
+    "crate__cfg-if-1.0.0",
+    "crate__clarabel-0.9.0",
+    "crate__darling-0.14.4",
+    "crate__darling_core-0.14.4",
+    "crate__darling_macro-0.14.4",
+    "crate__derive_builder-0.11.2",
+    "crate__derive_builder_core-0.11.2",
+    "crate__derive_builder_macro-0.11.2",
+    "crate__either-1.13.0",
+    "crate__enum_dispatch-0.3.13",
+    "crate__equivalent-1.0.1",
+    "crate__fnv-1.0.7",
+    "crate__hashbrown-0.15.2",
+    "crate__ident_case-1.0.1",
+    "crate__indexmap-2.7.0",
+    "crate__itertools-0.11.0",
+    "crate__itoa-1.0.14",
+    "crate__lapack-0.19.0",
+    "crate__lapack-sys-0.14.0",
+    "crate__lazy_static-1.5.0",
+    "crate__libc-0.2.168",
+    "crate__memchr-2.7.4",
+    "crate__num-complex-0.4.6",
+    "crate__num-traits-0.2.19",
+    "crate__once_cell-1.19.0",
+    "crate__paste-1.0.15",
+    "crate__proc-macro2-1.0.92",
+    "crate__quote-1.0.37",
+    "crate__ryu-1.0.18",
+    "crate__serde-1.0.216",
+    "crate__serde_derive-1.0.216",
+    "crate__serde_json-1.0.133",
+    "crate__strsim-0.10.0",
+    "crate__syn-1.0.109",
+    "crate__syn-2.0.90",
+    "crate__thiserror-1.0.69",
+    "crate__thiserror-impl-1.0.69",
+    "crate__unicode-ident-1.0.14",
+)

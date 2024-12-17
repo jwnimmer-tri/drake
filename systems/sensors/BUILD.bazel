@@ -230,11 +230,13 @@ drake_cc_library(
         "image_to_lcm_image_array_t.h",
     ],
     deps = [
-        ":lcm_image_traits",
         "//common:essential",
         "//lcmtypes:image_array",
         "//systems/framework",
-        "@zlib",
+    ],
+    implementation_deps = [
+        ":lcm_image_traits",
+        "@drake//tools/workspace/zlib",
     ],
 )
 
@@ -255,9 +257,9 @@ drake_cc_library(
         ":lcm_image_traits",
         ":vtk_image_reader_writer",
         "//lcmtypes:image_array",
+        "@drake//tools/workspace/zlib",
         "@vtk_internal//:vtkCommonCore",
         "@vtk_internal//:vtkIOImage",
-        "@zlib",
     ],
 )
 
@@ -616,7 +618,10 @@ drake_cc_googletest(
 
 drake_cc_googletest(
     name = "image_to_lcm_image_array_t_test",
-    deps = [":image_to_lcm_image_array_t"],
+    deps = [
+        ":image",
+        ":image_to_lcm_image_array_t",
+    ],
 )
 
 drake_cc_googletest(

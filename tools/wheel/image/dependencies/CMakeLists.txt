@@ -27,7 +27,6 @@ endif()
 
 include(ExternalProject)
 include(projects.cmake)
-message(STATUS "zlib: ${zlib_url}")
 
 set (COMMON_EP_ARGS
     DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/Downloads

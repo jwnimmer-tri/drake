@@ -601,7 +601,7 @@ MODULE_SETTINGS = {
             "VTK_MODULE_USE_EXTERNAL_vtkzlib=1",
         ],
         "deps_extra": [
-            "@zlib",
+            "@drake//tools/workspace/zlib",
         ],
     },
 

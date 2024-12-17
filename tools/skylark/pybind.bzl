@@ -67,9 +67,10 @@ def pybind_py_library(
         linkshared = 1,
         linkstatic = 1,
         copts = cc_copts + EXTRA_PYBIND_COPTS,
-        # Always link to pybind11.
+        # Always link to pybind11. (Use a Drake alias so it resolves correctly
+        # for downstream projects who use this macro.)
         deps = [
-            "@pybind11",
+            "@drake//tools/skylark:_pybind11",
         ] + cc_deps,
         **kwargs
     )

@@ -77,9 +77,8 @@ drake_py_test(
     srcs = ["workspace_bzlmod_sync_test.py"],
     allow_import_unittest = True,
     data = [
-        ":default.bzl",
+        ":default_categories.bzl",
         "//:MODULE.bazel",
-        "//:WORKSPACE.bzlmod",
         "//tools/workspace/bazel_skylib:repository.bzl",
         "//tools/workspace/build_bazel_apple_support:repository.bzl",
         "//tools/workspace/platforms:repository.bzl",
@@ -108,6 +107,7 @@ _DRAKE_EXTERNAL_PACKAGE_INSTALLS = [
         "eigen",
         "fmt",
         "spdlog",
+        "zlib",
     ]
 ] + ["@%s//:install" % p for p in [
     "ccd_internal",

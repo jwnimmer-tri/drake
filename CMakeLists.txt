@@ -77,8 +77,6 @@ else()
   endif()
 endif()
 
-# The version passed to find_package(Bazel) should match the
-# minimum_bazel_version value in the call to versions.check() in WORKSPACE.
 set(MINIMUM_BAZEL_VERSION 7.4)
 find_package(Bazel ${MINIMUM_BAZEL_VERSION} MODULE)
 if(NOT Bazel_FOUND)
