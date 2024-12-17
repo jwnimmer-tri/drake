@@ -12,8 +12,12 @@ def conex_internal_repository(
         patches = [
             ":patches/upstream/debug_macros.patch",
             ":patches/upstream/eigen_namespace_pollution.patch",
-            ":patches/no_eigen_io.patch",
+            ":patches/no_printing.patch",
             ":patches/vendor.patch",
+        ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<ostream>|;' $(find conex -name '*.[ch]*')",  # noqa
         ],
         mirrors = mirrors,
     )

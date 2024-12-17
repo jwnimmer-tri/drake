@@ -11,6 +11,8 @@ def nlopt_internal_repository(
         build_file = ":package.BUILD.bazel",
         patches = [
             ":patches/upstream/specific_iostream_includes.patch",
+            ":patches/no_cerr_cout.patch",
+            ":patches/no_exit.patch",
             ":patches/vendor.patch",
         ],
         mirrors = mirrors,

@@ -76,10 +76,6 @@ class TestIgnSdf(unittest.TestCase):
         stdout = self.gz_sdf(["--check", self.input_file])
         self.assertEqual(stdout.strip(), "Valid.")
 
-    def test_describe(self):
-        stdout = self.gz_sdf(["--describe", "1.7"])
-        self.assertIn("<element name ='model'", stdout)
-
     def test_print(self):
         stdout = self.gz_sdf(["--print", self.input_file])
         self.assertEqual(EXPECTED_OUTPUT, stdout)

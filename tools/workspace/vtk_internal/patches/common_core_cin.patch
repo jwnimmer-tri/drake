@@ -1,0 +1,72 @@
+XXX
+
+--- Common/Core/vtkIOStream.h
++++ Common/Core/vtkIOStream.h
+@@ -21,7 +21,6 @@
+ // Need these in global namespace so the same code will work with ansi
+ // and old-style streams.
+ using std::cerr;
+-using std::cin;
+ using std::cout;
+ using std::dec;
+ using std::endl;
+
+--- Common/Core/vtkOutputWindow.cxx
++++ Common/Core/vtkOutputWindow.cxx
+@@ -246,6 +246,7 @@
+       break;
+   }
+ 
++#if 0
+   if (this->PromptUser && this->CurrentMessageType != MESSAGE_TYPE_TEXT &&
+     stream_type != StreamType::Null)
+   {
+@@ -261,6 +262,7 @@
+       this->PromptUser = false;
+     }
+   }
++#endif
+ 
+   this->InvokeEvent(vtkCommand::MessageEvent, const_cast<char*>(txt));
+   if (this->CurrentMessageType == MESSAGE_TYPE_TEXT)
+
+--- Common/Core/vtkInformationKey.cxx
++++ Common/Core/vtkInformationKey.cxx
+@@ -109,7 +109,9 @@
+ //------------------------------------------------------------------------------
+ void vtkInformationKey::Print(vtkInformation* info)
+ {
+-  this->Print(cout, info);
++  std::ostringstream buffer;
++  this->Print(buffer, info);
++  std::cout << buffer.str();
+ }
+ 
+ //------------------------------------------------------------------------------
+
+--- Common/DataModel/vtkCellGridResponders.cxx
++++ Common/DataModel/vtkCellGridResponders.cxx
+@@ -100,7 +100,9 @@
+   if (!didFind)
+   {
+     vtkIndent indent;
++#if 0
+     this->PrintSelf(std::cout, indent);
++#endif
+     vtkErrorMacro("No responder for " << query->GetClassName() << " for "
+                                       << cellType->GetClassName() << " found.");
+     return false;
+
+--- Common/DataModel/vtkSelection.cxx
++++ Common/DataModel/vtkSelection.cxx
+@@ -758,7 +758,9 @@
+ //------------------------------------------------------------------------------
+ void vtkSelection::Dump()
+ {
+-  this->Dump(cout);
++  std::ostringstream buffer;
++  this->Dump(buffer);
++  std::cout << buffer.str();
+ }
+ 
+ //------------------------------------------------------------------------------

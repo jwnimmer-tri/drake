@@ -1,0 +1,49 @@
+[conex] Nerf the DUMP() macro and all other printing
+
+Dumping to cout and cerr from a library is completely unsuitable.
+
+Reasoning for not upstreaming this patch: Drake-specific build option.
+
+--- conex/debug_macros.h
++++ conex/debug_macros.h
+@@ -8,8 +8,6 @@
+ #define DUMP(x)                                              \
+-  std::cerr << __FILE__ << " line " << __LINE__ << std::endl \
+-            << #x ":" << std::endl                           \
+-            << x << std::endl;
++  do { (void)(x); } while (0);  /* Removed for Drake. */
+ 
+ #ifndef CONEX_VERBOSE
+-#define CONEX_VERBOSE 1
++#define CONEX_VERBOSE 0
+ #endif
+
+--- conex/error_checking_macros.h
++++ conex/error_checking_macros.h
+@@ -14,7 +14,7 @@
+ #else
+ #define CONEX_DEMAND(x, msg)                                                   \
+   if (!(x)) {                                                                  \
+-    std::cerr << __FILE__ << " line " << __LINE__ << ": " << msg << std::endl; \
++    (void)(msg);  /* Removed for Drake. */                                     \
+     return 1;                                                                  \
+   }
+ #endif
+
+--- conex/workspace.h
++++ conex/workspace.h
+@@ -85,12 +85,14 @@
+     return o.max_iter_ * num_items + 2;
+   }
+ 
++#if 0  // Removed for Drake.
+   friend void print(const WorkspaceStats& o) {
+     for (int i = 0; i < o.max_iter_; i++) {
+       std::cout << "sqrt_inv_mu, norm_inf_d" << o.sqrt_inv_mu[i] << ", "
+                 << o.norm_inf_d[i] << "\n";
+     }
+   }
++#endif
+ 
+   bool IsInitialized() { return initialized; }
+ 
