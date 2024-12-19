@@ -196,7 +196,7 @@ cc_binary(
     visibility = ["//visibility:private"],
     deps = [
         ":lcm",
-        "@python",
+        "@drake//tools/workspace/python:headers",
     ],
 )
 

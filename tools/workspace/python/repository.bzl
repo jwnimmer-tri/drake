@@ -166,7 +166,6 @@ def _impl(repo_ctx):
     # Set `python` to the the interpreter path specified by our rule attrs,
     # and `version` to its "major.minor" string.
     python, version = _get_python_interpreter(repo_ctx)
-    site_packages_relpath = "lib/python{}/site-packages".format(version)
 
     # Get extension_suffix, includes, and linkopts from python_config.
     python_config = "{}-config".format(python)
@@ -195,7 +194,7 @@ def _impl(repo_ctx):
 PYTHON_BIN_PATH = "{bin_path}"
 PYTHON_EXTENSION_SUFFIX = "{extension_suffix}"
 PYTHON_VERSION = "{version}"
-PYTHON_SITE_PACKAGES_RELPATH = "{site_packages_relpath}"
+PYTHON_SITE_PACKAGES_RELPATH = "lib/python{version}/site-packages"
 PYTHON_INCLUDES = {includes}
 PYTHON_LINKOPTS_EMBEDDED = {linkopts_embedded}
 PYTHON_LINKOPTS_MODULE = {linkopts_module}
@@ -203,7 +202,6 @@ PYTHON_LINKOPTS_MODULE = {linkopts_module}
         bin_path = bin_path,
         extension_suffix = extension_suffix,
         version = version,
-        site_packages_relpath = site_packages_relpath,
         includes = includes,
         linkopts_module = linkopts_module,
         linkopts_embedded = linkopts_embedded,

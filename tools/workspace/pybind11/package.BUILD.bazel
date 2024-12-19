@@ -61,7 +61,7 @@ cc_library(
     includes = ["include"],
     deps = [
         "@eigen",
-        "@python",
+        "@drake//tools/workspace/python:headers",
     ],
 )
 
