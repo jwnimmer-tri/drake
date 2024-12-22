@@ -13,7 +13,7 @@ from pydrake.autodiffutils import AutoDiffXd
 from pydrake.common import RandomGenerator
 from pydrake.common.test_utilities import numpy_compare
 from pydrake.common.value import AbstractValue, Value
-from pydrake.examples import PendulumPlant, RimlessWheel
+# from pydrake.examples import PendulumPlant, RimlessWheel
 from pydrake.symbolic import Expression
 from pydrake.systems.analysis import (
     GetIntegrationSchemes,
