@@ -77,6 +77,18 @@ class DiagramBuilder {
   DiagramBuilder();
   virtual ~DiagramBuilder();
 
+  template<class S>
+  S* AddSystem(std::shared_ptr<S> system) {
+    ThrowIfAlreadyBuilt();
+    if (system->get_name().empty()) {
+      system->set_name(system->GetMemoryObjectName());
+    }
+    S* raw_sys_ptr = system.get();
+    systems_.insert(raw_sys_ptr);
+    registered_systems_.push_back(std::move(system));
+    return raw_sys_ptr;
+  }
+
   /// Takes ownership of @p system and adds it to the builder. Returns a bare
   /// pointer to the System, which will remain valid for the lifetime of the
   /// Diagram built by this builder.
@@ -92,14 +104,7 @@ class DiagramBuilder {
   /// @tparam S The type of system to add.
   template<class S>
   S* AddSystem(std::unique_ptr<S> system) {
-    ThrowIfAlreadyBuilt();
-    if (system->get_name().empty()) {
-      system->set_name(system->GetMemoryObjectName());
-    }
-    S* raw_sys_ptr = system.get();
-    systems_.insert(raw_sys_ptr);
-    registered_systems_.push_back(std::move(system));
-    return raw_sys_ptr;
+    return AddSystem(std::shared_ptr<S>(std::move(system)));
   }
 
   /// Constructs a new system with the given @p args, and adds it to the
@@ -161,6 +166,13 @@ class DiagramBuilder {
   S<T>* AddSystem(Args&&... args) {
     ThrowIfAlreadyBuilt();
     return AddSystem(std::make_unique<S<T>>(std::forward<Args>(args)...));
+  }
+
+  template<class S>
+  S* AddNamedSystem(const std::string& name, std::shared_ptr<S> system) {
+    ThrowIfAlreadyBuilt();
+    system->set_name(name);
+    return AddSystem(std::move(system));
   }
 
   /// Takes ownership of @p system, applies @p name to it, and adds it to the
