@@ -297,14 +297,13 @@ struct Impl {
   template <typename... Args>
   using EventCallback = std::function<std::optional<EventStatus>(Args...)>;
 
-  static py::class_<System<T>, SystemBase, PySystem> DefineSystem(
-      py::module m) {
+  static py::class_<System<T>, SystemBase, PySystem, std::shared_ptr<System<T>>>
+  DefineSystem(py::module m) {
     // TODO(eric.cousineau): Show constructor, but somehow make sure `pybind11`
     // knows this is abstract?
-    auto system_cls =
-        DefineTemplateClassWithDefault<System<T>, SystemBase, PySystem>(m,
-            "System", GetPyParam<T>(), doc.System.doc, std::nullopt,
-            py::dynamic_attr());
+    auto system_cls = DefineTemplateClassWithDefault<System<T>, SystemBase,
+        PySystem, std::shared_ptr<System<T>>>(m, "System", GetPyParam<T>(),
+        doc.System.doc, std::nullopt, py::dynamic_attr());
     system_cls
         // Resource allocation and initialization.
         .def("AllocateContext", &System<T>::AllocateContext,
@@ -570,12 +569,14 @@ Note: The above is for the C++ documentation. For Python, use
   }
 
   static void DefineLeafSystem(py::module m) {
+#if 0
     using AllocCallback = typename LeafOutputPort<T>::AllocCallback;
     using CalcCallback = typename LeafOutputPort<T>::CalcCallback;
+#endif
     using CalcVectorCallback = typename LeafOutputPort<T>::CalcVectorCallback;
-    auto leaf_system_cls =
-        DefineTemplateClassWithDefault<LeafSystem<T>, PyLeafSystem, System<T>>(
-            m, "LeafSystem", GetPyParam<T>(), doc.LeafSystem.doc);
+    auto leaf_system_cls = DefineTemplateClassWithDefault<LeafSystem<T>,
+        PyLeafSystem, System<T>, std::shared_ptr<LeafSystem<T>>>(
+        m, "LeafSystem", GetPyParam<T>(), doc.LeafSystem.doc);
     leaf_system_cls  // BR
         .def(py::init<>(), doc.LeafSystem.ctor.doc_0args)
         // TODO(eric.cousineau): It'd be nice if we did not need the user to
@@ -599,6 +600,7 @@ Note: The above is for the C++ documentation. For Python, use
             doc.LeafSystem.DeclareAbstractParameter.doc)
         .def("DeclareNumericParameter", &PyLeafSystem::DeclareNumericParameter,
             py::arg("model_vector"), doc.LeafSystem.DeclareNumericParameter.doc)
+#if 0
         .def("DeclareAbstractOutputPort",
             WrapCallbacks([](PyLeafSystem* self, const std::string& name,
                               AllocCallback arg1, CalcCallback arg2,
@@ -612,6 +614,7 @@ Note: The above is for the C++ documentation. For Python, use
                 std::set<DependencyTicket>{SystemBase::all_sources_ticket()},
             doc.LeafSystem.DeclareAbstractOutputPort
                 .doc_4args_name_alloc_calc_prerequisites_of_calc)
+#endif
         .def(
             "DeclareVectorInputPort",
             [](PyLeafSystem* self, std::string name,
@@ -949,7 +952,8 @@ Note: The above is for the C++ documentation. For Python, use
   }
 
   static void DefineDiagram(py::module m) {
-    DefineTemplateClassWithDefault<Diagram<T>, PyDiagram, System<T>>(
+    DefineTemplateClassWithDefault<Diagram<T>, PyDiagram, System<T>,
+        std::shared_ptr<Diagram<T>>>(
         m, "Diagram", GetPyParam<T>(), doc.Diagram.doc)
         .def(py::init<>(), doc.Diagram.ctor.doc_0args)
         .def(
@@ -1045,7 +1049,7 @@ Note: The above is for the C++ documentation. For Python, use
       // This could be changed (see https://stackoverflow.com/a/2425785), but
       // meh, we're already abusing Python and C++ enough.
       auto cls = DefineTemplateClassWithDefault<VectorSystem<T>, PyVectorSystem,
-          LeafSystem<T>>(
+          LeafSystem<T>, std::shared_ptr<VectorSystem<T>>>(
           m, "VectorSystem", GetPyParam<T>(), doc.VectorSystem.doc);
       cls  // BR
           .def(py::init([](int input_size, int output_size,
@@ -1090,7 +1094,7 @@ void DoScalarIndependentDefinitions(py::module m) {
     using Class = SystemBase;
     constexpr auto& cls_doc = doc.SystemBase;
     // TODO(eric.cousineau): Bind remaining methods.
-    py::class_<Class> cls(m, "SystemBase", cls_doc.doc);
+    py::class_<Class, std::shared_ptr<Class>> cls(m, "SystemBase", cls_doc.doc);
     {
       using Nested = SystemBase::GraphvizFragment;
       constexpr auto& nested_doc = doc.SystemBase.GraphvizFragment;
@@ -1235,6 +1239,7 @@ void DefineSystemScalarConverter(PyClass* cls) {
             [](const SystemScalarConverter& in) -> SystemScalarConverter {
               return in;
             });
+#if 0
     // Bind templated instantiations.
     auto converter_methods = [converter](auto pack) {
       constexpr auto& cls_doc = pydrake_doc.drake.systems.SystemScalarConverter;
@@ -1274,6 +1279,7 @@ void DefineSystemScalarConverter(PyClass* cls) {
     converter.attr("SupportedScalars") = GetPyParam(CommonScalarPack{});
     converter.attr("SupportedConversionPairs") =
         GetPyParamList(ConversionPairs{});
+#endif
   }
 }
 
@@ -1292,7 +1298,8 @@ void DefineFrameworkPySystems(py::module m) {
   // Do templated instantiations of system types.
   auto bind_common_scalar_types = [&](auto dummy) {
     using T = decltype(dummy);
-    py::class_<System<T>, SystemBase, typename Impl<T>::PySystem>* cls_system{};
+    py::class_<System<T>, SystemBase, typename Impl<T>::PySystem,
+        std::shared_ptr<System<T>>>* cls_system{};
     if constexpr (std::is_same_v<T, double>) {
       cls_system = &cls_system_double;
     } else if constexpr (std::is_same_v<T, AutoDiffXd>) {

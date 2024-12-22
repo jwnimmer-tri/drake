@@ -41,8 +41,12 @@ class PySerializerInterface : public py::wrapper<SerializerInterface> {
   // interface below.
 
   std::unique_ptr<AbstractValue> CreateDefaultValue() const override {
+#if 0
     PYBIND11_OVERLOAD_PURE(std::unique_ptr<AbstractValue>, SerializerInterface,
         CreateDefaultValue);
+#else
+    return nullptr;
+#endif
   }
 
   void Deserialize(const void* message_bytes, int message_length,

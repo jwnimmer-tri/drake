@@ -284,6 +284,7 @@ void DefinePlanningCollisionChecker(py::module m) {
     constexpr auto& cls_doc = doc.SceneGraphCollisionChecker;
     py::class_<Class, CollisionChecker> cls(
         m, "SceneGraphCollisionChecker", cls_doc.doc);
+#if 0
     // TODO(jwnimmer-tri) Bind the __init__(params=...) constructor here once
     // we've solved the unique_ptr vs shared_ptr binding lifetime issue.
     py::object params_ctor = m.attr("CollisionCheckerParams");
@@ -309,6 +310,7 @@ void DefinePlanningCollisionChecker(py::module m) {
                 "See :class:`pydrake.planning.CollisionCheckerParams` for the "
                 "list of properties available here as kwargs.")
                 .c_str());
+#endif
   }
 
   {
@@ -316,6 +318,7 @@ void DefinePlanningCollisionChecker(py::module m) {
     constexpr auto& cls_doc = doc.UnimplementedCollisionChecker;
     py::class_<Class, CollisionChecker> cls(
         m, "UnimplementedCollisionChecker", cls_doc.doc);
+#if 0
     // TODO(jwnimmer-tri) Bind the __init__(params=...) constructor here once
     // we've solved the unique_ptr vs shared_ptr binding lifetime issue.
     py::object params_ctor = m.attr("CollisionCheckerParams");
@@ -343,6 +346,7 @@ void DefinePlanningCollisionChecker(py::module m) {
                 "See :class:`pydrake.planning.CollisionCheckerParams` for the "
                 "list of properties available here as kwargs.")
                 .c_str());
+#endif
   }
 }
 

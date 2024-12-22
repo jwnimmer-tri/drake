@@ -104,7 +104,9 @@ void DoScalarIndependentDefinitions(py::module m) {
   DefClone(&abstract_values);
   abstract_values  // BR
       .def(py::init<>(), doc.AbstractValues.ctor.doc_0args)
+#if 0
       .def(py::init<AbstractValuePtrList>(), doc.AbstractValues.ctor.doc_1args)
+#endif
       .def("size", &AbstractValues::size, doc.AbstractValues.size.doc)
       .def("get_value", &AbstractValues::get_value, py::arg("index"),
           py_rvp::reference_internal, doc.AbstractValues.get_value.doc)
@@ -201,6 +203,7 @@ void DoScalarIndependentDefinitions(py::module m) {
           doc.ContextBase.is_cache_frozen.doc);
   // TODO(russt, eric.cousineau): Add remaining methods from ContextBase here.
 
+#if 0
   {
     using Class = ValueProducer;
     constexpr auto& cls_doc = doc.ValueProducer;
@@ -212,6 +215,7 @@ void DoScalarIndependentDefinitions(py::module m) {
             py::arg("allocate"), py::arg("calc"), cls_doc.ctor.doc_overload_5d)
         .def_static("NoopCalc", &Class::NoopCalc, cls_doc.NoopCalc.doc);
   }
+#endif
 
   {
     using Class = CacheEntryValue;
@@ -598,7 +602,7 @@ void DoDefineFrameworkDiagramBuilder(py::module m) {
       .def(py::init<>(), doc.DiagramBuilder.ctor.doc)
       .def(
           "AddSystem",
-          [](DiagramBuilder<T>* self, unique_ptr<System<T>> system) {
+          [](DiagramBuilder<T>* self, std::shared_ptr<System<T>> system) {
             // Using BuilderLifeSupport::stash makes the builder
             // temporarily immortal (uncollectible self cycle). This will be
             // resolved by the Build() step. See BuilderLifeSupport for
@@ -611,7 +615,7 @@ void DoDefineFrameworkDiagramBuilder(py::module m) {
       .def(
           "AddNamedSystem",
           [](DiagramBuilder<T>* self, std::string& name,
-              unique_ptr<System<T>> system) {
+              std::shared_ptr<System<T>> system) {
             // Using BuilderLifeSupport::stash makes the builder
             // temporarily immortal (uncollectible self cycle). This will be
             // resolved by the Build() step. See BuilderLifeSupport for
@@ -875,11 +879,14 @@ void DefineParameters(py::module m) {
   auto parameters = DefineTemplateClassWithDefault<Parameters<T>>(
       m, "Parameters", GetPyParam<T>(), doc.Parameters.doc);
   DefClone(&parameters);
+#if 0
   using BasicVectorPtrList = vector<unique_ptr<BasicVector<T>>>;
+#endif
   parameters
       .def(py::init<>(), doc.Parameters.ctor.doc_0args)
-      // TODO(eric.cousineau): Ensure that we can respect keep alive behavior
-      // with lists of pointers.
+#if 0
+  // TODO(eric.cousineau): Ensure that we can respect keep alive behavior
+  // with lists of pointers.
       .def(py::init<BasicVectorPtrList, AbstractValuePtrList>(),
           py::arg("numeric"), py::arg("abstract"),
           doc.Parameters.ctor.doc_2args_numeric_abstract)
@@ -893,6 +900,7 @@ void DefineParameters(py::module m) {
       .def(py::init<unique_ptr<AbstractValue>>(), py::arg("value"),
           // Keep alive, ownership: `value` keeps `self` alive.
           py::keep_alive<2, 1>(), doc.Parameters.ctor.doc_1args_value)
+#endif
       .def("num_numeric_parameter_groups",
           &Parameters<T>::num_numeric_parameter_groups,
           doc.Parameters.num_numeric_parameter_groups.doc)
@@ -907,6 +915,7 @@ void DefineParameters(py::module m) {
           doc.Parameters.get_mutable_numeric_parameter.doc)
       .def("get_numeric_parameters", &Parameters<T>::get_numeric_parameters,
           py_rvp::reference_internal, doc.Parameters.get_numeric_parameters.doc)
+#if 0
       // TODO(eric.cousineau): Should this C++ code constrain the number of
       // parameters???
       .def("set_numeric_parameters", &Parameters<T>::set_numeric_parameters,
@@ -915,6 +924,7 @@ void DefineParameters(py::module m) {
           // Keep alive, ownership: `value` keeps `self` alive.
           py::keep_alive<2, 1>(), py::arg("numeric_params"),
           doc.Parameters.set_numeric_parameters.doc)
+#endif
       .def(
           "get_abstract_parameter",
           [](const Parameters<T>* self, int index) -> auto& {
@@ -932,12 +942,14 @@ void DefineParameters(py::module m) {
       .def("get_abstract_parameters", &Parameters<T>::get_abstract_parameters,
           py_rvp::reference_internal,
           doc.Parameters.get_abstract_parameters.doc)
+#if 0
       .def("set_abstract_parameters", &Parameters<T>::set_abstract_parameters,
           // WARNING: This will DELETE the existing parameters. See C++
           // `AddValueInstantiation` for more information.
           // Keep alive, ownership: `value` keeps `self` alive.
           py::keep_alive<2, 1>(), py::arg("abstract_params"),
           doc.Parameters.set_abstract_parameters.doc)
+#endif
       .def(
           "SetFrom",
           [](Parameters<T>* self, const Parameters<double>& other) {
@@ -1002,9 +1014,15 @@ void DefineContinuousState(py::module m) {
       m, "ContinuousState", GetPyParam<T>(), doc.ContinuousState.doc);
   DefClone(&continuous_state);
   continuous_state
-      .def(py::init<unique_ptr<VectorBase<T>>>(), py::arg("state"),
-          doc.ContinuousState.ctor.doc_1args_state)
-      .def(py::init<unique_ptr<VectorBase<T>>, int, int, int>(),
+      .def(py::init([](const BasicVector<T>& state) {
+        return std::make_unique<ContinuousState<T>>(state.Clone());
+      }),
+          py::arg("state"), doc.ContinuousState.ctor.doc_1args_state)
+      .def(py::init([](const BasicVector<T>& state, int num_q, int num_v,
+                        int num_z) {
+        return std::make_unique<ContinuousState<T>>(
+            state.Clone(), num_q, num_v, num_z);
+      }),
           py::arg("state"), py::arg("num_q"), py::arg("num_v"),
           py::arg("num_z"),
           doc.ContinuousState.ctor.doc_4args_state_num_q_num_v_num_z)
@@ -1070,9 +1088,18 @@ void DefineDiscreteValues(py::module m) {
       m, "DiscreteValues", GetPyParam<T>(), doc.DiscreteValues.doc);
   DefClone(&discrete_values);
   discrete_values
-      .def(py::init<unique_ptr<BasicVector<T>>>(), py::arg("datum"),
-          doc.DiscreteValues.ctor.doc_1args_datum)
-      .def(py::init<std::vector<std::unique_ptr<BasicVector<T>>>&&>(),
+      .def(py::init([](const BasicVector<T>& datum) {
+        return std::make_unique<DiscreteValues<T>>(datum.Clone());
+      }),
+          py::arg("datum"), doc.DiscreteValues.ctor.doc_1args_datum)
+      .def(py::init([](std::vector<const BasicVector<T>*> data) {
+	std::vector<std::unique_ptr<BasicVector<T>>> copy;
+	copy.reserve(data.size());
+	for (const auto* datum : data) {
+	  copy.push_back(datum->Clone());
+	}
+        return std::make_unique<DiscreteValues<T>>(std::move(copy));
+      }),
           py::arg("data"), doc.DiscreteValues.ctor.doc_1args_data)
       .def(py::init<>(), doc.DiscreteValues.ctor.doc_0args)
       .def("num_groups", &DiscreteValues<T>::num_groups,

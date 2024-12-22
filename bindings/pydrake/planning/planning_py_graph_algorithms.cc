@@ -28,8 +28,12 @@ void DefinePlanningGraphAlgorithms(py::module m) {
       }
 
       std::unique_ptr<MaxCliqueSolverBase> DoClone() const override {
+#if 0
         PYBIND11_OVERRIDE_PURE(
             std::unique_ptr<MaxCliqueSolverBase>, MaxCliqueSolverBase, DoClone);
+#else
+        return nullptr;
+#endif
       };
     };
     const auto& cls_doc = doc.MaxCliqueSolverBase;

@@ -68,12 +68,13 @@ PYBIND11_MODULE(primitives, m) {
   auto bind_common_scalar_types = [&m, &doc](auto dummy) {
     using T = decltype(dummy);
 
-    DefineTemplateClassWithDefault<Adder<T>, LeafSystem<T>>(
-        m, "Adder", GetPyParam<T>(), doc.Adder.doc)
+    DefineTemplateClassWithDefault<Adder<T>, LeafSystem<T>,
+        std::shared_ptr<Adder<T>>>(m, "Adder", GetPyParam<T>(), doc.Adder.doc)
         .def(py::init<int, int>(), py::arg("num_inputs"), py::arg("size"),
             doc.Adder.ctor.doc);
 
-    DefineTemplateClassWithDefault<AffineSystem<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<AffineSystem<T>, LeafSystem<T>,
+        std::shared_ptr<AffineSystem<T>>>(
         m, "AffineSystem", GetPyParam<T>(), doc.AffineSystem.doc)
         .def(py::init<const Eigen::Ref<const MatrixXd>&,
                  const Eigen::Ref<const MatrixXd>&,
@@ -125,13 +126,15 @@ PYBIND11_MODULE(primitives, m) {
             py::arg("covariance"),
             doc.TimeVaryingAffineSystem.configure_random_state.doc);
 
-    DefineTemplateClassWithDefault<ConstantValueSource<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<ConstantValueSource<T>, LeafSystem<T>,
+        std::shared_ptr<ConstantValueSource<T>>>(
         m, "ConstantValueSource", GetPyParam<T>(), doc.ConstantValueSource.doc)
         .def(py::init<const AbstractValue&>(), py::arg("value"),
             doc.ConstantValueSource.ctor.doc);
 
-    DefineTemplateClassWithDefault<ConstantVectorSource<T>, LeafSystem<T>>(m,
-        "ConstantVectorSource", GetPyParam<T>(), doc.ConstantVectorSource.doc)
+    DefineTemplateClassWithDefault<ConstantVectorSource<T>, LeafSystem<T>,
+        std::shared_ptr<ConstantVectorSource<T>>>(m, "ConstantVectorSource",
+        GetPyParam<T>(), doc.ConstantVectorSource.doc)
         .def(py::init<VectorX<T>>(), py::arg("source_value"),
             doc.ConstantVectorSource.ctor.doc)
         .def("get_source_value", &ConstantVectorSource<T>::get_source_value,
@@ -142,7 +145,8 @@ PYBIND11_MODULE(primitives, m) {
             py::arg("context"), py_rvp::reference_internal,
             doc.ConstantVectorSource.get_mutable_source_value.doc);
 
-    DefineTemplateClassWithDefault<Demultiplexer<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<Demultiplexer<T>, LeafSystem<T>,
+        std::shared_ptr<Demultiplexer<T>>>(
         m, "Demultiplexer", GetPyParam<T>(), doc.Demultiplexer.doc)
         .def(py::init<int, int>(), py::arg("size"),
             py::arg("output_ports_size") = 1, doc.Demultiplexer.ctor.doc_2args)
@@ -152,7 +156,8 @@ PYBIND11_MODULE(primitives, m) {
             &Demultiplexer<T>::get_output_ports_sizes,
             doc.Demultiplexer.get_output_ports_sizes.doc);
 
-    DefineTemplateClassWithDefault<DiscreteTimeDelay<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<DiscreteTimeDelay<T>, LeafSystem<T>,
+        std::shared_ptr<DiscreteTimeDelay<T>>>(
         m, "DiscreteTimeDelay", GetPyParam<T>(), doc.DiscreteTimeDelay.doc)
         .def(py::init<double, int, int>(), py::arg("update_sec"),
             py::arg("delay_time_steps"), py::arg("vector_size"),
@@ -164,9 +169,9 @@ PYBIND11_MODULE(primitives, m) {
             doc.DiscreteTimeDelay.ctor
                 .doc_3args_update_sec_delay_time_steps_abstract_model_value);
 
-    DefineTemplateClassWithDefault<DiscreteTimeIntegrator<T>, LeafSystem<T>>(m,
-        "DiscreteTimeIntegrator", GetPyParam<T>(),
-        doc.DiscreteTimeIntegrator.doc)
+    DefineTemplateClassWithDefault<DiscreteTimeIntegrator<T>, LeafSystem<T>,
+        std::shared_ptr<DiscreteTimeIntegrator<T>>>(m, "DiscreteTimeIntegrator",
+        GetPyParam<T>(), doc.DiscreteTimeIntegrator.doc)
         .def(py::init<int, double>(), py::arg("size"), py::arg("time_step"),
             doc.DiscreteTimeIntegrator.ctor.doc)
         .def("set_integral_value",
@@ -175,7 +180,8 @@ PYBIND11_MODULE(primitives, m) {
         .def("time_step", &DiscreteTimeIntegrator<T>::time_step,
             doc.DiscreteTimeIntegrator.time_step.doc);
 
-    DefineTemplateClassWithDefault<DiscreteDerivative<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<DiscreteDerivative<T>, LeafSystem<T>,
+        std::shared_ptr<DiscreteDerivative<T>>>(
         m, "DiscreteDerivative", GetPyParam<T>(), doc.DiscreteDerivative.doc)
         .def(py::init<int, double, bool>(), py::arg("num_inputs"),
             py::arg("time_step"), py::arg("suppress_initial_transient") = true,
@@ -186,8 +192,9 @@ PYBIND11_MODULE(primitives, m) {
             &DiscreteDerivative<T>::suppress_initial_transient,
             doc.DiscreteDerivative.suppress_initial_transient.doc);
 
-    DefineTemplateClassWithDefault<                  // BR
-        FirstOrderLowPassFilter<T>, LeafSystem<T>>(  //
+    DefineTemplateClassWithDefault<  // BR
+        FirstOrderLowPassFilter<T>, LeafSystem<T>,
+        std::shared_ptr<FirstOrderLowPassFilter<T>>>(  //
         m, "FirstOrderLowPassFilter", GetPyParam<T>(),
         doc.FirstOrderLowPassFilter.doc)
         .def(py::init<double, int>(), py::arg("time_constant"),
@@ -204,15 +211,15 @@ PYBIND11_MODULE(primitives, m) {
             &FirstOrderLowPassFilter<T>::set_initial_output_value,
             doc.FirstOrderLowPassFilter.set_initial_output_value.doc);
 
-    DefineTemplateClassWithDefault<Gain<T>, LeafSystem<T>>(
-        m, "Gain", GetPyParam<T>(), doc.Gain.doc)
+    DefineTemplateClassWithDefault<Gain<T>, LeafSystem<T>,
+        std::shared_ptr<Gain<T>>>(m, "Gain", GetPyParam<T>(), doc.Gain.doc)
         .def(py::init<double, int>(), py::arg("k"), py::arg("size"),
             doc.Gain.ctor.doc_2args)
         .def(py::init<const Eigen::Ref<const VectorXd>&>(), py::arg("k"),
             doc.Gain.ctor.doc_1args);
 
-    DefineTemplateClassWithDefault<Sine<T>, LeafSystem<T>>(
-        m, "Sine", GetPyParam<T>(), doc.Sine.doc)
+    DefineTemplateClassWithDefault<Sine<T>, LeafSystem<T>,
+        std::shared_ptr<Sine<T>>>(m, "Sine", GetPyParam<T>(), doc.Sine.doc)
         .def(py::init<double, double, double, int, bool>(),
             py::arg("amplitude"), py::arg("frequency"), py::arg("phase"),
             py::arg("size"), py::arg("is_time_based") = true,
@@ -223,14 +230,16 @@ PYBIND11_MODULE(primitives, m) {
             py::arg("amplitudes"), py::arg("frequencies"), py::arg("phases"),
             py::arg("is_time_based") = true, doc.Sine.ctor.doc_4args);
 
-    DefineTemplateClassWithDefault<Integrator<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<Integrator<T>, LeafSystem<T>,
+        std::shared_ptr<Integrator<T>>>(
         m, "Integrator", GetPyParam<T>(), doc.Integrator.doc)
         .def(py::init<int>(), doc.Integrator.ctor.doc)
         .def("set_integral_value", &Integrator<T>::set_integral_value,
             py::arg("context"), py::arg("value"),
             doc.Integrator.set_integral_value.doc);
 
-    DefineTemplateClassWithDefault<LinearSystem<T>, AffineSystem<T>>(
+    DefineTemplateClassWithDefault<LinearSystem<T>, AffineSystem<T>,
+        std::shared_ptr<LinearSystem<T>>>(
         m, "LinearSystem", GetPyParam<T>(), doc.LinearSystem.doc)
         .def(py::init<const Eigen::Ref<const MatrixXd>&,
                  const Eigen::Ref<const MatrixXd>&,
@@ -240,12 +249,14 @@ PYBIND11_MODULE(primitives, m) {
             py::arg("C") = Eigen::MatrixXd(), py::arg("D") = Eigen::MatrixXd(),
             py::arg("time_period") = 0.0, doc.LinearSystem.ctor.doc_5args);
 
-    DefineTemplateClassWithDefault<MatrixGain<T>, LinearSystem<T>>(
+    DefineTemplateClassWithDefault<MatrixGain<T>, LinearSystem<T>,
+        std::shared_ptr<MatrixGain<T>>>(
         m, "MatrixGain", GetPyParam<T>(), doc.MatrixGain.doc)
         .def(py::init<const Eigen::Ref<const MatrixXd>&>(), py::arg("D"),
             doc.MatrixGain.ctor.doc_1args_D);
 
-    DefineTemplateClassWithDefault<Multiplexer<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<Multiplexer<T>, LeafSystem<T>,
+        std::shared_ptr<Multiplexer<T>>>(
         m, "Multiplexer", GetPyParam<T>(), doc.Multiplexer.doc)
         .def(py::init<int>(), py::arg("num_scalar_inputs"),
             doc.Multiplexer.ctor.doc_1args_num_scalar_inputs)
@@ -254,8 +265,9 @@ PYBIND11_MODULE(primitives, m) {
         .def(py::init<const BasicVector<T>&>(), py::arg("model_vector"),
             doc.Multiplexer.ctor.doc_1args_model_vector);
 
-    DefineTemplateClassWithDefault<MultilayerPerceptron<T>, LeafSystem<T>>(m,
-        "MultilayerPerceptron", GetPyParam<T>(), doc.MultilayerPerceptron.doc)
+    DefineTemplateClassWithDefault<MultilayerPerceptron<T>, LeafSystem<T>,
+        std::shared_ptr<MultilayerPerceptron<T>>>(m, "MultilayerPerceptron",
+        GetPyParam<T>(), doc.MultilayerPerceptron.doc)
         .def(py::init<const std::vector<int>&, PerceptronActivationType>(),
             py::arg("layers"),
             py::arg("activation_type") = PerceptronActivationType::kTanh,
@@ -369,7 +381,8 @@ PYBIND11_MODULE(primitives, m) {
             "dynamic memory allocations of Y (e.g. if this is used inside an "
             "optimization loop).");
 
-    DefineTemplateClassWithDefault<PassThrough<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<PassThrough<T>, LeafSystem<T>,
+        std::shared_ptr<PassThrough<T>>>(
         m, "PassThrough", GetPyParam<T>(), doc.PassThrough.doc)
         .def(py::init<int>(), py::arg("vector_size"),
             doc.PassThrough.ctor.doc_1args_vector_size)
@@ -378,7 +391,8 @@ PYBIND11_MODULE(primitives, m) {
         .def(py::init<const AbstractValue&>(), py::arg("abstract_model_value"),
             doc.PassThrough.ctor.doc_1args_abstract_model_value);
 
-    DefineTemplateClassWithDefault<PortSwitch<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<PortSwitch<T>, LeafSystem<T>,
+        std::shared_ptr<PortSwitch<T>>>(
         m, "PortSwitch", GetPyParam<T>(), doc.PortSwitch.doc)
         .def(py::init<int>(), py::arg("vector_size"), doc.PortSwitch.ctor.doc)
         // TODO(russt): implement AbstractValue version of the constructor and
@@ -391,13 +405,15 @@ PYBIND11_MODULE(primitives, m) {
             py::arg("name"), py_rvp::reference_internal,
             doc.PortSwitch.DeclareInputPort.doc);
 
-    DefineTemplateClassWithDefault<Saturation<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<Saturation<T>, LeafSystem<T>,
+        std::shared_ptr<Saturation<T>>>(
         m, "Saturation", GetPyParam<T>(), doc.Saturation.doc)
         .def(py::init<const VectorX<T>&, const VectorX<T>&>(),
             py::arg("min_value"), py::arg("max_value"),
             doc.Saturation.ctor.doc_2args);
 
-    DefineTemplateClassWithDefault<SparseMatrixGain<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<SparseMatrixGain<T>, LeafSystem<T>,
+        std::shared_ptr<SparseMatrixGain<T>>>(
         m, "SparseMatrixGain", GetPyParam<T>(), doc.SparseMatrixGain.doc)
         .def(py::init([](const Eigen::SparseMatrix<double>& D) {
           // Our interactions with scipy don't work yet with (0,N) matrices.
@@ -410,8 +426,10 @@ PYBIND11_MODULE(primitives, m) {
             doc.SparseMatrixGain.set_D.doc);
 
     DefineTemplateClassWithDefault<StateInterpolatorWithDiscreteDerivative<T>,
-        Diagram<T>>(m, "StateInterpolatorWithDiscreteDerivative",
-        GetPyParam<T>(), doc.StateInterpolatorWithDiscreteDerivative.doc)
+        Diagram<T>,
+        std::shared_ptr<StateInterpolatorWithDiscreteDerivative<T>>>(m,
+        "StateInterpolatorWithDiscreteDerivative", GetPyParam<T>(),
+        doc.StateInterpolatorWithDiscreteDerivative.doc)
         .def(py::init<int, double, bool>(), py::arg("num_positions"),
             py::arg("time_step"), py::arg("suppress_initial_transient") = true,
             doc.StateInterpolatorWithDiscreteDerivative.ctor.doc)
@@ -440,7 +458,8 @@ PYBIND11_MODULE(primitives, m) {
             doc.StateInterpolatorWithDiscreteDerivative.set_initial_position
                 .doc_2args_state_position);
 
-    DefineTemplateClassWithDefault<SharedPointerSystem<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<SharedPointerSystem<T>, LeafSystem<T>,
+        std::shared_ptr<SharedPointerSystem<T>>>(
         m, "SharedPointerSystem", GetPyParam<T>(), doc.SharedPointerSystem.doc)
         .def(py::init([](py::object value_to_hold) {
           auto wrapped = std::make_unique<py::object>(std::move(value_to_hold));
@@ -469,8 +488,9 @@ PYBIND11_MODULE(primitives, m) {
             },
             doc.SharedPointerSystem.get.doc);
 
-    DefineTemplateClassWithDefault<SymbolicVectorSystem<T>, LeafSystem<T>>(m,
-        "SymbolicVectorSystem", GetPyParam<T>(), doc.SymbolicVectorSystem.doc)
+    DefineTemplateClassWithDefault<SymbolicVectorSystem<T>, LeafSystem<T>,
+        std::shared_ptr<SymbolicVectorSystem<T>>>(m, "SymbolicVectorSystem",
+        GetPyParam<T>(), doc.SymbolicVectorSystem.doc)
         .def(py::init<std::optional<Variable>, VectorX<Variable>,
                  VectorX<Variable>, VectorX<Expression>, VectorX<Expression>,
                  double>(),
@@ -525,7 +545,8 @@ PYBIND11_MODULE(primitives, m) {
         .def("get_input_size", &VectorLog<T>::get_input_size,
             doc.VectorLog.get_input_size.doc);
 
-    DefineTemplateClassWithDefault<VectorLogSink<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<VectorLogSink<T>, LeafSystem<T>,
+        std::shared_ptr<VectorLogSink<T>>>(
         m, "VectorLogSink", GetPyParam<T>(), doc.VectorLogSink.doc)
         .def(py::init<int, double>(), py::arg("input_size"),
             py::arg("publish_period") = 0.0, doc.VectorLogSink.ctor.doc_2args)
@@ -584,13 +605,15 @@ PYBIND11_MODULE(primitives, m) {
         // See #11531 for why `py_rvp::reference` is needed.
         py_rvp::reference, doc.LogVectorOutput.doc_4args);
 
-    DefineTemplateClassWithDefault<WrapToSystem<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<WrapToSystem<T>, LeafSystem<T>,
+        std::shared_ptr<WrapToSystem<T>>>(
         m, "WrapToSystem", GetPyParam<T>(), doc.WrapToSystem.doc)
         .def(py::init<int>(), doc.WrapToSystem.ctor.doc)
         .def("set_interval", &WrapToSystem<T>::set_interval,
             doc.WrapToSystem.set_interval.doc);
 
-    DefineTemplateClassWithDefault<ZeroOrderHold<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<ZeroOrderHold<T>, LeafSystem<T>,
+        std::shared_ptr<ZeroOrderHold<T>>>(
         m, "ZeroOrderHold", GetPyParam<T>(), doc.ZeroOrderHold.doc)
         .def(py::init<double, int, double>(), py::arg("period_sec"),
             py::arg("vector_size"), py::arg("offset_sec") = 0.0,
@@ -605,7 +628,8 @@ PYBIND11_MODULE(primitives, m) {
         .def("SetVectorState", &ZeroOrderHold<T>::SetVectorState,
             doc.ZeroOrderHold.SetVectorState.doc);
 
-    DefineTemplateClassWithDefault<TrajectorySource<T>, LeafSystem<T>>(
+    DefineTemplateClassWithDefault<TrajectorySource<T>, LeafSystem<T>,
+        std::shared_ptr<TrajectorySource<T>>>(
         m, "TrajectorySource", GetPyParam<T>(), doc.TrajectorySource.doc)
         .def(py::init<const trajectories::Trajectory<T>&, int, bool>(),
             py::arg("trajectory"), py::arg("output_derivative_order") = 0,
@@ -620,9 +644,9 @@ PYBIND11_MODULE(primitives, m) {
   auto bind_non_symbolic_scalar_types = [m, &doc](auto dummy) {
     using T = decltype(dummy);
 
-    DefineTemplateClassWithDefault<LinearTransformDensity<T>, LeafSystem<T>>(m,
-        "LinearTransformDensity", GetPyParam<T>(),
-        doc.LinearTransformDensity.doc)
+    DefineTemplateClassWithDefault<LinearTransformDensity<T>, LeafSystem<T>,
+        std::shared_ptr<LinearTransformDensity<T>>>(m, "LinearTransformDensity",
+        GetPyParam<T>(), doc.LinearTransformDensity.doc)
         .def(py::init<RandomDistribution, int, int>(), py::arg("distribution"),
             py::arg("input_size"), py::arg("output_size"),
             doc.LinearTransformDensity.ctor.doc)
@@ -655,9 +679,9 @@ PYBIND11_MODULE(primitives, m) {
         .def("CalcDensity", &LinearTransformDensity<T>::CalcDensity,
             py::arg("context"), doc.LinearTransformDensity.CalcDensity.doc);
 
-    DefineTemplateClassWithDefault<TrajectoryAffineSystem<T>, LeafSystem<T>>(m,
-        "TrajectoryAffineSystem", GetPyParam<T>(),
-        doc.TrajectoryAffineSystem.doc)
+    DefineTemplateClassWithDefault<TrajectoryAffineSystem<T>, LeafSystem<T>,
+        std::shared_ptr<TrajectoryAffineSystem<T>>>(m, "TrajectoryAffineSystem",
+        GetPyParam<T>(), doc.TrajectoryAffineSystem.doc)
         .def(py::init<const trajectories::Trajectory<double>&,
                  const trajectories::Trajectory<double>&,
                  const trajectories::Trajectory<double>&,
@@ -704,9 +728,9 @@ PYBIND11_MODULE(primitives, m) {
             py::arg("covariance"),
             doc.TimeVaryingAffineSystem.configure_random_state.doc);
 
-    DefineTemplateClassWithDefault<TrajectoryLinearSystem<T>, LeafSystem<T>>(m,
-        "TrajectoryLinearSystem", GetPyParam<T>(),
-        doc.TrajectoryLinearSystem.doc)
+    DefineTemplateClassWithDefault<TrajectoryLinearSystem<T>, LeafSystem<T>,
+        std::shared_ptr<TrajectoryLinearSystem<T>>>(m, "TrajectoryLinearSystem",
+        GetPyParam<T>(), doc.TrajectoryLinearSystem.doc)
         .def(py::init<const trajectories::Trajectory<double>&,
                  const trajectories::Trajectory<double>&,
                  const trajectories::Trajectory<double>&,
@@ -744,7 +768,8 @@ PYBIND11_MODULE(primitives, m) {
   };
   type_visit(bind_non_symbolic_scalar_types, NonSymbolicScalarPack{});
 
-  py::class_<BarycentricMeshSystem<double>, LeafSystem<double>>(
+  py::class_<BarycentricMeshSystem<double>, LeafSystem<double>,
+      std::shared_ptr<BarycentricMeshSystem<double>>>(
       m, "BarycentricMeshSystem", doc.BarycentricMeshSystem.doc)
       .def(py::init<math::BarycentricMesh<double>,
                const Eigen::Ref<const MatrixX<double>>&>(),
@@ -756,7 +781,8 @@ PYBIND11_MODULE(primitives, m) {
           doc.BarycentricMeshSystem.get_output_values.doc);
 
   // TODO(jwnimmer-tri) Add more scalar types bindings for this class.
-  py::class_<RandomSource<double>, LeafSystem<double>>(
+  py::class_<RandomSource<double>, LeafSystem<double>,
+      std::shared_ptr<RandomSource<double>>>(
       m, "RandomSource", doc.RandomSource.doc)
       .def(py::init<RandomDistribution, int, double>(), py::arg("distribution"),
           py::arg("num_outputs"), py::arg("sampling_interval_sec"),
