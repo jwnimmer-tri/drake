@@ -59,6 +59,9 @@ cc_library(
     name = "pybind11",
     hdrs = _HDRS,
     includes = ["include"],
+	defines = [
+        "DRAKE_ENABLE_HOLDER=0",
+    ],
     deps = [
         "@eigen",
         "@python",
