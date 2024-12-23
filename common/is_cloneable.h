@@ -19,9 +19,17 @@ struct is_cloneable_helper : std::false_type {};
 template <typename T>
 struct is_cloneable_helper<
     T, typename std::enable_if_t<
-           std::is_same_v<decltype(std::declval<const T>().Clone().release()),
-                          typename std::remove_const_t<T>*>>> : std::true_type {
-};
+           std::is_same_v<decltype(std::declval<const T>().Clone()),
+                          std::unique_ptr<typename std::remove_const_t<T>>>>>
+    : std::true_type {};
+
+// Ditto for shared_ptr.
+template <typename T>
+struct is_cloneable_helper<
+    T, typename std::enable_if_t<
+           std::is_same_v<decltype(std::declval<const T>().Clone()),
+                          std::shared_ptr<typename std::remove_const_t<T>>>>>
+    : std::true_type {};
 
 }  // namespace is_cloneable_internal
 
