@@ -243,7 +243,6 @@ drake_cc_library(
     deps = [
         "//bindings/pydrake:pydrake_pybind",
         "//common:essential",
-        "@fmt",
         "@pybind11",
     ],
 )

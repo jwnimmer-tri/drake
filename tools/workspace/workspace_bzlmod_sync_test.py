@@ -66,6 +66,12 @@ class TestWorkspaceBzlmodSync(unittest.TestCase):
         # Don't check modules that are known to be module-only.
         del modules["bazel_features"]
 
+        # Don't check modules whose repository rule twin is pkgconfig (and thus
+        # doesn't have a github pinned version that we need to keep in sync).
+        del modules["eigen"]
+        del modules["fmt"]
+        del modules["spdlog"]
+
         # Don't check module that are documented to purposefully skew versions.
         del modules["rules_python"]
 

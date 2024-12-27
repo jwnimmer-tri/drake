@@ -32,7 +32,7 @@ drake_cc_library(
     hdrs = ["iiwa_constants.h"],
     deps = [
         "//common:essential",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -145,7 +145,7 @@ drake_cc_library(
         "//systems/lcm",
         "//systems/primitives:demultiplexer",
         "//systems/primitives:gain",
-        "@eigen",
+        "//tools/workspace/eigen",
     ],
 )
 

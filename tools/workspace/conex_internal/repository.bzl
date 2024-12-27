@@ -15,5 +15,9 @@ def conex_internal_repository(
             ":patches/no_eigen_io.patch",
             ":patches/vendor.patch",
         ],
+        patch_cmds = [
+            # Force Conex to use the Eigen we want.
+            "sed -i -e 's|\"@eigen\"|\"@drake//tools/workspace/eigen\"|;' conex/BUILD",  # noqa
+        ],
         mirrors = mirrors,
     )

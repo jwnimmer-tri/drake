@@ -60,7 +60,7 @@ cc_library(
     hdrs = _HDRS,
     includes = ["include"],
     deps = [
-        "@eigen",
+        "@drake//tools/workspace/eigen",
         "@python",
     ],
 )

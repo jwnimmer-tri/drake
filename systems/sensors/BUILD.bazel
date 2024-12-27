@@ -415,7 +415,7 @@ drake_cc_googletest(
         "//common/test_utilities:expect_throws_message",
         "//common/yaml:yaml_io",
         "//geometry/render_vtk",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -643,7 +643,7 @@ drake_cc_googletest(
         "//multibody/plant",
         "//systems/framework:diagram_builder",
         "//systems/lcm:lcm_publisher_system",
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 

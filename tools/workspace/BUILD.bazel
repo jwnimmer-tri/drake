@@ -102,7 +102,14 @@ drake_py_binary(
     visibility = ["//visibility:public"],
 )
 
-_DRAKE_EXTERNAL_PACKAGE_INSTALLS = ["@%s//:install" % p for p in [
+_DRAKE_EXTERNAL_PACKAGE_INSTALLS = [
+    "//tools/workspace/{}:install_license".format(name)
+    for name in [
+        "eigen",
+        "fmt",
+        "spdlog",
+    ]
+] + ["@%s//:install" % p for p in [
     "ccd_internal",
     "clp_internal",
     "coinutils_internal",
@@ -111,7 +118,6 @@ _DRAKE_EXTERNAL_PACKAGE_INSTALLS = ["@%s//:install" % p for p in [
     "commons_io",
     "curl_internal",
     "fcl_internal",
-    "fmt",
     "gklib_internal",
     "gz_math_internal",
     "gz_utils_internal",
@@ -132,7 +138,6 @@ _DRAKE_EXTERNAL_PACKAGE_INSTALLS = ["@%s//:install" % p for p in [
     "pybind11",
     "qhull_internal",
     "sdformat_internal",
-    "spdlog",
     "spral_internal",
     "statsjs",
     "stduuid_internal",

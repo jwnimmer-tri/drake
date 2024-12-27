@@ -1,10 +1,6 @@
 # -*- bazel -*-
 
-load(
-    "@drake//:cmake/external/workspace/conversion.bzl",
-    "split_cmake_list",
-)
-load("@drake//tools/install:install.bzl", "install")
+load(":conversion.bzl", "split_cmake_list")
 
 _DEFINES = split_cmake_list(
     "$<TARGET_PROPERTY:fmt::fmt,INTERFACE_COMPILE_DEFINITIONS>",
@@ -22,10 +18,5 @@ cc_library(
     ),
     defines = _DEFINES,
     includes = ["include"],
-    visibility = ["//visibility:public"],
-)
-
-install(
-    name = "install",
     visibility = ["//visibility:public"],
 )

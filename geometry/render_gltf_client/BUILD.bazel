@@ -60,7 +60,7 @@ drake_cc_library(
         "//common:essential",
     ],
     implementation_deps = [
-        "@fmt",
+        "//tools/workspace/fmt",
     ],
 )
 
@@ -75,8 +75,8 @@ drake_cc_library(
     ],
     implementation_deps = [
         "//common:unused",
+        "//tools/workspace/fmt",
         "@curl_internal//:libcurl",
-        "@fmt",
     ],
 )
 
@@ -327,7 +327,7 @@ drake_cc_binary(
         "//systems/sensors:image_to_lcm_image_array_t",
         "//systems/sensors:image_writer",
         "//systems/sensors:rgbd_sensor",
-        "@fmt",
+        "//tools/workspace/fmt",
         "@gflags",
     ],
 )
