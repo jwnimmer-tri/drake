@@ -1,3 +1,60 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("//tools/install:install.bzl", "install_license")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+
+config_setting(
+    name = "flag_zlib_repo_pkgconfig",
+    flag_values = {
+        "//tools/flags:zlib_repo": "pkgconfig",
+    },
+)
+
+config_setting(
+    name = "flag_zlib_repo_default",
+    flag_values = {
+        "//tools/flags:zlib_repo": "default",
+    },
+)
+
+config_setting(
+    name = "flag_private_repo_default_pkgconfig",
+    flag_values = {
+        "//tools/flags:private_repo_default": "pkgconfig",
+    },
+)
+
+selects.config_setting_group(
+    name = "flag_zlib_repo_default_pkgconfig",
+    match_all = [
+        ":flag_zlib_repo_default",
+        ":flag_private_repo_default_pkgconfig",
+    ],
+)
+
+selects.config_setting_group(
+    name = "use_pkgconfig",
+    match_any = [
+        ":flag_zlib_repo_pkgconfig",
+        ":flag_zlib_repo_default_pkgconfig",
+    ],
+)
+
+alias(
+    name = "zlib",
+    actual = select({
+        ":use_pkgconfig": "@pkgconfig_zlib//:zlib",
+        "//conditions:default": "@module_zlib//:zlib",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+# Note: the zlib license does not require the license notice to be included in
+# non-source distributions, but we do it anyway as a courtesy.
+install_license(
+    name = "install",
+    doc_dest = "share/doc/zlib",
+    licenses = ["@zlib//:license"],
+    visibility = ["//tools/workspace:__pkg__"],
+)
 
 add_lint_tests()

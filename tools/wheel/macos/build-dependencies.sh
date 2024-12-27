@@ -11,15 +11,3 @@ readonly resource_root="$(
     realpath ..
 )"
 
-# Ensure nothing is left from previous builds.
-rm -rf /opt/drake-dependencies
-
-rm -rf "/opt/drake-wheel-build/dependencies"
-mkdir -p "/opt/drake-wheel-build/dependencies"
-
-# Copy the main script into the correct location and run it.
-cp -R \
-    "$resource_root/image/dependencies" \
-    "/opt/drake-wheel-build/dependencies/src"
-
-"$resource_root/image/build-dependencies.sh"

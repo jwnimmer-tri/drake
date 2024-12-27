@@ -136,6 +136,38 @@ string_flag(
 )
 
 # -----------------------------------------------------------------------------
+# Configuration for private (i.e., not exported) dependencies of Drake.
+#
+# For background, refer to the "Configuration for public dependencies"
+# documentation atop this file. Here we follow all of the same ideas, except
+# for private dependencies instead of public ones. It's would not be unusual
+# for users to have a different preference for private vs public dependencies.
+
+# The :private_repo_default configures what happens when a specific
+# :foobar_repo flag is set to "default".
+string_flag(
+    name = "private_repo_default",
+    build_setting_default = "module",
+    values = [
+        "module",
+        "pkgconfig",
+    ],
+)
+
+# The :zlib_repo flag configures where Drake obtains zlib from.
+# See the section header documentation above for the full details.
+# The public dependency alias is `@drake//tools/workspace/zlib`.
+string_flag(
+    name = "zlib_repo",
+    build_setting_default = "default",
+    values = [
+        "default",
+        "module",
+        "pkgconfig",
+    ],
+)
+
+# -----------------------------------------------------------------------------
 # Configuration for solver back-ends.
 #
 # Drake's SolverInterface wraps third-party solver libraries into common API.

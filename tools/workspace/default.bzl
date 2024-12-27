@@ -418,6 +418,7 @@ REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES = [
     "rules_rust",
     "rules_shell",
     "spdlog",
+    "zlib",
 ]
 
 # This is the list of repositories that Drake provides as a module extension
@@ -474,8 +475,7 @@ def _drake_dep_repositories_impl(module_ctx):
     snopt_repository(name = "snopt")
     styleguide_repository(name = "styleguide", mirrors = mirrors)
     x11_repository(name = "x11")
-    zlib_repository(name = "zlib")
-    for name in ["eigen", "fmt", "spdlog"]:
+    for name in ["eigen", "fmt", "spdlog", "zlib"]:
         alias_repository(
             name = name,
             aliases = {name: "@drake//tools/workspace/" + name},

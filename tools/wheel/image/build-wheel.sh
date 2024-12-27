@@ -30,7 +30,6 @@ chrpath()
         else
             strip_rpath \
                 --exclude="$HOMEBREW" \
-                --exclude=/opt/drake-dependencies/lib \
                 "$lib"
             install_name_tool -add_rpath "@loader_path/$rpath" "$lib"
         fi
@@ -95,7 +94,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
         /opt/drake/lib/libtbb*.dylib
 else
     # On Linux, it needs to be copied somewhere where auditwheel can find it.
-    cp -r -t /opt/drake-dependencies/lib \
+    cp -r -t ${WHEEL_DIR}/pydrake/lib \
         /opt/drake/lib/libmosek*.so* \
         /opt/drake/lib/libtbb*.so*
 fi
@@ -115,7 +114,7 @@ if [[ "$(uname)" == "Linux" ]]; then
 fi
 
 if [[ "$(uname)" == "Linux" ]]; then
-    export LD_LIBRARY_PATH=${WHEEL_DIR}/pydrake/lib:/opt/drake-dependencies/lib
+    export LD_LIBRARY_PATH=${WHEEL_DIR}/pydrake/lib
 fi
 
 chrpath lib pydrake/*.so
