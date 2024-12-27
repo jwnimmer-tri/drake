@@ -13,7 +13,7 @@ _ALLOWED_EXTERNALS = [
     "+_repo_rules+pkgconfig_eigen",
     "+_repo_rules2+pkgconfig_fmt",
     "+_repo_rules3+pkgconfig_spdlog",
-    "lcm",
+    "+non_module_dependencies+lcm",
 ]
 
 # Drake's allowed list of public preprocessor definitions. The only things

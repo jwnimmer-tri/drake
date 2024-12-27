@@ -120,6 +120,8 @@ either be installed via the host system via our `install_prereqs` scripts,
 and/or downloaded at build-time via our `add_default_...` macros, and/or
 specified via packaging metadata in the case of `apt` or `pip`.
 
+XXX Figure out what to say about bzlmod here.
+
 ## LCM messages
 
 Our Stable API covers all of Drake's

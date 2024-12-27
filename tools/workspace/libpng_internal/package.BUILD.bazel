@@ -99,7 +99,7 @@ cc_library(
     linkopts = ["-lm"],
     linkstatic = True,
     deps = [
-        "@zlib",
+        "@drake//tools/workspace/zlib",
     ],
     visibility = ["//visibility:public"],
 )

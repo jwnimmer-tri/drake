@@ -29,7 +29,7 @@ class TestWorkspaceBzlmodSync(unittest.TestCase):
             for item in line.split(","):
                 name, value = item.split(" = ")
                 kwargs[name.strip()] = value.strip().replace('"', '')
-            result[kwargs["name"]] = kwargs["version"]
+            result[kwargs["name"]] = kwargs.get("version", None)
         return result
 
     def _parse_repo_rule_version(self, content):
@@ -83,14 +83,14 @@ class TestWorkspaceBzlmodSync(unittest.TestCase):
                 f"drake/tools/workspace/{repo_name}/repository.bzl"))
             self.assertEqual(workspace_version, module_version)
 
-    def _parse_workspace_already_provided(self, content):
-        """Given the contents of default.bzl, returns the list of
-        REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES.
+    def _parse_workspace_directly_loaded(self, content):
+        """Given the contents of default_categories.bzl, returns the list of
+        DIRECTLY_LOADED_BAZEL_MODULES.
         """
         result = None
         for line in content.splitlines():
             line = line.strip()
-            if line == "REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES = [":
+            if line == "DIRECTLY_LOADED_BAZEL_MODULES = [":
                 result = list()
                 continue
             if result is None:
@@ -111,16 +111,13 @@ class TestWorkspaceBzlmodSync(unittest.TestCase):
         """
         modules = self._parse_modules(self._read(f"drake/MODULE.bazel"))
 
-        # These workspace-only repositories are irrelevant for bzlmod.
-        modules["rust_toolchain"] = None
-
-        # Check that default.bzl's constant matches the inventory of modules.
+        # Check that bzl constant matches the inventory of modules.
         repo_names = sorted([
             self._module_name_to_repo_name(module_name)
             for module_name in modules.keys()
         ])
-        self.assertEqual(repo_names, self._parse_workspace_already_provided(
-            self._read("drake/tools/workspace/default.bzl")))
+        self.assertEqual(repo_names, self._parse_workspace_directly_loaded(
+            self._read("drake/tools/workspace/default_categories.bzl")))
 
 
 assert __name__ == '__main__'

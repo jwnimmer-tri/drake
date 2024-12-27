@@ -1,3 +1,8 @@
+load(
+    "//tools/workspace:default_categories.bzl",
+    "DIRECTLY_LOADED_BAZEL_MODULES",
+    "INDIRECTLY_LOADED_BAZEL_MODULES",
+)
 load("//tools/workspace:mirrors.bzl", "DEFAULT_MIRRORS")
 load("//tools/workspace/abseil_cpp_internal:repository.bzl", "abseil_cpp_internal_repository")  # noqa
 load("//tools/workspace/bazel_skylib:repository.bzl", "bazel_skylib_repository")  # noqa
@@ -111,25 +116,6 @@ load("//tools/workspace/xmlrunner_py:repository.bzl", "xmlrunner_py_repository")
 load("//tools/workspace/yaml_cpp_internal:repository.bzl", "yaml_cpp_internal_repository")  # noqa
 load("//tools/workspace/zlib:repository.bzl", "zlib_repository")
 
-# This is the list of modules that our MODULE.bazel already incorporates.
-# It is cross-checked by the workspace_bzlmod_sync_test.py test.
-REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES = [
-    "bazel_features",
-    "bazel_skylib",
-    "build_bazel_apple_support",
-    "eigen",
-    "fmt",
-    "platforms",
-    "rules_cc",
-    "rules_java",
-    "rules_license",
-    "rules_python",
-    "rules_rust",
-    "rules_shell",
-    "rust_toolchain",
-    "spdlog",
-]
-
 def add_default_repositories(
         excludes = [],
         mirrors = DEFAULT_MIRRORS,
@@ -147,7 +133,8 @@ def add_default_repositories(
           set this to True if you are using bzlmod.
     """
     if bzlmod:
-        excludes = excludes + REPOS_ALREADY_PROVIDED_BY_BAZEL_MODULES
+        excludes = excludes + DIRECTLY_LOADED_BAZEL_MODULES
+        excludes = excludes + INDIRECTLY_LOADED_BAZEL_MODULES
     if "abseil_cpp_internal" not in excludes:
         abseil_cpp_internal_repository(name = "abseil_cpp_internal", mirrors = mirrors)  # noqa
     if "bazelisk" not in excludes:
@@ -436,3 +423,20 @@ def add_default_workspace(
         excludes = toolchain_excludes,
         bzlmod = bzlmod,
     )
+
+def _non_module_dependencies_impl(module_ctx):
+    add_default_repositories(
+        bzlmod = True,
+        excludes = ["crate_universe"],
+    )
+
+non_module_dependencies = module_extension(
+    implementation = _non_module_dependencies_impl,
+)
+
+def _non_module_crate_universe_dependencies_impl(module_ctx):
+    crate_universe_repositories(mirrors = DEFAULT_MIRRORS)
+
+non_module_crate_universe_dependencies = module_extension(
+    implementation = _non_module_crate_universe_dependencies_impl,
+)

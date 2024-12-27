@@ -19,6 +19,7 @@ build --repo_env=DRAKE_OS=manylinux
 build --repo_env=SNOPT_PATH=${SNOPT_PATH}
 build --config=packaging
 build --define=LCM_INSTALL_JAVA=OFF
+build --@drake//tools/flags:private_repo_default=module
 EOF
 
 # Install Drake using our wheel-build-specific Python interpreter.
