@@ -26,7 +26,8 @@ from pydrake.trajectories import (
     PiecewiseQuaternionSlerp_,
     StackedTrajectory_,
     Trajectory,
-    Trajectory_
+    Trajectory_,
+    WrappedTrajectory_,
 )
 from pydrake.symbolic import Variable, Expression
 
@@ -36,7 +37,7 @@ class CustomTrajectory(Trajectory):
     def __init__(self):
         Trajectory.__init__(self)
 
-    def Clone(self):
+    def __deepcopy__(self, memo):
         return CustomTrajectory()
 
     def rows(self):
@@ -68,6 +69,9 @@ class CustomTrajectory(Trajectory):
     def DoMakeDerivative(self, derivative_order):
         return DerivativeTrajectory_[float](self, derivative_order)
 
+    def __repr__(self):
+        return "CustomTrajectory()"
+
 
 class TestTrajectories(unittest.TestCase):
     @numpy_compare.check_all_types
@@ -83,6 +87,7 @@ class TestTrajectories(unittest.TestCase):
         self.assertEqual(trajectory.start_time(), 3.0)
         self.assertEqual(trajectory.end_time(), 4.0)
         self.assertTrue(trajectory.has_derivative())
+        self.assertEqual(repr(trajectory), "CustomTrajectory()")
         numpy_compare.assert_float_equal(trajectory.value(t=1.5),
                                          np.array([[2.5, 3.5]]))
         numpy_compare.assert_float_equal(
@@ -91,12 +96,45 @@ class TestTrajectories(unittest.TestCase):
         numpy_compare.assert_float_equal(
             trajectory.EvalDerivative(t=2.3, derivative_order=2),
             np.zeros((1, 2)))
+
         clone = trajectory.Clone()
         numpy_compare.assert_float_equal(clone.value(t=1.5),
                                          np.array([[2.5, 3.5]]))
+        self.assertEqual(repr(clone), "WrappedTrajectory(CustomTrajectory())")
+
         deriv = trajectory.MakeDerivative(derivative_order=1)
         numpy_compare.assert_float_equal(
             deriv.value(t=2.3), np.ones((1, 2)))
+        self.assertIn(
+            "WrappedTrajectory(<pydrake.trajectories.DerivativeTrajectory",
+            repr(deriv))
+
+    def test_custom_trajectory_legacy_clone(self):
+        """For backwards compatiblity we allow Clone() instead of __deepcopy__.
+        """
+        class LegacyCustomTrajectory(Trajectory):
+            def __init__(self):
+                Trajectory.__init__(self)
+
+            def Clone(self):
+                return LegacyCustomTrajectory()
+
+            def __repr__(self):
+                return "LegacyCustomTrajectory()"
+
+            def start_time(self):
+                return 0.0
+
+            def end_time(self):
+                return 1.0
+
+        dut = LegacyCustomTrajectory()
+
+        # This spelling forces a call to Clone from C++. Calling it from Python
+        # would not trigger our overload bindings.
+        clone = CompositeTrajectory_[float]([dut]).segment(0)
+        self.assertEqual(repr(clone),
+                         "WrappedTrajectory(LegacyCustomTrajectory())")
 
     @numpy_compare.check_all_types
     def test_bezier_curve(self, T):
@@ -716,6 +754,18 @@ class TestTrajectories(unittest.TestCase):
         dut.Append(zoh)
         dut.Append(zoh)
         self.assertEqual(dut.rows(), 2)
+        self.assertEqual(dut.cols(), 1)
+        dut.Clone()
+        copy.copy(dut)
+        copy.deepcopy(dut)
+
+    @numpy_compare.check_all_types
+    def test_wrapped_trajectory(self, T):
+        breaks = [0, 1, 2]
+        samples = [[[0]], [[1]], [[2]]]
+        zoh = PiecewisePolynomial_[T].ZeroOrderHold(breaks, samples)
+        dut = WrappedTrajectory_[T](trajectory=zoh)
+        self.assertEqual(dut.rows(), 1)
         self.assertEqual(dut.cols(), 1)
         dut.Clone()
         copy.copy(dut)
