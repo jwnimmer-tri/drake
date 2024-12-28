@@ -218,6 +218,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
         .def("SetUseSampledOutputPorts", &Class::SetUseSampledOutputPorts,
             py::arg("use_sampled_output_ports"),
             cls_doc.SetUseSampledOutputPorts.doc)
+#if 0
         .def(
             "AddJoint",
             [](Class * self, std::unique_ptr<Joint<T>> joint) -> auto& {
@@ -225,6 +226,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             },
             py::arg("joint"), py_rvp::reference_internal,
             cls_doc.AddJoint.doc_1args)
+#endif
         .def("RemoveJoint", &Class::RemoveJoint, py::arg("joint"),
             cls_doc.RemoveJoint.doc)
         .def("AddJointActuator", &Class::AddJointActuator,
@@ -233,12 +235,14 @@ void DoScalarDependentDefinitions(py::module m, T) {
             cls_doc.AddJointActuator.doc)
         .def("RemoveJointActuator", &Class::RemoveJointActuator,
             py::arg("actuator"), cls_doc.RemoveJointActuator.doc)
+#if 0
         .def(
             "AddFrame",
             [](Class * self, std::unique_ptr<Frame<T>> frame) -> auto& {
               return self->AddFrame(std::move(frame));
             },
             py_rvp::reference_internal, py::arg("frame"), cls_doc.AddFrame.doc)
+#endif
         .def("AddModelInstance", &Class::AddModelInstance, py::arg("name"),
             cls_doc.AddModelInstance.doc)
         .def("RenameModelInstance", &Class::RenameModelInstance,
@@ -263,6 +267,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             py::arg("frame_on_child_M"),
             py::arg("X_FM") = RigidTransform<double>::Identity(),
             py_rvp::reference_internal, cls_doc.WeldFrames.doc)
+#if 0
         .def(
             "AddForceElement",
             [](Class * self,
@@ -272,6 +277,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
             },
             py::arg("force_element"), py_rvp::reference_internal,
             cls_doc.AddForceElement.doc)
+#endif
         .def("GetConstraintIds", &Class::GetConstraintIds,
             cls_doc.GetConstraintIds.doc)
         .def("SetConstraintActiveStatus", &Class::SetConstraintActiveStatus,
@@ -948,12 +954,14 @@ void DoScalarDependentDefinitions(py::module m, T) {
             py::arg("diffuse_color"),
             cls_doc.RegisterVisualGeometry
                 .doc_5args_body_X_BG_shape_name_diffuse_color)
+#if 0
         .def("RegisterVisualGeometry",
             py::overload_cast<const RigidBody<T>&,
                 std::unique_ptr<geometry::GeometryInstance>>(
                 &Class::RegisterVisualGeometry),
             py::arg("body"), py::arg("geometry_instance"),
             cls_doc.RegisterVisualGeometry.doc_2args_body_geometry_instance)
+#endif
         .def("RegisterCollisionGeometry",
             py::overload_cast<const RigidBody<T>&,
                 const RigidTransform<double>&, const geometry::Shape&,
@@ -1360,6 +1368,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
           return py::make_tuple(plant_py, scene_graph_py);
         };
 
+#if 0
     m.def(
         "AddMultibodyPlantSceneGraph",
         [result_to_tuple](systems::DiagramBuilder<T>* builder,
@@ -1372,7 +1381,9 @@ void DoScalarDependentDefinitions(py::module m, T) {
         py::arg("builder"), py::arg("plant"), py::arg("scene_graph") = nullptr,
         doc.AddMultibodyPlantSceneGraph
             .doc_3args_systemsDiagramBuilder_stduniqueptr_stduniqueptr);
+#endif
 
+#if 0
     m.def(
         "AddMultibodyPlantSceneGraph",
         [result_to_tuple](systems::DiagramBuilder<T>* builder, double time_step,
@@ -1385,6 +1396,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
         py::arg("scene_graph") = nullptr,
         doc.AddMultibodyPlantSceneGraph
             .doc_3args_systemsDiagramBuilder_double_stduniqueptr);
+#endif
 
     // In C++ these functions are only defined for double, not AutoDiffXd.
     if constexpr (std::is_same_v<T, double>) {
@@ -1654,9 +1666,11 @@ PYBIND11_MODULE(plant, m) {
     cls  // BR
         .def(py::init<MultibodyPlant<T>*>(), cls_doc.ctor.doc)
         .def("num_bodies", &Class::num_bodies, cls_doc.num_bodies.doc)
+#if 0
         .def("RegisterDeformableBody", &Class::RegisterDeformableBody,
             py::arg("geometry_instance"), py::arg("config"),
             py::arg("resolution_hint"), cls_doc.RegisterDeformableBody.doc)
+#endif
         .def("SetWallBoundaryCondition", &Class::SetWallBoundaryCondition,
             py::arg("id"), py::arg("p_WQ"), py::arg("n_W"),
             cls_doc.SetWallBoundaryCondition.doc)

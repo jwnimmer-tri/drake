@@ -570,8 +570,10 @@ Note: The above is for the C++ documentation. For Python, use
   }
 
   static void DefineLeafSystem(py::module m) {
+#if 0
     using AllocCallback = typename LeafOutputPort<T>::AllocCallback;
     using CalcCallback = typename LeafOutputPort<T>::CalcCallback;
+#endif
     using CalcVectorCallback = typename LeafOutputPort<T>::CalcVectorCallback;
     auto leaf_system_cls =
         DefineTemplateClassWithDefault<LeafSystem<T>, PyLeafSystem, System<T>>(
@@ -599,6 +601,7 @@ Note: The above is for the C++ documentation. For Python, use
             doc.LeafSystem.DeclareAbstractParameter.doc)
         .def("DeclareNumericParameter", &PyLeafSystem::DeclareNumericParameter,
             py::arg("model_vector"), doc.LeafSystem.DeclareNumericParameter.doc)
+#if 0
         .def("DeclareAbstractOutputPort",
             WrapCallbacks([](PyLeafSystem* self, const std::string& name,
                               AllocCallback arg1, CalcCallback arg2,
@@ -612,6 +615,7 @@ Note: The above is for the C++ documentation. For Python, use
                 std::set<DependencyTicket>{SystemBase::all_sources_ticket()},
             doc.LeafSystem.DeclareAbstractOutputPort
                 .doc_4args_name_alloc_calc_prerequisites_of_calc)
+#endif
         .def(
             "DeclareVectorInputPort",
             [](PyLeafSystem* self, std::string name,
@@ -1309,7 +1313,7 @@ void DefineFrameworkPySystems(py::module m) {
   };
   type_visit(bind_common_scalar_types, CommonScalarPack{});
 
-  DefineSystemScalarConverter(&cls_system_scalar_converter);
+  // DefineSystemScalarConverter(&cls_system_scalar_converter);
 }
 
 }  // namespace pydrake
