@@ -1,0 +1,65 @@
+XXX
+
+--- include/sdf/SDFImpl.hh
++++ include/sdf/SDFImpl.hh
+@@ -292,10 +292,6 @@
+     /// \internal
+     /// \brief Pointer to private data.
+     private: std::unique_ptr<SDFPrivate> dataPtr;
+-
+-    /// \brief The SDF version. Set to SDF_VERSION by default, or through
+-    /// the Version function at runtime.
+-    private: static std::string version;
+   };
+   /// \}
+   }
+
+--- src/SDF.cc
++++ src/SDF.cc
+@@ -24,6 +24,8 @@
+ #include <string>
+ #include <vector>
+ 
++#include <gz/utils/NeverDestroyed.hh>
++
+ #include "sdf/parser.hh"
+ #include "sdf/Assert.hh"
+ #include "sdf/Console.hh"
+@@ -40,10 +42,6 @@
+ {
+ inline namespace SDF_VERSION_NAMESPACE
+ {
+-// TODO(azeey) This violates the Google style guide. Change to a function that
+-// returns the version string when possible.
+-std::string SDF::version = SDF_VERSION;  // NOLINT(runtime/string)
+-
+ std::string sdfSharePath()
+ {
+ #if 1
+@@ -495,15 +493,23 @@
+ }
+ 
+ /////////////////////////////////////////////////
++
++namespace {
++std::string& GetMutableGlobalVersion() {
++  static gz::utils::NeverDestroyed<std::string> global_version{SDF_VERSION};
++  return global_version.Access();
++}
++}  // namespace
++
+ std::string SDF::Version()
+ {
+-  return version;
++  return std::string{GetMutableGlobalVersion()};
+ }
+ 
+-/////////////////////////////////////////////////
+ void SDF::Version(const std::string &_version)
+ {
+-  version = _version;
++  // N.B. This is not thread-safe.
++  GetMutableGlobalVersion() = _version;
+ }
+ 
+ /////////////////////////////////////////////////
