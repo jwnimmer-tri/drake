@@ -319,11 +319,17 @@ def build(options):
     time = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
     identifier = f'{time}-{salt}'
 
-    # Provide the SNOPT source archive as a dependency.
+    # Provide the SNOPT source archive as a dependency. The gzipped form is
+    # non-deterministic, so we'll copy it into docker in uncompressed form and
+    # then recompress it on the inside during the Dockerfile.
     snopt_tgz = os.path.join(
         resource_root, 'image', 'dependencies', 'snopt.tar.gz')
-    _files_to_remove.append(snopt_tgz)
+    snopt_tar = os.path.join(
+        resource_root, 'image', 'dependencies', 'snopt.tar')
     create_snopt_tgz(snopt_path=options.snopt_path, output=snopt_tgz)
+    subprocess.run([sys.executable, "-m", "gzip", "-d", snopt_tgz])
+    os.unlink(snopt_tgz)
+    _files_to_remove.append(snopt_tar)
 
     # Generate the Drake repository source archive.
     source_tar = os.path.join(resource_root, 'image', 'drake-src.tar')
