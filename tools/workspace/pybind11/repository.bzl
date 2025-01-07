@@ -1,22 +1,20 @@
 load("//tools/workspace:generate_file.bzl", "generate_file")
 load("//tools/workspace:github.bzl", "github_archive")
 
-# Using the `drake` branch of this repository.
-_REPOSITORY = "RobotLocomotion/pybind11"
+# WIP repository
+_REPOSITORY = "jwnimmer-tri/pybind11"
 
-# When upgrading this commit, check the version header within
-#  https://github.com/RobotLocomotion/pybind11/blob/drake/include/pybind11/detail/common.h
-# and if it has changed, then update the version number in the two
-# pybind11-*.cmake files in the current directory to match.
-_COMMIT = "51d715e037386fcdbeda75ffab15f02f8e4388d8"
+# WIP branch: base-2.13.1-plus-eigen
+_COMMIT = "6c0d2092dd69661553bd8f96a22661e471be784c"
 
-_SHA256 = "1867ca13e237b92457e0a0364f55bcf5d913f6b8aed015b6fd4d252333828090"
+_SHA256 = "79fdd576c682d996f7c40205bcb7a4e545da252e73f8e923a47e39bb3d65adeb"
 
 def pybind11_repository(
         name,
         mirrors = None):
     github_archive(
         name = name,
+        # WIP local_repository_override = "/home/jwnimmer/jwnimmer-tri/pybind11",
         repository = _REPOSITORY,
         commit = _COMMIT,
         sha256 = _SHA256,
