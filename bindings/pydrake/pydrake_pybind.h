@@ -18,6 +18,12 @@
 #include "pybind11/stl.h"
 #include "pybind11/stl/filesystem.h"
 
+namespace pybind11 {
+// XXX backcompat
+template <typename Base>
+using wrapper = Base;
+}  // namespace pybind11
+
 namespace drake {
 
 /// For more high-level information, see the @ref python_bindings
