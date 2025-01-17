@@ -78,8 +78,6 @@ fi
 if [[ "$(uname)" == "Linux" ]]; then
     # The drake/tools/wheel/test/tests/libs-test.py must be kept in sync with
     # this list. The library name in that test is commented here as an EOL hint.
-    copy_ubuntu_license libblas-dev    # libblas
-    copy_ubuntu_license liblapack-dev  # liblapack
     copy_ubuntu_license libgl1         # libOpenGL, libGLdispatch, libGLX
     copy_ubuntu_license libgfortran5   # libgfortran, libquadmath, libgomp
 fi

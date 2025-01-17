@@ -7,7 +7,7 @@ def lapack_repository(name):
     os_specific_alias_repository(
         name = name,
         mapping = {
-            "linux": ["lapack=@liblapack"],
+            "linux": ["lapack=@lapack_internal//:lapack"],
             "osx": ["lapack=@drake//tools/workspace/blas:accelerate"],
         },
     )

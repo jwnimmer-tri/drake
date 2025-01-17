@@ -13,10 +13,8 @@ _ALLOWED_LIBS = [
     "libGLX",
     "libGLdispatch",
     "libOpenGL",
-    "libblas",
     "libgfortran",
     "libgomp",
-    "liblapack",
     "libquadmath",
     # These are installed by a Drake's repository rule, so don't need copyright
     # installed in build-wheel.sh.

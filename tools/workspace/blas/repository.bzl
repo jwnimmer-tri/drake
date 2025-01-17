@@ -7,7 +7,7 @@ def blas_repository(name):
     os_specific_alias_repository(
         name = name,
         mapping = {
-            "linux": ["blas=@libblas"],
+            "linux": ["blas=@lapack_internal//:blas"],
             "osx": ["blas=@drake//tools/workspace/blas:accelerate"],
         },
     )

@@ -41,6 +41,7 @@ load("//tools/workspace/highway_internal:repository.bzl", "highway_internal_repo
 load("//tools/workspace/ipopt:repository.bzl", "ipopt_repository")
 load("//tools/workspace/ipopt_internal:repository.bzl", "ipopt_internal_repository")  # noqa
 load("//tools/workspace/lapack:repository.bzl", "lapack_repository")
+load("//tools/workspace/lapack_internal:repository.bzl", "lapack_internal_repository")  # noqa
 load("//tools/workspace/lcm:repository.bzl", "lcm_repository")
 load("//tools/workspace/libblas:repository.bzl", "libblas_repository")
 load("//tools/workspace/libjpeg_turbo_internal:repository.bzl", "libjpeg_turbo_internal_repository")  # noqa
@@ -214,6 +215,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         ipopt_internal_repository(name = "ipopt_internal", mirrors = mirrors)  # noqa
     if "lapack" not in excludes:
         lapack_repository(name = "lapack")
+    if "lapack_internal" not in excludes:
+        lapack_internal_repository(name = "lapack_internal", mirrors = mirrors)  # noqa
     if "lcm" not in excludes:
         lcm_repository(name = "lcm", mirrors = mirrors)
     if "libblas" not in excludes:

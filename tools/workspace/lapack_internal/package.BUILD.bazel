@@ -1,0 +1,93 @@
+# -*- bazel -*-
+
+# load("@drake//tools/install:install.bzl", "install")
+load("@drake//tools/skylark:cc.bzl", "cc_library")
+load(
+    "@drake//tools/workspace/gfortran:fortran.bzl",
+    "fortran_library",
+    "fortran_module",
+)
+load(
+    "@drake//tools/workspace/lapack_internal:sources.bzl",
+    "ALLAUX",
+    "ALLBLAS",
+    "DB1AUX",
+    "DBLAS1",
+    "DBLAS2",
+    "DBLAS3",
+    "DLASRC",
+    "DSLASRC",
+    "DZLAUX",
+)
+
+# XXX licenses(["notice"])  # BSD-3-Clause
+
+package(default_visibility = ["//visibility:private"])
+
+BLAS_SRCS = depset(DBLAS1 + DB1AUX + ALLBLAS + DBLAS2 + DBLAS3).to_list()
+
+LAPACK_SRCS = depset(DLASRC + DSLASRC + DZLAUX + ALLAUX).to_list()
+
+fortran_library(
+    name = "blas_objects",
+    srcs = [
+        "BLAS/SRC/" + x
+        for x in BLAS_SRCS
+    ],
+    linkstatic = True,
+    _input_mods = [
+        # "la_constants.mod",
+        # "la_xisnan.mod",
+    ],
+    deps = [
+        # ":la_constants",
+        # ":la_xisnan",
+    ],
+)
+
+cc_library(
+    name = "blas",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":blas_objects",
+    ],
+)
+
+fortran_module(
+    src = "SRC/la_constants.f90",
+    name = "la_constants",
+)
+
+fortran_module(
+    src = "SRC/la_xisnan.F90",
+    name = "la_xisnan",
+    uses = ["la_constants"],
+)
+
+fortran_library(
+    name = "fortran_objects",
+    srcs = [
+        x[3:] if x.startswith("../") else "SRC/" + x
+        for x in LAPACK_SRCS
+    ],
+    linkstatic = True,
+    _input_mods = [
+        "la_constants.mod",
+        "la_xisnan.mod",
+    ],
+    deps = [
+        ":la_constants",
+        ":la_xisnan",
+    ],
+)
+
+cc_library(
+    name = "lapack",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fortran_objects",
+        "@blas",
+    ],
+)
+
+# XXX install( ... LICENSE ... )
