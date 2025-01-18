@@ -34,6 +34,6 @@ libxt-dev
 opencl-headers
 ocl-icd-opencl-dev
 
-# Remove on 2025-05-01.
-# Likewise remove mumps from setup/**.txt files.
-libmumps-seq-dev
+# TODO(jwnimmer-tri) Build these from source instead of using Ubuntu.
+libblas-dev
+liblapack-dev
