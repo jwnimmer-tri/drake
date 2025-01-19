@@ -53,6 +53,9 @@ check_lists_consistency(
     glob_include = [
         "include/**/*.h",
     ],
+    glob_exclude = [
+        "**/*.orig",
+    ],
 )
 
 cc_library(
