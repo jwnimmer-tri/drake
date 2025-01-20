@@ -1,8 +1,10 @@
 import platform
 import os
+from pathlib import Path
 import subprocess
 
 from clang import cindex
+from python import runfiles
 
 
 # Alternative: Make this a function in `mkdoc.py`, and import it from mkdoc as
@@ -18,6 +20,11 @@ def add_library_paths(parameters=None):
 
     Returns:
     """
+    manifest = runfiles.Create()
+    path = Path(manifest.Rlocation("llvm-project/clang/libclang.so"))
+    cindex.Config.set_library_file(path)
+    return
+
     library_file = None
     if platform.system() == 'Darwin':
         completed_process = subprocess.run(['xcrun', '--find', 'clang'],
