@@ -49,7 +49,7 @@ import sys
 from clang import cindex
 from clang.cindex import AccessSpecifier, CursorKind, TypeKind
 
-from tools.workspace.mkdoc_internal.libclang_setup import add_library_paths
+from tools.workspace.mkdoc_internal.libclang_setup import get_include_flags
 from tools.workspace.mkdoc_internal.mkdoc_comment import process_comment
 
 
@@ -640,7 +640,7 @@ class FileDict:
 
 def main():
     parameters = ['-x', 'c++', '-D__MKDOC_PY__']
-    add_library_paths(parameters)
+    parameters.extend(get_include_flags())
     filenames = []
 
     quiet = False
