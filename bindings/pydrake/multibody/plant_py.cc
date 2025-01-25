@@ -1363,6 +1363,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
           return py::make_tuple(plant_py, scene_graph_py);
         };
 
+#if 0
     m.def(
         "AddMultibodyPlantSceneGraph",
         [result_to_tuple](systems::DiagramBuilder<T>* builder,
@@ -1375,7 +1376,9 @@ void DoScalarDependentDefinitions(py::module m, T) {
         py::arg("builder"), py::arg("plant"), py::arg("scene_graph") = nullptr,
         doc.AddMultibodyPlantSceneGraph
             .doc_3args_systemsDiagramBuilder_stduniqueptr_stduniqueptr);
+#endif
 
+#if 0
     m.def(
         "AddMultibodyPlantSceneGraph",
         [result_to_tuple](systems::DiagramBuilder<T>* builder, double time_step,
@@ -1388,6 +1391,7 @@ void DoScalarDependentDefinitions(py::module m, T) {
         py::arg("scene_graph") = nullptr,
         doc.AddMultibodyPlantSceneGraph
             .doc_3args_systemsDiagramBuilder_double_stduniqueptr);
+#endif
 
     // In C++ these functions are only defined for double, not AutoDiffXd.
     if constexpr (std::is_same_v<T, double>) {

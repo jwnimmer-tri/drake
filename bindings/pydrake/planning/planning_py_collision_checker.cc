@@ -287,6 +287,7 @@ void DefinePlanningCollisionChecker(py::module m) {
     // TODO(jwnimmer-tri) Bind the __init__(params=...) constructor here once
     // we've solved the unique_ptr vs shared_ptr binding lifetime issue.
     py::object params_ctor = m.attr("CollisionCheckerParams");
+#if 0
     cls  // BR
         .def(py::init([params_ctor](std::unique_ptr<RobotDiagram<double>> model,
                           const py::kwargs& kwargs) {
@@ -309,6 +310,7 @@ void DefinePlanningCollisionChecker(py::module m) {
                 "See :class:`pydrake.planning.CollisionCheckerParams` for the "
                 "list of properties available here as kwargs.")
                 .c_str());
+#endif
   }
 
   {
@@ -319,6 +321,8 @@ void DefinePlanningCollisionChecker(py::module m) {
     // TODO(jwnimmer-tri) Bind the __init__(params=...) constructor here once
     // we've solved the unique_ptr vs shared_ptr binding lifetime issue.
     py::object params_ctor = m.attr("CollisionCheckerParams");
+#if 0
+    // XXX unique_ptr
     cls  // BR
         .def(py::init([params_ctor](std::unique_ptr<RobotDiagram<double>> model,
                           bool supports_parallel_checking,
@@ -343,6 +347,7 @@ void DefinePlanningCollisionChecker(py::module m) {
                 "See :class:`pydrake.planning.CollisionCheckerParams` for the "
                 "list of properties available here as kwargs.")
                 .c_str());
+#endif
   }
 }
 
