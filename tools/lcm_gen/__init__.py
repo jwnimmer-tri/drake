@@ -363,19 +363,25 @@ class @@STRUCT_NAME@@ {
   // but note that we use `int64_t` instead of `int` for byte counts.
   //@{
   static const char* getTypeName() { return "@@STRUCT_NAME@@"; }
-  int64_t getEncodedSize() const { return 8 + _getEncodedSizeNoHash(); }
+  int64_t getEncodedSize() const {
+    return sizeof(int64_t) + _getEncodedSizeNoHash();
+  }
   int64_t _getEncodedSizeNoHash() const {
-    int64_t _result = 0;
-@@GET_ENCODED_SIZE_NO_HASH@@
-    return _result;
+    auto [_required_size, _error] = _get_encoded_size<false>();
+    return _error ? 0 : _required_size;
   }
   template <bool with_hash = true>
   int64_t encode(void* buf, int64_t offset, int64_t maxlen) const {
     uint8_t* const _begin = static_cast<uint8_t*>(buf);
     uint8_t* const _start = _begin + offset;
     uint8_t* const _end = _start + maxlen;
+    auto [_required_size, _error] = _get_encoded_size<with_hash>();
+    if (_error || (_end - _start) < _required_size) [[unlikely]] {
+      return -1;
+    }
     uint8_t* _cursor = _start;
-    return this->_encode<with_hash>(&_cursor, _end) ? (_cursor - _start) : -1;
+    this->_encode<with_hash>(&_cursor);
+    return _cursor - _start;
   }
   int64_t _encodeNoHash(void* buf, int64_t offset, int64_t maxlen) const {
     return encode<false>(buf, offset, maxlen);
@@ -417,11 +423,23 @@ class @@STRUCT_NAME@@ {
     return (composite_hash << 1) + ((composite_hash >> 63) & 1);
   }
 
+  // New-style size calculation with invariant checks.
+  template <bool with_hash>
+  std::pair<int64_t, bool /* error */> _get_encoded_size() const {
+    int64_t _result = with_hash ? sizeof(int64_t) : 0;
+    bool _error = false;
+@@GET_ENCODED_SIZE@@
+    return {_result, _error};
+  }
+
   // New-style encoding.
+  // @pre The cursor has at least _get_encoded_size() bytes available.
   template <bool with_hash = true>
-  bool _encode(uint8_t** _cursor, uint8_t* _end) const {
-    constexpr int64_t _hash = _get_hash_impl();
-    return  // true iff success
+  void _encode(uint8_t** _cursor) const {
+    if constexpr (with_hash) {
+      constexpr int64_t _hash = _get_hash_impl();
+      _encode_field(_hash, _cursor);
+    }
 @@ENCODE@@
   }
 
@@ -526,67 +544,48 @@ class @@STRUCT_NAME@@ {
   }
 
   // Given a field (or child element within a field), encodes it into the given
-  // byte cursor and advances the cursor, returning true on success. Arrays are
+  // byte cursor and advances the cursor. As with _encode(), we assume as a
+  // precondition that the cursor has sufficient writeable space. Arrays are
   // passed with `_input` as vector-like container and `_dims` as the list of
   // multi-dimensional vector sizes, e.g., `int8_t image[6][4]` would be called
-  // like `_encode_field(image.at(0), &cursor, end, ArrayDims<2>{6, 4})`. In
-  // LCM messages, multi-dimensional arrays are encoded using C's memory layout
+  // like `_encode_field(image.at(0), &cursor, ArrayDims<2>{6, 4})`. In LCM
+  // messages, multi-dimensional arrays are encoded using C's memory layout
   // (i.e., with the last dimension as the most tightly packed.)
   template <typename T, size_t ndims = 0>
-  static bool _encode_field(const T& _input, uint8_t** _cursor, uint8_t* _end,
+  static void _encode_field(const T& _input, uint8_t** _cursor,
                             const ArrayDims<ndims>& _dims = ArrayDims<0>{}) {
     static_assert(!std::is_pointer_v<T>);
     if constexpr (ndims == 0) {
-      // With no array dimensions, just decode the field directly.
+      // With no array dimensions, just encode the field directly.
       if constexpr (std::is_fundamental_v<T>) {
         // POD input.
         constexpr size_t N = sizeof(T);
-        if (*_cursor + N > _end) {
-          return false;
-        }
         auto _swapped = _byteswap<N>(&_input);
         std::memcpy(*_cursor, &_swapped, N);
         *_cursor += N;
-        return true;
       } else if constexpr (std::is_same_v<T, std::string>) {
         // String input.
-        const int32_t _size = _input.size() + 1;
-        const bool ok = (_input.size() < INT32_MAX) &&
-                        (*_cursor + sizeof(_size) + _size <= _end) &&
-                        _encode_field(_size, _cursor, _end);
-        if (ok) {
-          std::memcpy(*_cursor, _input.c_str(), _size);
-        }
+        const int32_t _size = ssize(_input) + 1;
+        _encode_field(_size, _cursor);
+        std::memcpy(*_cursor, _input.c_str(), _size);
         *_cursor += _size;
-        return ok;
       } else {
         // Struct input.
-        return _input.template _encode<false>(_cursor, _end);
+        _input.template _encode<false>(_cursor);
       }
     } else {
-      // Cross-check the container size vs the size specified in the message's
-      // size field. (For fixed-size containers this is a no-op.)
-      if (static_cast<int64_t>(_input.size()) != _dims[0]) {
-        return false;
-      }
       if constexpr (_is_slab<T, ndims>()){
         // Encode a slab of POD memory.
         const size_t _raw_size = _input.size() * sizeof(_input[0]);
-        if ((*_cursor + _raw_size) > _end) {
-          return false;
-        }
         constexpr size_t N = _get_slab_step<T, ndims>();
         _memcpy_byteswap<N>(*_cursor, _input.data(), _raw_size);
         *_cursor += _raw_size;
       } else {
         // Encode each sub-item in turn, forwarding all _dims but the first.
         for (const auto& _child : _input) {
-          if (!_encode_field(_child, _cursor, _end, _cdr(_dims))) {
-            return false;
-          }
+          _encode_field(_child, _cursor, _cdr(_dims));
         }
       }
-      return true;
     }
   }
 
@@ -778,93 +777,119 @@ class CppGen:
         return result
 
     def _fill_encoded_size(self):
-        """Updates the getEncodedSize() implementation for this message."""
-        content = ""
-        pad = " " * 4
-        for name in self._size_variables:
-            content += f"{pad}if ({name} < 0) {{\n"
-            content += f"{pad}  return _result;\n"
-            content += f"{pad}}}\n"
+        """Updates the _get_encoded_size() implementation for this message."""
+        has_any_struct_fields = any([
+            isinstance(field.typ, UserType)
+            for field in self._struct.fields
+        ])
+        lines = []
+        if has_any_struct_fields:
+            lines.append("int64_t _temp_result;")
+            lines.append("bool _temp_error;")
         for field in self._struct.fields:
-            for line in self._fill_one_encoded_size(field).splitlines():
-                content += f"{pad}{line}\n"
-        self._replace("@@GET_ENCODED_SIZE_NO_HASH@@\n", content)
+            lines.extend(self._fill_one_encoded_size(field))
+        content = ""
+        for line in lines:
+            content += f"    {line}\n"
+        self._replace("@@GET_ENCODED_SIZE@@\n", content)
 
     def _fill_one_encoded_size(self, field):
-        """Returns the getEncodedSize() stanza for one member field."""
-        # For fixed-size elements, we can compute the byte size directly.
-        known_encoded_size = self._known_encoded_size(field)
-        if known_encoded_size is not None:
-            return f"_result += {known_encoded_size};  // {field.name}\n"
+        """Returns the checkEncodedSizeNoHash() stanza for one member field."""
+        line = f"// {field.name}"
+        if field.typ in self._FIXED_SIZE:
+            return [line] + self._fill_one_encoded_size_fixed(field)
+        else:
+            return [line] + self._fill_one_encoded_size_dynamic(field)
 
-        # For variable-size elements, we need to loop in case of arrays.
-        content = ""
+    def _fill_one_encoded_size_fixed(self, field):
+        lines = []
+        encoded_size = self._known_encoded_size(field)
+        assert encoded_size is not None
+        lines.append(f"_result += {encoded_size};")
+        # Fields used as array bounds must be non-negative.
+        if field.name in self._size_variables:
+            lines.append(self._encoded_size_guard(f"{field.name} < 0"))
+        # Now we need to identify any mismatched std::vector sizes.
+        dims = list(field.array_dims)
+        while len(dims) > 0 and isinstance(dims[-1], int):
+            dims.pop(-1)
+        if len(dims) == 0:
+            return lines
+        pad = ""
+        var = field.name
+        for i, dim in enumerate(dims):
+            if isinstance(dim, str):
+                guard = self._encoded_size_guard(f"ssize({var}) != {dim}")
+                lines.append(f"{pad}{guard}")
+            loop_var = f"_{field.name}_{i}"
+            if i + 1 < len(dims):
+                lines.append(f"{pad}for (const auto& {loop_var} : {var}) {{")
+                var = loop_var
+                pad += " " * 2
+        for _ in dims[:-1]:
+            pad = pad[:-2]
+            lines.append(f"{pad}}}")
+        return lines
+
+    def _fill_one_encoded_size_dynamic(self, field):
+        lines = []
         pad = ""
         var = field.name
         for i in range(len(field.array_dims)):
             new_var = f"_{field.name}_{i}"
-            content += f"{pad}for (const auto& {new_var} : {var}) {{\n"
+            lines.append(f"{pad}for (const auto& {new_var} : {var}) {{")
             var = new_var
             pad += " " * 2
         if field.typ == PrimitiveType.string:
-            content += f"{pad}_result += sizeof(int32_t) + {var}.size() + 1;\n"
+            ssize = f"ssize({var})"
+            lines.append(f"{pad}_result += sizeof(int32_t) + {ssize} + 1;")
+            guard = self._encoded_size_guard(f"{ssize} >= INT32_MAX")
         else:
             assert isinstance(field.typ, UserType)
-            content += f"{pad}_result += {var}._getEncodedSizeNoHash();\n"
+            lines.append(f"{pad}std::tie(_temp_result, _temp_error) =")
+            lines.append(f"    {var}._get_encoded_size<false>();")
+            lines.append(f"{pad}_result += _temp_result;")
+            guard = self._encoded_size_guard("_temp_error")
+        lines.append(f"{pad}{guard}")
         for _ in field.array_dims:
             pad = pad[:-2]
-            content += f"{pad}}}\n"
-        return content
+            lines.append(f"{pad}}}")
+        return lines
+
+    def _encoded_size_guard(self, predicate):
+        return f"if ({predicate}) [[unlikely]] {{ _error = true; }}"
 
     def _known_encoded_size(self, field):
-        """If field will have a known encoded size at runtime, returns a
-        string expression for that size; otherwise None.
+        """If field is a POD ("plain old data") type or an LCM array with a POD
+        type as its base, returns a string expression for the encoded size of
+        the field. For any other type (strings, structs, or arrays of strings
+        or structs), returns None.
         """
-        primitive_size = self._FIXED_SIZE.get(field.typ)
-        if primitive_size is None:
+        pod_size = self._FIXED_SIZE.get(field.typ)
+        if pod_size is None:
             return None
-        result = f"{primitive_size}"
+        result = f"{pod_size}"
         for dim in field.array_dims:
             result += f" * {dim}"
         return result
 
     def _fill_encode(self):
         """Updates the encode() implementation for this message."""
-        # Each string in `operations` is one call to a bool-valued helper that
-        # encodes one field (or the hash) or guards out-of-bounds values.
-        operations = []
-
-        # Check that all variable-length sizes are valid.
-        operations.extend([
-            f"({dim} >= 0)"
-            for dim in self._size_variables
-        ])
-
-        # Encode the hash.
-        operations.extend([
-            "(with_hash ? _encode_field(_hash, _cursor, _end) : true)",
-        ])
-
-        # Encode the fields.
+        lines = []
         for item in self._struct.fields:
-            operations.extend(self._fill_one_encode(item))
-
-        # Format the sequence of operations as a C++ short-circuit expression.
-        content = " &&\n".join([
-            " " * 8 + item
-            for item in operations
-        ]) + ";\n"
+            lines.extend(self._fill_one_encode(item))
+        content = ""
+        for line in lines:
+            content += f"    {line}\n"
         self._replace("@@ENCODE@@\n", content)
 
     def _fill_one_encode(self, field):
-        """Returns the encode() stanzas for one member field."""
+        """Returns the encode() lines for one member field."""
         extra_array_dims = ""
         if field.array_dims:
             dims = [str(dim) for dim in field.array_dims]
             extra_array_dims = f", ArrayDims<{len(dims)}>{{{', '.join(dims)}}}"
-        return [
-            f"_encode_field({field.name}, _cursor, _end{extra_array_dims})",
-        ]
+        return [f"_encode_field({field.name}, _cursor{extra_array_dims});"]
 
     def _fill_decode(self):
         """Updates the decode() implementation for this message."""
