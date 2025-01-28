@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -16,6 +15,17 @@
 namespace drake {
 namespace multibody {
 namespace meshcat {
+
+namespace internal {
+/* We need to memorize the details of Meshcat's sliders, because it doesn't
+provide any API to retrieve the min/max/step after we set it. */
+struct SliderDetail {
+  std::string name;
+  double min{};
+  double max{};
+  double step{};
+};
+}  // namespace internal
 
 /** %JointSliders adds slider bars to the Meshcat control panel for the joints
 of a MultibodyPlant. These might be useful for interactive or teleoperation
@@ -33,12 +43,6 @@ elements matches `plant.GetPositions()`.
 
 Only positions associated with joints get sliders. All other positions are fixed
 at nominal values.
-
-Beware that the output port of this system always provides the sliders' current
-values, even if evaluated by multiple different downstream input ports during a
-single computation.  If you need to have a synchronized view of the slider data,
-place a systems::ZeroOrderHold system between the sliders and downstream
-calculations.
 
 @tparam_nonsymbolic_scalar
 @ingroup visualization */
@@ -80,16 +84,22 @@ class JointSliders final : public systems::LeafSystem<T> {
   @param increment_keycodes (Optional) A vector of length plant.num_positions()
   with keycodes to assign to increment the value of each individual joint
   slider. See Meshcat::AddSlider for more details.
+
+  @param time_step (Optional). The slider values are updated at discrete
+  intervals of this duration.
   */
   JointSliders(
       std::shared_ptr<geometry::Meshcat> meshcat,
       const MultibodyPlant<T>* plant,
       std::optional<Eigen::VectorXd> initial_value = {},
-      std::variant<std::monostate, double, Eigen::VectorXd> lower_limit = {},
-      std::variant<std::monostate, double, Eigen::VectorXd> upper_limit = {},
-      std::variant<std::monostate, double, Eigen::VectorXd> step = {},
+      const std::variant<std::monostate, double, Eigen::VectorXd>& lower_limit =
+          {},
+      const std::variant<std::monostate, double, Eigen::VectorXd>& upper_limit =
+          {},
+      const std::variant<std::monostate, double, Eigen::VectorXd>& step = {},
       std::vector<std::string> decrement_keycodes = {},
-      std::vector<std::string> increment_keycodes = {});
+      std::vector<std::string> increment_keycodes = {},
+      double time_step = 1 / 32.0);
 
   /** Removes our sliders from the associated meshcat instance.
 
@@ -134,28 +144,38 @@ class JointSliders final : public systems::LeafSystem<T> {
   /** Sets all robot positions (corresponding to joint positions and potentially
   positions not associated with any joint) to the values in `q`.  The meshcat
   sliders associated with any joint positions described by `q` will have their
-  value updated.  Additionally, the "initial state" vector of positions tracked
-  by this instance will be updated to the values in `q`.  This "initial state"
-  vector update will persist even if sliders are removed (e.g., via Delete).
+  value updated.
 
   @param q A vector whose length is equal to the associated
   MultibodyPlant::num_positions().
   */
+  void SetPositions(systems::Context<T>* context, const Eigen::VectorXd& q);
+
+  DRAKE_DEPRECATED("2025-05-01", "Use SetPositions(context, q) instead.")
   void SetPositions(const Eigen::VectorXd& q);
 
  private:
-  void CalcOutput(const systems::Context<T>&, systems::BasicVector<T>*) const;
+  Eigen::VectorXd RoundSliderValues(const Eigen::VectorXd& values) const;
+
+  systems::EventStatus Update(const systems::Context<T>& context,
+                              systems::DiscreteValues<T>* updates) const;
+
+  systems::EventStatus Publish(const systems::Context<T>& context) const;
 
   typename systems::LeafSystem<T>::GraphvizFragment DoGetGraphvizFragment(
       const typename systems::LeafSystem<T>::GraphvizFragmentParams& params)
       const final;
 
-  std::shared_ptr<geometry::Meshcat> meshcat_;
-  const MultibodyPlant<T>* const plant_;
-  const std::map<int, std::string> position_names_;
+  // The `nominal_value_` is deprecated for removal 2025-05-01.
   /* The nominal values for all positions; positions with sliders will not use
    their nominal value except for defining the slider's initial value. */
   Eigen::VectorXd nominal_value_;
+
+  std::shared_ptr<geometry::Meshcat> meshcat_;
+  const MultibodyPlant<T>* const plant_;
+  const std::vector<internal::SliderDetail> slider_details_;
+  const systems::DiscreteStateIndex slider_values_index_;
+  const systems::DiscreteStateIndex positions_output_index_;
   std::atomic<bool> is_registered_;
 };
 
