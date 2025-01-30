@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/find_runfiles.h"
-#include "drake/common/text_logging.h"
+#include "drake/common/text_logging_gflags.h"
 
 namespace drake {
 namespace {

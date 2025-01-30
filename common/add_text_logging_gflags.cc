@@ -9,7 +9,7 @@
 
 #include <gflags/gflags.h>
 
-#include "drake/common/text_logging.h"
+#include "drake/common/text_logging_gflags.h"
 #include "drake/common/unused.h"
 
 // Declare the gflags options.

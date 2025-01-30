@@ -60,6 +60,7 @@ drake_cc_package_library(
         ":sorted_pair",
         ":string_container",
         ":temp_directory",
+        ":text_logging_gflags",
         ":timer",
         ":type_safe_index",
         ":unused",
@@ -92,7 +93,6 @@ drake_cc_library(
     srcs = [
         "drake_assert_and_throw.cc",
         "drake_deprecated.cc",
-        "text_logging.cc",
     ],
     hdrs = [
         "constants.h",
@@ -110,7 +110,75 @@ drake_cc_library(
         ":fmt",
         "@eigen",
         "@fmt",
+    ],
+    implementation_deps = select({
+        "//tools/workspace/spdlog:flag_spdlog_repo_disabled": [
+            ":text_logging_impl_simple",
+        ],
+        "//conditions:default": [
+            ":text_logging_impl_spdlog",
+        ],
+    }),
+)
+
+drake_cc_library(
+    name = "text_logging_impl_simple",
+    srcs = [
+        "text_logging.cc",
+        "text_logging_gflags.cc",
+        "text_logging_simple.cc",
+    ],
+    hdrs = [
+        "drake_copyable.h",
+        "never_destroyed.h",
+        "text_logging.h",
+        "text_logging_gflags.h",
+    ],
+    internal = True,
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+    deps = [
+        "@fmt",
+    ],
+)
+
+drake_cc_library(
+    name = "text_logging_impl_spdlog",
+    srcs = [
+        "text_logging.cc",
+        "text_logging_gflags.cc",
+        "text_logging_spdlog.cc",
+    ],
+    hdrs = [
+        "drake_copyable.h",
+        "never_destroyed.h",
+        "text_logging.h",
+        "text_logging_gflags.h",
+        "text_logging_spdlog.h",
+    ],
+    internal = True,
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+    deps = [
+        "@fmt",
         "@spdlog",
+    ],
+)
+
+drake_cc_library(
+    name = "text_logging_spdlog",
+    hdrs = ["text_logging_spdlog.h"],
+    tags = ["exclude_from_package"],
+    deps = [
+        ":essential",
+    ],
+)
+
+drake_cc_library(
+    name = "text_logging_gflags",
+    hdrs = ["text_logging_gflags.h"],
+    deps = [
+        ":essential",
     ],
 )
 
@@ -540,7 +608,7 @@ drake_cc_library(
     ],
     visibility = ["//:__subpackages__"],
     deps = [
-        ":essential",
+        ":text_logging_gflags",
         ":unused",
         "@gflags",
     ],
@@ -1184,69 +1252,54 @@ drake_cc_googletest(
     ],
 )
 
-# This version of text_logging_test is compiled with HAVE_SPDLOG enabled,
-# because that is what Drake's WORKSPACE provides for the @spdlog external.
 drake_cc_googletest(
-    name = "text_logging_test",
-    defines = [
-        "TEXT_LOGGING_TEST_SPDLOG=1",
+    name = "text_logging_simple_test",
+    srcs = [
+        "test/text_logging_test.cc",
     ],
     use_default_main = False,
     deps = [
-        ":essential",
+        ":text_logging_impl_simple",
     ],
 )
 
-# Likewise (to the above test) for the ostream variation.
+drake_cc_googletest(
+    name = "text_logging_spdlog_test",
+    srcs = [
+        "test/text_logging_test.cc",
+    ],
+    use_default_main = False,
+    deps = [
+        ":text_logging_impl_spdlog",
+    ],
+)
+
+drake_cc_googletest(
+    name = "text_logging_gflags_simple_test",
+    srcs = [
+        "test/text_logging_gflags_test.cc",
+    ],
+    use_default_main = False,
+    deps = [
+        ":text_logging_impl_simple",
+    ],
+)
+
+drake_cc_googletest(
+    name = "text_logging_gflags_spdlog_test",
+    srcs = [
+        "test/text_logging_gflags_test.cc",
+    ],
+    use_default_main = False,
+    deps = [
+        ":text_logging_impl_spdlog",
+    ],
+)
+
 drake_cc_googletest(
     name = "text_logging_ostream_test",
-    defines = [
-        "TEXT_LOGGING_TEST_SPDLOG=1",
-    ],
-    use_default_main = False,
     deps = [
         ":essential",
-    ],
-)
-
-# This version of text_logging_test re-compiles all source files without
-# defining HAVE_SPDLOG, to ensure that the no-op stubs behave as desired.
-drake_cc_googletest(
-    name = "text_logging_no_spdlog_test",
-    srcs = [
-        "drake_copyable.h",
-        "fmt.h",
-        "never_destroyed.h",
-        "test/text_logging_test.cc",
-        "text_logging.cc",
-        "text_logging.h",
-    ],
-    defines = [
-        "TEXT_LOGGING_TEST_SPDLOG=0",
-    ],
-    use_default_main = False,
-    deps = [
-        "@fmt",
-    ],
-)
-
-# Likewise (to the above test) for the ostream variation.
-drake_cc_googletest(
-    name = "text_logging_ostream_no_spdlog_test",
-    srcs = [
-        "drake_copyable.h",
-        "fmt.h",
-        "never_destroyed.h",
-        "test/text_logging_ostream_test.cc",
-        "text_logging.cc",
-        "text_logging.h",
-    ],
-    defines = [
-        "TEXT_LOGGING_TEST_SPDLOG=0",
-    ],
-    use_default_main = False,
-    deps = [
-        "@fmt",
     ],
 )
 
