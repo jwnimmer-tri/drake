@@ -15,7 +15,7 @@ Similarly, it provides:
   drake::log()->error(...);
   drake::log()->critical(...);
 </pre>
-If you want to log objects that are expensive to serialize, these macros will
+If you want to log objects that are expensive to stringize, these macros will
 not be compiled if debugging is turned off (-DNDEBUG is set):
 <pre>
   DRAKE_LOGGER_TRACE("message: {}", something_conditionally_compiled);
@@ -45,118 +45,56 @@ meet our style guide rules for inline functions. (This is enforced in CI by
 Drake's linter.) */
 
 #include <string>
+#include <string_view>
+#include <utility>
 
-#include "drake/common/fmt.h"
-#include "drake/common/text_logging_config.h"
-
-#ifndef DRAKE_DOXYGEN_CXX
-#ifdef DRAKE_INTERNAL_SPDLOG_ENABLED
-#ifndef NDEBUG
-
-// When in Debug builds, before including spdlog we set the compile-time
-// minimum log threshold so that spdlog defaults to enabling all log levels.
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-
-// Provide operative macros only when spdlog is available and Debug is enabled.
-#define DRAKE_LOGGER_TRACE(...)                                              \
-  do {                                                                       \
-    /* Capture the drake::log() in a temporary, using a relatively unique */ \
-    /* variable name to avoid potential variable name shadowing warnings. */ \
-    ::drake::logging::logger* const drake_spdlog_macro_logger_alias =        \
-        ::drake::log();                                                      \
-    if (drake_spdlog_macro_logger_alias->level() <= spdlog::level::trace) {  \
-      SPDLOG_LOGGER_TRACE(drake_spdlog_macro_logger_alias, __VA_ARGS__);     \
-    }                                                                        \
-  } while (0)
-#define DRAKE_LOGGER_DEBUG(...)                                              \
-  do {                                                                       \
-    /* Capture the drake::log() in a temporary, using a relatively unique */ \
-    /* variable name to avoid potential variable name shadowing warnings. */ \
-    ::drake::logging::logger* const drake_spdlog_macro_logger_alias =        \
-        ::drake::log();                                                      \
-    if (drake_spdlog_macro_logger_alias->level() <= spdlog::level::debug) {  \
-      SPDLOG_LOGGER_DEBUG(drake_spdlog_macro_logger_alias, __VA_ARGS__);     \
-    }                                                                        \
-  } while (0)
-
-#else
-
-// Spdlog is available, but we are doing a non-Debug build.
-#define DRAKE_LOGGER_TRACE(...)
-#define DRAKE_LOGGER_DEBUG(...)
-
-#endif
-
-#include <spdlog/spdlog.h>
-
-#endif  // DRAKE_INTERNAL_SPDLOG_ENABLED
-#endif  // DRAKE_DOXYGEN_CXX
+#include <fmt/format.h>
 
 #include "drake/common/drake_copyable.h"
 
-namespace drake {
+// Provide operative macros only in Debug builds with logging enabled, and
+// exclude details from doxygen (the file overview already covered it).
+// XXX or simple
+#ifndef DRAKE_DOXYGEN_CXX
+#if !defined(NDEBUG) && defined(DRAKE_INTERNAL_SPDLOG_ENABLED)
 
-#ifdef DRAKE_INTERNAL_SPDLOG_ENABLED
-namespace logging {
+#define DRAKE_LOGGER_TRACE(...)                                               \
+  do {                                                                        \
+    /* Capture the drake::log() in a temporary, using a relatively unique */  \
+    /* variable name to avoid potential variable name shadowing warnings. */  \
+    auto* drake_macro_logger_alias = ::drake::log();                          \
+    if (drake_macro_logger_alias->should_log(drake::logging::level::trace)) { \
+      drake_macro_logger_alias->trace(__VA_ARGS__);                           \
+    }                                                                         \
+  } while (0)
+#define DRAKE_LOGGER_DEBUG(...)                                               \
+  do {                                                                        \
+    /* Capture the drake::log() in a temporary, using a relatively unique */  \
+    /* variable name to avoid potential variable name shadowing warnings. */  \
+    auto* drake_macro_logger_alias = ::drake::log();                          \
+    if (drake_macro_logger_alias->should_log(drake::logging::level::debug)) { \
+      drake_macro_logger_alias->debug(__VA_ARGS__);                           \
+    }                                                                         \
+  } while (0)
 
-// If we have spdlog, just alias logger into our namespace.
-/** The drake::logging::logger class provides text logging methods.
-See the text_logging.h documentation for a short tutorial. */
-using logger = spdlog::logger;
+#else  // NDEBUG
 
-/** When spdlog is enabled in this build, drake::logging::sink is an alias for
-spdlog::sinks::sink.  When spdlog is disabled, it is an empty class. */
-using spdlog::sinks::sink;
-
-/** True only if spdlog is enabled in this build. */
-constexpr bool kHaveSpdlog = true;
-
-}  // namespace logging
-
-#else  // DRAKE_INTERNAL_SPDLOG_ENABLED
-// If we don't have spdlog, we need to stub out logger.
-
-namespace logging {
-constexpr bool kHaveSpdlog = false;
-
-// A stubbed-out version of `spdlog::logger`.  Implements only those methods
-// that we expect to use, as spdlog's API does change from time to time.
-class logger {
- public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(logger);
-
-  logger();
-
-  template <typename... Args>
-  void trace(const Args&...) {}
-  template <typename... Args>
-  void debug(const Args&...) {}
-  template <typename... Args>
-  void info(const Args&...) {}
-  template <typename... Args>
-  void warn(const Args&...) {}
-  template <typename... Args>
-  void error(const Args&...) {}
-  template <typename... Args>
-  void critical(const Args&...) {}
-};
-
-// A stubbed-out version of `spdlog::sinks::sink`.
-class sink {
- public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(sink);
-
-  sink();
-};
-
-}  // namespace logging
-
+// The macros are no-ops in Release builds, or when logging is off.
 #define DRAKE_LOGGER_TRACE(...)
 #define DRAKE_LOGGER_DEBUG(...)
 
-#endif  // DRAKE_INTERNAL_SPDLOG_ENABLED
+#endif  // NDEBUG / DRAKE_INTERNAL_SPDLOG_ENABLED
+#endif  // DRAKE_DOXYGEN_CXX
 
-/** Retrieve an instance of a logger to use for logging; for example:
+namespace drake {
+
+#ifndef DRAKE_DOXYGEN_CXX
+namespace logging {
+class logger;  // Defined below.
+}  // namespace logging
+#endif
+
+/** Retrieve Drake's singleton instance of the `class logger`; for example:
 <pre>
   drake::log()->info("potato!")
 </pre>
@@ -166,12 +104,156 @@ logging::logger* log();
 
 namespace logging {
 
-/** (Advanced) Retrieves the default sink for all Drake logs.  When spdlog is
-enabled, the return value can be cast to spdlog::sinks::dist_sink_mt and thus
-allows consumers of Drake to redirect Drake's text logs to locations other than
-the default of stderr.  When spdlog is disabled, the return value is an empty
-class. */
-sink* get_dist_sink();
+// Ideally we would have named this just `enum class level`, but then the
+// logger::level() function would end up shadowing us.
+/** The severity level associated with a log message. */
+enum class level_enum {
+  trace,
+  debug,
+  info,
+  warn,
+  err,
+  critical,
+  off,
+};
+
+// We need to alias the values into a namespace, so that drake::logging::level
+// maintains backwards compatibility.
+namespace level {
+/** The TRACE severity level associated with a log message. */
+constexpr auto trace = level_enum::trace;
+/** The DEBUG severity level associated with a log message. */
+constexpr auto debug = level_enum::debug;
+/** The INFO severity level associated with a log message. */
+constexpr auto info = level_enum::info;
+/** The WARNING severity level associated with a log message. */
+constexpr auto warn = level_enum::warn;
+/** The ERROR severity level associated with a log message. */
+constexpr auto err = level_enum::err;
+/** The CRITICAL severity level associated with a log message. */
+constexpr auto critical = level_enum::critical;
+/** The OFF severity level associated with a log message. */
+constexpr auto off = level_enum::off;
+}  // namespace level
+
+/** The singleton class returned by Drake's drake::log() function, offering
+functions to emit log messages. Refer to the file overview for details. */
+class logger {
+ public:
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(logger);
+
+  /** XXX */
+  template <typename... Args>
+  void trace(fmt::format_string<Args...> pattern, Args&&... args) {
+    this->log(level::trace, pattern, std::forward<Args>(args)...);
+  }
+
+  /** XXX */
+  template <typename... Args>
+  void debug(fmt::format_string<Args...> pattern, Args&&... args) {
+    this->log(level::debug, pattern, std::forward<Args>(args)...);
+  }
+
+  /** XXX */
+  template <typename... Args>
+  void info(fmt::format_string<Args...> pattern, Args&&... args) {
+    this->log(level::info, pattern, std::forward<Args>(args)...);
+  }
+
+  /** XXX */
+  template <typename... Args>
+  void warn(fmt::format_string<Args...> pattern, Args&&... args) {
+    this->log(level::warn, pattern, std::forward<Args>(args)...);
+  }
+
+  /** XXX */
+  template <typename... Args>
+  void error(fmt::format_string<Args...> pattern, Args&&... args) {
+    this->log(level::err, pattern, std::forward<Args>(args)...);
+  }
+
+  /** XXX */
+  template <typename... Args>
+  void critical(fmt::format_string<Args...> pattern, Args&&... args) {
+    this->log(level::critical, pattern, std::forward<Args>(args)...);
+  }
+
+  /** XXX */
+  template <typename StringLike>
+  void trace(const StringLike& message) {
+    this->log(level::trace, std::string_view{message});
+  }
+
+  /** XXX */
+  template <typename StringLike>
+  void debug(const StringLike& message) {
+    this->log(level::debug, std::string_view{message});
+  }
+
+  /** XXX */
+  template <typename StringLike>
+  void info(const StringLike& message) {
+    this->log(level::info, std::string_view{message});
+  }
+
+  /** XXX */
+  template <typename StringLike>
+  void warn(const StringLike& message) {
+    this->log(level::warn, std::string_view{message});
+  }
+
+  /** XXX */
+  template <typename StringLike>
+  void error(const StringLike& message) {
+    this->log(level::err, std::string_view{message});
+  }
+
+  /** XXX */
+  template <typename StringLike>
+  void critical(const StringLike& message) {
+    this->log(level::critical, std::string_view{message});
+  }
+
+  /** XXX */
+  template <typename... Args>
+  void log(level_enum severity, fmt::format_string<Args...> pattern,
+           Args&&... args) {
+    if (should_log(severity)) {
+      this->LogUnconditionally(
+          severity, fmt::format(pattern, std::forward<Args>(args)...));
+    }
+  }
+
+  /** XXX */
+  void log(level_enum severity, std::string_view message) {
+    if (should_log(severity)) {
+      this->LogUnconditionally(severity, message);
+    }
+  }
+
+  /** Returns true iff the current level() threshold meets the given `severity`.
+   */
+  bool should_log(level_enum severity) const;
+
+  /** Returns the current log level. */
+  level_enum level() const;
+
+  /** Sets the currently log level. */
+  void set_level(level_enum severity) const;
+
+  /** XXX */
+  void set_pattern(std::string_view pattern);
+
+ private:
+  friend logging::logger* drake::log();
+
+  logger();
+  ~logger();
+
+  void LogUnconditionally(level_enum severity, std::string_view message);
+
+  void* const impl_;
+};
 
 /** When constructed, logs a message (at "warn" severity); the destructor is
 guaranteed to be trivial.  This is useful for declaring an instance of this
@@ -191,11 +273,8 @@ double* SanityCheck(double* data) {
 </pre> */
 struct [[maybe_unused]] Warn {  // NOLINT(whitespace/braces)
   template <typename... Args>
-  Warn(const char* a, const Args&... b) {
-    // TODO(jwnimmer-tri) Ideally we would compile-time check our Warn format
-    // strings without using fmt_runtime here, but I haven't figured out how
-    // to forward the arguments properly for all versions of fmt.
-    drake::log()->warn(fmt_runtime(a), b...);
+  Warn(fmt::format_string<Args...> pattern, Args&&... args) {
+    drake::log()->warn(pattern, std::forward<Args>(args)...);
   }
 };
 
@@ -216,6 +295,7 @@ extern const char* const kSetLogLevelUnchanged;
 extern const char* const kSetLogLevelHelpMessage;
 
 /** Invokes `drake::log()->set_pattern(pattern)`.
+This has no effect unless spdlog is enabled.
 @param pattern Formatting for message. For more information, see:
 https://github.com/gabime/spdlog/wiki/3.-Custom-formatting */
 void set_log_pattern(const std::string& pattern);

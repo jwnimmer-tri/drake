@@ -17,6 +17,20 @@ config_setting(
     },
 )
 
+config_setting(
+    name = "flag_text_logging_simple",
+    flag_values = {
+        "//tools/flags:text_logging": "simple",
+    },
+)
+
+config_setting(
+    name = "flag_text_logging_off",
+    flag_values = {
+        "//tools/flags:text_logging": "off",
+    },
+)
+
 # ---- Logic for choosing which spdlog to use. ---
 
 config_setting(

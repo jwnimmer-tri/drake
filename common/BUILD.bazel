@@ -120,7 +120,6 @@ drake_cc_library(
     srcs = [
         "drake_assert.cc",
         "drake_deprecated.cc",
-        "text_logging.cc",
     ],
     hdrs = [
         "constants.h",
@@ -139,12 +138,68 @@ drake_cc_library(
         ":fmt",
         "@eigen",
         "@fmt",
-    ] + select({
+    ],
+    implementation_deps = select({
         "//tools/workspace/spdlog:flag_text_logging_spdlog": [
-            "@spdlog",
+            ":text_logging_impl_spdlog",
         ],
-        "//conditions:default": [],
+        "//tools/workspace/spdlog:flag_text_logging_simple": [
+            ":text_logging_impl_simple",
+        ],
+        "//tools/workspace/spdlog:flag_text_logging_off": [
+            ":text_logging_impl_off",
+        ],
     }),
+)
+
+drake_cc_library(
+    name = "text_logging_impl_simple",
+    srcs = [
+        "text_logging.cc",
+        "text_logging_simple.cc",
+    ],
+    hdrs = [
+        "drake_copyable.h",
+        "never_destroyed.h",
+        "text_logging.h",
+    ],
+    internal = True,
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":unused",
+        "@fmt",
+    ],
+)
+
+drake_cc_library(
+    name = "text_logging_impl_spdlog",
+    srcs = [
+        "text_logging.cc",
+        "text_logging_spdlog.cc",
+    ],
+    hdrs = [
+        "drake_copyable.h",
+        "never_destroyed.h",
+        "text_logging.h",
+        "text_logging_spdlog.h",
+    ],
+    internal = True,
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+    deps = [
+        "@fmt",
+        "@spdlog",
+    ],
+)
+
+drake_cc_library(
+    name = "text_logging_spdlog",
+    hdrs = ["text_logging_spdlog.h"],
+    tags = ["exclude_from_package"],
+    deps = [
+        ":essential",
+    ],
 )
 
 drake_cc_library(
@@ -1226,25 +1281,52 @@ drake_cc_googletest(
     ],
 )
 
-# This version of text_logging_test is compiled with spdlog enabled.
 drake_cc_googletest(
-    name = "text_logging_test",
-    defines = [
-        "TEXT_LOGGING_TEST_SPDLOG=1",
+    name = "text_logging_simple_test",
+    srcs = [
+        "test/text_logging_test.cc",
     ],
     use_default_main = False,
     deps = [
-        ":essential",
+        ":text_logging_impl_simple",
     ],
 )
 
-# Likewise (to the above test) for the ostream variation.
 drake_cc_googletest(
-    name = "text_logging_ostream_test",
-    defines = [
-        "TEXT_LOGGING_TEST_SPDLOG=1",
+    name = "text_logging_spdlog_test",
+    srcs = [
+        "test/text_logging_test.cc",
     ],
     use_default_main = False,
+    deps = [
+        ":text_logging_impl_spdlog",
+    ],
+)
+
+drake_cc_googletest(
+    name = "text_logging_gflags_simple_test",
+    srcs = [
+        "test/text_logging_gflags_test.cc",
+    ],
+    use_default_main = False,
+    deps = [
+        ":text_logging_impl_simple",
+    ],
+)
+
+drake_cc_googletest(
+    name = "text_logging_gflags_spdlog_test",
+    srcs = [
+        "test/text_logging_gflags_test.cc",
+    ],
+    use_default_main = False,
+    deps = [
+        ":text_logging_impl_spdlog",
+    ],
+)
+
+drake_cc_googletest(
+    name = "text_logging_ostream_test",
     deps = [
         ":essential",
     ],

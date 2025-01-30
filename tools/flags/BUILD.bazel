@@ -119,12 +119,16 @@ string_flag(
 # spdlog, which in pydrake is routed to `logging.getLogger("drake")`; users can
 # configure the spdlog logger to their needs.
 #
+# When set to "simple" logs are directly printed to stderr, with no available
+# configuration settings, and spdlog is not used (nor compiled / linked).
+#
 # When set to "off", logging is fully disabled (in both C++ and Python).
 string_flag(
     name = "text_logging",
     build_setting_default = "spdlog",
     values = [
         "spdlog",
+        "simple",
         "off",
     ],
 )
