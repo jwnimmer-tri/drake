@@ -471,9 +471,8 @@ void LogConstraintViolations(const MathematicalProgram& prog,
       "were {}",
       fmt::join(infeasible_constraint_names, ", "));
 
-#ifdef DRAKE_INTERNAL_SPDLOG_ENABLED
   // Debugging information for all constraints.
-  if (log()->should_log(spdlog::level::debug)) {
+  if (log()->should_log(logging::level::debug)) {
     for (const auto& binding : prog.GetAllConstraints()) {
       const auto& constraint = binding.evaluator();
 
@@ -488,7 +487,6 @@ void LogConstraintViolations(const MathematicalProgram& prog,
       }
     }
   }
-#endif
 }
 
 VectorXd TrySolveQPAndFallbackToZero(const MathematicalProgram& prog,

@@ -144,8 +144,10 @@ Adjusting open-source dependencies:
 * `DRAKE_TEXT_LOGGING` (default `spdlog`). Configures how Drake performs text
   logging (i.e., console output). By default, C++ log messages are displayed via
   `spdlog` to stderr; when using pydrake spdlog logs are redirected by default
-  to `logging.getLogger('drake')`. All text logging can be fully disabled (in
-  both C++ and Python) by setting this to `OFF`.
+  to `logging.getLogger('drake')`.  When set to `simple` logs are directly
+  printed to stderr, with no available configuration settings, and spdlog is not
+  used (nor compiled / linked).  All text logging can be fully disabled (in both
+  C++ and Python) by setting this to `OFF`.
 * `WITH_USER_EIGEN` (default `ON`). When `ON`, uses `find_package(Eigen3)`
   to locate a user-provided `Eigen3::Eigen` library
   instead of hard-coding to the operating system version.

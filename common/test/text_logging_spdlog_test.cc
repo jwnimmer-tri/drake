@@ -1,6 +1,9 @@
-#include "drake/common/text_logging_spdlog.h"
+/* clang-format off to disable clang-format-includes */
+#include "drake/common/text_logging.h"
+/* clang-format on */
 
 #include <memory>
+#include <ostream>
 #include <sstream>
 
 #include <gmock/gmock.h>
