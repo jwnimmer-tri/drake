@@ -120,6 +120,28 @@ class pylogging_sink final
     DRAKE_UNREACHABLE();
   }
 
+  // https://docs.python.org/3/library/logging.html#logging-levels
+  static int to_py_level(logging::level_enum level) {
+    using Enum = logging::level_enum;
+    switch (level) {
+      case Enum::trace:
+        return 5;
+      case Enum::debug:
+        return 10;
+      case Enum::info:
+        return 20;
+      case Enum::warn:
+        return 30;
+      case Enum::err:
+        return 40;
+      case Enum::critical:
+        return 50;
+      case Enum::off:
+        break;
+    }
+    DRAKE_UNREACHABLE();
+  }
+
   std::atomic<bool> is_configured_{false};
   py::object name_{py::cast("drake")};
   py::object is_enabled_for_;

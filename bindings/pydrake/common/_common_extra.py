@@ -99,7 +99,7 @@ def configure_logging():
     format = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
     _logging.basicConfig(level=_logging.INFO, format=format)
     _logging.addLevelName(5, "TRACE")
-    if _kHaveSpdlog:
+    if _kHaveSpdlog:  # XXX
         # Inherit the root logger's level.
         _drake_logger.setLevel(_logging.NOTSET)
     else:
