@@ -56,7 +56,6 @@ build --repository_cache=$HOME/.cache/drake-wheel-build/bazel/repository_cache
 build --repo_env=DRAKE_WHEEL=1
 build --repo_env=SNOPT_PATH=${SNOPT_PATH}
 build --config=packaging
-build --define=LCM_INSTALL_JAVA=OFF
 # See tools/wheel/wheel_builder/macos.py for more on this env variable.
 build --macos_minimum_os="${MACOSX_DEPLOYMENT_TARGET}"
 EOF
@@ -69,6 +68,7 @@ cmake "$git_root" \
     -DWITH_USER_SPDLOG=OFF \
     -DWITH_USER_BLAS=OFF \
     -DWITH_USER_LAPACK=OFF \
+    -DWITH_DRAKE_LCMTYPES_JAVA=OFF \
     -DDRAKE_VERSION_OVERRIDE="${DRAKE_VERSION}" \
     -DCMAKE_INSTALL_PREFIX="/opt/drake-dist/$python" \
     -DPython_EXECUTABLE="$python_executable"

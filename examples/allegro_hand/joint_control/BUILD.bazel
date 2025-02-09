@@ -47,6 +47,7 @@ drake_cc_binary(
         "//examples/allegro_hand:allegro_lcm",
         "//lcmtypes:allegro",
         "@gflags",
+        # TODO(jwnimmer-tri) Port to drake_lcm instead of lcm-cpp.
         "@lcm",
     ],
 )

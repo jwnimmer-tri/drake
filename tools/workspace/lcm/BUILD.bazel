@@ -1,6 +1,7 @@
 load("//tools/lint:lint.bzl", "add_lint_tests")
 load("//tools/skylark:drake_py.bzl", "drake_py_unittest")
 
+# Remove this stanza on 2025-05-01.
 exports_files(
     [
         "lcm-config.cmake",
@@ -10,9 +11,26 @@ exports_files(
     visibility = ["@lcm//:__pkg__"],
 )
 
+config_setting(
+    name = "runtime_enabled",
+    flag_values = {"//tools/flags:with_lcm_runtime": "True"},
+)
+
+cc_library(
+    name = "shared_library_maybe",
+    visibility = ["//tools/install/libdrake:__pkg__"],
+    deps = select({
+        ":runtime_enabled": ["@lcm"],
+        "//conditions:default": [],
+    }),
+)
+
 drake_py_unittest(
     name = "no_lcm_warnings_test",
     deps = ["@lcm//:lcm-python"],
 )
 
-add_lint_tests(python_lint_extra_srcs = ["test/lcm-gen_install_test.py"])
+add_lint_tests(
+    # Remove this stanza on 2025-05-01.
+    python_lint_extra_srcs = ["test/lcm-gen_install_test.py"],
+)

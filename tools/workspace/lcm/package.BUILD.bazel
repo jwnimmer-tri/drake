@@ -1,7 +1,6 @@
 # -*- bazel -*-
 
 load("@drake//tools/install:install.bzl", "install", "install_files")
-load("@drake//tools/lint:python_lint.bzl", "python_lint")
 load("@drake//tools/skylark:cc.bzl", "cc_binary", "cc_library")
 load("@drake//tools/skylark:drake_java.bzl", "drake_java_binary")
 load("@drake//tools/skylark:java.bzl", "java_library")
@@ -18,14 +17,6 @@ licenses([
 ])
 
 package(default_visibility = ["//visibility:public"])
-
-# Provide an opt-out that avoids installing Java LCM libraries (e.g., we don't
-# need Java when we're building a Python wheel). The java targets will still be
-# defined, they just won't be part of //:install.
-config_setting(
-    name = "lcm_install_java_is_off",
-    values = {"define": "LCM_INSTALL_JAVA=OFF"},
-)
 
 config_setting(
     name = "linux",
@@ -290,6 +281,34 @@ drake_java_binary(
 
 CMAKE_PACKAGE = "lcm"
 
+# TODO(jwnimmer-tri) After 2025-05-01 we can simplify the install rule(s).
+install(
+    name = "install_c_library",
+    targets = [
+        ":libdrake_lcm.so",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# Deprecated 2025-05-01; see below.
+install(
+    name = "install_c_headers",
+    hdrs = LCM_PUBLIC_HEADERS,
+    hdr_dest = "include/" + CMAKE_PACKAGE,
+    visibility = ["//visibility:private"],
+)
+
+# Deprecated 2025-05-01; see below.
+install(
+    name = "install_c_binaries",
+    targets = [
+        ":lcm-logger",
+        ":lcm-logplayer",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# Deprecated 2025-05-01; see below.
 install_files(
     name = "install_cmake_config",
     dest = "lib/cmake/{}".format(CMAKE_PACKAGE),
@@ -303,51 +322,15 @@ install_files(
     visibility = ["//visibility:private"],
 )
 
+# Deprecated 2025-05-01; see below.
 install(
-    name = "install_python",
+    name = "install_java",
     targets = [
-        ":_lcm.so",
-        ":lcm-python-upstream",
-    ],
-    library_dest = "lib/python@PYTHON_VERSION@/site-packages/lcm",
-    py_strip_prefix = ["lcm-python"],
-)
-
-# Drake's install of LCM alongside Drake (both as part of our CMake install,
-# and in our binary packages) is deprecated and will be removed on 2025-05-01.
-#
-# If you still need LCM tools in your own project, add LCM as a CMake external
-# to your project.
-#
-# On 2025-05-01 we will remove everything from this target except for the
-# C++ runtime shared library and its license.
-install(
-    name = "install",
-    install_tests = [
-        "@drake//tools/workspace/lcm:test/lcm-gen_install_test.py",
-    ],
-    targets = [
-        ":lcm-gen",
-        ":lcm-logger",
-        ":lcm-logplayer",
-        ":libdrake_lcm.so",
-    ] + select({
-        ":lcm_install_java_is_off": [],
-        "//conditions:default": [
-            ":lcm-java",
-            ":lcm-logplayer-gui",
-            ":lcm-logplayer-gui-launcher",
-            ":lcm-spy",
-            ":lcm-spy-launcher",
-        ],
-    }),
-    py_strip_prefix = ["lcm-python"],
-    hdrs = LCM_PUBLIC_HEADERS,
-    hdr_dest = "include/" + CMAKE_PACKAGE,
-    docs = [
-        "AUTHORS",
-        "COPYING",
-        "NEWS.md",
+        ":lcm-java",
+        ":lcm-logplayer-gui",
+        ":lcm-logplayer-gui-launcher",
+        ":lcm-spy",
+        ":lcm-spy-launcher",
     ],
     allowed_externals = [
         "@com_jidesoft_jide_oss//jar",
@@ -360,10 +343,67 @@ install(
         "bin/lcm-logplayer-gui-launcher.sh": "lcm-logplayer-gui",
         "bin/lcm-spy-launcher.sh": "lcm-spy",
     },
-    deps = [
-        ":install_cmake_config",
-        ":install_python",
-    ],
+    visibility = ["//visibility:private"],
 )
 
-python_lint(extra_srcs = [":test/lcm-gen_install_test.py"])
+# Deprecated 2025-05-01; see below.
+install(
+    name = "install_python",
+    targets = [
+        ":_lcm.so",
+        ":lcm-python-upstream",
+    ],
+    library_dest = "lib/python@PYTHON_VERSION@/site-packages/lcm",
+    py_strip_prefix = ["lcm-python"],
+    visibility = ["//visibility:private"],
+)
+
+# Deprecated 2025-05-01; see below.
+install(
+    name = "install_lcmgen",
+    install_tests = [
+        "@drake//tools/workspace/lcm:test/lcm-gen_install_test.py",
+    ],
+    targets = [
+        ":lcm-gen",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# Drake's install of LCM alongside Drake (both as part of our CMake install,
+# and in our binary packages) is deprecated and will be removed on 2025-05-01.
+#
+# If you still need LCM tools in your own project, add LCM as a CMake external
+# to your project.
+#
+# On 2025-05-01 we will remove everything from this target except for the
+# C++ runtime shared library and its license.
+install(
+    name = "install",
+    docs = [
+        "AUTHORS",
+        "COPYING",
+        "NEWS.md",
+    ],
+    deps = [
+        ":install_cmake_config",
+        ":install_lcmgen",
+    ] + select({
+        "@drake//tools/workspace/lcm:runtime_enabled": [
+            ":install_c_binaries",
+            ":install_c_headers",
+            ":install_c_library",
+            ":install_python",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        # Here we abuse "don't install lcmtypes_drake.jar" to imply "don't
+        # install lcm.jar". This is what our wheel builds want it to mean,
+        # and it's not worth making an indepedent flag to govern it since
+        # it's deprecated for removal in a few months anyway.
+        "@drake//lcmtypes:with_drake_lcmtypes_java": [
+            ":install_java",
+        ],
+        "//conditions:default": [],
+    }),
+)

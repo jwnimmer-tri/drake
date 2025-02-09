@@ -67,6 +67,7 @@ drake_cc_binary(
         "//manipulation/kinova_jaco:jaco_constants",
         "//manipulation/util:move_ik_demo_base",
         "//math:geometric_transform",
+        # TODO(jwnimmer-tri) Port to drake_lcm instead of lcm-cpp.
         "@lcm",
     ],
 )

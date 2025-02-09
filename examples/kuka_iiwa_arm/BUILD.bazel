@@ -119,6 +119,7 @@ drake_cc_binary(
         "//lcmtypes:robot_plan",
         "//multibody/parsing",
         "//multibody/plant",
+        # TODO(jwnimmer-tri) Port to drake_lcm instead of lcm-cpp.
         "@lcm",
     ],
 )
@@ -136,6 +137,7 @@ drake_cc_binary(
         "//lcmtypes:iiwa",
         "//manipulation/util:move_ik_demo_base",
         "//math:geometric_transform",
+        # TODO(jwnimmer-tri) Port to drake_lcm instead of lcm-cpp.
         "@lcm",
     ],
 )

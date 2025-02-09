@@ -48,9 +48,10 @@ PYBIND11_MODULE(lcm, m) {
                   channel, [handler](const void* data, int size) {
                     handler(py::bytes(static_cast<const char*>(data), size));
                   });
-              DRAKE_DEMAND(subscription != nullptr);
-              // This is already the default, but for clarity we'll repeat it.
-              subscription->set_unsubscribe_on_delete(false);
+              if (subscription != nullptr) {
+                // This is already the default, but for clarity we'll repeat it.
+                subscription->set_unsubscribe_on_delete(false);
+              }
             },
             py::arg("channel"), py::arg("handler"), cls_doc.Subscribe.doc)
         .def(
@@ -63,9 +64,10 @@ PYBIND11_MODULE(lcm, m) {
                     handler(channel,
                         py::bytes(static_cast<const char*>(data), size));
                   });
-              DRAKE_DEMAND(subscription != nullptr);
-              // This is already the default, but for clarity we'll repeat it.
-              subscription->set_unsubscribe_on_delete(false);
+              if (subscription != nullptr) {
+                // This is already the default, but for clarity we'll repeat it.
+                subscription->set_unsubscribe_on_delete(false);
+              }
             },
             py::arg("regex"), py::arg("handler"),
             cls_doc.SubscribeMultichannel.doc)
@@ -78,9 +80,10 @@ PYBIND11_MODULE(lcm, m) {
                     handler(channel,
                         py::bytes(static_cast<const char*>(data), size));
                   });
-              DRAKE_DEMAND(subscription != nullptr);
-              // This is already the default, but for clarity we'll repeat it.
-              subscription->set_unsubscribe_on_delete(false);
+              if (subscription != nullptr) {
+                // This is already the default, but for clarity we'll repeat it.
+                subscription->set_unsubscribe_on_delete(false);
+              }
             },
             py::arg("handler"), cls_doc.SubscribeAllChannels.doc)
         .def("HandleSubscriptions", &DrakeLcmInterface::HandleSubscriptions,
@@ -107,7 +110,8 @@ PYBIND11_MODULE(lcm, m) {
         .def(py::init<std::string>(), py::arg("lcm_url"),
             cls_doc.ctor.doc_1args_lcm_url)
         .def(py::init<DrakeLcmParams>(), py::arg("params"),
-            cls_doc.ctor.doc_1args_params);
+            cls_doc.ctor.doc_1args_params)
+        .def_static("available", &Class::available, cls_doc.available.doc);
   }
 
   ExecuteExtraPythonCode(m);

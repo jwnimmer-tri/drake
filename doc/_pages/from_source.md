@@ -96,6 +96,13 @@ Adjusting open-source dependencies:
   user-provided `LAPACK::LAPACK` library instead of building from source.
   This option is not available on macOS.
   When ON, WITH_USER_BLAS must also be ON.
+* WITH_LCM_RUNTIME (default ON). When ON, the LGPL-licensed LCM runtime library
+  will be installed alongside Drake. When OFF, the library will not be installed
+  and the static methods `DrakeLcm::available()` and `DrakeLcmLog::available()`
+  will return `false`.
+* WITH_DRAKE_LCMTYPES_JAVA (default ON). When ON, lcmtypes_drake.jar will be
+  compiled and installed. Setting to OFF might be helpful to avoid depending
+  on a JDK during the build.
 
 Adjusting closed-source (commercial) software dependencies:
 
