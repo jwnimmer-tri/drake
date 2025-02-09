@@ -6,9 +6,9 @@
 /// of the end effector is printed before, during, and after the commanded
 /// motion.
 
-#include "lcm/lcm-cpp.hpp"
 #include <gflags/gflags.h>
 
+#include "drake/lcm/drake_lcm.h"
 #include "drake/lcmt_jaco_status.hpp"
 #include "drake/manipulation/kinova_jaco/jaco_constants.h"
 #include "drake/manipulation/util/move_ik_demo_base.h"
@@ -38,6 +38,8 @@ namespace examples {
 namespace kinova_jaco_arm {
 namespace {
 
+using lcm::DrakeLcm;
+using lcm::Subscriber;
 using manipulation::kinova_jaco::kFingerSdkToUrdf;
 using manipulation::util::MoveIkDemoBase;
 using multibody::PackageMap;
@@ -55,31 +57,31 @@ int DoMain() {
       !FLAGS_urdf.empty() ? FLAGS_urdf : PackageMap{}.ResolveUrl(kUrdfUrl),
       "base", FLAGS_ee_name, 100);
 
-  ::lcm::LCM lc;
-  lc.subscribe<lcmt_jaco_status>(
-      FLAGS_lcm_status_channel,
-      [&](const ::lcm::ReceiveBuffer*, const std::string&,
-          const lcmt_jaco_status* status) {
-        Eigen::VectorXd jaco_q(status->num_joints + status->num_fingers);
-        for (int i = 0; i < status->num_joints; i++) {
-          jaco_q[i] = status->joint_position[i];
+  DrakeLcm lcm;
+  Subscriber<lcmt_jaco_status> subscriber(&lcm, FLAGS_lcm_status_channel);
+  while (true) {
+    lcm.HandleSubscriptions(1);
+    if (subscriber.count() > 0) {
+      const lcmt_jaco_status& status = subscriber.message();
+      Eigen::VectorXd jaco_q(status.num_joints + status.num_fingers);
+      for (int i = 0; i < status.num_joints; i++) {
+        jaco_q[i] = status.joint_position[i];
+      }
+      for (int i = 0; i < status.num_fingers; i++) {
+        jaco_q[status.num_joints + i] =
+            status.finger_position[i] * kFingerSdkToUrdf;
+      }
+      demo.HandleStatus(jaco_q);
+      if (demo.status_count() == 1) {
+        std::optional<lcmt_robot_plan> plan = demo.Plan(pose);
+        if (plan.has_value()) {
+          Publish(&lcm, FLAGS_lcm_plan_channel, plan.value());
         }
-
-        for (int i = 0; i < status->num_fingers; i++) {
-          jaco_q[status->num_joints + i] =
-              status->finger_position[i] * kFingerSdkToUrdf;
-        }
-        demo.HandleStatus(jaco_q);
-        if (demo.status_count() == 1) {
-          std::optional<lcmt_robot_plan> plan = demo.Plan(pose);
-          if (plan.has_value()) {
-            lc.publish(FLAGS_lcm_plan_channel, &plan.value());
-          }
-        }
-      });
-
-  while (lc.handle() >= 0) {
+      }
+    }
+    subscriber.clear();
   }
+
   return 0;
 }
 

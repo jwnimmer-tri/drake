@@ -46,8 +46,8 @@ drake_cc_binary(
         "//examples/allegro_hand:allegro_common",
         "//examples/allegro_hand:allegro_lcm",
         "//lcmtypes:allegro",
+        "//lcm:drake_lcm",
         "@gflags",
-        "@lcm",
     ],
 )
 
