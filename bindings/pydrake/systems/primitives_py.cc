@@ -6,6 +6,7 @@
 #include "drake/systems/primitives/adder.h"
 #include "drake/systems/primitives/affine_system.h"
 #include "drake/systems/primitives/barycentric_system.h"
+#include "drake/systems/primitives/bus_creator.h"
 #include "drake/systems/primitives/constant_value_source.h"
 #include "drake/systems/primitives/constant_vector_source.h"
 #include "drake/systems/primitives/demultiplexer.h"
@@ -124,6 +125,16 @@ PYBIND11_MODULE(primitives, m) {
             &TimeVaryingAffineSystem<T>::configure_random_state,
             py::arg("covariance"),
             doc.TimeVaryingAffineSystem.configure_random_state.doc);
+
+    DefineTemplateClassWithDefault<BusCreator<T>, LeafSystem<T>>(
+        m, "BusCreator", GetPyParam<T>(), doc.BusCreator.doc)
+        .def(py::init<std::variant<std::string, UseDefaultName>>(),
+            py::arg("output_port_name") = kUseDefaultName,
+            doc.BusCreator.ctor.doc)
+        .def("DeclareAbstractInputPort",
+            &BusCreator<T>::DeclareAbstractInputPort, py::arg("name"),
+            py::arg("model_value"), py_rvp::reference_internal,
+            doc.BusCreator.DeclareAbstractInputPort.doc);
 
     DefineTemplateClassWithDefault<ConstantValueSource<T>, LeafSystem<T>>(
         m, "ConstantValueSource", GetPyParam<T>(), doc.ConstantValueSource.doc)
