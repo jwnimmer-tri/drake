@@ -1,0 +1,45 @@
+[lcm] Tweak rules to allow for installing
+
+These changes are required for Drake's install logic. On 2025-05-01
+when we delete the install logic we should also delete this patch.
+
+(1) Change header file visibility to allow installing.
+
+(2) Use drake_java_binary wrapper instead of java_binary.
+
+(3) Change lcm-python visibility to allow installing.
+
+Reasoning for not upstreaming this patch: temporary Drake-specific
+build requirement.
+
+--- lcm/BUILD.bazel
++++ lcm/BUILD.bazel
+@@ -34,6 +34,7 @@ LCM_INSTALL_HEADERS = [
+     "lcm-cpp-impl.hpp",
+     "lcm_export.h",
+ ]
++exports_files(LCM_INSTALL_HEADERS)
+ 
+ LCM_SOURCES_WIN32 = [
+     "windows/WinLCM.cpp",
+
+--- lcm-java/BUILD.bazel
++++ lcm-java/BUILD.bazel
+@@ -1,4 +1,4 @@
+-load("@rules_java//java:java_binary.bzl", "java_binary")
++load("@drake//tools/skylark:drake_java.bzl", java_binary = "drake_java_binary")
+ load("@rules_java//java:java_library.bzl", "java_library")
+ 
+ package(
+
+--- lcm-python/BUILD.bazel
++++ lcm-python/BUILD.bazel
+@@ -17,7 +17,7 @@ cc_binary(
+         "pylcm_subscription.h",
+     ],
+     linkshared = True,
+-    visibility = ["//visibility:private"],
++    visibility = ["//:__subpackages__"],
+     deps = [
+         "//lcm:lcm-shared",
+         "@rules_python//python/cc:current_py_cc_headers",
