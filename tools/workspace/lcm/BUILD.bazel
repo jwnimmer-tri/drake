@@ -12,7 +12,7 @@ exports_files(
 
 drake_py_unittest(
     name = "no_lcm_warnings_test",
-    deps = ["@lcm//:lcm-python"],
+    deps = ["@lcm//lcm-python"],
 )
 
 add_lint_tests(python_lint_extra_srcs = ["test/lcm-gen_install_test.py"])

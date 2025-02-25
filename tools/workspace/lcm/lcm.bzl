@@ -126,7 +126,7 @@ _lcm_library_gen = rule(
         "lcmgen": attr.label(
             cfg = "host",
             executable = True,
-            default = Label("@lcm//:lcm-gen"),
+            default = Label("@lcm//lcmgen:lcm-gen"),
         ),
         "outs": attr.output_list(),
         "language": attr.string(),
@@ -221,8 +221,13 @@ def lcm_cc_library(
 
     deps = kwargs.pop("deps", [])
     if not _use_new_lcm_gen:
-        if "@lcm//:lcm_coretypes" not in deps:
-            deps = deps + ["@lcm//:lcm_coretypes"]
+        needs_coretypes = True
+        if "@lcm//:lcm_coretypes" in deps:  # Remove 2025-09-01 (deprecation).
+            needs_coretypes = False
+        if "@lcm//lcm:lcm-coretypes" in deps:
+            needs_coretypes = False
+        if needs_coretypes:
+            deps = deps + ["@lcm//lcm:lcm-coretypes"]
 
     includes = kwargs.pop("includes", [])
     if "." not in includes:
@@ -318,8 +323,15 @@ def lcm_java_library(
     )
 
     deps = kwargs.pop("deps", [])
-    if "@lcm//:lcm-java" not in deps:
-        deps = deps + ["@lcm//:lcm-java"]
+    needs_lcm_java = True
+    if "@lcm//:lcm-java" in deps:  # Remove 2025-09-01 (deprecation).
+        needs_lcm_java = False
+    if "@lcm//lcm-java" in deps:
+        needs_lcm_java = False
+    if "@lcm//lcm-java:lcm-java" in deps:
+        needs_lcm_java = False
+    if needs_lcm_java:
+        deps = deps + ["@lcm//lcm-java"]
 
     java_library(
         name = name,

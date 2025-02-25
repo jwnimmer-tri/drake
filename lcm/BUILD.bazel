@@ -78,7 +78,7 @@ drake_cc_library(
     implementation_deps = [
         "//common:network_policy",
         "@glib",
-        "@lcm",
+        "@lcm//lcm:drake_lcm",
     ],
 )
 
@@ -92,7 +92,7 @@ drake_cc_library(
     ],
     implementation_deps = [
         "//common:string_container",
-        "@lcm",
+        "@lcm//lcm:drake_lcm",
     ],
 )
 
@@ -144,7 +144,7 @@ drake_cc_googletest(
         ":drake_lcm",
         ":lcmt_drake_signal_utils",
         "//common/test_utilities:expect_throws_message",
-        "@lcm",
+        "@lcm//lcm:drake_lcm",
     ],
 )
 
@@ -163,7 +163,7 @@ drake_cc_googletest(
     deps = [
         ":drake_lcm",
         ":lcmt_drake_signal_utils",
-        "@lcm",
+        "@lcm//lcm:drake_lcm",
     ],
 )
 
@@ -209,7 +209,7 @@ drake_py_test(
     name = "import_lcm_test",
     # TODO(jwnimmer-tri) Port this to drake_py_unittest.
     allow_import_unittest = True,
-    deps = ["@lcm//:lcm-python"],
+    deps = ["@lcm//lcm-python"],
 )
 
 add_lint_tests()
