@@ -10,8 +10,16 @@ def lcm_repository(
         When updating, lcm needs its own pull request separate from the rest of
         the monthly upgrades.
         """,
-        commit = "v1.5.1",
-        sha256 = "40ba0b7fb7c9ad06d05e06b4787d743cf11be30eb4f1a03abf4a92641c5b1203",  # noqa
+        # TOOD(jwnimmer-tri) Once LCM has its next tagged release >v1.5.1, we
+        # should switch this back to a release tag instead of this hash.
+        commit = "050ce9ee512fe8a42ea26934bdb80f64200ef057",
+        sha256 = "410d0dc4d31a8153aab2b2e28a879ae5719556e93a7577365a8f2ca6d0f95bab",  # noqa
         build_file = ":package.BUILD.bazel",
+        patches = [
+            ":patches/copts.patch",
+            ":patches/drake_shared_library.patch",
+            ":patches/install.patch",
+            ":patches/respell_bzlmod_deps.patch",
+        ],
         mirrors = mirrors,
     )

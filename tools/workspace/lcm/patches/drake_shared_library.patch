@@ -1,0 +1,42 @@
+[lcm] Add rule to compile an installable shared library
+
+--- lcm/BUILD.bazel
++++ lcm/BUILD.bazel
+@@ -1,5 +1,6 @@
+ load("@bazel_skylib//lib:paths.bzl", "paths")
+ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
++load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+ load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ load("@rules_cc//cc:cc_shared_library.bzl", "cc_shared_library")
+ load("//lcm-bazel/private:copts.bzl", "WARNINGS_COPTS")
+@@ -180,3 +181,30 @@ cc_shared_library(
+     visibility = ["//visibility:public"],
+     deps = ["lcm-shared"],
+ )
++
++# We only build a shared-library flavor of liblcm.so, because its LGPL-licensed
++# and thus should never be linked statically.  Building C++ shared libraries
++# in Bazel is not well-supported, but for C code is relatively trivial.  This
++# rule creates the runtime artifact -- a loadable shared library with its deps
++# linked dynamically.  The `name = "lcm"` rule below provides the compile-time
++# artifact that combines the shared library with its headers.
++cc_binary(
++    name = "libdrake_lcm.so",
++    srcs = SRCS + HDRS,
++    copts = COPTS,
++    linkopts = LINKOPTS + select({
++        ":linux": ["-Wl,-soname,libdrake_lcm.so"],
++        "//conditions:default": [],
++    }),
++    linkshared = True,
++    visibility = ["//visibility:public"],
++    deps = ["@glib"],
++)
++
++# This is the compile-time target for libdrake_lcm.so; see above for details.
++cc_library(
++    name = "drake_lcm",
++    srcs = ["libdrake_lcm.so"],
++    hdrs = HDRS,
++    visibility = ["//visibility:public"],
++)
