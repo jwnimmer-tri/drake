@@ -10,6 +10,8 @@ def nlopt_internal_repository(
         sha256 = "506f83a9e778ad4f204446e99509cb2bdf5539de8beccc260a014bd560237be1",  # noqa
         build_file = ":package.BUILD.bazel",
         patches = [
+            ":patches/no_cerr_cout.patch",
+            ":patches/no_exit.patch",
             ":patches/vendor.patch",
         ],
         mirrors = mirrors,
