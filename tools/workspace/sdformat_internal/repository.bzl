@@ -18,9 +18,14 @@ def sdformat_internal_repository(
             ":patches/console.patch",
             ":patches/deprecation_unit_testing.patch",
             ":patches/environment.patch",
+            ":patches/no_cout.patch",
             ":patches/no_global_config.patch",
             ":patches/no_share_path.patch",
             ":patches/no_urdf.patch",
+        ],
+        patch_cmds = [
+            # XXX document me (only src NOT INCLUDE)
+            # "sed -i -e 's|<iostream>|<ostream>|;' $(find src -name '*.[ch]*')",  # noqa
         ],
         mirrors = mirrors,
     )

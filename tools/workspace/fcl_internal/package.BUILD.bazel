@@ -60,6 +60,9 @@ _HDRS_GLOB = glob(
     ],
     exclude = [
         "**/octree/**",
+        # The profiler abuses std::cout; don't even #include it.
+        "include/fcl/common/profiler.h",
+        "include/fcl/common/detail/profiler.h",
     ],
     allow_empty = False,
 )
@@ -134,6 +137,7 @@ cc_library_vendored(
     linkstatic = True,
     deps = [
         "@ccd_internal//:ccd",
+        "@drake//tools/vendor_iostream",
         "@eigen",
     ],
 )

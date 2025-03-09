@@ -145,6 +145,7 @@ _vtk_internal_repository_impl = repository_rule(
         "sha256": attr.string(),
         "build_file": attr.label(),
         "patches": attr.label_list(),
+        "patch_cmds": attr.string_list(),
         "extra_strip_prefix": attr.string(),
         "mirrors": attr.string_list_dict(),
         # This attribute is specific to our rule, not setup_github_repository.
@@ -176,12 +177,16 @@ def vtk_internal_repository(
         sha256 = "6794ad2d95d36d1b6c83ed31ea18ffc1adef33d1ced94aab1aa04c0f10b5602a",  # noqa
         build_file = ":package.BUILD.bazel",
         patches = [
+            ":patches/upstream/common_core_rm_iostream.patch",
             ":patches/upstream/fix_illumination_bugs.patch",
             ":patches/upstream/gltf_selected_load.patch",
             ":patches/upstream/io_geometry_gltf_default_scene.patch",
             ":patches/upstream/gltf_importer_from_stream.patch",
             ":patches/upstream/scaled_albedo_for_ibl.patch",
+            # XXX ":patches/upstream/vtkpugixml_global_ctor.patch",
+            ":patches/common_core_cout_is_not_a_stream.patch",
             ":patches/common_core_nobacktrace.patch",
+            ":patches/common_core_rm_cin_prompting.patch",
             ":patches/common_core_version.patch",
             ":patches/disable_static_destructors.patch",
             ":patches/io_image_formats.patch",
@@ -193,6 +198,10 @@ def vtk_internal_repository(
             ":patches/vtkfast_float_hidden.patch",
             ":patches/vtkpugixml_hidden.patch",
             ":patches/vtksys_hidden.patch",
+        ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find . -type f -name '*.[ch]*')",  # noqa
         ],
         settings_bzl = ":settings.bzl",
         **kwargs):
@@ -225,6 +234,7 @@ def vtk_internal_repository(
             sha256 = sha256,
             build_file = build_file,
             patches = patches,
+            patch_cmds = patch_cmds,
             settings_bzl = settings_bzl,
             **kwargs
         )

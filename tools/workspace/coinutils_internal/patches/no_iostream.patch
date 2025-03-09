@@ -1,0 +1,18 @@
+--- CoinUtils/src/CoinError.hpp
++++ CoinUtils/src/CoinError.hpp
+@@ -89,6 +89,7 @@
+   {
+     if (!doPrint)
+       return;
++#if 0
+     if (lineNumber_ < 0) {
+       std::cout << message_ << " in " << class_ << "::" << method_ << std::endl;
+     } else {
+@@ -97,6 +98,7 @@
+       if (class_ != "")
+         std::cout << "Possible reason: " << class_ << std::endl;
+     }
++#endif
+   }
+   //@}
+ 

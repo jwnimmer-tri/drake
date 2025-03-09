@@ -19,5 +19,9 @@ def uwebsockets_internal_repository(
         patches = [
             ":patches/upstream/pr1828.patch",
         ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find src -name '*.[ch]*')",  # noqa
+        ],
         mirrors = mirrors,
     )
