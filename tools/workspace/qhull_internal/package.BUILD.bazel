@@ -87,7 +87,10 @@ cc_library_vendored(
     copts = ["-w"],
     linkstatic = 1,
     visibility = ["//visibility:public"],
-    deps = [":qhull_r"],
+    deps = [
+        ":qhull_r",
+        "@drake//tools/vendor_iostream",
+    ],
 )
 
 generate_vendor_patch(

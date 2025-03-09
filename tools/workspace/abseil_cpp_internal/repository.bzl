@@ -19,6 +19,8 @@ def abseil_cpp_internal_repository(
             # uses so that we don't get "duplicate kwarg" errors. Then, add it
             # anywhere that linkopts already appears.
             "sed -i -e 's|linkstatic = 1,||; s|linkopts = |linkstatic = 1, linkopts = |' $(find absl -name BUILD.bazel)",  # noqa
+            # XXX document me
+            "sed -i -e 's|<iostream>|<ostream>|;' $(find absl -name '*.[ch]*')",  # noqa
         ],
         mirrors = mirrors,
     )

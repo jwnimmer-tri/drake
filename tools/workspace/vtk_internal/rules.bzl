@@ -142,6 +142,7 @@ def _vtk_cc_module_impl(
     deps = deps + module_deps_public
     deps = deps + module_deps_private
     deps = deps + deps_extra
+    deps = deps + ["@drake//tools/vendor_iostream"]
 
     # Deal with objc code.
     if PLATFORM["name"] != "linux" and srcs_objc_non_arc:
