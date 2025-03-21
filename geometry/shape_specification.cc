@@ -152,17 +152,6 @@ Convex::Convex(const Eigen::Matrix3X<double>& points, const std::string& label,
                                                   ".obj", label)},
              scale) {}
 
-std::string Convex::filename() const {
-  if (source_.is_path()) {
-    return source_.path().string();
-  }
-  throw std::runtime_error(
-      fmt::format("Convex::filename() cannot be called when constructed on "
-                  "in-memory mesh data: '{}'. Call Convex::source().path() "
-                  "instead.",
-                  source_.in_memory().mesh_file.filename_hint()));
-}
-
 const PolygonSurfaceMesh<double>& Convex::GetConvexHull() const {
   ComputeConvexHullAsNecessary(&hull_, source_, scale_);
   return *hull_;
@@ -253,17 +242,6 @@ Mesh::Mesh(MeshSource source, double scale)
   // Note: We don't validate extensions because there's a possibility that a
   // mesh of unsupported type is used, but only processed by client code.
   ThrowForBadScale(scale, "Mesh");
-}
-
-std::string Mesh::filename() const {
-  if (source_.is_path()) {
-    return source_.path().string();
-  }
-  throw std::runtime_error(
-      fmt::format("Mesh::filename() cannot be called when constructed on "
-                  "in-memory mesh data: '{}'. Call Mesh::source().path() "
-                  "instead.",
-                  source_.in_memory().mesh_file.filename_hint()));
 }
 
 const PolygonSurfaceMesh<double>& Mesh::GetConvexHull() const {

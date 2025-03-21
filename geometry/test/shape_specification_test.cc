@@ -477,10 +477,6 @@ GTEST_TEST(ShapeTest, Constructors) {
   EXPECT_EQ(convex.source().description(), kFilename);
   EXPECT_EQ(convex.extension(), ".obj");
   EXPECT_EQ(convex.scale(), 1.5);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  EXPECT_EQ(convex.filename(), kFilename);
-#pragma GCC diagnostic pop
 
   const Cylinder cylinder{1, 2};
   EXPECT_EQ(cylinder.radius(), 1);
@@ -507,10 +503,6 @@ GTEST_TEST(ShapeTest, Constructors) {
   EXPECT_EQ(mesh.source().description(), kFilename);
   EXPECT_EQ(mesh.extension(), ".obj");
   EXPECT_EQ(mesh.scale(), 1.4);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  EXPECT_EQ(mesh.filename(), kFilename);
-#pragma GCC diagnostic pop
 
   const MeshcatCone cone{1.2, 3.4, 5.6};
   EXPECT_EQ(cone.height(), 1.2);
@@ -642,11 +634,6 @@ GTEST_TEST(ShapeTest, ConvexFromMemory) {
   ASSERT_TRUE(source.is_in_memory());
   EXPECT_EQ(source.in_memory().mesh_file.filename_hint(), mesh_name);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  EXPECT_THROW(convex.filename(), std::exception);
-#pragma GCC diagnostic pop
-
   const Convex from_source(source, 3.0);
   ASSERT_TRUE(from_source.source().is_in_memory());
   EXPECT_EQ(from_source.source().in_memory().mesh_file.filename_hint(),
@@ -714,11 +701,6 @@ GTEST_TEST(ShapeTest, MeshFromMemory) {
   const MeshSource& source = mesh.source();
   ASSERT_TRUE(source.is_in_memory());
   EXPECT_EQ(source.in_memory().mesh_file.filename_hint(), mesh_name);
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  EXPECT_THROW(mesh.filename(), std::exception);
-#pragma GCC diagnostic pop
 
   const Mesh from_source(source, 3.0);
   ASSERT_TRUE(from_source.source().is_in_memory());
