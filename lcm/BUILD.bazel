@@ -76,8 +76,8 @@ drake_cc_library(
     ],
     implementation_deps = [
         "//common:network_policy",
+        "//tools/workspace/lcm_internal:drake_vendor_lcm",
         "@glib",
-        "@lcm_internal//lcm:drake_vendor_lcm",
     ],
 )
 
@@ -91,7 +91,7 @@ drake_cc_library(
     ],
     implementation_deps = [
         "//common:string_container",
-        "@lcm_internal//lcm:drake_vendor_lcm",
+        "//tools/workspace/lcm_internal:drake_vendor_lcm",
     ],
 )
 
@@ -143,7 +143,7 @@ drake_cc_googletest(
         ":drake_lcm",
         ":lcmt_drake_signal_utils",
         "//common/test_utilities:expect_throws_message",
-        "@lcm_internal//lcm:drake_vendor_lcm",
+        "//tools/workspace/lcm_internal:drake_vendor_lcm",
     ],
 )
 
@@ -162,7 +162,7 @@ drake_cc_googletest(
     deps = [
         ":drake_lcm",
         ":lcmt_drake_signal_utils",
-        "@lcm_internal//lcm:drake_vendor_lcm",
+        "//tools/workspace/lcm_internal:drake_vendor_lcm",
     ],
 )
 

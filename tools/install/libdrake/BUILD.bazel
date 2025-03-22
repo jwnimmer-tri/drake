@@ -291,8 +291,8 @@ cc_library(
         ":x11_deps",
         "//common:drake_marker_shared_library",
         "//tools/workspace/fmt:shared_library_maybe",
+        "//tools/workspace/lcm_internal:libdrake_vendor_lcm.so",
         "//tools/workspace/spdlog:shared_library_maybe",
-        "@lcm_internal//lcm:drake_vendor_lcm",
     ],
 )
 
