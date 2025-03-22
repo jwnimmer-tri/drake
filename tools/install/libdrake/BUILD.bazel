@@ -292,7 +292,7 @@ cc_library(
         "//common:drake_marker_shared_library",
         "//tools/workspace/fmt:shared_library_maybe",
         "//tools/workspace/spdlog:shared_library_maybe",
-        "@lcm",
+        "@lcm_internal//lcm:drake_vendor_lcm",
     ],
 )
 

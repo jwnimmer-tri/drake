@@ -1,0 +1,11 @@
+XXX
+
+--- lcm/BUILD.bazel
++++ lcm/BUILD.bazel
+@@ -66,5 +66,5 @@ LCM_COMPILE_DEFINITIONS_PRIVATE = [
+ string_flag(
+     name = "LCM_C_NAMESPACE",
+-    build_setting_default = "lcm",
++    build_setting_default = "drake_vendor_lcm",
+ )
+ 
