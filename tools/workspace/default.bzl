@@ -42,6 +42,7 @@ load("//tools/workspace/ipopt_internal:repository.bzl", "ipopt_internal_reposito
 load("//tools/workspace/lapack:repository.bzl", "lapack_repository")
 load("//tools/workspace/lapack_internal:repository.bzl", "lapack_internal_repository")  # noqa
 load("//tools/workspace/lcm:repository.bzl", "lcm_repository")
+load("//tools/workspace/lcm_internal:repository.bzl", "lcm_internal_repository")  # noqa
 load("//tools/workspace/libblas:repository.bzl", "libblas_repository")
 load("//tools/workspace/libjpeg_turbo_internal:repository.bzl", "libjpeg_turbo_internal_repository")  # noqa
 load("//tools/workspace/liblapack:repository.bzl", "liblapack_repository")
@@ -228,6 +229,8 @@ def add_default_repositories(
         lapack_internal_repository(name = "lapack_internal", mirrors = mirrors)
     if "lcm" not in excludes:
         lcm_repository(name = "lcm", mirrors = mirrors)
+    if "lcm_internal" not in excludes:
+        lcm_internal_repository(name = "lcm_internal", mirrors = mirrors)
     if "libblas" not in excludes:
         # Deprecated 2025-05-01.
         libblas_repository(name = "libblas")
