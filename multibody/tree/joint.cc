@@ -31,6 +31,7 @@ void Joint<T>::SetPositions(
     const Eigen::Ref<const VectorX<T>>& positions) const {
   DRAKE_THROW_UNLESS(context != nullptr);
   DRAKE_THROW_UNLESS(positions.size() == num_positions());
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::SetPositions");
   DRAKE_DEMAND(has_mobilizer());
   const Eigen::VectorBlock<VectorX<T>> all_q =
@@ -41,6 +42,7 @@ void Joint<T>::SetPositions(
 template <typename T>
 Eigen::Ref<const VectorX<T>> Joint<T>::GetPositions(
     const systems::Context<T>& context) const {
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::GetPositions");
   DRAKE_DEMAND(has_mobilizer());
   const Eigen::VectorBlock<const VectorX<T>> all_q =
@@ -54,6 +56,7 @@ void Joint<T>::SetVelocities(
     const Eigen::Ref<const VectorX<T>>& velocities) const {
   DRAKE_THROW_UNLESS(context != nullptr);
   DRAKE_THROW_UNLESS(velocities.size() == num_velocities());
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::SetVelocities");
   DRAKE_DEMAND(has_mobilizer());
   const Eigen::VectorBlock<VectorX<T>> all_v =
@@ -64,6 +67,7 @@ void Joint<T>::SetVelocities(
 template <typename T>
 Eigen::Ref<const VectorX<T>> Joint<T>::GetVelocities(
     const systems::Context<T>& context) const {
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::GetVelocities");
   DRAKE_DEMAND(has_mobilizer());
   const Eigen::VectorBlock<const VectorX<T>> all_v =
@@ -108,6 +112,7 @@ void Joint<T>::SetSpatialVelocityImpl(systems::Context<T>* context,
                                       const SpatialVelocity<T>& V_FM,
                                       const char* func) const {
   DRAKE_THROW_UNLESS(context != nullptr);
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::SetSpatialVelocity");
   DRAKE_DEMAND(has_mobilizer());
   if (!mobilizer_->SetSpatialVelocity(*context, V_FM,
@@ -122,6 +127,7 @@ void Joint<T>::SetSpatialVelocityImpl(systems::Context<T>* context,
 template <typename T>
 SpatialVelocity<T> Joint<T>::GetSpatialVelocity(
     const systems::Context<T>& context) const {
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::GetSpatialVelocity");
   DRAKE_DEMAND(has_mobilizer());
   return mobilizer_->GetSpatialVelocity(context);
@@ -132,6 +138,7 @@ void Joint<T>::SetPosePairImpl(systems::Context<T>* context,
                                const Quaternion<T>& q_FM,
                                const Vector3<T>& p_FM, const char* func) const {
   DRAKE_THROW_UNLESS(context != nullptr);
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::SetPosePair");
   DRAKE_DEMAND(has_mobilizer());
   if (!mobilizer_->SetPosePair(*context, q_FM, p_FM,
@@ -146,6 +153,7 @@ void Joint<T>::SetPosePairImpl(systems::Context<T>* context,
 template <typename T>
 std::pair<Eigen::Quaternion<T>, Vector3<T>> Joint<T>::GetPosePair(
     const systems::Context<T>& context) const {
+  DRAKE_THROW_UNLESS(this->has_parent_tree());
   this->get_parent_tree().ThrowIfNotFinalized("Joint::GetPosePair");
   DRAKE_DEMAND(has_mobilizer());
   return mobilizer_->GetPosePair(context);

@@ -409,6 +409,7 @@ void BodyNodeImpl<T, ConcreteMobilizer>::CalcInverseDynamics_TipToBase(
   const bool is_tau_applied = (ssize(tau_applied_array) != 0);
 
   // Check sizes.
+  DRAKE_ASSERT(this->has_parent_tree());
   DRAKE_ASSERT(Fb_Bo_W_cache == nullptr ||
                ssize(*Fb_Bo_W_cache) == this->get_parent_tree().num_mobods());
   DRAKE_ASSERT(!is_Fapplied || ssize(Fapplied_Bo_W_array) ==
@@ -528,6 +529,7 @@ void BodyNodeImpl<T, ConcreteMobilizer>::
         ArticulatedBodyInertiaCache<T>* abic) const {
   DRAKE_DEMAND(mobod_index() != world_mobod_index());
   DRAKE_DEMAND(abic != nullptr);
+  DRAKE_ASSERT(this->has_parent_tree());
   DRAKE_DEMAND(diagonal_inertias.size() ==
                this->get_parent_tree().num_velocities());
 
