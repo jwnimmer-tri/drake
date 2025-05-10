@@ -10,7 +10,7 @@ load(
 )
 load("//tools/install:install.bzl", "install", "install_cmake_config")
 load("//tools/lint:lint.bzl", "add_lint_tests")
-load("//tools/skylark:cc.bzl", "cc_binary", "cc_library")
+load("//tools/skylark:cc.bzl", "cc_binary", "cc_library", "cc_shared_library")
 load(
     "//tools/skylark:drake_cc.bzl",
     "drake_cc_googletest",
@@ -153,17 +153,11 @@ cc_whole_archive_library(
 # LIBDRAKE_COMPONENTS plus the statically-linked Drake externals used by the
 # LIBDRAKE_COMPONENTS.  We use linkstatic=1 here so that the library will not
 # contain any references to constituent shared libraries inside the build tree.
-cc_binary(
-    name = "libdrake.so",
-    linkopts = select({
-        "//tools/cc_toolchain:linux": ["-Wl,-soname,libdrake.so"],
-        "//conditions:default": [],
-    }),
-    linkshared = 1,
-    linkstatic = 1,
-    deps = [
-        ":libdrake_components_whole_archive",
-        ":libdrake_runtime_so_deps",
+cc_shared_library(
+    name = "drake",
+    deps = LIBDRAKE_COMPONENTS,
+    dynamic_deps = [
+        "//common:drake_marker",
     ],
 )
 
@@ -207,7 +201,7 @@ install(
         "test/snopt_visibility_install_test.py",
         "test/rpath_install_test.py",
     ],
-    targets = ["libdrake.so"],
+    targets = [":drake"],
     hdrs = [":libdrake_headers"],
     hdr_dest = "include/drake",
     allowed_externals = ["//:LICENSE.TXT"],  # Root for our #include paths.
@@ -257,23 +251,10 @@ cc_library(
     }),
 )
 
-# Provide a cc_library target that provides libdrake.so, its headers, its
-# header-only dependencies, and its required *.so's.  This is aliased by
-# `//:drake_shared_library`, which is what downstream users will consume if
-# they wish to link to `libdrake.so`.
-cc_library(
+alias(
     name = "drake_shared_library",
-    srcs = [":libdrake.so"],
-    hdrs = [":libdrake_headers"],
-    # N.B. To pull in transitive `data` dependencies, we must list
-    # `libdrake.so` as a data target.
-    data = [":libdrake.so"],
-    include_prefix = "drake",
-    strip_include_prefix = "/",
+    actual = ":drake",
     visibility = ["//:__pkg__"],
-    deps = [
-        ":drake_headers",
-    ],
 )
 
 # The list of depended-on *.so files. These should ONLY be shared libraries; do
@@ -289,7 +270,6 @@ cc_library(
         ":mosek_deps",
         ":usd_deps",
         ":x11_deps",
-        "//common:drake_marker_shared_library",
         "//tools/workspace/fmt:shared_library_maybe",
         "//tools/workspace/spdlog:shared_library_maybe",
         "@lcm",
@@ -312,19 +292,31 @@ cc_library(
     ],
 )
 
+cc_import(
+    name = "bung",
+    hdrs = [":drake_headers"],
+    shared_library = ":drake",
+)
+
+cc_library(
+    name = "foobar",
+    deps = [
+        ":drake_headers",
+        ":bung",
+    ],
+)
+
 drake_cc_test(
     name = "drake_shared_library_test",
     # Using `drake_shared_library` can cause timeouts in debug mode.
     timeout = "moderate",
-    deps = [":drake_shared_library"],
+    deps = [":foobar"],
 )
 
 drake_cc_googletest(
     name = "fast_math_test",
     tags = ["no_kcov"],  # See #10788.
-    deps = [
-        "//:drake_shared_library",
-    ],
+    deps = [":foobar"],
 )
 
 # The exported_symbols_test is skipped in some build configurations.
@@ -344,7 +336,7 @@ drake_py_unittest(
         "//conditions:default": [],
     }),
     data = [
-        ":libdrake.so",
+        # XXX ":libdrake.so",
     ],
     tags = ["no_kcov"],
 )

@@ -14,7 +14,6 @@ LIBDRAKE_COMPONENTS = [
     "//common/symbolic",
     "//common/trajectories",
     "//common/yaml",
-    "//common:drake_marker_shared_library",  # unpackaged
     "//examples/acrobot:acrobot_geometry",  # unpackaged
     "//examples/acrobot:acrobot_input",  # unpackaged
     "//examples/acrobot:acrobot_params",  # unpackaged

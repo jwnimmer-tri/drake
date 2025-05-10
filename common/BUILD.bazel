@@ -1,5 +1,6 @@
 load("//tools/install:install.bzl", "install")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+load("//tools/skylark:cc.bzl", "cc_library", "cc_shared_library")
 load(
     "//tools/skylark:drake_cc.bzl",
     "drake_cc_binary",
@@ -296,28 +297,24 @@ drake_cc_library(
 )
 
 # Provides an anchor for finding resources.
-drake_cc_binary(
-    name = "libdrake_marker.so",
-    srcs = [
-        "drake_marker.cc",
-        "drake_marker.h",
-    ],
-    linkopts = select({
-        "//tools/cc_toolchain:linux": ["-Wl,-soname,libdrake_marker.so"],
-        "//conditions:default": [],
-    }),
-    linkshared = 1,
-    linkstatic = 1,
-    visibility = ["//visibility:private"],
+drake_cc_library(
+    name = "drake_marker_raw",
+    srcs = ["drake_marker.cc"],
+    hdrs = ["drake_marker.h"],
+    internal = True,
+    visibility = ["//tools/install/libdrake:__pkg__"],
 )
 
-drake_cc_library(
-    name = "drake_marker_shared_library",
-    srcs = ["libdrake_marker.so"],
-    hdrs = ["drake_marker.h"],
-    install_hdrs_exclude = ["drake_marker.h"],
-    tags = ["exclude_from_package"],
+cc_shared_library(
+    name = "drake_marker",
     visibility = ["//tools/install/libdrake:__pkg__"],
+    deps = [":drake_marker_raw"],
+)
+
+cc_library(
+    name = "drake_marker.installed_headers",
+    tags = ["exclude_from_package"],
+    visibility = ["//visibility:private"],
 )
 
 drake_cc_library(
@@ -363,7 +360,7 @@ drake_cc_library(
         ":essential",
     ],
     implementation_deps = [
-        ":drake_marker_shared_library",
+        ":drake_marker_raw",
         ":find_runfiles",
     ],
 )
@@ -627,24 +624,16 @@ drake_cc_binary(
 )
 
 install(
-    name = "install_drake_marker",
-    targets = [":libdrake_marker.so"],
-)
-
-install(
     name = "install",
     install_tests = [":test/resource_tool_installed_test.py"],
     targets = [
-        ":libdrake_marker.so",
+        ":drake_marker",
         ":resource_tool",
     ],
     runtime_dest = "share/drake/common",
     data_dest = "share/drake",
     guess_data = "WORKSPACE",
     allowed_externals = [DRAKE_RESOURCE_SENTINEL],
-    deps = [
-        ":install_drake_marker",
-    ],
 )
 
 # === test/ ===
