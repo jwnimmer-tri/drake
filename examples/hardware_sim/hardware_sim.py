@@ -39,6 +39,7 @@ from pydrake.geometry import (
 )
 from pydrake.multibody.plant import (
     AddMultibodyPlant,
+    ApplyMultibodyPlantConfig,
     MultibodyPlantConfig,
 )
 from pydrake.multibody.parsing import (
@@ -46,12 +47,12 @@ from pydrake.multibody.parsing import (
     ModelDirectives,
     ProcessModelDirectives,
 )
+from pydrake.planning import RobotDiagramBuilder
 from pydrake.systems.analysis import (
     ApplySimulatorConfig,
     Simulator,
     SimulatorConfig,
 )
-from pydrake.systems.framework import DiagramBuilder
 from pydrake.systems.lcm import ApplyLcmBusConfig
 from pydrake.systems.sensors import (
     ApplyCameraConfig,
@@ -143,13 +144,17 @@ def _load_scenario(*, filename, scenario_name, scenario_text):
 def run(*, scenario, graphviz=None):
     """Runs a simulation of the given scenario.
     """
-    builder = DiagramBuilder()
-
     # Create the multibody plant and scene graph.
-    sim_plant, scene_graph = AddMultibodyPlant(
-        plant_config=scenario.plant_config,
-        scene_graph_config=scenario.scene_graph_config,
-        builder=builder)
+    robot_builder = RobotDiagramBuilder(
+        time_step=scenario.plant_config.time_step,
+    )
+    sim_plant = robot_builder.plant()
+    ApplyMultibodyPlantConfig(
+        plant=sim_plant,
+        config=scenario.plant_config,
+    )
+    robot_builder.scene_graph().set_config(config=scenario.scene_graph_config)
+    builder = robot_builder.builder()
 
     # Add model directives.
     added_models = ProcessModelDirectives(
