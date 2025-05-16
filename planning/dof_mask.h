@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <initializer_list>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -32,7 +34,7 @@ single-dof joints but is not generally true for all joints (e.g., floating
 joints or roll-pitch-yaw ball joints). */
 class DofMask {
  public:
-  DRAKE_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(DofMask);
+  DRAKE_DECLARE_COPY_AND_MOVE_AND_ASSIGN(DofMask);
 
   /** @group  Constructors
 
@@ -46,7 +48,7 @@ class DofMask {
   /** Default constructor; creates a mask with no dofs (size() = count() = 0 ).
   @pydrake_mkdoc_identifier{default}
   */
-  DofMask();
+  DofMask() = default;
 
   /** Full/empty constructor.
 
@@ -68,7 +70,7 @@ class DofMask {
   /** Constructs a %DofMask from a vector of bool.
   @pydrake_mkdoc_identifier{vector_bool} */
   // NOLINTNEXTLINE(runtime/explicit)
-  DofMask(std::vector<bool> values);
+  DofMask(const std::vector<bool>& values);
 
   //@}
 
@@ -100,7 +102,7 @@ class DofMask {
   //{
 
   /** Reports this %DofMask instance's total number of indexable dofs.  */
-  int size() const { return ssize(data_); }
+  int size() const { return size_; }
 
   /** Reports this %DofMask instance's number of _selected_ dofs. */
   int count() const { return count_; }
@@ -117,7 +119,15 @@ class DofMask {
   bool operator==(const DofMask& o) const;
 
   /** @pre `index` is in the range [0, size()). */
-  bool operator[](int index) const { return data_.at(index); }
+  bool operator[](int index) const {
+    DRAKE_THROW_UNLESS(index >= 0);
+    DRAKE_THROW_UNLESS(index < size_);
+    if (buffer_ != nullptr) {
+      return buffer_[index];
+    } else {
+      return (inline_ >> index) & 1;
+    }
+  }
 
   /** The string representation of the mask -- it encodes the full mask size
   clearly indicating which dofs are selected and which are unselected. The exact
@@ -237,16 +247,38 @@ class DofMask {
   //@}
 
  private:
+  DofMask(int size, int count, uint64_t inline_in)
+      : size_(size), count_(count), inline_(inline_in) {}
+
   /* Throws if `plant` is *not* compatible with %DofMask's assumptions.
   Specifically, the iᵗʰ velocity corresponds to the iᵗʰ position for all
   `i`; `vᵢ = q̇ᵢ`. */
   static void ThrowIfNotCompatible(
       const multibody::MultibodyPlant<double>& plant);
 
+  /* Returns true if inline_ stores our data or false when buffer_ stores it. */
+  bool is_inline() const { return buffer_ == nullptr; }
+  /* Returns the representation of `inline_` when all dofs are selected.
+  @pre is_inline() */
+  uint64_t all_selected() const { return (uint64_t{1} << size_) - 1; }
+
+  // The meaning of `size_` and `count_` are per the size() and count() API.
+  //
+  // For storing the actual mask values, we have two options:
+  // - For small masks, we use the `inline_` bitmask. The bit at
+  //   `(1 << index)` stores the index'th mask value.
+  // - For larger masks, the we use the `buffer_` array. The bool at
+  //   `buffer_[index]` stores the index'th mask value.
+  //
+  // When `inline_` storage is being used, it's high-order bits beyond `size_`
+  // are guaranteed to be zero, and `buffer_` is guaranteed to be null.
+  //
   // These member fields are almost "const" -- we have no member functions that
-  // mutate them, other than the two default assignment operators.
-  std::vector<bool> data_;
+  // mutate them, other than the two assignment operators.
+  reset_after_move<int> size_{0};
   reset_after_move<int> count_{0};
+  reset_after_move<uint64_t> inline_{0};
+  std::unique_ptr<bool[]> buffer_{nullptr};
 };
 
 }  // namespace planning
