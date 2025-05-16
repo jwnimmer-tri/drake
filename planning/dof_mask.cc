@@ -1,5 +1,7 @@
 #include "drake/planning/dof_mask.h"
 
+#include <cstring>
+
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
@@ -11,23 +13,85 @@ using multibody::JointIndex;
 using multibody::ModelInstanceIndex;
 using multibody::MultibodyPlant;
 
-DofMask::DofMask() = default;
+namespace {
 
-DofMask::DofMask(int size, bool value)
-    : data_(size >= 0 ? size : 0, value), count_(value ? size : 0) {
+constexpr int kMaxInlineSize = 64;
+
+int popcount(uint64_t x) {
+  return __builtin_popcount(x);
+}
+
+}  // namespace
+
+DofMask::DofMask(int size, bool value) {
   DRAKE_THROW_UNLESS(size >= 0);
+  size_ = size;
+  count_ = value ? size : 0;
+  if (size <= kMaxInlineSize) [[likely]] {
+    if (value) {
+      inline_ = ~inline_;
+    }
+  } else {
+    buffer_.reset(new bool[size]);
+    for (int i = 0; i < size; ++i) {
+      buffer_[i] = value;
+    }
+  }
 }
 
 DofMask::DofMask(std::initializer_list<bool> values)
     : DofMask(std::vector(std::move(values))) {}
 
-DofMask::DofMask(std::vector<bool> values) : data_(std::move(values)) {
-  for (int i = 0; i < ssize(data_); ++i) {
-    if (data_[i]) {
-      ++count_;
+DofMask::DofMask(const std::vector<bool>& values) {
+  size_ = ssize(values);
+  if (size_ <= kMaxInlineSize) [[likely]] {
+    for (int i = 0; i < size_; ++i) {
+      const bool bit = values[i];
+      inline_ |= (uint64_t{bit} << i);
+      if (bit) {
+        ++count_;
+      }
+    }
+  } else {
+    buffer_.reset(new bool[size_]);
+    for (int i = 0; i < size_; ++i) {
+      const bool bit = values[i];
+      buffer_[i] = bit;
+      if (bit) {
+        ++count_;
+      }
     }
   }
 }
+
+// We can't use the defaulted implementation because of our unique_ptr member.
+// However, for simplicity we can just delegate to the copy-assignment operator.
+DofMask::DofMask(const DofMask& other) {
+  *this = other;
+}
+
+// We can't use the defaulted implementation because of our unique_ptr member.
+DofMask& DofMask::operator=(const DofMask& other) {
+  if (this == &other) [[unlikely]] {
+    return *this;
+  }
+  size_ = other.size_;
+  count_ = other.count_;
+  inline_ = other.inline_;
+  if (other.is_inline()) [[likely]] {
+    buffer_.reset();
+  } else {
+    buffer_.reset(new bool[size_]);
+    for (int i = 0; i < size_; ++i) {
+      buffer_[i] = other.buffer_[i];
+    }
+  }
+  return *this;
+}
+
+DofMask::DofMask(DofMask&& other) = default;
+
+DofMask& DofMask::operator=(DofMask&& other) = default;
 
 DofMask DofMask::MakeFromModel(const MultibodyPlant<double>& plant,
                                ModelInstanceIndex model_index) {
@@ -65,27 +129,48 @@ void DofMask::ThrowIfNotCompatible(const MultibodyPlant<double>& plant) {
 }
 
 std::string DofMask::to_string() const {
-  // In future versions (>9), fmt::to_string(data_) will work, but will require
-  // including fmt/std.h.
-  return fmt::to_string(std::vector<int>(data_.begin(), data_.end()));
+  std::vector<int> exploded;
+  exploded.resize(size());
+  for (int i = 0; i < size(); ++i) {
+    exploded[i] = (*this)[i];
+  }
+  return fmt::to_string(exploded);
 }
 
 DofMask DofMask::Complement() const {
-  DofMask result(*this);
-  result.data_.flip();
-  result.count_ = this->size() - this->count();
-  return result;
+  if (is_inline()) [[likely]] {
+    return DofMask(
+        /* size = */ size_,
+        /* count = */ size_ - count_,
+        /* inline = */ ~inline_ & all_selected());
+  } else {
+    DofMask result(
+        /* size = */ size_,
+        /* count = */ size_ - count_,
+        /* inline = */ 0);
+    result.buffer_.reset(new bool[size_]);
+    for (int i = 0; i < size_; ++i) {
+      result.buffer_[i] = !buffer_[i];
+    }
+    return result;
+  }
 }
 
 DofMask DofMask::Union(const DofMask& other) const {
   const int mask_size = size();
   DRAKE_THROW_UNLESS(other.size() == mask_size);
+  DRAKE_DEMAND(this->is_inline() == other.is_inline());
   DofMask result(mask_size, false);
-  for (int i = 0; i < mask_size; ++i) {
-    const bool bit = data_[i] || other[i];
-    result.data_[i] = bit;
-    if (bit) {
-      ++result.count_;
+  if (is_inline()) [[likely]] {
+    result.inline_ = (this->inline_ | other.inline_) & all_selected();
+    result.count_ = popcount(result.inline_);
+  } else {
+    for (int i = 0; i < mask_size; ++i) {
+      const bool bit = buffer_[i] || other.buffer_[i];
+      result.buffer_[i] = bit;
+      if (bit) {
+        ++result.count_;
+      }
     }
   }
   return result;
@@ -94,12 +179,18 @@ DofMask DofMask::Union(const DofMask& other) const {
 DofMask DofMask::Intersect(const DofMask& other) const {
   const int mask_size = size();
   DRAKE_THROW_UNLESS(other.size() == mask_size);
+  DRAKE_DEMAND(this->is_inline() == other.is_inline());
   DofMask result(mask_size, false);
-  for (int i = 0; i < mask_size; ++i) {
-    const bool bit = data_[i] && other[i];
-    result.data_[i] = bit;
-    if (bit) {
-      ++result.count_;
+  if (is_inline()) [[likely]] {
+    result.inline_ = (this->inline_ & other.inline_) & all_selected();
+    result.count_ = popcount(result.inline_);
+  } else {
+    for (int i = 0; i < mask_size; ++i) {
+      const bool bit = buffer_[i] && other.buffer_[i];
+      result.buffer_[i] = bit;
+      if (bit) {
+        ++result.count_;
+      }
     }
   }
   return result;
@@ -108,12 +199,18 @@ DofMask DofMask::Intersect(const DofMask& other) const {
 DofMask DofMask::Subtract(const DofMask& other) const {
   const int mask_size = size();
   DRAKE_THROW_UNLESS(other.size() == mask_size);
+  DRAKE_DEMAND(this->is_inline() == other.is_inline());
   DofMask result(mask_size, false);
-  for (int i = 0; i < mask_size; ++i) {
-    const bool bit = data_[i] && !other[i];
-    result.data_[i] = bit;
-    if (bit) {
-      ++result.count_;
+  if (is_inline()) [[likely]] {
+    result.inline_ = (this->inline_ & ~other.inline_) & all_selected();
+    result.count_ = popcount(result.inline_);
+  } else {
+    for (int i = 0; i < mask_size; ++i) {
+      const bool bit = buffer_[i] && !other.buffer_[i];
+      result.buffer_[i] = bit;
+      if (bit) {
+        ++result.count_;
+      }
     }
   }
   return result;
@@ -126,7 +223,7 @@ void DofMask::GetFromArray(const Eigen::Ref<const Eigen::VectorXd>& full_vec,
   DRAKE_THROW_UNLESS(full_vec.size() == size());
   int out_index = -1;
   for (int i = 0; i < size(); ++i) {
-    if (data_[i]) {
+    if ((*this)[i]) {
       (*output)[++out_index] = full_vec[i];
       if (out_index >= output->size()) break;
     }
@@ -150,7 +247,7 @@ void DofMask::GetColumnsFromMatrix(
   DRAKE_THROW_UNLESS(full_mat.cols() == size());
   int out_index = -1;
   for (int i = 0; i < size(); ++i) {
-    if (data_[i]) {
+    if ((*this)[i]) {
       output->col(++out_index) = full_mat.col(i);
       if (out_index >= output->cols()) break;
     }
@@ -172,7 +269,7 @@ void DofMask::SetInArray(const Eigen::Ref<const Eigen::VectorXd>& vec,
   DRAKE_THROW_UNLESS(output->size() == size());
   int input_index = -1;
   for (int i = 0; i < size(); ++i) {
-    if (data_[i]) {
+    if ((*this)[i]) {
       (*output)[i] = vec[++input_index];
     }
   }
@@ -188,7 +285,7 @@ std::vector<JointIndex> DofMask::GetJoints(
     const Joint<double>& joint = plant.get_joint(j);
     for (int i = joint.position_start();
          i < joint.position_start() + joint.num_positions(); ++i) {
-      if (data_[i]) {
+      if ((*this)[i]) {
         result.push_back(j);
         break;
       }
@@ -198,7 +295,16 @@ std::vector<JointIndex> DofMask::GetJoints(
 }
 
 bool DofMask::operator==(const DofMask& o) const {
-  const bool result = data_ == o.data_;
+  if (this->size_ != o.size_) {
+    return false;
+  }
+  DRAKE_DEMAND(this->is_inline() == o.is_inline());
+  bool result;
+  if (is_inline()) [[likely]] {
+    result = (this->inline_ == o.inline_);
+  } else {
+    result = (std::memcmp(buffer_.get(), o.buffer_.get(), size_) == 0);
+  }
   DRAKE_ASSERT((result == false) || (this->count() == o.count()));
   return result;
 }
