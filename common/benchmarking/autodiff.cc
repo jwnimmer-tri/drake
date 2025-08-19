@@ -24,6 +24,8 @@ enum ScalarConfig : int {
   kDerNone = -1,
   /* AutoDiff with empty derivatives (i.e., size() == 0). */
   kDerEmpty = 0,
+  /* AutoDiff with unit derivatives (as in InitializeAutoDiff). */
+  kDerUnit = 1,
   /* AutoDiff with dense derivatives (all partials are non-zero). */
   kDerDense = 2,
 };
@@ -53,6 +55,9 @@ T __attribute__((noinline)) MakeScalar(double value, ScalarConfig config,
     return value;
   }
   if constexpr (std::is_same_v<T, AD>) {
+    if (config == kDerUnit) {
+      return AD(value, size, 0);
+    }
     if (config == kDerDense) {
       return AD(value, VectorXd::LinSpaced(size, 0.5, 2.5));
     }
@@ -80,6 +85,10 @@ auto __attribute__((noinline)) MakeMatrix(ScalarConfig config, int size) {
         continue;
       }
       if constexpr (std::is_same_v<T, AD>) {
+        if (config == kDerUnit) {
+          result(row, col) = AD(value, size, col);
+          continue;
+        }
         if (config == kDerDense) {
           const double lo = 5 * std::cos(row + 7 * col);
           const double hi = 5 * std::cos(row + 13 * col);
@@ -202,23 +211,23 @@ void MatrixMultiply(benchmark::State& state) {  // NOLINT
 }
 
 BENCHMARK(ArrayScalarMac)
-    ->ArgsProduct({{kDerEmpty, kDerDense},
-                   {kDerNone, kDerEmpty, kDerDense},
+    ->ArgsProduct({{kDerEmpty, kDerUnit, kDerDense},
+                   {kDerNone, kDerEmpty, kDerUnit, kDerDense},
                    {kSmallSize, 100}})
     ->Unit(benchmark::kMicrosecond);
 BENCHMARK(ArrayArrayMac)
-    ->ArgsProduct({{kDerEmpty, kDerDense},
-                   {kDerNone, kDerEmpty, kDerDense},
+    ->ArgsProduct({{kDerEmpty, kDerUnit, kDerDense},
+                   {kDerNone, kDerEmpty, kDerUnit, kDerDense},
                    {kSmallSize, 100}})
     ->Unit(benchmark::kMicrosecond);
 BENCHMARK(VectorDotProduct)
-    ->ArgsProduct({{kDerEmpty, kDerDense},
-                   {kDerNone, kDerEmpty, kDerDense},
+    ->ArgsProduct({{kDerEmpty, kDerUnit, kDerDense},
+                   {kDerNone, kDerEmpty, kDerUnit, kDerDense},
                    {kSmallSize, 100}})
     ->Unit(benchmark::kMicrosecond);
 BENCHMARK(MatrixMultiply)
-    ->ArgsProduct({{kDerEmpty, kDerDense},
-                   {kDerEmpty, kDerDense},
+    ->ArgsProduct({{kDerEmpty, kDerUnit, kDerDense},
+                   {kDerEmpty, kDerUnit, kDerDense},
                    {kSmallSize, 10}})
     ->Unit(benchmark::kMicrosecond);
 
