@@ -94,10 +94,39 @@ spdlog_repository(name = "pkgconfig_spdlog")
 # For first-party Bazel builds (by Drake Developers), the non-module flavor
 # is used by default.
 
+bazel_dep(name = "lcm", repo_name = "module_lcm")
+
+# When updating, lcm needs its own pull request separate from the rest of the
+# monthly upgrades.
+# TODO(jwnimmer-tri) Once LCM has its next tagged release >v1.5.1, we should
+# switch this back to a release tag instead of this hash.
+LCM_COMMIT = "e4686e6670eb675bf9305b5f7cc033d741a4ccf8"
+LCM_SHA256 = "fe669dd8938ea600549349df4c6b92382d30fc7426b324602a991f19ac8fad38"
+
+archive_override(
+    module_name = "lcm",
+    urls = [x.format(LCM_COMMIT) for x in [
+        "https://github.com/lcm-proj/lcm/archive/{}.tar.gz",
+        "https://drake-mirror.csail.mit.edu/github/lcm-proj/lcm/{}.tar.gz",
+        "https://s3.amazonaws.com/drake-mirror/github/lcm-proj/lcm/{}.tar.gz",
+    ]],
+    sha256 = LCM_SHA256,
+    strip_prefix = "lcm-{}".format(LCM_COMMIT.lstrip("v")),
+    patches = [
+        "@drake//tools/workspace/lcm_internal:patches/copts.patch",
+        # "@drake//tools/workspace/lcm_internal:patches/drake_shared_library.patch",
+    ],
+)
+
+bazel_dep(name = "glib", version = "2.82.2.bcr.5", repo_name = "module_glib")
 bazel_dep(name = "zlib", version = "1.3.1.bcr.5", repo_name = "module_zlib")
 
-# TODO(jwnimmer-tri) These as well should be module-or-external.
-# - glib
+glib_repository = use_repo_rule(
+    "@drake//tools/workspace/glib:repository.bzl",
+    "glib_repository",
+)
+
+glib_repository(name = "pkgconfig_glib")
 
 # Add additional modules we use as tools (not runtime dependencies).
 
@@ -137,6 +166,7 @@ use_repo(
     "gtest",
     "gurobi",
     "lapack",
+    # XXX remove me (and add deprecation)
     "lcm",
     "meshcat",
     "mosek",

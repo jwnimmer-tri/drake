@@ -1,0 +1,53 @@
+load(
+    "@drake//tools/skylark:drake_cc.bzl",
+    "cc_nolink_library",
+)
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load(
+    "//third_party:com_github_bazelbuild_rules_cc/whole_archive.bzl",
+    "cc_whole_archive_library",
+)
+load("//tools/lint:lint.bzl", "add_lint_tests")
+
+cc_whole_archive_library(
+    name = "lcm_shared_whole_archive",
+    deps = ["@module_lcm//lcm:lcm-shared"],
+)
+
+config_setting(
+    name = "linux",
+    constraint_values = ["@platforms//os:linux"],
+)
+
+# We only build a shared-library flavor of liblcm.so, because its LGPL-licensed
+# and thus should never be linked statically.  Building C++ shared libraries
+# in Bazel is not well-supported, but for C code is relatively trivial.  This
+# rule creates the runtime artifact -- a loadable shared library with its deps
+# linked dynamically.  The `name = "lcm"` rule below provides the compile-time
+# artifact that combines the shared library with its headers.
+cc_binary(
+    name = "libdrake_vendor_lcm.so",
+    linkopts = select({
+        ":linux": ["-Wl,-soname,libdrake_vendor_lcm.so"],
+        "//conditions:default": [],
+    }),
+    linkshared = True,
+    visibility = ["//tools/install/libdrake:__pkg__"],
+    deps = [":lcm_shared_whole_archive"],
+)
+
+cc_nolink_library(
+    name = "hdrs",
+    deps = ["@module_lcm//lcm:lcm-shared"],
+)
+
+# This is the compile-time target for libdrake_vendor_lcm.so; see above for
+# details.
+cc_library(
+    name = "drake_vendor_lcm",
+    srcs = [":libdrake_vendor_lcm.so"],
+    visibility = ["//visibility:public"],
+    deps = [":hdrs"],
+)
+
+add_lint_tests()

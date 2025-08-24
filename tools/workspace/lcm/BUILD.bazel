@@ -1,5 +1,12 @@
 load("//tools/lint:lint.bzl", "add_lint_tests")
-load("//tools/skylark:drake_py.bzl", "drake_py_unittest")
+load("//tools/skylark:drake_py.bzl", "drake_py_test", "drake_py_unittest")
+
+drake_py_test(
+    name = "import_lcm_test",
+    # TODO(jwnimmer-tri) Port this to drake_py_unittest.
+    allow_import_unittest = True,
+    deps = ["@lcm//:lcm-python"],
+)
 
 drake_py_unittest(
     name = "no_lcm_warnings_test",
