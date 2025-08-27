@@ -1,0 +1,103 @@
+XXX
+
+diff --git Utilities/KWSys/vtksys/SystemTools.cxx Utilities/KWSys/vtksys/SystemTools.cxx
+index 89a3cc789f..3a8b06091c 100644
+--- Utilities/KWSys/vtksys/SystemTools.cxx
++++ Utilities/KWSys/vtksys/SystemTools.cxx
+@@ -567,8 +567,14 @@ public:
+     bool no_system_path = false);
+ };
+ 
++#if 1  // Drake only allows constexpr globals.
++static constexpr SystemToolsStatic SystemToolsStaticStorage;
++static constexpr const SystemToolsStatic* SystemToolsStatics =
++    &SystemToolsStaticStorage;
++#else
+ // Do NOT initialize.  Default initialization to zero is necessary.
+ static SystemToolsStatic* SystemToolsStatics;
++#endif
+ 
+ #ifdef _WIN32
+ std::string SystemToolsStatic::GetCasePathName(std::string const& pathIn)
+@@ -4843,6 +4849,7 @@ std::string SystemTools::DecodeURL(const std::string& url)
+   return ret;
+ }
+ 
++#if 0  // Disabled for Drake.
+ // ----------------------------------------------------------------------
+ // Do NOT initialize.  Default initialization to zero is necessary.
+ static unsigned int SystemToolsManagerCount;
+@@ -4866,6 +4873,7 @@ SystemToolsManager::~SystemToolsManager()
+     SystemTools::ClassFinalize();
+   }
+ }
++#endif
+ 
+ #if defined(__VMS)
+ // On VMS we configure the run time C library to be more UNIX like.
+@@ -4881,6 +4889,7 @@ static int SetVMSFeature(char* name, int value)
+ }
+ #endif
+ 
++#if 0  // Disabled for Drake.
+ void SystemTools::ClassInitialize()
+ {
+ #ifdef __VMS
+@@ -4940,6 +4949,7 @@ void SystemTools::ClassFinalize()
+ {
+   delete SystemToolsStatics;
+ }
++#endif
+ 
+ } // namespace KWSYS_NAMESPACE
+ 
+diff --git Utilities/KWSys/vtksys/SystemTools.hxx.in Utilities/KWSys/vtksys/SystemTools.hxx.in
+index acce01570d..245ab6cb42 100644
+--- Utilities/KWSys/vtksys/SystemTools.hxx.in
++++ Utilities/KWSys/vtksys/SystemTools.hxx.in
+@@ -44,6 +44,7 @@ namespace @KWSYS_NAMESPACE@ {
+ 
+ class SystemToolsStatic;
+ 
++#if 0  // Disabled for Drake.
+ /** \class SystemToolsManager
+  * \brief Use to make sure SystemTools is initialized before it is used
+  * and is the last static object destroyed
+@@ -51,8 +52,8 @@ class SystemToolsStatic;
+ class @KWSYS_NAMESPACE@_EXPORT SystemToolsManager
+ {
+ public:
+-  SystemToolsManager();
+-  ~SystemToolsManager();
++  SystemToolsManager() = delete;  // Disabled for Drake.
++  ~SystemToolsManager() = delete;  // Disabled for Drake.
+ 
+   SystemToolsManager(const SystemToolsManager&) = delete;
+   SystemToolsManager& operator=(const SystemToolsManager&) = delete;
+@@ -62,6 +63,7 @@ public:
+ // SystemTools. It will make sure SystemTools is initialized
+ // before it is used and is the last static object destroyed.
+ static SystemToolsManager SystemToolsManagerInstance;
++#endif
+ 
+ // Flags for use with TestFileAccess.  Use a typedef in case any operating
+ // system in the future needs a special type.  These are flags that may be
+@@ -985,6 +987,7 @@ public:
+   static std::string DecodeURL(const std::string& url);
+ 
+ private:
++#if 0  // Disabled for Drake.
+   /**
+    * Allocate the stl map that serve as the Path Translation table.
+    */
+@@ -1002,9 +1005,9 @@ private:
+   {
+     return &SystemToolsManagerInstance;
+   }
++#endif
+ 
+   friend class SystemToolsStatic;
+-  friend class SystemToolsManager;
+ };
+ 
+ } // namespace @KWSYS_NAMESPACE@

@@ -192,11 +192,13 @@ def vtk_internal_repository(
             # - Patch file names should begin with the name of the module being
             #   edited (e.g., patching IO/Image is named io_image_{foo}.patch).
             # - Use alphabetical order within a directory when listing patches.
+            ":patches/upstream/common_core_conditionalize_leaks_manager_globals.patch",
             ":patches/upstream/gltf_export_with_object_names.patch",
             ":patches/upstream/ignore_unsupported_image_types.patch",
             ":patches/upstream/utilities_x11_more_functions.patch",
             ":patches/common_core_fmt9.patch",
             ":patches/common_core_nobacktrace.patch",
+            ":patches/common_core_no_globals.patch",
             ":patches/common_core_rm_cin_prompting.patch",
             ":patches/common_core_version.patch",
             ":patches/common_datamodel_no_pegtl.patch",
@@ -212,6 +214,8 @@ def vtk_internal_repository(
             ":patches/vtkpugixml_hidden.patch",
             ":patches/vtkscn_hidden.patch",
             ":patches/vtksys_hidden.patch",
+            ":patches/vtksys_no_globals.patch",
+            ":patches/vtktoken_no_globals.patch",
         ],
         settings_bzl = ":settings.bzl",
         **kwargs):
