@@ -157,6 +157,7 @@ _vtk_internal_repository_impl = repository_rule(
         "sha256": attr.string(),
         "build_file": attr.label(),
         "patches": attr.label_list(),
+        "patch_cmds": attr.string_list(),
         "extra_strip_prefix": attr.string(),
         "mirrors": attr.string_list_dict(),
         # This attribute is specific to our rule, not setup_github_repository.
@@ -192,10 +193,14 @@ def vtk_internal_repository(
             # - Patch file names should begin with the name of the module being
             #   edited (e.g., patching IO/Image is named io_image_{foo}.patch).
             # - Use alphabetical order within a directory when listing patches.
+            ":patches/upstream/common_core_conditionalize_leaks_manager_globals.patch",
             ":patches/upstream/rendering_opengl2_replace_single_scattering_with_multi_scattering_in_pbr.patch",
             ":patches/upstream/utilities_x11_more_functions.patch",
+            ":patches/upstream/vtktoken_rm_iostream.patch",
             ":patches/common_core_fmt9.patch",
+            ":patches/common_core_cout_is_not_a_stream.patch",
             ":patches/common_core_nobacktrace.patch",
+            ":patches/common_core_no_globals.patch",
             ":patches/common_core_rm_cin_prompting.patch",
             ":patches/common_core_version.patch",
             ":patches/common_datamodel_no_pegtl.patch",
@@ -211,6 +216,12 @@ def vtk_internal_repository(
             ":patches/vtkpugixml_hidden.patch",
             ":patches/vtkscn_hidden.patch",
             ":patches/vtksys_hidden.patch",
+            ":patches/vtksys_no_globals.patch",
+            ":patches/vtktoken_no_globals.patch",
+        ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find . -type f -name '*.[ch]*')",  # noqa
         ],
         settings_bzl = ":settings.bzl",
         **kwargs):
@@ -243,6 +254,7 @@ def vtk_internal_repository(
             sha256 = sha256,
             build_file = build_file,
             patches = patches,
+            patch_cmds = patch_cmds,
             settings_bzl = settings_bzl,
             **kwargs
         )

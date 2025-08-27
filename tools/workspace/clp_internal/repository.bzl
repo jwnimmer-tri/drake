@@ -12,5 +12,9 @@ def clp_internal_repository(
         patches = [
             ":patches/upstream/missing_include.patch",
         ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find Clp/src -name '*.[ch]*')",  # noqa
+        ],
         mirrors = mirrors,
     )

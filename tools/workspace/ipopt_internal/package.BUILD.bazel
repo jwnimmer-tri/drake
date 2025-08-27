@@ -360,6 +360,7 @@ coin_cc_library(
     output_vendoring_patch = "drake_ipopt.patch",
     deps = [
         "@blas",
+        "@drake//tools/vendor_iostream",
         "@lapack",
         "@spral_internal//:spral",
     ],

@@ -50,7 +50,9 @@ MODULE_SETTINGS = {
             # Match the VTK defaults.
             "KWSYS_NAMESPACE=vtksys",
             "KWSYS_NAME_IS_KWSYS=0",
-            "KWSYS_SYSTEMTOOLS_USE_TRANSLATION_MAP=1",
+            # Opt-out of the translation map; we don't use it, and it has global
+            # variables contrary to our style guide.
+            "KWSYS_SYSTEMTOOLS_USE_TRANSLATION_MAP=0",
             # Features that are available on the host platform.
             "KWSYS_STL_HAS_WSTRING=1",
             # Features that are NOT available on the host platform.
@@ -698,6 +700,9 @@ MODULE_SETTINGS = {
         "includes_extra": [
             "ThirdParty/scn/vtkscn/include",
             "ThirdParty/scn/vtkscn/src",
+        ],
+        "defines_extra": [
+            "SCN_DISABLE_LOCALE=1",
         ],
         "srcs_glob_extra": [
             "ThirdParty/scn/vtkscn/src/vtkscn/*.cpp",

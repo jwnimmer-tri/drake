@@ -1,0 +1,14 @@
+diff --git a/Common/Core/vtkObjectFactory.h b/Common/Core/vtkObjectFactory.h
+index 1b58a5bb1b..bd2109181a 100644
+--- Common/Core/vtkObjectFactory.h
++++ Common/Core/vtkObjectFactory.h
+@@ -322,7 +322,9 @@ private:
+   vtkObjectFactoryRegistryCleanup(const vtkObjectFactoryRegistryCleanup& other) = delete;
+   vtkObjectFactoryRegistryCleanup& operator=(const vtkObjectFactoryRegistryCleanup& rhs) = delete;
+ };
++#if 0  // Disabled for Drake.
+ static vtkObjectFactoryRegistryCleanup vtkObjectFactoryRegistryCleanupInstance;
++#endif
+ 
+ // Macro to create an object creation function.
+ // The name of the function will by vtkObjectFactoryCreateclassname
