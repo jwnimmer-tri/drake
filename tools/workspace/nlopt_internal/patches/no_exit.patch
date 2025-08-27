@@ -1,0 +1,74 @@
+[nlopt_internal] Use exceptions instead of exit
+
+Reasoning for not upstreaming this patch: Drake-specific integration
+choice.
+
+--- src/algs/stogo/local.cc
++++ src/algs/stogo/local.cc
+@@ -3,7 +3,9 @@
+    Local search - A trust region algorithm with BFGS update.
+ */
+ 
++#if 0  // Removed for Drake.
+ #include <iostream>
++#endif
+ #include <stdlib.h>
+ 
+ #include "stogo_config.h"
+@@ -61,9 +61,13 @@
+ #endif
+ 
+   if (box.OutsideBox(x, domain) != 0) {
++#if 0  // Changed for Drake.
+     cout << "Starting point is not inside the boundary. Exiting...\n" ;
+     exit(1) ;
+     return LS_Out ;
++#else
++    throw std::runtime_error("Nlopt Fatal: starting point is not inside the boundary");
++#endif
+   }
+ 
+   // Check if we are close to a stationary point located previously
+@@ -78,8 +82,12 @@
+ #if 0
+ 
+   if (axis != -1) {
++#if 0  // Changed for Drake.
+     cout << "NLopt code only works with axis == -1, exiting...\n" ;
+     exit(EXIT_FAILURE);
++#else
++    throw std::runtime_error("Nlopt Fatal: only works with axis == -1");
++#endif
+   }
+   f_local_data data;
+   data.glob = &glob;
+@@ -378,8 +386,12 @@
+   }
+ 
+   if (info == LS_Unstable) {
++#if 0  // Changed for Drake.
+     cout << "Local search became unstable. No big deal but exiting anyway\n" ;
+     exit(1);
++#else
++    throw std::runtime_error("Nlopt Fatal: local search became unstable");
++#endif
+   }
+ 
+   *mgr=maxgrad ;
+
+--- src/algs/stogo/tools.cc
++++ src/algs/stogo/tools.cc
+@@ -276,9 +278,13 @@
+   if (ins_box==0 && ins_dom==0)
+     outs=2;
+   if (outs==999) {
++#if 0  // Changed for Drake.
+     // Something has gone wrong!
+     cout << "Error in OutsideBox, exiting\n";
+     exit(1);
++#else
++    throw std::runtime_error("Nlopt Fatal: Error in OutsideBox");
++#endif
+   }
+   return outs;
+ }

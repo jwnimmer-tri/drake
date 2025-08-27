@@ -5,11 +5,11 @@
 /* clang-format on */
 
 #include <atomic>
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 #include <string>
+
+#include <fmt/format.h>
 
 #include "drake/common/drake_assertion_error.h"
 #include "drake/common/never_destroyed.h"
@@ -28,33 +28,31 @@ struct AssertionConfig {
   std::atomic<bool> assertion_failures_are_exceptions;
 };
 
-// Stream into @p out the given failure details; only @p condition may be null.
-void PrintFailureDetailTo(std::ostream& out, const char* condition,
-                          const char* func, const char* file, int line) {
-  out << "Failure at " << file << ":" << line << " in " << func << "()";
-  if (condition) {
-    out << ": condition '" << condition << "' failed.";
-  } else {
-    out << ".";
-  }
+// Combines the given failure details into a cohesive string message and
+// returns it. Of all the input arguments, only `condition` may be null.
+std::string FormatFailureDetail(const char* condition, const char* func,
+                                const char* file, int line) {
+  return fmt::format("Failure at {}:{} in {}(){}.", file, line, func,
+                     (condition != nullptr)
+                         ? fmt::format(": condition '{}' failed", condition)
+                         : std::string{});
 }
 }  // namespace
 
 // Declared in drake_assert.h.
 void Abort(const char* condition, const char* func, const char* file,
            int line) {
-  std::cerr << "abort: ";
-  PrintFailureDetailTo(std::cerr, condition, func, file, line);
-  std::cerr << std::endl;
+  const std::string detail = FormatFailureDetail(condition, func, file, line);
+  // We use fprintf instead of std::cerr to avoid C++ static constructor and
+  // destructor shenanigans that come from including <iostream>.
+  std::fprintf(stderr, "abort: %s\n", detail.c_str());
   std::abort();
 }
 
 // Declared in drake_throw.h.
 void Throw(const char* condition, const char* func, const char* file,
            int line) {
-  std::ostringstream what;
-  PrintFailureDetailTo(what, condition, func, file, line);
-  throw assertion_error(what.str().c_str());
+  throw assertion_error(FormatFailureDetail(condition, func, file, line));
 }
 
 // Declared in drake_assert.h.

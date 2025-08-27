@@ -9,5 +9,9 @@ def fcl_internal_repository(
         commit = "a3fbc9fe4f619d7bb1117dc137daa497d2de454b",
         sha256 = "dd542daa13ab2f861f29792f20be50a1776859540c46360b728d1fad5d819a0c",  # noqa
         build_file = ":package.BUILD.bazel",
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_cout_cerr.h>|; s| std::cout | drake::cout |g; s| std::cerr | drake::cerr |g;' $(find include src -name '*.[ch]*')",  # noqa
+        ],
         mirrors = mirrors,
     )

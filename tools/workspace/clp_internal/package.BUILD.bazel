@@ -147,6 +147,7 @@ coin_cc_library(
     output_vendoring_patch = "drake_clp.patch",
     deps = [
         "@coinutils_internal//:coinutils",
+        "@drake//tools/vendor_iostream",
     ],
     visibility = ["//visibility:public"],
 )

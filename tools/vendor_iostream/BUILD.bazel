@@ -1,0 +1,22 @@
+load("//tools/lint:lint.bzl", "add_lint_tests")
+load("//tools/skylark:cc.bzl", "cc_library")
+
+cc_library(
+    name = "vendor_iostream",
+    srcs = [
+        "drake_replacement_stream.cc",
+    ],
+    hdrs = [
+        "drake_cout_cerr.h",
+        "drake_replacement_stream.h",
+        "drake_std_cout_cerr.h",
+    ],
+    includes = ["."],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:essential",
+    ],
+)
+
+add_lint_tests()

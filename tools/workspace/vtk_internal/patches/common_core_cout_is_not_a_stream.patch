@@ -1,0 +1,42 @@
+XXX
+
+--- Common/Core/vtkInformationKey.cxx
++++ Common/Core/vtkInformationKey.cxx
+@@ -109,7 +109,9 @@
+ //------------------------------------------------------------------------------
+ void vtkInformationKey::Print(vtkInformation* info)
+ {
+-  this->Print(cout, info);
++  std::ostringstream buffer;
++  this->Print(buffer, info);
++  std::cout << buffer.str();
+ }
+ 
+ //------------------------------------------------------------------------------
+
+--- Common/DataModel/vtkCellGridResponders.cxx
++++ Common/DataModel/vtkCellGridResponders.cxx
+@@ -100,7 +100,9 @@
+   if (!didFind)
+   {
+     vtkIndent indent;
++#if 0
+     this->PrintSelf(std::cout, indent);
++#endif
+     vtkErrorMacro("No responder for " << query->GetClassName() << " for "
+                                       << cellType->GetClassName() << " found.");
+     return false;
+
+--- Common/DataModel/vtkSelection.cxx
++++ Common/DataModel/vtkSelection.cxx
+@@ -758,7 +758,9 @@
+ //------------------------------------------------------------------------------
+ void vtkSelection::Dump()
+ {
+-  this->Dump(cout);
++  std::ostringstream buffer;
++  this->Dump(buffer);
++  std::cout << buffer.str();
+ }
+ 
+ //------------------------------------------------------------------------------

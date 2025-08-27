@@ -157,6 +157,7 @@ _vtk_internal_repository_impl = repository_rule(
         "sha256": attr.string(),
         "build_file": attr.label(),
         "patches": attr.label_list(),
+        "patch_cmds": attr.string_list(),
         "extra_strip_prefix": attr.string(),
         "mirrors": attr.string_list_dict(),
         # This attribute is specific to our rule, not setup_github_repository.
@@ -203,6 +204,7 @@ def vtk_internal_repository(
             ":patches/upstream/rendering_core_vtkcomposite_exception.patch",
             ":patches/upstream/rendering_opengl2_scaled_albedo_for_ibl.patch",
             ":patches/upstream/vtkpugixml_global_ctor.patch",
+            ":patches/common_core_cout_is_not_a_stream.patch",
             ":patches/common_core_nobacktrace.patch",
             ":patches/common_core_rm_cin_prompting.patch",
             ":patches/common_core_version.patch",
@@ -217,6 +219,10 @@ def vtk_internal_repository(
             ":patches/vtkfast_float_hidden.patch",
             ":patches/vtkpugixml_hidden.patch",
             ":patches/vtksys_hidden.patch",
+        ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find . -type f -name '*.[ch]*')",  # noqa
         ],
         settings_bzl = ":settings.bzl",
         **kwargs):
@@ -249,6 +255,7 @@ def vtk_internal_repository(
             sha256 = sha256,
             build_file = build_file,
             patches = patches,
+            patch_cmds = patch_cmds,
             settings_bzl = settings_bzl,
             **kwargs
         )

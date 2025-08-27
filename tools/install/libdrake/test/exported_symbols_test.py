@@ -87,6 +87,8 @@ _KNOWN_BAD_SYMBOLS_SUBSTR = [
     "slack_value",
     "sortOnOther",
     "wrapper",
+    # XXX
+    "_GLOBAL__sub_I_vtk",
 ]
 
 
@@ -159,7 +161,7 @@ class ExportedSymbolsTest(unittest.TestCase):
         bad_rows = sorted(bad_rows, key=lambda x: (x.Type, x.Name))
 
         # Report the first few errors.
-        for row in bad_rows[:25]:
+        for row in bad_rows[:100]:
             print(f"{row.Type} {row.Bind} {row.Vis}")
             print(f" {self._demangle(row.Name)}")
             print(f" {row.Name}")
@@ -188,16 +190,18 @@ class ExportedSymbolsTest(unittest.TestCase):
 
     @staticmethod
     def _is_symbol_ok(row):
-        # Local symbols don't matter.
+        name = row.Name
+        # Local symbols don't matter ...
         if row.Bind == "LOCAL":
-            return True
+            # ... unless it's an init or fini:
+            if not name.startswith("_GLOBAL__sub"):
+                return True
         # BSS start / end / etc don't matter.
         if row.Type == "NOTYPE":
             return True
         # Undefined references don't matter.
         if row.Ndx == "UND":
             return True
-        name = row.Name
         for prefix in _GOOD_SYMBOLS_PREFIX:
             if name.startswith(prefix):
                 return True

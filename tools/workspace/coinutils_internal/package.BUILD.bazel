@@ -134,6 +134,7 @@ coin_cc_library(
     vendor_tool_args = ["--no-inline-namespace"],
     output_vendoring_patch = "drake_coinutils.patch",
     deps = [
+        "@drake//tools/vendor_iostream",
         "@blas",
         "@lapack",
     ],
