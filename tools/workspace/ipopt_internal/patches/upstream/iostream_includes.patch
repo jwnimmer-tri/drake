@@ -1,0 +1,71 @@
+[ipopt_internal] Remove unnecessary <iostream> includes
+
+https://github.com/coin-or/Ipopt/pull/856
+
+--- src/Algorithm/LinearSolvers/IpMa57TSolverInterface.cpp
++++ src/Algorithm/LinearSolvers/IpMa57TSolverInterface.cpp
+@@ -9,7 +9,6 @@
+ #include "IpMa57TSolverInterface.hpp"
+ 
+ #include <cmath>
+-#include <iostream>
+ 
+ #ifdef IPOPT_HAS_HSL
+ #include "CoinHslConfig.h"
+
+--- src/Algorithm/LinearSolvers/IpMa77SolverInterface.cpp
++++ src/Algorithm/LinearSolvers/IpMa77SolverInterface.cpp
+@@ -11,7 +11,6 @@
+ #include "IpoptConfig.h"
+ #include "IpMa77SolverInterface.hpp"
+ 
+-#include <iostream>
+ #include <cmath>
+ 
+ #ifdef IPOPT_HAS_HSL
+
+--- src/Algorithm/LinearSolvers/IpMa86SolverInterface.cpp
++++ src/Algorithm/LinearSolvers/IpMa86SolverInterface.cpp
+@@ -11,7 +11,6 @@
+ #include "IpoptConfig.h"
+ #include "IpMa86SolverInterface.hpp"
+ 
+-#include <iostream>
+ #include <cmath>
+ 
+ #ifdef IPOPT_HAS_HSL
+
+--- src/Algorithm/LinearSolvers/IpMa97SolverInterface.cpp
++++ src/Algorithm/LinearSolvers/IpMa97SolverInterface.cpp
+@@ -11,7 +11,6 @@
+ #include "IpoptConfig.h"
+ #include "IpMa97SolverInterface.hpp"
+ 
+-#include <iostream>
+ #include <cstdio>
+ #include <cmath>
+ #include <cassert>
+
+--- src/Common/IpOptionsList.hpp
++++ src/Common/IpOptionsList.hpp
+@@ -12,7 +12,7 @@
+ #include "IpException.hpp"
+ #include "IpRegOptions.hpp"
+ 
+-#include <iostream>
++#include <istream>
+ #include <map>
+ 
+ namespace Ipopt
+
+--- src/Interfaces/IpIpoptApplication.hpp
++++ src/Interfaces/IpIpoptApplication.hpp
+@@ -7,7 +7,7 @@
+ #ifndef __IPIPOPTAPPLICATION_HPP__
+ #define __IPIPOPTAPPLICATION_HPP__
+ 
+-#include <iostream>
++#include <istream>
+ 
+ #include "IpJournalist.hpp"
+ #include "IpTNLP.hpp"

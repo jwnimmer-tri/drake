@@ -365,6 +365,7 @@ coin_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "@blas",
+        "@drake//tools/vendor_iostream",
         "@lapack",
         "@spral_internal//:spral",
     ],

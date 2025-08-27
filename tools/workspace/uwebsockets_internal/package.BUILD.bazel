@@ -17,6 +17,7 @@ cc_library(
     linkopts = ["-pthread"],
     linkstatic = 1,
     deps = [
+        "@drake//tools/vendor_iostream",
         "@usockets_internal//:usockets",
         "@zlib",
     ],

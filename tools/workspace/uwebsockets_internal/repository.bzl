@@ -14,6 +14,11 @@ def uwebsockets_internal_repository(
         build_file = ":package.BUILD.bazel",
         patches = [
             ":patches/max_fallback_size.patch",
+            ":patches/no_globals.patch",
+        ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find src -name '*.[ch]*')",  # noqa
         ],
         mirrors = mirrors,
     )

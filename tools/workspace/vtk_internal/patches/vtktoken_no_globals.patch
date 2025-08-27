@@ -1,0 +1,95 @@
+diff --git ThirdParty/token/vtktoken/token/Singletons.cxx ThirdParty/token/vtktoken/token/Singletons.cxx
+index 3f6b1c00ef..8796a6e8fd 100644
+--- ThirdParty/token/vtktoken/token/Singletons.cxx
++++ ThirdParty/token/vtktoken/token/Singletons.cxx
+@@ -3,6 +3,14 @@
+ #include <mutex>
+ 
+ token_BEGIN_NAMESPACE
++#if 1 // Re-implemented for Drake.
++TypeContainer& singletons()
++{
++  // This is purposefully never destroyed.
++  static TypeContainer* s_singletons = new TypeContainer;
++  return *s_singletons;
++}
++#else
+ namespace {
+ 
+ // rely on default initialization to 0 for static variables
+@@ -53,5 +61,6 @@ void finalizeSingletons()
+   delete s_singletons;
+   s_singletons = nullptr;
+ }
++#endif
+ 
+ token_CLOSE_NAMESPACE
+diff --git ThirdParty/token/vtktoken/token/Singletons.h ThirdParty/token/vtktoken/token/Singletons.h
+index 2d98ec4b9b..3210464a14 100644
+--- ThirdParty/token/vtktoken/token/Singletons.h
++++ ThirdParty/token/vtktoken/token/Singletons.h
+@@ -14,6 +14,7 @@ token_BEGIN_NAMESPACE
+ /// container.
+ TOKEN_EXPORT TypeContainer& singletons();
+ 
++#if 0  // Disabled for Drake.
+ /// Destroy the container holding all registered singleton objects.
+ ///
+ /// The destructors of any contained objects will be called.
+@@ -45,6 +46,7 @@ private:
+ static singletonsCleanup singletonsCleanupInstance;
+ 
+ } // namespace detail
++#endif
+ 
+ token_CLOSE_NAMESPACE
+ 
+diff --git ThirdParty/token/vtktoken/token/Token.cxx ThirdParty/token/vtktoken/token/Token.cxx
+index 5d7e6097eb..2d531df427 100644
+--- ThirdParty/token/vtktoken/token/Token.cxx
++++ ThirdParty/token/vtktoken/token/Token.cxx
+@@ -9,8 +9,10 @@
+ 
+ token_BEGIN_NAMESPACE
+ 
++#if 0 // Re-implemented for Drake.
+ static std::mutex s_managerLock;
+ std::shared_ptr<Manager> Token::m_manager;
++#endif
+ 
+ Token::Token(const char* data, std::size_t size)
+ {
+@@ -50,6 +52,11 @@ Manager* Token::getManager()
+ 
+ Manager* Token::getManagerInternal()
+ {
++#if 1 // Re-implemented for Drake.
++  // This is purposefully never destroyed.
++  static std::shared_ptr<Manager>* manager = new std::shared_ptr<Manager>;
++  return manager->get();
++#else
+   if (!Token::m_manager)
+   {
+     std::lock_guard<std::mutex> lock(s_managerLock);
+@@ -59,6 +66,7 @@ Manager* Token::getManagerInternal()
+     }
+   }
+   return Token::m_manager.get();
++#endif
+ }
+ 
+ bool Token::operator==(const Token& other) const
+diff --git ThirdParty/token/vtktoken/token/Token.h ThirdParty/token/vtktoken/token/Token.h
+index 1420c751b5..af2c461bd7 100644
+--- ThirdParty/token/vtktoken/token/Token.h
++++ ThirdParty/token/vtktoken/token/Token.h
+@@ -81,7 +81,9 @@ public:
+ 
+ protected:
+   Hash m_id;
++#if 0  // Move into the Token.cxx for Drake.
+   static std::shared_ptr<Manager> m_manager;
++#endif
+ 
+   static Manager* getManagerInternal();
+ 

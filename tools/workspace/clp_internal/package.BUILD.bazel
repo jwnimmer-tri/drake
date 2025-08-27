@@ -148,6 +148,7 @@ coin_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "@coinutils_internal//:coinutils",
+        "@drake//tools/vendor_iostream",
     ],
 )
 

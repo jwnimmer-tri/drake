@@ -1,0 +1,68 @@
+diff --git Common/Core/vtkDebugLeaks.cxx Common/Core/vtkDebugLeaks.cxx
+index da0e6085f0..32bc417f99 100644
+--- Common/Core/vtkDebugLeaks.cxx
++++ Common/Core/vtkDebugLeaks.cxx
+@@ -407,11 +407,6 @@ void vtkDebugLeaks::ClassInitialize()
+   // Default to error when leaks occur while running tests.
+   vtkDebugLeaks::ExitError = 1;
+   vtkDebugLeaks::Observer = nullptr;
+-#else
+-  vtkDebugLeaks::MemoryTable = nullptr;
+-  vtkDebugLeaks::CriticalSection = nullptr;
+-  vtkDebugLeaks::ExitError = 0;
+-  vtkDebugLeaks::Observer = nullptr;
+ #endif
+ }
+ 
+@@ -455,17 +450,21 @@ void vtkDebugLeaks::ClassFinalize()
+ 
+ //------------------------------------------------------------------------------
+ 
+-// Purposely not initialized.  ClassInitialize will handle it.
++// Purposely not initialized.  ClassInitialize will handle it of VTK_DEBUG_LEAKS
++// is enabled; if not, the C++ default of zero-initialization is correct.
+ vtkDebugLeaksHashTable* vtkDebugLeaks::MemoryTable;
+ 
+ vtkDebugLeaksTraceManager* vtkDebugLeaks::TraceManager;
+ 
+-// Purposely not initialized.  ClassInitialize will handle it.
++// Purposely not initialized.  ClassInitialize will handle it of VTK_DEBUG_LEAKS
++// is enabled; if not, the C++ default of zero-initialization is correct.
+ std::mutex* vtkDebugLeaks::CriticalSection;
+ 
+-// Purposely not initialized.  ClassInitialize will handle it.
++// Purposely not initialized.  ClassInitialize will handle it of VTK_DEBUG_LEAKS
++// is enabled; if not, the C++ default of zero-initialization is correct.
+ int vtkDebugLeaks::ExitError;
+ 
+-// Purposely not initialized.  ClassInitialize will handle it.
++// Purposely not initialized.  ClassInitialize will handle it of VTK_DEBUG_LEAKS
++// is enabled; if not, the C++ default of zero-initialization is correct.
+ vtkDebugLeaksObserver* vtkDebugLeaks::Observer;
+ VTK_ABI_NAMESPACE_END
+diff --git Common/Core/vtkDebugLeaksManager.h Common/Core/vtkDebugLeaksManager.h
+index 27818df491..568f650c10 100644
+--- Common/Core/vtkDebugLeaksManager.h
++++ Common/Core/vtkDebugLeaksManager.h
+@@ -14,6 +14,7 @@
+ #define vtkDebugLeaksManager_h
+ 
+ #include "vtkCommonCoreModule.h" // For export macro
++#include "vtkDebug.h"            // Needed for VTK_DEBUG_LEAKS macro setting.
+ #include "vtkSystemIncludes.h"
+ 
+ VTK_ABI_NAMESPACE_BEGIN
+@@ -28,11 +29,13 @@ private:
+   vtkDebugLeaksManager& operator=(const vtkDebugLeaksManager&) = delete;
+ };
+ 
++#if VTK_DEBUG_LEAKS
+ // This instance will show up in any translation unit that uses
+ // vtkDebugLeaks or that has a singleton.  It will make sure
+ // vtkDebugLeaks is initialized before it is used and is the last
+ // static object destroyed.
+ static vtkDebugLeaksManager vtkDebugLeaksManagerInstance;
++#endif
+ 
+ VTK_ABI_NAMESPACE_END
+ #endif

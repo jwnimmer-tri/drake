@@ -11,6 +11,11 @@ def ipopt_internal_repository(
         build_file = ":package.BUILD.bazel",
         patches = [
             ":patches/upstream/atomic.patch",
+            ":patches/upstream/iostream_includes.patch",
+        ],
+        patch_cmds = [
+            # XXX document me
+            "sed -i -e 's|<iostream>|<drake_std_cout_cerr.h>|;' $(find src -name '*.[ch]*')",  # noqa
         ],
         mirrors = mirrors,
     )

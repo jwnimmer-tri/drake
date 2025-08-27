@@ -1,0 +1,198 @@
+[nlopt_internal] Remove debugging code that prints to stdout
+
+Reasoning for not upstreaming this patch: Drake-specific build
+requirement (all logging must be via spdlog).
+
+--- src/algs/ags/ags.cc
++++ src/algs/ags/ags.cc
+@@ -4,7 +4,9 @@
+ #include "ags.h"
+ #include "solver.hpp"
+ 
++#if 0  // Removed for Drake.
+ #include <iostream>
++#endif
+ #include <cstring>
+ #include <exception>
+ #include <limits>
+@@ -26,8 +28,10 @@
+   if(m != nlopt_count_constraints(m, fc) || m > ags::solverMaxConstraints)
+     return NLOPT_INVALID_ARGS;
+ 
++#if 0  // Removed for Drake.
+   if (ags_verbose && n > 5)
+     std::cout << "Warning: AGS is unstable when dimension > 5" << std::endl;
++#endif
+ 
+   std::vector<double> lb(l, l + n);
+   std::vector<double> ub(u, u + n);
+@@ -81,9 +85,12 @@
+   catch (const std::exception& exp)
+   {
++#if 0  // Removed for Drake.
+     std::cerr << "AGS internal error: " << std::string(exp.what()) << std::endl;
++#endif
+     return NLOPT_FAILURE;
+   }
+ 
++#if 0  // Removed for Drake.
+   if (ags_verbose)
+   {
+     auto calcCounters = solver.GetCalculationsStatistics();
+@@ -98,6 +103,7 @@
+       std::cout << "Feasible point not found" << "\n";
+     std::cout << std::string(40, '-') << std::endl;
+   }
++#endif
+ 
+   if (static_cast<int>(m) == optPoint.idx)
+   {
+
+--- src/algs/stogo/global.h
++++ src/algs/stogo/global.h
+@@ -60,7 +60,9 @@
+ //  Global& operator=(const Global &);
+ 
+   void Search(int, RCRVector);
++#if 0  // Removed for Drake.
+   void DispMinimizers();
++#endif
+   virtual double OneMinimizer(RCRVector);
+   virtual bool NoMinimizers();
+   void SetDomain(RTBox);
+
+--- src/algs/stogo/global.cc
++++ src/algs/stogo/global.cc
+@@ -9,7 +9,9 @@
+    NB The RNGs seed should be initialized using some timer
+ */
+ 
++#if 0  // Removed for Drake.
+ #include <iostream>
++#endif
+ 
+ #include <iterator>
+ #include <algorithm>
+@@ -109,10 +109,12 @@
+       box.AddTrial(tmpTrial) ;
+ 
+       if (tmpTrial.objval<=fbound+mu && tmpTrial.objval<=box.minf+mu) {
++#if 0  // Removed for Drake.
+         if (stogo_verbose) {
+           cout << "Found a candidate, x=" << tmpTrial.xvals;
+           cout << " F=" <<tmpTrial.objval << " FC=" << FC << endl;
+         }
++#endif
+         SolSet.push_back(tmpTrial);
+         if (tmpTrial.objval < stop->minf_max)
+           break;
+@@ -179,8 +181,10 @@
+   MacEpsilon=eps(); // Get machine precision
+   if (det_pnts>2*dim+1) {
+     det_pnts=2*dim+1;
++#if 0  // Removed for Drake.
+     if (stogo_verbose)
+       cout << "Warning: Reducing det_pnts to " << det_pnts << endl;
++#endif
+   }
+ 
+   // Initialize timer
+@@ -218,23 +222,29 @@
+       }
+       if (!InTime()) {
+         done=true;
++#if 0
+ 	if (stogo_verbose)
+ 	  cout << "The program has run out of time or function evaluations\n";
++#endif
+         break;
+       }
+ 
+     } // inner while-loop
++#if 0  // Removed for Drake.
+     if (stogo_verbose)
+       cout << endl << "*** Inner loop completed ***" << endl ;
++#endif
+ 
+     // Reduce SolSet if necessary
+     SolSet.erase(remove_if(SolSet.begin(), SolSet.end(),
+ 			   TrialGT(fbound+mu)),SolSet.end());
+     if (InTime()) {
++#if 0  // Removed for Drake.
+       if (stogo_verbose) {
+ 	cout << "Current set of minimizers (" << SolSet.size() << ")" << endl ;
+ 	DispMinimizers() ;
+       }
++#endif
+ 
+       while (!Garbage.empty()) {
+         box=Garbage.top() ;
+@@ -248,6 +258,7 @@
+     }
+   } // Outer while-loop
+ 
++#if 0  // Removed for Drake.
+   if (stogo_verbose) {
+     cout << "Number of outer iterations : " << outer_iter << endl;
+     cout << "Number of unexplored boxes : " << CandSet.size() << endl;
+@@ -256,6 +267,7 @@
+     cout << "Number of function evaluations : " << FC << endl;
+     cout << "Number of gradient evaluations : " << GC << endl;
+   }
++#endif
+ 
+   if (axis != -1) {
+     // Return minimizer when doing the AV method
+@@ -291,9 +303,11 @@
+   box=Domain;
+ }
+ 
++#if 0  // Removed for Drake.
+ void Global::DispMinimizers() {
+   copy(SolSet.begin(), SolSet.end(), ostream_iterator<Trial>(cout));
+ }
++#endif
+ 
+ double Global::OneMinimizer(RCRVector x) {
+   if (NoMinimizers()) return 0.0;
+
+--- src/algs/stogo/tools.h
++++ src/algs/stogo/tools.h
+@@ -94,7 +94,9 @@
+   int NStationary();      // Returns the number of stationary points
+ 
+   void split(RTBox, RTBox);     // Split a box
++#if 0  // Removed for Drake.
+   void dispTrials();
++#endif
+ 
+   bool InsideBox(RCRVector);
+   int  OutsideBox(RCRVector, RCTBox);
+
+--- src/algs/stogo/tools.cc
++++ src/algs/stogo/tools.cc
+@@ -1,6 +1,8 @@
+ 
+ #include <float.h>
++#if 0  // Removed for Drake.
+ #include <iostream>
++#endif
+ 
+ #include "stogo_config.h"
+ #include "tools.h"
+@@ -229,6 +229,7 @@
+   B1.minf=fm1 ; B2.minf=fm2;
+ }
+ 
++#if 0  // Removed for Drake.
+ void TBox::dispTrials() {
+   // Display information about box
+ #ifdef KCC
+@@ -237,6 +238,7 @@
+   copy(TList.begin(), TList.end(), ostream_iterator<Trial>(cout));
+ #endif
+ }
++#endif
+ 
+ ostream & operator << (ostream & os, const TBox & B) {
+   int n=(B.lb).GetLength() ;
