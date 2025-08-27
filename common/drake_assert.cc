@@ -1,10 +1,8 @@
 #include "drake/common/drake_assert.h"
 
 #include <atomic>
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -29,15 +27,14 @@ struct AssertionConfig {
   std::atomic<bool> assertion_failures_are_exceptions;
 };
 
-// Stream into @p out the given failure details; only @p condition may be null.
-void PrintFailureDetailTo(std::ostream& out, const char* condition,
-                          const char* func, const char* file, int line) {
-  out << "Failure at " << file << ":" << line << " in " << func << "()";
-  if (condition) {
-    out << ": condition '" << condition << "' failed.";
-  } else {
-    out << ".";
-  }
+// Combines the given failure details into a cohesive string message and
+// returns it. Of all the input arguments, only `condition` may be null.
+std::string FormatFailureDetail(const char* condition, const char* func,
+                                const char* file, int line) {
+  return fmt::format("Failure at {}:{} in {}(){}.", file, line, func,
+                     (condition != nullptr)
+                         ? fmt::format(": condition '{}' failed", condition)
+                         : std::string{});
 }
 
 // When calling DRAKE_THROW_UNLESS(condition, value1, value2, ...) some values
@@ -57,17 +54,17 @@ std::string_view StripFormatCruft(const std::string& key) {
 // Declared in drake_assert.h.
 void Abort(const char* condition, const char* func, const char* file,
            int line) {
-  std::cerr << "abort: ";
-  PrintFailureDetailTo(std::cerr, condition, func, file, line);
-  std::cerr << std::endl;
+  const std::string detail = FormatFailureDetail(condition, func, file, line);
+  // We use fprintf instead of std::cerr to avoid C++ static constructor and
+  // destructor shenanigans that come from including <iostream>.
+  std::fprintf(stderr, "abort: %s\n", detail.c_str());
   std::abort();
 }
 
 // Declared in drake_throw.h.
 void Throw(const char* condition, const char* func, const char* file, int line,
            const ThrowValuesBuf& buffer) {
-  std::ostringstream what;
-  PrintFailureDetailTo(what, condition, func, file, line);
+  std::string what = FormatFailureDetail(condition, func, file, line);
   if (buffer.values[0].first != nullptr) {
     std::vector<std::string> pairs;
     pairs.reserve(buffer.values.size());
@@ -75,9 +72,9 @@ void Throw(const char* condition, const char* func, const char* file, int line,
       if (key == nullptr) break;
       pairs.push_back(fmt::format("{} = {}", StripFormatCruft(key), value_str));
     }
-    what << fmt::format(" {}.", fmt::join(pairs, ", "));
+    what += fmt::format(" {}.", fmt::join(pairs, ", "));
   }
-  throw assertion_error(what.str().c_str());
+  throw assertion_error(what.c_str());
 }
 
 // Declared in drake_assert.h.

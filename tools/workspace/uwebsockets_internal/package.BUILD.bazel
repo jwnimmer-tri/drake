@@ -15,6 +15,7 @@ cc_library(
     includes = ["src"],
     isystem = True,
     deps = [
+        "@drake//tools/vendor_iostream",
         "@usockets_internal//:usockets",
         "@zlib",
     ],

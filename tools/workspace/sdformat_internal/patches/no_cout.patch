@@ -1,0 +1,81 @@
+XXX
+
+--- include/sdf/SDFImpl.hh
++++ include/sdf/SDFImpl.hh
+@@ -170,7 +170,9 @@
+     public: ~SDF();
++#if 0
+     public: void PrintDescription();
+     public: void PrintDescription(sdf::Errors &_errors);
+     public: void PrintDoc();
++#endif
+     public: void Write(const std::string &_filename);
+     public: void Write(sdf::Errors &_errors, const std::string &_filename);
+ 
+
+--- src/FrameSemantics.cc
++++ src/FrameSemantics.cc
+@@ -15,7 +15,6 @@
+  *
+ */
+ #include <algorithm>
+-#include <iostream>
+ #include <string>
+ #include <set>
+ #include <utility>
+@@ -43,6 +43,7 @@
+ {
+ inline namespace SDF_VERSION_NAMESPACE {
+ 
++#if 0
+ // Helpful functions when debugging in gdb
+ void printGraph(const ScopedGraph<PoseRelativeToGraph> &_graph)
+ {
+@@ -52,6 +53,7 @@
+ {
+   std::cout << _graph.Graph() << std::endl;
+ }
++#endif
+ 
+ // The following two functions were originally submitted to gz-math,
+ // but were not accepted as they were not generic enough.
+
+--- src/SDF.cc
++++ src/SDF.cc
+@@ -18,3 +18,2 @@
+ #include <mutex>
+-#include <iostream>
+ #include <sstream>
+@@ -228,6 +228,7 @@
+ {
+ }
+ 
++#if 0
+ /////////////////////////////////////////////////
+ void SDF::PrintDescription()
+ {
+@@ -241,6 +242,7 @@
+ {
+   this->Root()->PrintDescription(_errors, "");
+ }
++#endif
+ 
+ /////////////////////////////////////////////////
+ void SDF::PrintValues(const PrintConfig &_config)
+@@ -259,6 +259,7 @@
+   this->Root()->PrintValues(_errors, "", _config);
+ }
+ 
++#if 0
+ /////////////////////////////////////////////////
+ void SDF::PrintDoc()
+ {
+@@ -370,6 +371,7 @@
+ 
+   std::cout << "    </body>    </html>\n";
+ }
++#endif
+ 
+ /////////////////////////////////////////////////
+ void SDF::Write(const std::string &_filename)
+
