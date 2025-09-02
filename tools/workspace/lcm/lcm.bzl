@@ -126,7 +126,7 @@ _lcm_library_gen = rule(
         "lcmgen": attr.label(
             cfg = "host",
             executable = True,
-            default = Label("@lcm//:lcm-gen"),
+            default = Label("@module_lcm//lcmgen:lcm-gen"),
         ),
         "outs": attr.output_list(),
         "language": attr.string(),
@@ -221,6 +221,7 @@ def lcm_cc_library(
 
     deps = kwargs.pop("deps", [])
     if not _use_new_lcm_gen:
+        # XXX deprecation
         if "@lcm//:lcm_coretypes" not in deps:
             deps = deps + ["@lcm//:lcm_coretypes"]
 
@@ -318,8 +319,8 @@ def lcm_java_library(
     )
 
     deps = kwargs.pop("deps", [])
-    if "@lcm//:lcm-java" not in deps:
-        deps = deps + ["@lcm//:lcm-java"]
+    if "@module_lcm//lcm-java" not in deps:
+        deps = deps + ["@module_lcmg//lcm-java"]
 
     java_library(
         name = name,

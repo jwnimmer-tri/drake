@@ -1,6 +1,62 @@
-# This file exists to make our directory into a Bazel package, so that our
-# neighboring *.bzl file can be loaded elsewhere.
-
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("//tools/install:install.bzl", "install")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+
+# ---- Logic for choosing which glib to use. ---
+
+config_setting(
+    name = "flag_glib_repo_pkgconfig",
+    flag_values = {
+        "//tools/flags:glib_repo": "pkgconfig",
+    },
+)
+
+config_setting(
+    name = "flag_glib_repo_default",
+    flag_values = {
+        "//tools/flags:glib_repo": "default",
+    },
+)
+
+config_setting(
+    name = "flag_private_runtime_repo_default_external",
+    flag_values = {
+        "//tools/flags:private_runtime_repo_default": "external",
+    },
+)
+
+selects.config_setting_group(
+    name = "flag_glib_repo_default_pkgconfig",
+    match_all = [
+        ":flag_glib_repo_default",
+        ":flag_private_runtime_repo_default_external",
+    ],
+)
+
+selects.config_setting_group(
+    name = "use_pkgconfig",
+    match_any = [
+        ":flag_glib_repo_pkgconfig",
+        ":flag_glib_repo_default_pkgconfig",
+    ],
+)
+
+alias(
+    name = "glib",
+    actual = select({
+        ":use_pkgconfig": "@pkgconfig_glib",
+        "//conditions:default": "@module_glib//:glib",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+# ---- Logic for installing glib-related files. ---
+
+# XXX
+install(
+    name = "install",
+    visibility = ["//tools/workspace:__pkg__"],
+)
 
 add_lint_tests()
