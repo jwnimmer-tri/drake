@@ -169,6 +169,7 @@ def _add_internal_repositories():
     uwebsockets_internal_repository(name = "uwebsockets_internal", mirrors = mirrors)  # noqa
     voxelized_geometry_tools_internal_repository(name = "voxelized_geometry_tools_internal", mirrors = mirrors)  # noqa
     vtk_internal_repository(name = "vtk_internal", mirrors = mirrors)
+    x11_repository(name = "x11_internal")
     xmlrunner_py_internal_repository(name = "xmlrunner_py_internal", mirrors = mirrors)  # noqa
     yaml_cpp_internal_repository(name = "yaml_cpp_internal", mirrors = mirrors)
 
@@ -186,7 +187,6 @@ def _drake_dep_repositories_impl(module_ctx):
     pybind11_repository(name = "pybind11", mirrors = mirrors)
     python_repository(name = "python")
     snopt_repository(name = "snopt")
-    x11_repository(name = "x11")
     zlib_repository(name = "zlib")
     for name in ["eigen", "fmt", "spdlog"]:
         alias_repository(
@@ -200,6 +200,7 @@ def _drake_dep_repositories_impl(module_ctx):
     gtest_repository(name = "gtest", mirrors = mirrors)
     pycodestyle_repository(name = "pycodestyle", mirrors = mirrors)
     styleguide_repository(name = "styleguide", mirrors = mirrors)
+    x11_repository(name = "x11")
 
 drake_dep_repositories = module_extension(
     implementation = _drake_dep_repositories_impl,

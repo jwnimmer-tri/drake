@@ -240,7 +240,7 @@ cc_library(
     name = "x11_deps",
     deps = select({
         "//conditions:default": [
-            "@x11",
+            "@x11_internal",
         ],
         "//tools/cc_toolchain:apple": [],
     }),

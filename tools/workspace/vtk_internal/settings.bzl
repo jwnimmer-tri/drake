@@ -537,7 +537,7 @@ MODULE_SETTINGS = {
             ":osx": [],
             "//conditions:default": [
                 # Mimic vtk_module_link(... X11::X11) from upstream.
-                "@x11",
+                "@x11_internal",
             ],
         }),
         "module_deps_ignore": [
