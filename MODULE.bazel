@@ -152,8 +152,6 @@ use_repo(
     # deprecating it until we have nanobind ready.
     "pybind11",
     # TODO(jwnimmer-tri) Move both of these to be internal (+ deprecation).
-    "opencl",
-    # TODO(jwnimmer-tri) Move both of these to be internal (+ deprecation).
     # However, both have bzlmod support so the rework will be a bit nuanced,
     # so will need to be attacked a dedicated commit just for these two.
     "glib",
@@ -260,6 +258,7 @@ use_repo(
     "nlohmann_internal",
     "nlopt_internal",
     "onetbb_internal",
+    "opencl_internal",
     "org_apache_xmlgraphics_commons_internal",
     "osqp_internal",
     "pathspec_internal",

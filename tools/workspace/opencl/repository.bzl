@@ -1,6 +1,7 @@
 def _impl(repository_ctx):
     repository_ctx.symlink(
-        Label("@drake//tools/workspace/opencl:package.BUILD.bazel"),
+        # TODO(jwnimmer-tri) Simplify on 2025-06-01 during deprecation removal.
+        Label("@drake//tools/workspace/opencl:package.BUILD.bazel") if "internal" in repository_ctx.name else Label("@drake//tools/workspace/opencl:package-deprecated.BUILD.bazel"),  # noqa
         "BUILD.bazel",
     )
 

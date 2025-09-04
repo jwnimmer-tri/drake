@@ -139,6 +139,7 @@ def _add_internal_repositories():
     nlohmann_internal_repository(name = "nlohmann_internal", mirrors = mirrors)
     nlopt_internal_repository(name = "nlopt_internal", mirrors = mirrors)
     onetbb_internal_repository(name = "onetbb_internal", mirrors = mirrors)
+    opencl_repository(name = "opencl_internal")
     org_apache_xmlgraphics_commons_internal_repository(name = "org_apache_xmlgraphics_commons_internal", mirrors = mirrors)  # noqa
     osqp_internal_repository(name = "osqp_internal", mirrors = mirrors)
     pathspec_internal_repository(name = "pathspec_internal", mirrors = mirrors)
@@ -183,7 +184,6 @@ def _drake_dep_repositories_impl(module_ctx):
     lcm_repository(name = "lcm", mirrors = mirrors)
     meshcat_repository(name = "meshcat", mirrors = mirrors)
     mosek_repository(name = "mosek", mirrors = mirrors)
-    opencl_repository(name = "opencl")
     pybind11_repository(name = "pybind11", mirrors = mirrors)
     python_repository(name = "python")
     snopt_repository(name = "snopt")
@@ -198,6 +198,7 @@ def _drake_dep_repositories_impl(module_ctx):
     buildifier_repository(name = "buildifier", mirrors = mirrors)
     gflags_repository(name = "gflags", mirrors = mirrors)
     gtest_repository(name = "gtest", mirrors = mirrors)
+    opencl_repository(name = "opencl")
     pycodestyle_repository(name = "pycodestyle", mirrors = mirrors)
     styleguide_repository(name = "styleguide", mirrors = mirrors)
     x11_repository(name = "x11")

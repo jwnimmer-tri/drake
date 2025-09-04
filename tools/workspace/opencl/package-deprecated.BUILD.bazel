@@ -5,7 +5,7 @@ load("@drake//tools/skylark:cc.bzl", "cc_library")
 licenses(["permissive"])  # BSD-2-Clause AND Expat
 
 cc_library(
-    name = "opencl_internal",
+    name = "opencl",
     linkopts = select({
         "@drake//tools/skylark:osx": [
             "-framework OpenCL",
@@ -15,4 +15,5 @@ cc_library(
         ],
     }),
     visibility = ["//visibility:public"],
+    deprecation = "DRAKE DEPRECATED: The @opencl external is deprecated and will be removed from Drake on or after 2026-01-01.",  # noqa
 )

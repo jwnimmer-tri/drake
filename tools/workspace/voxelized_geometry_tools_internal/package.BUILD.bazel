@@ -13,7 +13,7 @@ cc_library(
     hdrs = ["include/voxelized_geometry_tools/cl.hpp"],
     includes = ["include"],
     linkstatic = True,
-    deps = ["@opencl"],
+    deps = ["@opencl_internal"],
 )
 
 cc_library(
