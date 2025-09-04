@@ -159,8 +159,6 @@ use_repo(
     # so will need to be attacked a dedicated commit just for these two.
     "glib",
     "lcm",
-    # TODO(jwnimmer-tri) Move this to be internal (+ deprecation).
-    "styleguide",
 )
 
 # Load developer dependencies that are modules.
@@ -281,6 +279,7 @@ use_repo(
     "stable_baselines3_internal",
     "statsjs_internal",
     "stduuid_internal",
+    "styleguide_internal",
     "suitesparse_internal",
     "sympy_py_internal",
     "tinygltf_internal",
