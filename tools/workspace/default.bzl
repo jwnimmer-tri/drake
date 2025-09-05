@@ -87,7 +87,6 @@ load("//tools/workspace/usockets_internal:repository.bzl", "usockets_internal_re
 load("//tools/workspace/uwebsockets_internal:repository.bzl", "uwebsockets_internal_repository")  # noqa
 load("//tools/workspace/voxelized_geometry_tools_internal:repository.bzl", "voxelized_geometry_tools_internal_repository")  # noqa
 load("//tools/workspace/vtk_internal:repository.bzl", "vtk_internal_repository")  # noqa
-load("//tools/workspace/x11:repository.bzl", "x11_repository")
 load("//tools/workspace/xmlrunner_py_internal:repository.bzl", "xmlrunner_py_internal_repository")  # noqa
 load("//tools/workspace/yaml_cpp_internal:repository.bzl", "yaml_cpp_internal_repository")  # noqa
 load("//tools/workspace/zlib:repository.bzl", "zlib_repository")
@@ -186,9 +185,8 @@ def _drake_dep_repositories_impl(module_ctx):
     python_repository(name = "python")
     snopt_repository(name = "snopt")
     styleguide_repository(name = "styleguide", mirrors = mirrors)
-    x11_repository(name = "x11")
     zlib_repository(name = "zlib")
-    for name in ["eigen", "fmt", "spdlog"]:
+    for name in ["eigen", "fmt", "spdlog", "x11"]:
         alias_repository(
             name = name,
             aliases = {name: "@drake//tools/workspace/" + name},

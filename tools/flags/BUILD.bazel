@@ -216,6 +216,23 @@ string_flag(
     ],
 )
 
+# The :x11_repo flag configures where Drake obtains @x11 from.
+# The public dependency alias is `@drake//tools/workspace/x11` or use the
+# drake_dep_repositories() module extension at //tools/workspace:default.bzl.
+string_flag(
+    name = "x11_repo",
+    build_setting_default = "default",
+    values = [
+        # The default is based on :private_runtime_repo_default -- "internal"
+        # maps to "module" and "external" maps to "pkgconfig".
+        "default",
+        # Compile x11 from source.
+        "module",
+        # Find x11 via pkg-config.
+        "pkgconfig",
+    ],
+)
+
 # -----------------------------------------------------------------------------
 # Configuration for solver back-ends.
 #
