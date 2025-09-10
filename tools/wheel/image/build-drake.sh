@@ -19,8 +19,21 @@ cat > /tmp/drake-wheel-build/drake-build/drake.bazelrc << EOF
 build --disk_cache=/var/cache/bazel/disk_cache
 build --repository_cache=/var/cache/bazel/repository_cache
 build --repo_env=DRAKE_WHEEL=1
-build --repo_env=SNOPT_PATH=${SNOPT_PATH}
+# build --repo_env=SNOPT_PATH=...
 build --config=packaging
+
+build --@drake//tools/flags:with_osqp=True
+
+build --@drake//tools/flags:with_clarabel=False
+build --@drake//tools/flags:with_clp=False
+build --@drake//tools/flags:with_csdp=False
+build --@drake//tools/flags:with_gurobi=False
+build --@drake//tools/flags:with_ipopt=False
+build --@drake//tools/flags:with_mosek=False
+build --@drake//tools/flags:with_nlopt=False
+build --@drake//tools/flags:with_scs=False
+build --@drake//tools/flags:with_snopt=False
+
 build --define=LCM_INSTALL_JAVA=OFF
 # Enable MOSEK lazy loading. Right now this is only done for Linux builds.
 build --@drake//solvers:mosek_lazy_load=True

@@ -46,8 +46,21 @@ cat > "$build_root/drake.bazelrc" << EOF
 build --disk_cache=$HOME/.cache/drake-wheel-build/bazel/disk_cache
 build --repository_cache=$HOME/.cache/drake-wheel-build/bazel/repository_cache
 build --repo_env=DRAKE_WHEEL=1
-build --repo_env=SNOPT_PATH=${SNOPT_PATH}
+# build --repo_env=SNOPT_PATH=...
 build --config=packaging
+
+build --@drake//tools/flags:with_osqp=True
+
+build --@drake//tools/flags:with_clarabel=False
+build --@drake//tools/flags:with_clp=False
+build --@drake//tools/flags:with_csdp=False
+build --@drake//tools/flags:with_gurobi=False
+build --@drake//tools/flags:with_ipopt=False
+build --@drake//tools/flags:with_mosek=False
+build --@drake//tools/flags:with_nlopt=False
+build --@drake//tools/flags:with_scs=False
+build --@drake//tools/flags:with_snopt=False
+
 build --define=LCM_INSTALL_JAVA=OFF
 # See tools/wheel/wheel_builder/macos.py for more on this env variable.
 build --macos_minimum_os="${MACOSX_DEPLOYMENT_TARGET}"

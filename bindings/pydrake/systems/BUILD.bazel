@@ -317,25 +317,25 @@ drake_py_library(
 )
 
 PY_LIBRARIES_WITH_INSTALL = [
-    ":analysis_py",
-    ":controllers_py",
-    ":estimators_py",
+    # ":analysis_py",
+    # ":controllers_py",
+    # ":estimators_py",
     ":framework_py",
-    ":lcm_py",
+    # ":lcm_py",
     ":primitives_py",
-    ":rendering_py",
-    ":sensors_py",
+    # ":rendering_py",
+    # ":sensors_py",
 ]
 
 PY_LIBRARIES = [
-    ":_resample_interp1d_py",
-    ":drawing_py",
-    ":jupyter_widgets_py",
+    # ":_resample_interp1d_py",
+    # ":drawing_py",
+    # ":jupyter_widgets_py",
     ":scalar_conversion_py",
     ":module_py",
-    ":perception_py",
-    ":planar_scenegraph_visualizer_py",
-    ":pyplot_visualizer_py",
+    # ":perception_py",
+    # ":planar_scenegraph_visualizer_py",
+    # ":pyplot_visualizer_py",
 ]
 
 # Symbol roll-up (for user ease).

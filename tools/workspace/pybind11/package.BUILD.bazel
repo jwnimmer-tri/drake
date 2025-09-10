@@ -62,6 +62,7 @@ cc_library(
     name = "pybind11",
     hdrs = _HDRS,
     includes = ["include"],
+    defines = ["PYBIND11_DETAILED_ERROR_MESSAGES=1"],
     deps = [
         "@eigen",
         "@drake//tools/workspace/python:cc_headers",

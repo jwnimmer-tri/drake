@@ -36,10 +36,10 @@ from the Drake source tree.
 from . import getDrakePath
 from .autodiffutils import *
 from .forwarddiff import *
-from .lcm import *
-from .manipulation import *
+# from .lcm import *
+# from .manipulation import *
 from .math import *
-from .perception import *
+# from .perception import *
 from .planning import *
 from .polynomial import *
 from .solvers import *
@@ -53,7 +53,7 @@ from .geometry.all import *
 # - `.examples` does not offer public Drake library symbols.
 from .multibody.all import *
 from .systems.all import *
-from .visualization import *
+# from .visualization import *
 
 # Preferred Ordering.
 # Please note this will *re*import some modules.
@@ -65,5 +65,5 @@ from .math import *
 from .symbolic import Polynomial
 
 # Ensure that the command-line modules appear in the pydrake API reference.
-import pydrake.visualization.meldis
-import pydrake.visualization.model_visualizer
+# import pydrake.visualization.meldis
+# import pydrake.visualization.model_visualizer

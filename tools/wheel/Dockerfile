@@ -35,7 +35,7 @@ RUN /image/provision-python.sh ${PYTHON} ${PYTHON_SHA}
 
 ADD image/build-drake.sh /image/
 ADD image/drake-src.tar /tmp/drake-wheel-build/drake-src/
-COPY image/snopt.tar.gz /tmp/drake-wheel-build/snopt/
+# COPY image/snopt.tar.gz /tmp/drake-wheel-build/snopt/
 
 # -----------------------------------------------------------------------------
 # Build the Drake wheel.
@@ -48,7 +48,7 @@ ARG DRAKE_GIT_SHA
 
 ENV DRAKE_VERSION=${DRAKE_VERSION}
 ENV DRAKE_GIT_SHA=${DRAKE_GIT_SHA}
-ENV SNOPT_PATH=/tmp/drake-wheel-build/snopt/snopt.tar.gz
+# ENV SNOPT_PATH=/tmp/drake-wheel-build/snopt/snopt.tar.gz
 
 RUN --mount=type=cache,target=/var/cache/bazel \
     /image/build-drake.sh

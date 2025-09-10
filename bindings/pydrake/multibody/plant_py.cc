@@ -21,7 +21,7 @@
 #include "drake/geometry/scene_graph.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/multibody/plant/contact_results.h"
-#include "drake/multibody/plant/contact_results_to_lcm.h"
+// #include "drake/multibody/plant/contact_results_to_lcm.h"
 #include "drake/multibody/plant/deformable_model.h"
 #include "drake/multibody/plant/externally_applied_spatial_force.h"
 #include "drake/multibody/plant/externally_applied_spatial_force_multiplexer.h"
@@ -1572,6 +1572,7 @@ PYBIND11_MODULE(plant, m) {
 
   using T = double;
 
+#if 0
   // ContactResultsToLcmSystem
   {
     using Class = ContactResultsToLcmSystem<T>;
@@ -1609,6 +1610,7 @@ PYBIND11_MODULE(plant, m) {
       // Keep alive, transitive: `lcm` keeps `builder` alive.
       py::keep_alive<4, 1>(),
       doc.ConnectContactResultsToDrakeVisualizer.doc_5args);
+#endif
 
   {
     using Class = PropellerInfo;

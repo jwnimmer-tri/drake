@@ -313,12 +313,12 @@ install_files(
 )
 
 PY_LIBRARIES_WITH_INSTALL = [
-    ":benchmarks_py",
+    # ":benchmarks_py",
     ":fem_py",
     ":inverse_kinematics_py",
     ":math_py",
-    ":meshcat_py",
-    ":optimization_py",
+    # ":meshcat_py",
+    # ":optimization_py",
     ":parsing_py",
     ":plant_py",
     ":rational_py",
@@ -326,10 +326,10 @@ PY_LIBRARIES_WITH_INSTALL = [
 ]
 
 PY_LIBRARIES = [
-    ":jupyter_widgets_py",
+    # ":jupyter_widgets_py",
     ":module_py",
-    ":mesh_model_maker_py",
-    ":inertia_fixer_py",
+    # ":mesh_model_maker_py",
+    # ":inertia_fixer_py",
 ]
 
 # Symbol roll-up (for user ease).

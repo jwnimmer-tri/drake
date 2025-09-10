@@ -8,10 +8,10 @@ DRAKE_VERSION = os.environ.get('DRAKE_VERSION', '0.0.0')
 
 # Required python packages that will be pip installed along with pydrake
 python_required = [
-    'matplotlib',
-    'Mosek==11.0.24',
+    # 'matplotlib',
+    # 'Mosek==11.0.24',
     'numpy',
-    'pydot',
+    # 'pydot',
     'PyYAML',
 ]
 
@@ -29,13 +29,13 @@ def _actually_find_packages():
     result.extend([
         'pydrake.autodiffutils',
         'pydrake.common',
-        'pydrake.examples',
+        # 'pydrake.examples',
         'pydrake.geometry',
-        'pydrake.manipulation',
+        # 'pydrake.manipulation',
         'pydrake.math',
         'pydrake.solvers',
         'pydrake.symbolic',
-        'pydrake.visualization',
+        # 'pydrake.visualization',
     ])
     print(f'Using packages={result}')
     return result

@@ -14,9 +14,9 @@
 #include "drake/geometry/render/light_parameter.h"
 #include "drake/geometry/render/render_engine.h"
 #include "drake/geometry/render/render_label.h"
-#include "drake/geometry/render_gl/factory.h"
-#include "drake/geometry/render_gltf_client/factory.h"
-#include "drake/geometry/render_vtk/factory.h"
+// #include "drake/geometry/render_gl/factory.h"
+// #include "drake/geometry/render_gltf_client/factory.h"
+// #include "drake/geometry/render_vtk/factory.h"
 
 namespace drake {
 namespace pydrake {
@@ -362,6 +362,7 @@ void DoScalarIndependentDefinitions(py::module m) {
     // extraordinarily inefficient.
   }
 
+#if 0
   {
     using Class = geometry::NullTexture;
     constexpr auto& cls_doc = doc_geometry.NullTexture;
@@ -501,6 +502,7 @@ void DoScalarIndependentDefinitions(py::module m) {
       },
       py::arg("params") = RenderEngineGltfClientParams(),
       py_rvp::take_ownership, doc_geometry.MakeRenderEngineGltfClient.doc);
+#endif
 
   AddValueInstantiation<RenderLabel>(m);
 }

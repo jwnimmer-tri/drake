@@ -11,8 +11,7 @@ namespace {
 void def_geometry_all(py::module m) {
   py::dict vars = m.attr("__dict__");
   py::exec(
-      "from pydrake.geometry import *\n"
-      "from pydrake.geometry.optimization import *\n",
+      "from pydrake.geometry import *\n",
       py::globals(), vars);
 }
 }  // namespace
@@ -30,8 +29,8 @@ PYBIND11_MODULE(geometry, m) {
   DefineGeometryHydro(m);
   DefineGeometryRender(m);
   DefineGeometrySceneGraph(m);
-  DefineGeometryOptimization(m.def_submodule("optimization"));
-  DefineGeometryVisualizers(m);
+  // DefineGeometryOptimization(m.def_submodule("optimization"));
+  // DefineGeometryVisualizers(m);
 
   ExecuteExtraPythonCode(m, true);
 
