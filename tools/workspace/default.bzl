@@ -2,7 +2,6 @@ load("//tools/workspace:alias.bzl", "alias_repository")
 load("//tools/workspace:mirrors.bzl", "DEFAULT_MIRRORS")
 load("//tools/workspace/abseil_cpp_internal:repository.bzl", "abseil_cpp_internal_repository")  # noqa
 load("//tools/workspace/bazelisk_internal:repository.bzl", "bazelisk_internal_repository")  # noqa
-load("//tools/workspace/blas:repository.bzl", "blas_repository")
 load("//tools/workspace/buildifier:repository.bzl", "buildifier_repository")
 load("//tools/workspace/ccd_internal:repository.bzl", "ccd_internal_repository")
 load("//tools/workspace/clang_cindex_python3_internal:repository.bzl", "clang_cindex_python3_internal_repository")  # noqa
@@ -30,7 +29,6 @@ load("//tools/workspace/gz_utils_internal:repository.bzl", "gz_utils_internal_re
 load("//tools/workspace/highway_internal:repository.bzl", "highway_internal_repository")  # noqa
 load("//tools/workspace/implib_so_internal:repository.bzl", "implib_so_internal_repository")  # noqa
 load("//tools/workspace/ipopt_internal:repository.bzl", "ipopt_internal_repository")  # noqa
-load("//tools/workspace/lapack:repository.bzl", "lapack_repository")
 load("//tools/workspace/lapack_internal:repository.bzl", "lapack_internal_repository")  # noqa
 load("//tools/workspace/lcm:repository.bzl", "lcm_repository")
 load("//tools/workspace/libjpeg_turbo_internal:repository.bzl", "libjpeg_turbo_internal_repository")  # noqa
@@ -162,10 +160,8 @@ def _add_internal_repositories():
 
 def _drake_dep_repositories_impl(module_ctx):
     mirrors = DEFAULT_MIRRORS
-    blas_repository(name = "blas")
     drake_models_repository(name = "drake_models", mirrors = mirrors)
     gurobi_repository(name = "gurobi")
-    lapack_repository(name = "lapack")
     lcm_repository(name = "lcm", mirrors = mirrors)
     meshcat_repository(name = "meshcat", mirrors = mirrors)
     mosek_repository(name = "mosek", mirrors = mirrors)
@@ -174,7 +170,17 @@ def _drake_dep_repositories_impl(module_ctx):
     python_repository(name = "python")
     snopt_repository(name = "snopt")
     x11_repository(name = "x11")
-    for name in ["eigen", "fmt", "glib", "spdlog", "zlib"]:
+
+    ALIAS_REPOSITORIES = [
+        "blas",
+        "eigen",
+        "fmt",
+        "glib",
+        "lapack",
+        "spdlog",
+        "zlib",
+    ]
+    for name in ALIAS_REPOSITORIES:
         alias_repository(
             name = name,
             aliases = {name: "@drake//tools/workspace/" + name},

@@ -134,11 +134,14 @@ drake_dep_repositories = use_extension(
 use_repo(
     drake_dep_repositories,
     # Aliases for C++ dependencies that are part of our public API.
+    # What these refer to is configurable; see above.
     "eigen",
     "fmt",
     "spdlog",
     # Aliases for C++ dependencies that are used by our implementation.
+    # What these refer to is configurable; see above.
     "blas",
+    "glib",
     "lapack",
     "zlib",
     # First-party dependencies (i.e., drake-maintained).
@@ -160,10 +163,9 @@ use_repo(
     # TODO(jwnimmer-tri) Move both of these to be internal (+ deprecation).
     "opencl",
     "x11",
-    # TODO(jwnimmer-tri) Move both of these to be internal (+ deprecation).
-    # However, both have bzlmod support so the rework will be a bit nuanced,
-    # so will need to be attacked a dedicated commit just for these two.
-    "glib",
+    # TODO(jwnimmer-tri) Move this to be internal (+ deprecation). However, it
+    # has bzlmod support so the rework will be a bit nuanced and attacked as a
+    # dedicated commit.
     "lcm",
 )
 
