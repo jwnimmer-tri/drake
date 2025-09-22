@@ -43,7 +43,7 @@ def whitespace_around_named_parameter_equals_positive(logical_line, tokens):
     no_space = False
     prev_end = None
     annotated_func_arg = False
-    in_def = logical_line.startswith('def')
+    in_def = logical_line.startswith("def")
     message = "B251 expected spaces around keyword / parameter equals"
     for token_type, text, start, end, line in tokens:
         if token_type == pycodestyle.tokenize.NL:
@@ -53,15 +53,15 @@ def whitespace_around_named_parameter_equals_positive(logical_line, tokens):
             if start == prev_end:
                 yield (prev_end, message)
         if token_type == pycodestyle.tokenize.OP:
-            if text in '([':
+            if text in "([":
                 parens += 1
-            elif text in ')]':
+            elif text in ")]":
                 parens -= 1
-            elif in_def and text == ':' and parens == 1:
+            elif in_def and text == ":" and parens == 1:
                 annotated_func_arg = True
-            elif parens and text == ',' and parens == 1:
+            elif parens and text == "," and parens == 1:
                 annotated_func_arg = False
-            elif parens and text == '=' and not annotated_func_arg:
+            elif parens and text == "=" and not annotated_func_arg:
                 no_space = True
                 if start == prev_end:
                     yield (prev_end, message)
@@ -75,15 +75,16 @@ def _main():
     """Parse options and run checks on Skylark source."""
 
     pycodestyle.register_check(
-        whitespace_around_named_parameter_equals_positive)
+        whitespace_around_named_parameter_equals_positive
+    )
 
     style_guide = pycodestyle.StyleGuide(parse_argv=True)
     options = style_guide.options
 
     ignore = set(options.ignore)
-    ignore.add('E251')  # Skylark wants spaces around named parameters
-    ignore.add('E711')  # Skylark has no `is`
-    ignore.add('E721')  # Skylark has no `isinstance`
+    ignore.add("E251")  # Skylark wants spaces around named parameters
+    ignore.add("E711")  # Skylark has no `is`
+    ignore.add("E721")  # Skylark has no `isinstance`
     options.ignore = tuple(ignore)
 
     report = style_guide.check_files()
@@ -93,9 +94,9 @@ def _main():
 
     if report.total_errors:
         if options.count:
-            sys.stderr.write(str(report.total_errors) + '\n')
+            sys.stderr.write(str(report.total_errors) + "\n")
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()
