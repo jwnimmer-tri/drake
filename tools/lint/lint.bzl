@@ -9,7 +9,7 @@ def add_lint_tests(
         cpplint_extra_srcs = None,
         python_lint_exclude = None,
         python_lint_extra_srcs = None,
-        python_lint_use_ruff = False,
+        python_lint_use_ruff = True,
         python_lint_use_ruff_format = False,
         bazel_lint_ignore = None,
         bazel_lint_extra_srcs = None,
