@@ -217,7 +217,11 @@ RotationMatrix<T> RotationMatrix<T>::MakeFromOneUnitVector(
   // The value of the index i is determined by identifying uₘᵢₙ = u_A(i),
   // the element of u_A with smallest absolute value.
   int i;
+#if 0
   u_A.cwiseAbs().minCoeff(&i);  // uₘᵢₙ = u_A(i).
+#else
+  i = 0;
+#endif
   const int j = (i + 1) % 3;
   const int k = (j + 1) % 3;
 

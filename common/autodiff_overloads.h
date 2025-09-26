@@ -122,7 +122,9 @@ pow(const Eigen::AutoDiffScalar<DerTypeA>& base,
                     typename internal::remove_all<DerTypeB>::type::PlainObject>,
                 "The derivative types must match.");
 
+#if 0
   internal::make_coherent(base.derivatives(), exponent.derivatives());
+#endif
 
   const auto& x = base.value();
   const auto& xgrad = base.derivatives();
