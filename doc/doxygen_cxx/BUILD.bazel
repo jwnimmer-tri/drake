@@ -80,4 +80,4 @@ drake_py_binary(
     ],
 )
 
-add_lint_tests(python_lint_use_ruff = True)
+add_lint_tests()
