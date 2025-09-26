@@ -2,11 +2,17 @@ load("//tools/skylark:drake_py.bzl", "py_test_isolated")
 load("//tools/skylark:sh.bzl", "sh_test")
 
 # Internal helper.
-def _python_lint(*, name_prefix, files, use_ruff, disallow_executable):
+def _python_lint(
+        *,
+        name_prefix,
+        files,
+        use_ruff,
+        use_ruff_format,
+        disallow_executable):
     locations = ["$(location %s)" % f for f in files]
 
     if use_ruff:
-        # Ruff.
+        # Ruff lint.
         sh_test(
             name = name_prefix + "_ruff_check_lint",
             size = "small",
@@ -15,16 +21,8 @@ def _python_lint(*, name_prefix, files, use_ruff, disallow_executable):
             args = ["check"] + locations,
             tags = ["ruff", "lint"],
         )
-        sh_test(
-            name = name_prefix + "_ruff_format_lint",
-            size = "small",
-            srcs = ["//tools/lint:ruff_format_lint.sh"],
-            data = ["@ruff", "//:.ruff.toml"] + files,
-            args = locations,
-            tags = ["ruff", "lint"],
-        )
     else:
-        # Pycodestyle.
+        # Pycodestyle lint.
         py_test_isolated(
             name = name_prefix + "_pycodestyle",
             size = "small",
@@ -34,6 +32,17 @@ def _python_lint(*, name_prefix, files, use_ruff, disallow_executable):
             args = locations + ["--max-line-length=80"],
             main = "@pycodestyle_internal//:pycodestyle.py",
             tags = ["pycodestyle", "lint"],
+        )
+
+    if use_ruff_format:
+        # Ruff format.
+        sh_test(
+            name = name_prefix + "_ruff_format_lint",
+            size = "small",
+            srcs = ["//tools/lint:ruff_format_lint.sh"],
+            data = ["@ruff", "//:.ruff.toml"] + files,
+            args = locations,
+            tags = ["ruff", "lint"],
         )
 
     # Additional Drake lint.
@@ -55,7 +64,8 @@ def python_lint(
         existing_rules = None,
         exclude = None,
         extra_srcs = None,
-        use_ruff = False):
+        use_ruff = False,
+        use_ruff_format = False):
     """Runs the pycodestyle PEP 8 code style checker on all Python source files
     declared in rules in a BUILD file.  Also runs the drakelint.py linter.
 
@@ -66,6 +76,7 @@ def python_lint(
         exclude: List of labels to exclude from linting, e.g., [:foo.py].
         extra_srcs: Source files that are not discoverable via rules.
         use_ruff: When True, use ruff instead of pycodestyle.
+        use_ruff_format: When True, require ruff auto-formatting.
     """
     if existing_rules == None:
         existing_rules = native.existing_rules().values()
@@ -104,6 +115,7 @@ def python_lint(
             name_prefix = "package",
             files = files,
             use_ruff = use_ruff,
+            use_ruff_format = use_ruff_format,
             disallow_executable = True,
         )
 
@@ -113,5 +125,6 @@ def python_lint(
             name_prefix = "extra_srcs",
             files = extra_srcs,
             use_ruff = use_ruff,
+            use_ruff_format = use_ruff_format,
             disallow_executable = False,
         )

@@ -10,6 +10,7 @@ def add_lint_tests(
         python_lint_exclude = None,
         python_lint_extra_srcs = None,
         python_lint_use_ruff = False,
+        python_lint_use_ruff_format = False,
         bazel_lint_ignore = None,
         bazel_lint_extra_srcs = None,
         bazel_lint_exclude = None,
@@ -37,6 +38,7 @@ def add_lint_tests(
         exclude = python_lint_exclude,
         extra_srcs = python_lint_extra_srcs,
         use_ruff = python_lint_use_ruff,
+        use_ruff_format = python_lint_use_ruff_format,
     )
     bazel_lint(
         ignore = bazel_lint_ignore,
