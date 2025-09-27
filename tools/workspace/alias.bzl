@@ -11,7 +11,11 @@ def _impl(repo_ctx):
             "actual = " + repr(actual),
         ]))
 
-    repo_ctx.file("BUILD.bazel", build)
+    subdir = repo_ctx.attr.package
+    if subdir == "":
+        repo_ctx.file("BUILD.bazel", build)
+    else:
+        repo_ctx.file("{}/BUILD.bazel".format(subdir), build)
 
     generate_repository_metadata(
         repo_ctx,
@@ -25,6 +29,12 @@ alias_repository = repository_rule(
             doc = """
             Dictionary of aliases to create. The keys are target names,
             the values are the destination labels (i.e., the 'actual').
+            """,
+        ),
+        "package": attr.string(
+            default = "",
+            doc = """
+            Optional package (subdirectory) to place the alias into.
             """,
         ),
     },

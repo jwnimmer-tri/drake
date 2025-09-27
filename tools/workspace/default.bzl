@@ -196,6 +196,7 @@ def _drake_dep_repositories_impl(module_ctx):
         alias_repository(
             name = name,
             aliases = {name: "@drake//tools/workspace/" + name},
+            package = "glib" if name == "glib" else None,
         )
 
     # Deprecated 2026-01-01.

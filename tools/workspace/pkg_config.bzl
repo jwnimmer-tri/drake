@@ -277,6 +277,14 @@ def _maybe_setup_pkg_config_repository(repository_ctx):
     )
     repository_ctx.template("BUILD.bazel", template, substitutions)
 
+    extra_templates = getattr(
+        repository_ctx.attr,
+        "extra_build_file_templates",
+        {},
+    )
+    for path, template in extra_templates.items():
+        repository_ctx.template(path, template, substitutions)
+
     return struct(error = None)
 
 def setup_pkg_config_repository(repository_ctx):
@@ -344,6 +352,7 @@ _do_pkg_config_repository = repository_rule(
             default = _DEFAULT_TEMPLATE,
             allow_files = True,
         ),
+        "extra_build_file_templates": attr.string_keyed_label_dict(),
         "extra_srcs": attr.string_list(),
         "extra_hdrs": attr.string_list(),
         "extra_copts": attr.string_list(),
