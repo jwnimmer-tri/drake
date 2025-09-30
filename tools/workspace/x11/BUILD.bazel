@@ -1,24 +1,106 @@
-load("//tools/install:install.bzl", "install")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("//tools/install:install.bzl", "install", "install_license")
 load("//tools/lint:lint.bzl", "add_lint_tests")
 
 # ---- Logic for choosing which x11 to use. ---
 
-# TODO(jwnimmer-tri) There is a "libx11" module in BCR, but I haven't been able
-# to get it to work yet, so for the moment we don't offer it as an option.
+config_setting(
+    name = "flag_x11_repo_pkgconfig",
+    flag_values = {
+        "//tools/flags:x11_repo": "pkgconfig",
+    },
+)
+
+config_setting(
+    name = "flag_x11_repo_default",
+    flag_values = {
+        "//tools/flags:x11_repo": "default",
+    },
+)
+
+config_setting(
+    name = "flag_private_runtime_repo_default_external",
+    flag_values = {
+        "//tools/flags:private_runtime_repo_default": "external",
+    },
+)
+
+selects.config_setting_group(
+    name = "flag_x11_repo_default_pkgconfig",
+    match_all = [
+        ":flag_x11_repo_default",
+        ":flag_private_runtime_repo_default_external",
+    ],
+)
+
+selects.config_setting_group(
+    name = "use_pkgconfig",
+    match_any = [
+        ":flag_x11_repo_pkgconfig",
+        ":flag_x11_repo_default_pkgconfig",
+    ],
+)
 
 alias(
     name = "x11",
-    actual = "@pkgconfig_x11_internal",
+    actual = select({
+        ":use_pkgconfig": "@pkgconfig_x11_internal",
+        "//conditions:default": "@module_x11//:x11",
+    }),
     visibility = ["//visibility:public"],
 )
 
-# ---- Logic for installing x11-related files. ---
+# # ---- Logic for installing x11-related files. ---
+
+# bool_flag(
+#     name = "with_user_x11",
+#     # This is overridden by our CMakeLists.txt to match the CMake option.
+#     build_setting_default = False,
+# )
+
+# config_setting(
+#     name = "is_with_user_true",
+#     flag_values = {":with_user_x11": "True"},
+# )
+
+# selects.config_setting_group(
+#     name = "is_external",
+#     match_any = [
+#         ":is_with_user_true",
+#         ":use_pkgconfig",
+#     ],
+# )
+
+# install(
+#     name = "install_hdrs",
+#     targets = ["@module_x11//:x11"],
+#     hdr_dest = "include",
+#     guess_hdrs = "PACKAGE",
+#     allowed_externals = ["@module_x11//:x11"],
+# )
+
+# install_license(
+#     name = "install_license",
+#     doc_dest = "share/doc/x11",
+#     licenses = [
+#         "@module_x11//:license.APACHE",
+#         "@module_x11//:license.BSD",
+#         "@module_x11//:license.MINPACK",
+#         "@module_x11//:license.MPL2",
+#     ],
+# )
 
 install(
     name = "install",
     visibility = ["//tools/workspace:__pkg__"],
-    # There's nothing to do here. We aren't redistributing X11, so we don't
-    # need to install its license.
+    # deps = select({
+    #     ":is_external": [],
+    #     "//conditions:default": [
+    #         ":install_hdrs",
+    #         ":install_license",
+    #     ],
+    # }),
 )
 
 add_lint_tests()

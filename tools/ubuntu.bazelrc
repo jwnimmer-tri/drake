@@ -27,3 +27,7 @@ build:gcc --action_env=CC=gcc
 build:gcc --action_env=CXX=g++
 build:gcc --host_action_env=CC=gcc
 build:gcc --host_action_env=CXX=g++
+
+# Tests setting `display = True` require a real Xorg server, so we must plumb
+# through the authentication credentials.
+build --sandbox_add_mount_pair=/tmp/.X11-unix
