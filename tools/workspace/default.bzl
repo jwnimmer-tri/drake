@@ -40,6 +40,7 @@ load("//tools/workspace/mosek:repository.bzl", "mosek_repository")
 load("//tools/workspace/mpmath_py_internal:repository.bzl", "mpmath_py_internal_repository")  # noqa
 load("//tools/workspace/msgpack_internal:repository.bzl", "msgpack_internal_repository")  # noqa
 load("//tools/workspace/mujoco_menagerie_internal:repository.bzl", "mujoco_menagerie_internal_repository")  # noqa
+load("//tools/workspace/musl_internal:repository.bzl", "musl_internal_repository")  # noqa
 load("//tools/workspace/mypy_extensions_internal:repository.bzl", "mypy_extensions_internal_repository")  # noqa
 load("//tools/workspace/mypy_internal:repository.bzl", "mypy_internal_repository")  # noqa
 load("//tools/workspace/nanoflann_internal:repository.bzl", "nanoflann_internal_repository")  # noqa
@@ -125,6 +126,7 @@ def _add_internal_repositories():
     mpmath_py_internal_repository(name = "mpmath_py_internal", mirrors = mirrors)  # noqa
     msgpack_internal_repository(name = "msgpack_internal", mirrors = mirrors)
     mujoco_menagerie_internal_repository(name = "mujoco_menagerie_internal", mirrors = mirrors)  # noqa
+    musl_internal_repository(name = "musl_internal")
     mypy_extensions_internal_repository(name = "mypy_extensions_internal", mirrors = mirrors)  # noqa
     mypy_internal_repository(name = "mypy_internal", mirrors = mirrors)
     nanoflann_internal_repository(name = "nanoflann_internal", mirrors = mirrors)  # noqa

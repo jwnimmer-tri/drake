@@ -16,14 +16,26 @@ def get_include_flags():
     llvm_dir = libcxx_v1_dir.parent.parent.parent
     libcxx_x86_dir = llvm_dir / "include/x86_64-unknown-linux-gnu/c++/v1"
     libcxx_libinclude_dir = llvm_dir / "lib/clang/19.1.3/include"
+
+    musl_dir = Path(manifest.Rlocation(
+        "musl_internal/include/features.h")).parent
+    musl_obj_dir = Path(manifest.Rlocation(
+        "musl_internal/obj/include/bits/alltypes.h")).parent.parent
+    musl_arch_dir = Path(manifest.Rlocation(
+        "musl_internal/arch/x86_64/bits/stdint.h")).parent.parent
+    musl_generic_dir = Path(manifest.Rlocation(
+        "musl_internal/arch/generic/bits/errno.h")).parent.parent
+
     result = [
         "-nostdinc",
         # "-nostdlibinc",
         f"-I{libcxx_v1_dir}",
         f"-I{libcxx_x86_dir}",
         f"-I{libcxx_libinclude_dir}",
-        "-I/usr/include",
-        "-I/usr/include/x86_64-linux-gnu",
-        "-I/usr/lib/gcc/x86_64-linux-gnu/11/include",
+        f"-I{musl_dir}",
+        f"-I{musl_obj_dir}",
+        f"-I{musl_arch_dir}",
+        f"-I{musl_generic_dir}",
+        "-D_LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE",
     ]
     return result

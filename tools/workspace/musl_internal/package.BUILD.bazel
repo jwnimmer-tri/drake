@@ -1,0 +1,50 @@
+# -*- bazel -*-
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "arch",
+    srcs = glob(["arch/**"]),
+)
+
+filegroup(
+    name = "include",
+    srcs = glob(["include/**"]),
+)
+
+# Mimic a stanza from the musl Makefile.
+genrule(
+    name = "alltypes",
+    srcs = [
+        "tools/mkalltypes.sed",
+        "arch/x86_64/bits/alltypes.h.in",
+        "include/alltypes.h.in",
+    ],
+    outs = ["obj/include/bits/alltypes.h"],
+	cmd = " ".join([
+        "sed",
+        "-f $(execpath tools/mkalltypes.sed)",
+        "$(execpath arch/x86_64/bits/alltypes.h.in)",
+        "$(execpath include/alltypes.h.in)",
+        "> $@",
+    ]),
+)
+
+# Mimic a stanza from the musl Makefile.
+genrule(
+    name = "syscall",
+    srcs = ["arch/x86_64/bits/syscall.h.in"],
+    outs = ["obj/include/bits/syscall.h"],
+ 	cmd = " && ".join([
+        "cp $< $@",
+ 	    "sed -n -e s/__NR_/SYS_/p < $< >> $@",
+    ]),
+)
+
+filegroup(
+    name = "obj_include",
+    srcs = [
+        ":obj/include/bits/alltypes.h",
+        ":obj/include/bits/syscall.h",
+    ],
+)

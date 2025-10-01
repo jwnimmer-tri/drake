@@ -304,7 +304,6 @@ use_repo(
     #
     # Python code used when building pydrake.
     #
-    "clang_cindex_python3_internal",
     "mypy_extensions_internal",
     "mypy_internal",
     "pathspec_internal",
@@ -318,9 +317,11 @@ use_repo(
     #
     # Python libraries used at test-time or by maintainers.
     #
+    "clang_cindex_python3_internal",
     "cpplint_internal",
     "github3_py_internal",
     "mpmath_py_internal",
+    "musl_internal",
     "pycodestyle_internal",
     "sympy_py_internal",
     "uritemplate_py_internal",
