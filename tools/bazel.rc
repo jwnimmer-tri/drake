@@ -1,3 +1,6 @@
+build --@drake//tools/flags:eigen_repo=module
+build --override_module=eigen=/home/jwnimmer/jwnimmer-tri/eigen
+
 # When compiling Drake as the main module (i.e., not as a Bazel dependency of
 # something else) we will default to using pkg-config to locate our C++
 # library dependencies.
