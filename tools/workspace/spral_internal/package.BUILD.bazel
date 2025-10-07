@@ -95,92 +95,29 @@ cc_library(
     ],
 )
 
-# For the definitive guide to the fortran_module deps written in this BUILD
-# file, refer to the upstream Makefile.am at "# Fortran 90 dependencies".
-
-fortran_module(
-    src = "src/blas_iface.f90",
-    name = "spral_blas_iface",
-    deps = ["@blas"],
-)
-
-fortran_module(
-    src = "src/core_analyse.f90",
-    name = "spral_core_analyse",
-)
-
-fortran_module(
-    name = "spral_cuda",
-    src = "src/cuda/cuda_nocuda.f90",
-)
-
-fortran_module(
-    name = "spral_hw_topology",
-    src = "src/hw_topology/hw_topology.f90",
-    deps = [
-        ":guess_topology",
-    ],
-)
-
-fortran_module(
-    name = "spral_lapack_iface",
-    src = "src/lapack_iface.f90",
-    deps = ["@lapack"],
-)
-
-fortran_module(
-    name = "spral_match_order",
-    src = "src/match_order.f90",
-    uses = [
+# XXX dox me
+MODULE_MAP = {
+    "spral_blas_iface": [],
+    "spral_core_analyse": [],
+    "spral_cuda": [],
+    "spral_hw_topology": [],
+    "spral_lapack_iface": [],
+    "spral_match_order": [
         "spral_metis_wrapper",
         "spral_scaling",
     ],
-)
-
-fortran_module(
-    name = "spral_matrix_util",
-    src = "src/matrix_util.f90",
-)
-
-fortran_module(
-    name = "spral_metis_wrapper",
-    src = "src/metis5_wrapper.F90",
-    deps = [
-        "@metis_internal//:metis",
-    ],
-)
-
-fortran_module(
-    name = "spral_pgm",
-    src = "src/pgm.f90",
-)
-
-fortran_module(
-    name = "spral_random",
-    src = "src/random.f90",
-)
-
-fortran_module(
-    name = "spral_rutherford_boeing",
-    src = "src/rutherford_boeing.f90",
-    uses = [
+    "spral_matrix_util": [],
+    "spral_metis_wrapper": [],
+    "spral_pgm": [],
+    "spral_random": [],
+    "spral_rutherford_boeing": [
         "spral_matrix_util",
         "spral_random",
     ],
-)
-
-fortran_module(
-    name = "spral_scaling",
-    src = "src/scaling.f90",
-    uses = [
+    "spral_scaling": [
         "spral_matrix_util",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids",
-    src = "src/ssids/ssids.f90",
-    uses = [
+    "spral_ssids": [
         "spral_hw_topology",
         "spral_match_order",
         "spral_matrix_util",
@@ -193,69 +130,33 @@ fortran_module(
         "spral_ssids_fkeep",
         "spral_ssids_inform",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_akeep",
-    src = "src/ssids/akeep.f90",
-    uses = [
+    "spral_ssids_akeep": [
         "spral_hw_topology",
         "spral_ssids_datatypes",
         "spral_ssids_inform",
         "spral_ssids_subtree",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_ciface",
-    src = "interfaces/C/ssids.f90",
-    uses = [
+    "spral_ssids_ciface": [
         "spral_hw_topology",
         "spral_ssids",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_cpu_iface",
-    src = "src/ssids/cpu/cpu_iface.f90",
-    uses = [
+    "spral_ssids_cpu_iface": [
         "spral_blas_iface",
         "spral_lapack_iface",
         "spral_ssids_datatypes",
         "spral_ssids_inform",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_cpu_subtree",
-    src = "src/ssids/cpu/subtree.f90",
-    uses = [
+    "spral_ssids_cpu_subtree": [
         "spral_ssids_contrib",
         "spral_ssids_cpu_iface",
         "spral_ssids_datatypes",
         "spral_ssids_inform",
         "spral_ssids_subtree",
     ],
-    deps = [
-        ":cpu_kernels",
-    ],
-)
-
-fortran_module(
-    name = "spral_ssids_profile",
-    src = "src/ssids/profile_iface.f90",
-    uses = [
+    "spral_ssids_profile": [
         "spral_hw_topology",
     ],
-    deps = [
-        ":profile",
-    ],
-)
-
-fortran_module(
-    name = "spral_ssids_anal",
-    src = "src/ssids/anal.F90",
-    uses = [
+    "spral_ssids_anal": [
         "spral_core_analyse",
         "spral_cuda",
         "spral_hw_topology",
@@ -266,38 +167,18 @@ fortran_module(
         "spral_ssids_gpu_subtree",
         "spral_ssids_inform",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_contrib",
-    src = "src/ssids/contrib.f90",
-    uses = [
+    "spral_ssids_contrib": [
         "spral_ssids_datatypes",
     ],
-)
-
-fortran_module(
-    name = "drake_vendor_spral_ssids_contrib_free",
-    src = "src/ssids/contrib_free.f90",
-    uses = [
+    "drake_vendor_spral_ssids_contrib_free": [
         "spral_ssids_contrib",
         "spral_ssids_cpu_subtree",
         "spral_ssids_gpu_subtree",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_datatypes",
-    src = "src/ssids/datatypes.f90",
-    uses = [
+    "spral_ssids_datatypes": [
         "spral_scaling",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_fkeep",
-    src = "src/ssids/fkeep.F90",
-    uses = [
+    "spral_ssids_fkeep": [
         "spral_ssids_akeep",
         "spral_ssids_contrib",
         "spral_ssids_datatypes",
@@ -306,37 +187,192 @@ fortran_module(
         "spral_ssids_subtree",
         "spral_ssids_cpu_subtree",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_gpu_subtree",
-    src = "src/ssids/gpu/subtree_no_cuda.f90",
-    uses = [
+    "spral_ssids_gpu_subtree": [
         "spral_ssids_contrib",
         "spral_ssids_datatypes",
         "spral_ssids_inform",
         "spral_ssids_subtree",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_inform",
-    src = "src/ssids/inform.f90",
-    uses = [
+    "spral_ssids_inform": [
         "spral_cuda",
         "spral_scaling",
         "spral_ssids_datatypes",
     ],
-)
-
-fortran_module(
-    name = "spral_ssids_subtree",
-    src = "src/ssids/subtree.f90",
-    uses = [
+    "spral_ssids_subtree": [
         "spral_ssids_contrib",
         "spral_ssids_datatypes",
         "spral_ssids_inform",
     ],
+}
+
+fortran_module(
+    src = "src/blas_iface.f90",
+    name = "spral_blas_iface",
+    deps = ["@blas"],
+    module_map = MODULE_MAP,
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    src = "src/core_analyse.f90",
+    name = "spral_core_analyse",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_cuda",
+    src = "src/cuda/cuda_nocuda.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_hw_topology",
+    src = "src/hw_topology/hw_topology.f90",
+    deps = [
+        ":guess_topology",
+    ],
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_lapack_iface",
+    src = "src/lapack_iface.f90",
+    deps = ["@lapack"],
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_match_order",
+    src = "src/match_order.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_matrix_util",
+    src = "src/matrix_util.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_metis_wrapper",
+    src = "src/metis5_wrapper.F90",
+    deps = [
+        "@metis_internal//:metis",
+    ],
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_pgm",
+    src = "src/pgm.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_random",
+    src = "src/random.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_rutherford_boeing",
+    src = "src/rutherford_boeing.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_scaling",
+    src = "src/scaling.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids",
+    src = "src/ssids/ssids.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_akeep",
+    src = "src/ssids/akeep.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_ciface",
+    src = "interfaces/C/ssids.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_cpu_iface",
+    src = "src/ssids/cpu/cpu_iface.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_cpu_subtree",
+    src = "src/ssids/cpu/subtree.f90",
+    deps = [
+        ":cpu_kernels",
+    ],
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_profile",
+    src = "src/ssids/profile_iface.f90",
+    deps = [
+        ":profile",
+    ],
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_anal",
+    src = "src/ssids/anal.F90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_contrib",
+    src = "src/ssids/contrib.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "drake_vendor_spral_ssids_contrib_free",
+    src = "src/ssids/contrib_free.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_datatypes",
+    src = "src/ssids/datatypes.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_fkeep",
+    src = "src/ssids/fkeep.F90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_gpu_subtree",
+    src = "src/ssids/gpu/subtree_no_cuda.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_inform",
+    src = "src/ssids/inform.f90",
+)
+
+fortran_module(
+    module_map = MODULE_MAP,
+    name = "spral_ssids_subtree",
+    src = "src/ssids/subtree.f90",
 )
 
 # The ":spral" target only provides the subset of SPRAL used by IPOPT, i.e.,

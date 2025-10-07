@@ -4,7 +4,7 @@ load("//tools/lint:lint.bzl", "add_lint_tests")
 # to use. This is cited by our fortran.bzl rules in the current directory.
 alias(
     name = "compiler",
-    actual = "@gfortran_internal//:compiler",
+    actual = "@llvm//:bin/flang-21",
     visibility = ["//visibility:public"],
 )
 

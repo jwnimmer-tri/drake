@@ -23,17 +23,8 @@ config_setting(
 
 cc_library(
     name = "runtime",
-    linkopts = [
-        "-L{}".format(LIBDIR),
-        "-ldl",
-        "-lgfortran",
-    ] + select({
-        ":x86_64": [
-            # TODO(jwnimmer-tri) Possibly this is unnecessary on Ubuntu 24.04?
-            # The libgfortran5 no longer depends on libquadmath0.
-            "-lquadmath",
-        ],
-        "//conditions:default": [],
-    }),
+    srcs = [
+        "@llvm//:lib/clang/21/lib/x86_64-unknown-linux-gnu/libflang_rt.runtime.a",
+    ],
     visibility = ["//visibility:public"],
 )

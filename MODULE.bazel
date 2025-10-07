@@ -99,7 +99,7 @@ llvm = use_repo_rule("@toolchains_llvm//toolchain:rules.bzl", "llvm")
 
 llvm(
     name = "llvm",
-    llvm_version = "20.1.7",
+    llvm_version = "21.1.0",
 )
 
 # Load dependencies which are "public", i.e., made available to downstream
