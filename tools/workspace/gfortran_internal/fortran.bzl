@@ -100,11 +100,30 @@ def fortran_library(
         **kwargs
     )
 
+def _closure(module_names, module_map):
+    result = []
+    pending = list(module_names)
+    max_iters = len(module_map) * len(module_map)
+    for _ in range(max_iters):
+        if not pending:
+            break
+        module_name = pending.pop(0)
+        if module_name not in result:
+            result.append(module_name)
+            for dependency in module_map.get(module_name, []):
+                if dependency in result:
+                    continue
+                if dependency in pending:
+                    continue
+                pending.append(dependency)
+    return result
+
 def fortran_module(
         name,
         *,
         src,
         uses = [],
+        module_map = {},
         extra_provides = [],
         fopts = [],
         deps = []):
@@ -120,13 +139,15 @@ def fortran_module(
     fopts: Extra options to pass to the fortran compiler.
     deps: Passed through to the bazel cc_library result.
     """
+    total_uses = uses + module_map.get(name, [])
+    transitive_uses = _closure(total_uses, module_map)
     fortran_library(
         name = name,
         srcs = [src],
         fopts = [],
         _input_mods = [
             x + ".mod"
-            for x in uses
+            for x in transitive_uses
         ],
         _output_mods = [
             name + ".mod",
@@ -136,7 +157,7 @@ def fortran_module(
         ],
         deps = deps + [
             ":{}".format(x)
-            for x in uses
+            for x in total_uses
         ],
     )
     for x in extra_provides:
