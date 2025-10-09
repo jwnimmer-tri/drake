@@ -334,7 +334,7 @@ SEARCH_INCLUDES        = YES
 INCLUDE_PATH           =
 INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = DRAKE_DOXYGEN_CXX=1 \
-                         HAVE_SPDLOG=1
+                         DRAKE_INTERNAL_SPDLOG_ENABLED=1
 # =============================================================================
 # N.B. The spelling of the macro names between common/drake_copyable.h,
 # common/drake_deprecated.h, common/default_scalars.h and this file must be

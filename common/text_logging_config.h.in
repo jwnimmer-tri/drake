@@ -1,0 +1,3 @@
+#pragma once
+
+#cmakedefine DRAKE_INTERNAL_SPDLOG_ENABLED

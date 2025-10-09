@@ -127,6 +127,19 @@ generate_file(
     }),
 )
 
+# Deprecated for removal 2026-02-01.
+generate_file(
+    name = "have_spdlog.cmake",
+    content = select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": (
+            "set(HAVE_SPDLOG ON)"
+        ),
+        "//conditions:default": (
+            "set(HAVE_SPDLOG OFF)"
+        ),
+    }),
+)
+
 generate_file(
     name = "with_user_spdlog.cmake",
     content = select({
@@ -171,7 +184,12 @@ cc_defines(
 cc_defines(
     name = "bazel_spdlog_defines.cmake",
     var = "BAZEL_SPDLOG_DEFINES",
-    deps = ["@spdlog"],
+    deps = select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": [
+            "@spdlog",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cmake_configure_file(
@@ -185,6 +203,7 @@ cmake_configure_file(
         ":bazel_spdlog_defines.cmake",
         ":drake_install_java.cmake",
         ":libdrake_was_linked_shared.cmake",
+        ":have_spdlog.cmake",
         ":python_version.cmake",
         ":stamp_version.cmake",
         ":with_lcm_runtime.cmake",
@@ -366,8 +385,12 @@ cc_library(
         "//common:drake_marker_shared_library",
         "//tools/workspace/fmt:shared_library_maybe",
         "//tools/workspace/lcm_internal:shared_library_maybe",
-        "//tools/workspace/spdlog:shared_library_maybe",
-    ],
+    ] + select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": [
+            "//tools/workspace/spdlog:shared_library_maybe",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 # The list of depended-on header-only libraries that libdrake's header files
@@ -381,9 +404,13 @@ cc_library(
     deps = [
         "//lcmtypes:lcmtypes_drake_cc",
         "//tools/workspace/fmt:hdrs",
-        "//tools/workspace/spdlog:hdrs",
         "@eigen",
-    ],
+    ] + select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": [
+            "//tools/workspace/spdlog:hdrs",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 drake_cc_test(

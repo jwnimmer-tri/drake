@@ -1,5 +1,7 @@
+load("@drake//tools/workspace:cmake_configure_file.bzl", "cmake_configure_file")
 load("//tools/install:install.bzl", "install")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+load("//tools/skylark:cc.bzl", "cc_library")
 load(
     "//tools/skylark:drake_cc.bzl",
     "drake_cc_binary",
@@ -91,6 +93,26 @@ drake_cc_library(
     ],
 )
 
+cmake_configure_file(
+    name = "text_logging_config",
+    src = "text_logging_config.h.in",
+    out = "text_logging_config.h",
+    defines = select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": [
+            "DRAKE_INTERNAL_SPDLOG_ENABLED",
+        ],
+        "//conditions:default": [],
+    }),
+    strict = True,
+    undefines = select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": [],
+        "//conditions:default": [
+            "DRAKE_INTERNAL_SPDLOG_ENABLED",
+        ],
+    }),
+    visibility = ["//visibility:private"],
+)
+
 # A library of things that EVERYONE should want and MUST EAT.
 # Be appropriately hesitant when adding new things here.
 drake_cc_library(
@@ -111,13 +133,18 @@ drake_cc_library(
         "never_destroyed.h",
         "ssize.h",
         "text_logging.h",
+        ":text_logging_config.h",
     ],
     deps = [
         ":fmt",
         "@eigen",
         "@fmt",
-        "@spdlog",
-    ],
+    ] + select({
+        "//tools/workspace/spdlog:flag_text_logging_spdlog": [
+            "@spdlog",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 drake_cc_library(
@@ -1199,8 +1226,7 @@ drake_cc_googletest(
     ],
 )
 
-# This version of text_logging_test is compiled with HAVE_SPDLOG enabled,
-# because that is what Drake's WORKSPACE provides for the @spdlog external.
+# This version of text_logging_test is compiled with spdlog enabled.
 drake_cc_googletest(
     name = "text_logging_test",
     defines = [
@@ -1224,8 +1250,25 @@ drake_cc_googletest(
     ],
 )
 
+genrule(
+    name = "text_logging_config_empty",
+    testonly = True,
+    outs = ["test_fixture/drake/common/text_logging_config.h"],
+    cmd = "echo > $@",
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "text_logging_config_off",
+    testonly = True,
+    hdrs = [":test_fixture/drake/common/text_logging_config.h"],
+    strip_include_prefix = "test_fixture",
+    visibility = ["//visibility:private"],
+)
+
 # This version of text_logging_test re-compiles all source files without
-# defining HAVE_SPDLOG, to ensure that the no-op stubs behave as desired.
+# defining DRAKE_INTERNAL_SPDLOG_ENABLED, to ensure that the no-op stubs
+# behave as desired.
 drake_cc_googletest(
     name = "text_logging_no_spdlog_test",
     srcs = [
@@ -1241,6 +1284,7 @@ drake_cc_googletest(
     ],
     use_default_main = False,
     deps = [
+        ":text_logging_config_off",
         "@fmt",
     ],
 )
@@ -1261,6 +1305,7 @@ drake_cc_googletest(
     ],
     use_default_main = False,
     deps = [
+        ":text_logging_config_off",
         "@fmt",
     ],
 )

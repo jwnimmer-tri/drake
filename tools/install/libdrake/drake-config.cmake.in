@@ -26,7 +26,13 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/modules;${CMAKE_MODULE_PATH}")
 set(_drake_interface_libraries "${${CMAKE_FIND_PACKAGE_NAME}_IMPORT_PREFIX}/lib/libdrake_marker.so")
-set(_drake_interface_compile_definitions HAVE_SPDLOG)
+if(@HAVE_SPDLOG@)
+  # DRAKE DEPRECATED: This preprocessor definition is deprecated for removal; it
+  # will be removed from Drake on or after 2026-02-01.
+  set(_drake_interface_compile_definitions HAVE_SPDLOG)
+else()
+  set(_drake_interface_compile_definitions)
+endif()
 if(@WITH_USER_EIGEN@)
   find_dependency(Eigen3 CONFIG)
   list(APPEND _drake_interface_libraries Eigen3::Eigen)
