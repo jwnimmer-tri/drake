@@ -98,8 +98,13 @@ def configure_logging():
     """
     format = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
     _logging.basicConfig(level=_logging.INFO, format=format)
-    _drake_logger.setLevel(_logging.NOTSET)
     _logging.addLevelName(5, "TRACE")
+    if _kHaveSpdlog:
+        # Inherit the root logger's level.
+        _drake_logger.setLevel(_logging.NOTSET)
+    else:
+        # DRAKE_TEXT_LOGGING was set to OFF. Don't log anything.
+        _drake_logger.setLevel(_logging.CRITICAL + 1)
 
 
 def use_native_cpp_logging():
