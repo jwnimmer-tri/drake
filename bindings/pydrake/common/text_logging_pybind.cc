@@ -12,7 +12,7 @@
 #include "drake/common/text_logging.h"
 // clang-format on
 
-#ifdef HAVE_SPDLOG
+#ifdef DRAKE_INTERNAL_SPDLOG_ENABLED
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/dist_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
@@ -25,7 +25,7 @@ namespace drake {
 namespace pydrake {
 namespace internal {
 
-#ifdef HAVE_SPDLOG
+#ifdef DRAKE_INTERNAL_SPDLOG_ENABLED
 namespace {
 class pylogging_sink final
     // We use null_mutex below because we'll use the GIL as our *only* mutex.
