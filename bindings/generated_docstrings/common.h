@@ -71,6 +71,7 @@
 // #include "drake/common/string_unordered_set.h"
 // #include "drake/common/temp_directory.h"
 // #include "drake/common/text_logging.h"
+// #include "drake/common/text_logging_config.h"
 // #include "drake/common/timer.h"
 // #include "drake/common/type_safe_index.h"
 // #include "drake/common/unused.h"
