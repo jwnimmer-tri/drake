@@ -12,18 +12,10 @@
 #error Missing a required definition to compile this test case.
 #endif
 
-// Check for the expected HAVE_SPDLOG value.
-// clang-format off
-#if TEXT_LOGGING_TEST_SPDLOG
-  #ifndef HAVE_SPDLOG
-    #error Missing HAVE_SPDLOG.
-  #endif
-#else
-  #ifdef HAVE_SPDLOG
-    #error Unwanted HAVE_SPDLOG.
-  #endif
+#ifdef TEXT_LOGGING_TEST_SPDLOG
+#include <spdlog/sinks/dist_sink.h>
+#include <spdlog/sinks/ostream_sink.h>
 #endif
-// clang-format on
 
 #include "drake/common/fmt_ostream.h"
 
