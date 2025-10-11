@@ -198,7 +198,7 @@ struct [[maybe_unused]] Warn {  // NOLINT(whitespace/braces)
 @param level Must be a string from spdlog enumerations: `trace`, `debug`,
 `info`, `warn`, `err`, `critical`, `off`, or `unchanged` (not an enum, but
 useful for command-line).
-@return The string value of the previous log level. If SPDLOG is disabled, then
+@return The string value of the previous log level. If text_logging is off, then
 this returns an empty string. */
 std::string set_log_level(const std::string& level);
 
