@@ -56,46 +56,70 @@ GTEST_TEST(DofMaskTest, ConstructorsAndSize) {
   const DofMask dut5(bits5);
   EXPECT_EQ(dut5.count(), 4);
   EXPECT_EQ(dut5.size(), 6);
+
+  const DofMask dut6(200, true);
+  EXPECT_EQ(dut6.count(), 200);
+  EXPECT_EQ(dut6.size(), 200);
+
+  std::vector<bool> bits7(200, true);
+  const DofMask dut7(bits7);
+  EXPECT_EQ(dut7.count(), 200);
+  EXPECT_EQ(dut7.size(), 200);
 }
 
 // In addition to testing move/copy semantics, this also provides testing for
 // operator==.
 GTEST_TEST(DofMaskTest, CopyMoveSemantics) {
   const DofMask empty;
-  const DofMask dofs({true, false, true, false});
 
-  // Copy constructor.
-  DofMask copied(dofs);
-  EXPECT_EQ(copied, dofs);
+  // Trial 0 is small size; trial 1 is large size.
+  for (int trial = 0; trial < 2; ++trial) {
+    SCOPED_TRACE(trial);
 
-  // Move constructor.
-  DofMask moved(std::move(copied));
-  EXPECT_EQ(moved, dofs);
-  EXPECT_NE(copied, dofs);
+    std::vector<bool> bits;
+    if (trial == 0) {
+      bits = std::vector{true, false, true, false};
+    } else {
+      bits = std::vector(200, true);
+      bits[100] = false;
+    }
+    const DofMask dofs(bits);
 
-  // A moved-from object must be zero-sized (it's the only reasonable way for
-  // it to maintain its invariants after donating is storage to the new object.)
-  EXPECT_EQ(copied.size(), 0);
-  EXPECT_EQ(copied.count(), 0);
+    // Copy constructor.
+    DofMask copied(dofs);
+    EXPECT_EQ(copied, dofs);
 
-  // Move assignment.
-  copied = std::move(moved);
-  EXPECT_EQ(copied, dofs);
-  EXPECT_NE(moved, dofs);
+    // Move constructor.
+    DofMask moved(std::move(copied));
+    EXPECT_EQ(moved, dofs);
+    EXPECT_NE(copied, dofs);
 
-  // A moved-from object must be zero-sized (it's the only reasonable way for
-  // it to maintain its invariants after donating is storage to the new object.)
-  EXPECT_EQ(moved.size(), 0);
-  EXPECT_EQ(moved.count(), 0);
+    // A moved-from object must be zero-sized (it's the only reasonable way for
+    // it to maintain its invariants after donating is storage to the new
+    // object.)
+    EXPECT_EQ(copied.size(), 0);
+    EXPECT_EQ(copied.count(), 0);
 
-  // Copy assignment.
-  DofMask target;
-  target = copied;
-  EXPECT_EQ(target, dofs);
-  EXPECT_EQ(copied, dofs);
-  target = empty;
-  EXPECT_EQ(target, DofMask{});
-  EXPECT_EQ(empty, DofMask{});
+    // Move assignment.
+    copied = std::move(moved);
+    EXPECT_EQ(copied, dofs);
+    EXPECT_NE(moved, dofs);
+
+    // A moved-from object must be zero-sized (it's the only reasonable way for
+    // it to maintain its invariants after donating is storage to the new
+    // object.)
+    EXPECT_EQ(moved.size(), 0);
+    EXPECT_EQ(moved.count(), 0);
+
+    // Copy assignment.
+    DofMask target;
+    target = copied;
+    EXPECT_EQ(target, dofs);
+    EXPECT_EQ(copied, dofs);
+    target = empty;
+    EXPECT_EQ(target, DofMask{});
+    EXPECT_EQ(empty, DofMask{});
+  }
 }
 
 // Confirms the factories work.
@@ -181,10 +205,18 @@ GTEST_TEST(DofMaskTest, GetJoints) {
   }
 }
 
-GTEST_TEST(DofMaskTest, ElementAccess) {
+GTEST_TEST(DofMaskTest, ElementAccessSmallSize) {
   const std::vector<bool> bits{true, false, false, true, true};
   const DofMask dut(bits);
+  for (int i = 0; i < dut.size(); ++i) {
+    EXPECT_EQ(dut[i], bits[i]);
+  }
+}
 
+GTEST_TEST(DofMaskTest, ElementAccessLargeSize) {
+  std::vector<bool> bits(200, true);
+  bits[100] = true;
+  const DofMask dut(bits);
   for (int i = 0; i < dut.size(); ++i) {
     EXPECT_EQ(dut[i], bits[i]);
   }
@@ -194,11 +226,11 @@ GTEST_TEST(DofMaskTest, ToString) {
   const std::vector<bool> bits{true, false, false, true, true};
   const std::vector<int> int_bits(bits.begin(), bits.end());
   const DofMask dut(bits);
-  // The string representation of DofMask should match that of vector<bool>.
+  // The string representation of DofMask should match that of vector<int>.
   EXPECT_EQ(dut.to_string(), fmt::to_string(int_bits));
 }
 
-GTEST_TEST(DofMaskTest, Complement) {
+GTEST_TEST(DofMaskTest, ComplementSmallSize) {
   const DofMask d1({true, false, false});
   const DofMask expected({false, true, true});
 
@@ -208,7 +240,7 @@ GTEST_TEST(DofMaskTest, Complement) {
   EXPECT_EQ(empty.Complement(), DofMask{});
 }
 
-GTEST_TEST(DofMaskTest, Union) {
+GTEST_TEST(DofMaskTest, UnionSmallSize) {
   const DofMask d1({true, false, false});
   const DofMask d2({false, false, true});
   const DofMask expected({true, false, true});
@@ -219,7 +251,7 @@ GTEST_TEST(DofMaskTest, Union) {
   EXPECT_EQ(empty.Union(empty), DofMask{});
 }
 
-GTEST_TEST(DofMaskTest, Intersect) {
+GTEST_TEST(DofMaskTest, IntersectSmallSize) {
   const DofMask d1({true, true, false});
   const DofMask d2({false, true, true});
   const DofMask expected({false, true, false});
@@ -230,7 +262,7 @@ GTEST_TEST(DofMaskTest, Intersect) {
   EXPECT_EQ(empty.Intersect(empty), DofMask{});
 }
 
-GTEST_TEST(DofMaskTest, Subtract) {
+GTEST_TEST(DofMaskTest, SubtractSmallSize) {
   const DofMask d1({true, true, false});
   const DofMask d2({false, true, true});
   const DofMask expected({true, false, false});
@@ -239,6 +271,74 @@ GTEST_TEST(DofMaskTest, Subtract) {
 
   const DofMask empty;
   EXPECT_EQ(empty.Subtract(empty), DofMask{});
+}
+
+GTEST_TEST(DofMaskTest, ComplementUnionIntersectSubtractLargeSize) {
+  const int size = 300;
+  std::vector<bool> zero_bits(size, false);
+  std::vector<bool> even_bits(size, false);
+  std::vector<bool> multiples_of_3_bits(size, false);
+  for (int i = 0; i < size; i += 2) {
+    even_bits[i] = true;
+  }
+  for (int i = 0; i < size; i += 3) {
+    multiples_of_3_bits[i] = true;
+  }
+
+  const DofMask zero(zero_bits);
+  const DofMask even(even_bits);
+  const DofMask multiples_of_3(multiples_of_3_bits);
+  EXPECT_EQ(zero.count(), 0);
+  EXPECT_EQ(even.count(), size / 2);
+  EXPECT_EQ(multiples_of_3.count(), size / 3);
+
+  EXPECT_EQ(even.Union(zero), even);
+  EXPECT_EQ(even.Intersect(zero), zero);
+  EXPECT_EQ(even.Intersect(zero.Complement()), even);
+  EXPECT_EQ(even.Subtract(zero), even);
+
+  const DofMask odd = even.Complement();
+  EXPECT_EQ(odd.size(), size);
+  EXPECT_EQ(odd.count(), size / 2);
+  EXPECT_EQ(odd[0], false);
+  EXPECT_EQ(odd[1], true);
+
+  const DofMask non_multiples_of_3 = multiples_of_3.Complement();
+  EXPECT_EQ(non_multiples_of_3.size(), size);
+  EXPECT_EQ(non_multiples_of_3.count(), size * 2 / 3);
+  EXPECT_EQ(non_multiples_of_3[1], true);
+  EXPECT_EQ(non_multiples_of_3[1], true);
+  EXPECT_EQ(non_multiples_of_3[0], false);
+
+  const DofMask multiples_of_2_or_3 = even.Union(multiples_of_3);
+  EXPECT_EQ(multiples_of_2_or_3.size(), size);
+  EXPECT_EQ(multiples_of_2_or_3.count(), size * 4 / 6);
+  EXPECT_EQ(multiples_of_2_or_3[0], true);
+  EXPECT_EQ(multiples_of_2_or_3[1], false);
+  EXPECT_EQ(multiples_of_2_or_3[2], true);
+  EXPECT_EQ(multiples_of_2_or_3[3], true);
+  EXPECT_EQ(multiples_of_2_or_3[4], true);
+  EXPECT_EQ(multiples_of_2_or_3[5], false);
+
+  const DofMask multiples_of_2_and_3 = even.Intersect(multiples_of_3);
+  EXPECT_EQ(multiples_of_2_and_3.size(), size);
+  EXPECT_EQ(multiples_of_2_and_3.count(), size * 1 / 6);
+  EXPECT_EQ(multiples_of_2_and_3[0], true);
+  EXPECT_EQ(multiples_of_2_and_3[1], false);
+  EXPECT_EQ(multiples_of_2_and_3[2], false);
+  EXPECT_EQ(multiples_of_2_and_3[3], false);
+  EXPECT_EQ(multiples_of_2_and_3[4], false);
+  EXPECT_EQ(multiples_of_2_and_3[5], false);
+
+  const DofMask multiples_of_2_but_not_3 = even.Subtract(multiples_of_3);
+  EXPECT_EQ(multiples_of_2_but_not_3.size(), size);
+  EXPECT_EQ(multiples_of_2_but_not_3.count(), size * 2 / 6);
+  EXPECT_EQ(multiples_of_2_but_not_3[0], false);
+  EXPECT_EQ(multiples_of_2_but_not_3[1], false);
+  EXPECT_EQ(multiples_of_2_but_not_3[2], true);
+  EXPECT_EQ(multiples_of_2_but_not_3[3], false);
+  EXPECT_EQ(multiples_of_2_but_not_3[4], true);
+  EXPECT_EQ(multiples_of_2_but_not_3[5], false);
 }
 
 GTEST_TEST(DofMaskTest, GetFromArrayWithReturn) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <span>
 
@@ -45,7 +46,11 @@ class CountedDynamicBitset {
   @pre `index` is in the range [0, size()). */
   bool operator[](int index) const {
     DRAKE_ASSERT(index >= 0 && index < size_);
-    return buffer_[index];
+    if (is_inline()) {
+      return (inline_ >> index) & 1;
+    } else {
+      return buffer_[index];
+    }
   }
 
   /* Returns a new bitset with `true` values replaced with `false` and vice
@@ -71,9 +76,20 @@ class CountedDynamicBitset {
       const CountedDynamicBitset& other) const;
 
  private:
-  CountedDynamicBitset(int size, int count) : size_(size), count_(count) {}
+  using SmallBitmaskUInt = uint64_t;
+
+  CountedDynamicBitset(int size, int count, SmallBitmaskUInt inline_in)
+      : size_(size), count_(count), inline_(inline_in) {}
+
+  /* Returns true if inline_ stores our data or false when buffer_ stores it. */
+  bool is_inline() const { return buffer_ == nullptr; }
+
+  /* Returns the representation of `inline_` if all bits were `true`.
+  @pre is_inline() */
+  SmallBitmaskUInt mask() const { return (SmallBitmaskUInt{1} << size()) - 1; }
 
   /* Returns a view of `buffer_`.
+  @pre is_inline() == false
   @pre buffer != nullptr */
   std::span<const bool> as_span() const {
     return std::span<const bool>(buffer_.get(), size_);
@@ -83,11 +99,26 @@ class CountedDynamicBitset {
     DRAKE_ASSERT(size_ >= 0);
     DRAKE_ASSERT(count_ <= size_);
     DRAKE_ASSERT((buffer_.get() == nullptr) == (size_ == 0));
+    DRAKE_ASSERT(!is_inline() || (inline_ & ~mask()) == 0);
   }
 
+  // The meaning of `size_` and `count_` are per the size() and count() API.
+  //
+  // For storing the actual values, we have two options:
+  // - For small bitsets, we use the `inline_` bitmask. The bit at
+  //   `(1 << index)` stores the index'th set value.
+  // - For larger bitsets, the we use the `buffer_` array. The bool at
+  //   `buffer_[index]` stores the index'th set value.
+  //
+  // When `inline_` storage is being used, it's high-order bits beyond `size_`
+  // are guaranteed to be zero, and `buffer_` is guaranteed to be null.
+  //
+  // These member fields are almost "const" -- we have no member functions that
+  // mutate them, other than the two assignment operators.
   reset_after_move<int> size_{0};
   reset_after_move<int> count_{0};
   std::unique_ptr<bool[]> buffer_{nullptr};
+  reset_after_move<SmallBitmaskUInt> inline_{0};
 };
 
 // The move operations are cheap so are defined inline. The copy operations are
