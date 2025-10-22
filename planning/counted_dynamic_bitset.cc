@@ -11,7 +11,7 @@ namespace internal {
 namespace {
 
 // Our inline storage can store this many bits.
-constexpr int kMaxInlineSize = 64;
+constexpr int kMaxInlineSize = 128;
 
 // Returns the number of 1 bits in `x`.
 template <typename SomeUInt>

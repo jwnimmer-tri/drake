@@ -76,7 +76,7 @@ class CountedDynamicBitset {
       const CountedDynamicBitset& other) const;
 
  private:
-  using SmallBitmaskUInt = uint64_t;
+  using SmallBitmaskUInt = unsigned __int128;
 
   CountedDynamicBitset(int size, int count, SmallBitmaskUInt inline_in)
       : size_(size), count_(count), inline_(inline_in) {}
