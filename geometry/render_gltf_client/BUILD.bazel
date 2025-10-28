@@ -300,6 +300,9 @@ drake_py_binary(
     deps = [
         "@rules_python//python/runfiles",
     ],
+    requirements = [
+        "flask",
+    ],
 )
 
 drake_cc_binary(
@@ -402,6 +405,10 @@ drake_py_unittest(
     ],
     deps = [
         "@rules_python//python/runfiles",
+    ],
+    requirements = [
+        "Pillow",
+        "numpy",
     ],
 )
 

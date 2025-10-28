@@ -45,6 +45,10 @@ drake_py_library(
         "//bindings/pydrake/common:_init_py",
         "//lcmtypes:lcmtypes_drake_py",
     ],
+    requirements = [
+        "PyYAML",
+        "numpy",
+    ],
 )
 
 drake_cc_library(
@@ -381,6 +385,9 @@ drake_py_binary(
         ":all_py",
         "@mypy_internal//:mypy",
         "@stable_baselines3_internal//:stable_baselines3",
+    ],
+    requirements = [
+        "mypy",
     ],
 )
 

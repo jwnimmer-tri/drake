@@ -51,7 +51,8 @@ class TestAllEachImport(unittest.TestCase, metaclass=ValueParameterizedTest):
             with open("{temp_filename}", "wb") as f:
                 pickle.dump(has_common, f)
         """)
-        subprocess.run([sys.executable, "-c", script], check=True)
+        env = {"PYTHONPATH": ":".join(sys.path)}
+        subprocess.run([sys.executable, "-c", script], env=env, check=True)
 
         # Parse the output.
         with open(temp_filename, "rb") as f:

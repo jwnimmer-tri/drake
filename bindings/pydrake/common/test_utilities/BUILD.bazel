@@ -122,6 +122,9 @@ drake_py_library(
     ],
     # N.B. We do not depend on ":module_py".
     imports = ["scipy_stub"],
+    requirements = [
+        "numpy",
+    ],
 )
 
 drake_py_unittest(
