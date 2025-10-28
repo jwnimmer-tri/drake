@@ -1,0 +1,16 @@
+Pillow
+PyYAML
+flask
+ipywidgets
+jupyter-core
+matplotlib
+mypy
+notebook
+numpy
+opencv-python
+psutil
+pydot
+six
+u-msgpack-python
+websockets
+unittest-xml-reporting
