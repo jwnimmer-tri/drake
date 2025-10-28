@@ -1,3 +1,4 @@
+load("@pip//:requirements.bzl", "requirement")
 load(
     "//tools/skylark:kwargs.bzl",
     "amend",
@@ -9,11 +10,20 @@ load("//tools/skylark:py.bzl", "py_binary", "py_library", "py_test")
 
 def drake_py_library(
         name,
+        requirements = None,
         **kwargs):
     """A wrapper to insert Drake-specific customizations."""
+
+    # Fold requirements in deps.
+    all_deps = kwargs.pop("deps", []) + [
+        requirement(x)
+        for x in (requirements or [])
+    ]
+
     py_library(
         name = name,
         srcs_version = "PY3",
+        deps = all_deps,
         **kwargs
     )
 
@@ -50,6 +60,8 @@ def _py_target_isolated(
         py_target = None,
         srcs = None,
         main = None,
+        deps = None,
+        requirements = None,
         isolate = True,
         visibility = None,
         legacy_create_init = False,
@@ -59,6 +71,12 @@ def _py_target_isolated(
     # supporting Python 2 (#10606).
     if py_target == None:
         fail("Must supply macro function for defining `py_target`.")
+
+    # Fold requirements in deps.
+    all_deps = (deps or []) + [
+        requirement(x)
+        for x in (requirements or [])
+    ]
 
     # Targets that are already isolated (with a `py/` prefix) don't require any
     # additional work. This can happen when linting tests (isolated by
@@ -79,6 +97,7 @@ def _py_target_isolated(
             main = main,
             visibility = visibility,
             legacy_create_init = legacy_create_init,
+            deps = all_deps,
             **kwargs
         )
 
@@ -103,6 +122,7 @@ def _py_target_isolated(
             main = main,
             visibility = visibility,
             legacy_create_init = legacy_create_init,
+            deps = all_deps,
             **kwargs
         )
 
@@ -112,6 +132,7 @@ def drake_py_binary(
         main = None,
         data = [],
         deps = None,
+        requirements = None,
         isolate = False,
         tags = [],
         add_test_rule = 0,
@@ -139,6 +160,7 @@ def drake_py_binary(
         main = main,
         data = data,
         deps = deps,
+        requirements = requirements,
         tags = tags,
         python_version = "PY3",
         srcs_version = "PY3",
@@ -150,6 +172,7 @@ def drake_py_binary(
             srcs = srcs,
             main = main,
             deps = deps,
+            requirements = requirements,
             # We use the same srcs for both the py_binary and the py_test so we
             # must disable pre-compilation during the py_test target; otherwise
             # both targets would declare an identical set of `*.pyc` output
@@ -203,8 +226,8 @@ def drake_py_unittest(
         main = helper,
         allow_import_unittest = True,
         _drake_py_unittest_shard_count = kwargs.pop("shard_count", None),
-        deps = kwargs.pop("deps", []) + [
-            "@xmlrunner_py_internal//:xmlrunner_py",
+        requirements = kwargs.pop("requirements", []) + [
+            "unittest-xml-reporting",
         ],
         **kwargs
     )
@@ -214,6 +237,7 @@ def drake_py_test(
         size = None,
         srcs = None,
         deps = None,
+        requirements = None,
         isolate = True,
         allow_import_unittest = False,
         allow_network = None,
@@ -273,6 +297,7 @@ def drake_py_test(
         shard_count = shard_count,
         srcs = srcs,
         deps = deps,
+        requirements = requirements,
         python_version = "PY3",
         srcs_version = "PY3",
         **kwargs

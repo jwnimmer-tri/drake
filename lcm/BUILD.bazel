@@ -241,6 +241,9 @@ drake_py_unittest(
     deps = [
         "@rules_python//python/runfiles",
     ],
+    requirements = [
+        "psutil",
+    ],
 )
 
 drake_cc_googletest(

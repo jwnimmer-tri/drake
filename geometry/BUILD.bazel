@@ -655,6 +655,10 @@ drake_py_binary(
     visibility = [
         "//bindings/pydrake/visualization:__pkg__",
     ],
+    requirements = [
+        "u-msgpack-python",
+        "websockets",
+    ],
 )
 
 drake_cc_googletest(
