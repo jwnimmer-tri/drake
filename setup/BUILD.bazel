@@ -1,3 +1,4 @@
+load("@rules_python//python/uv:lock.bzl", "lock")
 load("//tools/install:install.bzl", "install_files")
 load("//tools/lint:lint.bzl", "add_lint_tests")
 
@@ -51,6 +52,19 @@ install_files(
     rename = {
         "share/drake/setup/install_prereqs.sh": "install_prereqs",
     },
+)
+
+lock(
+    name = "python/requirements_lock",
+    srcs = ["python/requirements.in"],
+    out = "python/requirements.txt",
+    args = [
+        "--upgrade",
+        "--universal",
+        # This is our minimum supported version.
+        # When changing this, see drake/tools/workspace/python/README.md.
+        "--python-version=3.10",
+    ],
 )
 
 add_lint_tests()
