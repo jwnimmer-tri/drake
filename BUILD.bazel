@@ -169,6 +169,9 @@ install_test(
         ":install",
         _INSTALL_TEST_COMMANDS,
     ],
+    requirements = [
+        "numpy",
+    ],
     tags = [
         # Running acceptance tests under coverage (kcov) probably burns more CI
         # time and flakiness compared to any upside.
