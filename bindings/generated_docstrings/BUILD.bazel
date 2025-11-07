@@ -91,6 +91,12 @@ write_file(
     content = _FILENAMES,
 )
 
+# Provide a rule that creates the generated files.
+drake_py_binary(
+    name = "generate",
+    srcs = ["tools/generate.py"],
+)
+
 # Provide a rule that refreshes the generated files.
 drake_py_binary(
     name = "regenerate",

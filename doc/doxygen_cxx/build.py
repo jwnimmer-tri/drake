@@ -57,7 +57,7 @@ def _cull_skipped_headers(*, temp_dir, modules):
             (dirpath / filename).unlink()
 
 
-def _generate_doxyfile(*, manifest, out_dir, temp_dir, dot):
+def _generate_doxyfile(*, manifest, out_dir, temp_dir, dot, format):
     """Creates Doxyfile_CXX from Doxyfile_CXX.in."""
     input_filename = manifest.Rlocation("drake/doc/doxygen_cxx/Doxyfile_CXX.in")
     assert os.path.exists(input_filename)
@@ -77,6 +77,13 @@ def _generate_doxyfile(*, manifest, out_dir, temp_dir, dot):
     else:
         definitions["DOXYGEN_DOT_FOUND"] = "NO"
         definitions["DOXYGEN_DOT_EXECUTABLE"] = ""
+    if format == "html":
+        definitions["GENERATE_HTML"] = "YES"
+        definitions["GENERATE_XML"] = "NO"
+    else:
+        assert format == "xml"
+        definitions["GENERATE_HTML"] = "NO"
+        definitions["GENERATE_XML"] = "YES"
 
     check_call(
         [
@@ -192,7 +199,7 @@ def _postprocess_doxygen_log(original_lines, check_for_errors):
         raise RuntimeError(message)
 
 
-def _build(*, out_dir, temp_dir, modules, quick):
+def _build(*, out_dir, temp_dir, modules, quick, format="html"):
     """Generates into out_dir; writes scratch files into temp_dir.
     As a precondition, both directories must already exist and be empty.
     """
@@ -202,9 +209,12 @@ def _build(*, out_dir, temp_dir, modules, quick):
     doxygen = manifest.Rlocation("doxygen_internal/doxygen")
     assert os.path.exists(doxygen), doxygen
 
-    # Find dot.
-    dot = "/usr/bin/dot"
-    assert os.path.exists(dot), dot
+    if format == "html":
+        # Find dot.
+        dot = "/usr/bin/dot"
+        assert os.path.exists(dot), dot
+    else:
+        dot = ""
 
     # Configure doxygen.
     doxyfile = _generate_doxyfile(
@@ -212,6 +222,7 @@ def _build(*, out_dir, temp_dir, modules, quick):
         out_dir=out_dir,
         temp_dir=temp_dir,
         dot=(dot if not quick else ""),
+        format=format,
     )
     _generate_system_doxygen_wrapper(temp_dir=temp_dir)
 
@@ -255,9 +266,10 @@ def _build(*, out_dir, temp_dir, modules, quick):
         # <dd><a class="anchor" id="_deprecated000013"></a>"Use RotationMatrix::MakeFromOneVector()." <br />  # noqa
         r'while (s#(?<=_deprecated\d{6}")([^"]*)"(.*?<br)#\1\2#) {};',
     ]
-    perl_cleanup_html_output(
-        out_dir=out_dir, extra_perl_statements=extra_perl_statements
-    )
+    if format == "html":
+        perl_cleanup_html_output(
+            out_dir=out_dir, extra_perl_statements=extra_perl_statements
+        )
 
     # Remove extraneous Doxygen build files.
     files_to_remove = glob(join(out_dir, "*.md5"))

@@ -190,7 +190,7 @@ IGNORE_PREFIX          =
 #---------------------------------------------------------------------------
 # Configuration options related to the HTML output
 #---------------------------------------------------------------------------
-GENERATE_HTML          = YES
+GENERATE_HTML          = @GENERATE_HTML@
 HTML_OUTPUT            = "."
 HTML_FILE_EXTENSION    = .html
 HTML_HEADER            = "@INPUT_ROOT@/drake/doc/doxygen_cxx/header.html"
@@ -299,7 +299,7 @@ MAN_LINKS              = NO
 #---------------------------------------------------------------------------
 # Configuration options related to the XML output
 #---------------------------------------------------------------------------
-GENERATE_XML           = NO
+GENERATE_XML           = @GENERATE_XML@
 XML_OUTPUT             = xml
 XML_PROGRAMLISTING     = YES
 XML_NS_MEMB_FILE_SCOPE = NO

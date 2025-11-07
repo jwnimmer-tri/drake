@@ -1,8 +1,4 @@
 load("//tools/skylark:drake_cc.bzl", "drake_cc_library")
-load(
-    "//tools/workspace/mkdoc_internal:defs.bzl",
-    "generate_pybind_documentation_header",
-)
 
 def generate_docstrings(*, subdir):
     """Given a subdir name like "multibody/tree", declares a cc_library named
@@ -24,7 +20,7 @@ def generate_docstrings(*, subdir):
     )
 
     # Generate the reference docstrings.
-    generate_pybind_documentation_header(
+    generate_header(
         name = "gen_{}".format(identifier),
         out = "gen/{}".format(filename),
         hdr_subdir = "drake/{}".format(subdir),
@@ -39,6 +35,44 @@ def generate_docstrings(*, subdir):
             "drake/common/autodiffxd.h",
             "drake/common/eigen_autodiff_types.h",
         ],
-        root_name = "pydrake_doc_{}".format(identifier),
-        targets = ["//tools/install/libdrake:drake_headers"],
     )
+
+def _generate_header_impl(ctx):
+    inputs = [
+        ctx.file._doxygen_xml,
+    ]
+    outputs = [
+        ctx.outputs.out,
+    ]
+    args = ctx.actions.args()
+    args.add("--input=" + inputs[0].path)
+    args.add("--output=" + outputs[0].path)
+    args.add("--hdr_subdir=" + ctx.attr.hdr_subdir)
+    for p in ctx.attr.exclude_hdr_patterns:
+        args.add("--exclude_hdr_patterns=" + p)
+    ctx.actions.run(
+        inputs = inputs,
+        outputs = outputs,
+        arguments = [args],
+        executable = ctx.executable._generate,
+    )
+
+generate_header = rule(
+    attrs = {
+        "_generate": attr.label(
+            default = Label("//bindings/generated_docstrings:generate"),
+            allow_files = True,
+            cfg = "host",
+            executable = True,
+        ),
+        "_doxygen_xml": attr.label(
+            default = Label("//doc/doxygen_cxx:doxygen_xml"),
+            allow_single_file = True,
+        ),
+        "hdr_subdir": attr.string(mandatory = True),
+        "out": attr.output(mandatory = True),
+        "exclude_hdr_patterns": attr.string_list(),
+    },
+    implementation = _generate_header_impl,
+    output_to_genfiles = True,
+)
