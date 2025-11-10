@@ -1,0 +1,26 @@
+# -*- bazel -*-
+
+load("@drake//tools/install:install.bzl", "install")
+load("@drake//tools/skylark:cc.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "libzippp",
+    srcs = ["src/libzippp.cpp"],
+    hdrs = ["src/libzippp.h"],
+    includes = ["src"],
+    deps = [
+        "@libzip_internal//:libzip",
+        "@zlib",
+    ],
+    linkstatic = 1,
+)
+
+# Install the license file.
+install(
+    name = "install",
+    docs = ["LICENSE"],
+)
+
+exports_files(["drake_repository_metadata.json"])

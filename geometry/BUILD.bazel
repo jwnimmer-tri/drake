@@ -600,6 +600,7 @@ drake_cc_library(
         "//geometry/proximity:polygon_to_triangle_mesh",
         "//systems/analysis:realtime_rate_calculator",
         "@common_robotics_utilities_internal//:common_robotics_utilities",
+        "@libzippp_internal//:libzippp",
         "@msgpack_internal//:msgpack",
         "@nlohmann_internal//:nlohmann",
         "@stduuid_internal//:stduuid",
