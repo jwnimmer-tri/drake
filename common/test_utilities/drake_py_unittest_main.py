@@ -14,6 +14,10 @@ import trace
 import unittest
 import warnings
 
+print("YYY")
+for x in sys.path:
+    print("XXX", x)
+
 import xmlrunner
 
 try:
@@ -227,10 +231,6 @@ def reexecute_if_unbuffered():
     """Ensures that output is immediately flushed (e.g. for segfaults).
     ONLY use this at your entrypoint. Otherwise, you may have code be
     re-executed that will clutter your console."""
-
-    # XXX sys.executable doesn't have the sys.path set up
-    return
-
     import os
     import shlex
     import sys
