@@ -24,3 +24,15 @@ patching stubgen to reset in case it sees a double colon.
              and token.string == "="
              and self.state[-1] in (STATE_ARGUMENT_LIST, STATE_ARGUMENT_TYPE)
          ):
+
+--- mypy-1.18.2.dist-info/RECORD
++++ mypy-1.18.2.dist-info/RECORD
+@@ -173,7 +173,7 @@
+ mypy/stats.py,sha256=AEmNudc8VqgBAt4Bp6p4hH4E6JHt38IAwFqeT9YmVUY,16796
+ mypy/strconv.cpython-312-x86_64-linux-gnu.so,sha256=gI_ATRLfHBGkixb1qOgHUKSgfXMbfH8Qrwmm3pCk6Y4,15984
+ mypy/strconv.py,sha256=8_ilAdydlYOPbq59c8sTmBaa8X247YqaWi-ek5PEQuk,24455
+-mypy/stubdoc.py,sha256=JT18oLHTiogu40pCjKxF3JLK00qRsQjAMD9g1X3M24A,18780
++mypy/stubdoc.py,sha256=vloy7x64Qdybf2mJQlRhFADDsMEIgsNdAI6NG1YnP54,18979
+ mypy/stubgen.cpython-312-x86_64-linux-gnu.so,sha256=AlZ2rMPy0oWrRBZdIanBH_3xVxzg-v3YEopimXwQjzo,15984
+ mypy/stubgen.py,sha256=iGA3YuF1t74YEQQMw9JM85qBlqNVhqGVDGfkJEoyxvU,78478
+ mypy/stubgenc.py,sha256=LeocpCTn2K-gvW04P_ULe8r7QToA_tFUziYKyizrmlk,39262

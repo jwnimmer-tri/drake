@@ -1,9 +1,20 @@
 Increase timeout from 30 seconds to 360 seconds
 
+Also, don't retry in case of error. Nothing Drake loads should have nasty
+side-effects, so there should never be any reason to crash and resume.
+Retrying might slow things down, which we definitely do NOT want.
+
 Reasoning for not upstreaming this patch: Drake-specific option value.
 
 --- mypy/moduleinspect.py
 +++ mypy/moduleinspect.py
+@@ -143,5 +143,5 @@
+         if isinstance(res, str):
+             # Error importing module
+-            if self.counter > 0:
++            if False:
+                 # Also try with a fresh process. Maybe one of the previous imports has
+                 # corrupted some global state.
 @@ -157,13 +157,15 @@
  
          Return the value read from the queue, or None if the process unexpectedly died.
@@ -22,3 +33,15 @@ Reasoning for not upstreaming this patch: Drake-specific option value.
              except queue.Empty:
                  if not self.proc.is_alive():
                      return None
+
+--- mypy-1.18.2.dist-info/RECORD
++++ mypy-1.18.2.dist-info/RECORD
+@@ -111,7 +111,7 @@
+ mypy/modulefinder.cpython-312-x86_64-linux-gnu.so,sha256=DwaXXJkxv80SZcZoJpKFno3ltiDfTldV9rQR2Yl6InU,15992
+ mypy/modulefinder.py,sha256=VIV9Ni8QUfxwtHbzirD7aaSVCV6uGs5_AyEzhg_kdT0,42932
+ mypy/moduleinspect.cpython-312-x86_64-linux-gnu.so,sha256=CxrbDcKd8xTGPfgbM2JKpzG-dqtAoRTkEXZ1MOEU_Lc,15992
+-mypy/moduleinspect.py,sha256=HCEI7yW61OkMNFqUqjuRB09HcTDpalcmtVBYjlWfxyo,6326
++mypy/moduleinspect.py,sha256=limKP3brX4IaLEam7mUYR6OsV1NP2F9MYGN-vnJQLQI,6428
+ mypy/mro.cpython-312-x86_64-linux-gnu.so,sha256=wNiPn-t9Cyk3r6tE203nt_Jdt69F5BOXdSfdszP0638,15976
+ mypy/mro.py,sha256=Mj_6Ke6W-s2ordeoLWS-LAya3-LUNTv-p2iHFcyxF1A,1993
+ mypy/nodes.cpython-312-x86_64-linux-gnu.so,sha256=6G0DVB53QMtDsvgNOg0_hN07QroPw8PnbNV6PQO2plg,15976

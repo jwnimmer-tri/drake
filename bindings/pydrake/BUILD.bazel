@@ -390,7 +390,6 @@ drake_py_binary(
     srcs = ["stubgen.py"],
     deps = [
         ":all_py",
-        "@mypy_internal//:mypy",
         "@stable_baselines3_internal//:stable_baselines3",
     ],
     requirements = [
@@ -474,8 +473,10 @@ drake_py_unittest(
         ":pydrake_typed",
     ],
     deps = [
-        "@mypy_internal//:mypy",
         "@rules_python//python/runfiles",
+    ],
+    requirements = [
+        "mypy",
     ],
 )
 
