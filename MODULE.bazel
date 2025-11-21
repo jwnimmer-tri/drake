@@ -125,6 +125,15 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
     for python_version in PYTHON_VERSIONS
 ]
 
+pip.override(
+    file = "mypy-1.18.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    patch_strip = 0,
+    patches = [
+        "//tools/workspace/mypy_internal:patches/timeout.patch",
+        "//tools/workspace/mypy_internal:patches/upstream/reject_double_colon.patch",  # noqa
+    ],
+)
+
 use_repo(pip, "pip")
 
 # Load dependencies which are "public", i.e., made available to downstream
@@ -326,11 +335,6 @@ use_repo(
     # Python code used when building pydrake.
     #
     "clang_cindex_python3_internal",
-    "mypy_extensions_internal",
-    "mypy_internal",
-    "pathspec_internal",
-    "tomli_internal",
-    "typing_extensions_internal",
     #
     # Python libraries used at runtime.
     #
