@@ -23,8 +23,8 @@ inline constexpr bool is_double_or_symbolic_v =
 template <typename T>
 struct is_autodiff : std::false_type {};
 
-template <int N>
-struct is_autodiff<drake::AutoDiffd<N>> : std::true_type {};
+template <>
+struct is_autodiff<drake::AutoDiffXd> : std::true_type {};
 
 template <typename T>
 inline constexpr bool is_autodiff_v = is_autodiff<T>::value;

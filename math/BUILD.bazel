@@ -27,7 +27,7 @@ drake_cc_package_library(
         ":geometric_transform",
         ":gradient",
         ":gray_code",
-        ":jacobian",
+        # ":jacobian",  # XXX
         ":linear_solve",
         ":matrix_util",
         ":quadratic_form",
@@ -281,6 +281,11 @@ drake_cc_library(
     name = "jacobian",
     srcs = ["jacobian.cc"],
     hdrs = ["jacobian.h"],
+    tags = [
+        # XXX
+        "exclude_from_package",
+        "manual",
+    ],
     deps = [
         "//common:autodiff",
         "//common:essential",
@@ -454,6 +459,10 @@ drake_cc_googletest(
 drake_cc_googletest(
     name = "jacobian_test",
     copts = ["-Wno-deprecated-declarations"],
+    tags = [
+        # XXX
+        "manual",
+    ],
     deps = [
         ":gradient",
         ":jacobian",

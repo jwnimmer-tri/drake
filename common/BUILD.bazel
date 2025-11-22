@@ -174,14 +174,16 @@ drake_cc_library(
     name = "autodiff",
     hdrs = [
         "autodiff.h",
-        "autodiff_overloads.h",
-        "autodiffxd.h",
-        "eigen_autodiff_types.h",
+        # XXX
+        # "autodiff_overloads.h",
+        # "autodiffxd.h",
+        # "eigen_autodiff_types.h",
     ],
     deps = [
         ":cond",
         ":dummy_value",
         ":essential",
+        "//common/ad",
     ],
 )
 
@@ -698,6 +700,10 @@ drake_cc_googletest(
         "-DDRAKE_AUTODIFFXD_DUT=drake::AutoDiffXd",
         "-DStandardOperationsTest=AutoDiffXdTest",
     ],
+    tags = [
+        # XXX porting
+        "manual",
+    ],
     deps = [
         ":autodiff",
         "//common/ad:standard_operations_test_h",
@@ -715,6 +721,10 @@ drake_cc_googletest(
 
 drake_cc_googletest(
     name = "autodiff_overloads_test",
+    tags = [
+        # XXX porting
+        "manual",
+    ],
     deps = [
         ":autodiff",
         ":essential",

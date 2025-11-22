@@ -6,8 +6,8 @@
 #include <Eigen/Core>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <unsupported/Eigen/AutoDiff>
 
+#include "drake/common/autodiff.h"
 #include "drake/common/eigen_types.h"
 #include "drake/common/name_value.h"
 #include "drake/common/test_utilities/limit_malloc.h"
@@ -110,18 +110,9 @@ GTEST_TEST(YamlPerformanceTest, VectorNesting) {
 }  // namespace yaml
 }  // namespace drake
 
-using ADS1 = Eigen::AutoDiffScalar<drake::VectorX<double>>;
-using ADS2 = Eigen::AutoDiffScalar<drake::VectorX<ADS1>>;
-
-// Add ADL Serialize method to Eigen::AutoDiffScalar.
-namespace Eigen {
+// Add ADL Serialize method to AutoDiffXd.
 template <typename Archive>
-void Serialize(Archive* a, ADS2* x) {
-  a->Visit(drake::MakeNameValue("value", &(x->value())));
-  a->Visit(drake::MakeNameValue("derivatives", &(x->derivatives())));
-}
-template <typename Archive>
-void Serialize(Archive* a, ADS1* x) {
+void Serialize(Archive* a, AutoDiffXd* x) {
   a->Visit(drake::MakeNameValue("value", &(x->value())));
   a->Visit(drake::MakeNameValue("derivatives", &(x->derivatives())));
 }
@@ -137,7 +128,7 @@ struct BigEigen {
     a->Visit(DRAKE_NVP(value));
   }
 
-  MatrixX<ADS2> value;
+  MatrixX<AutoDiffXd> value;
 };
 
 GTEST_TEST(YamlPerformanceTest, EigenMatrix) {
@@ -154,7 +145,7 @@ GTEST_TEST(YamlPerformanceTest, EigenMatrix) {
       dummy += 1.0;
       x.derivatives().resize(kDim);
       for (int k = 0; k < x.derivatives().size(); ++k) {
-        ADS1& y = x.derivatives()(k);
+        AutoDiffXd& y = x.derivatives()(k);
         y.value() = dummy;
         dummy += 1.0;
         y.derivatives() = Eigen::VectorXd::Zero(kDim);
@@ -200,7 +191,7 @@ GTEST_TEST(YamlPerformanceTest, EigenMatrix) {
       ADS2& x = new_data.value(i, j);
       ASSERT_EQ(x.derivatives().size(), kDim);
       for (int k = 0; k < kDim; ++k) {
-        ADS1& y = x.derivatives()(k);
+        AutoDiffXd& y = x.derivatives()(k);
         ASSERT_EQ(y.derivatives().size(), kDim);
       }
     }
