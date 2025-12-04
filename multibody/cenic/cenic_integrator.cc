@@ -109,47 +109,38 @@ bool CenicIntegrator<T>::DoStep(const T& h) {
   const Context<T>& plant_context = plant().GetMyContextFromRoot(context);
   const T t0 = context.get_time();
 
-  // Track whether error control rejected the last step. If so, we can reuse
-  // constraints and geometry queries from the previous solve.
-  // TODO(vincekurtz): consider implementing something like
-  // IntegratorBase::previous_step_was_rejected() instead.
-  const bool previous_step_was_rejected = (t0 == time_at_last_solve_);
-  time_at_last_solve_ = t0;
-
-  // TODO(vincekurtz): set these flags at initialization
-  bool has_actuators = plant().num_actuators() > 0;
-  bool has_external_forces =
-      plant().get_applied_generalized_force_input_port().HasValue(
-          plant_context) ||
-      plant().get_applied_spatial_force_input_port().HasValue(plant_context);
-
   // Linearize any external systems (e.g., controllers, external force elements)
   //     τ = actuation_feedback + external_feedback,
   //       = B u(x) + τₑₓₜ(x),
   //     ≈ clamp(-Kᵤ v + bᵤ) - Kₑ v + bₑ.
-  // We'll only do this linearization once per step, and reuse the same
-  // linearization for error control.
-  LinearFeedbackGains<T>& actuation_feedback = scratch_.actuation_feedback;
-  LinearFeedbackGains<T>& external_feedback = scratch_.external_feedback;
-
-  if (!previous_step_was_rejected && (has_actuators || has_external_forces)) {
-    LinearizeExternalSystem(h, &actuation_feedback, &external_feedback);
-  }
-  std::optional<LinearFeedbackGains<T>> actuation_feedback_opt =
-      has_actuators ? std::make_optional(actuation_feedback) : std::nullopt;
-  std::optional<LinearFeedbackGains<T>> external_feedback_opt =
-      has_external_forces ? std::make_optional(external_feedback)
-                          : std::nullopt;
+  //
+  // TODO(vincekurtz) If error control is retrying a step, ideally we would
+  // reuse the same linearization, but thatt's a bit challenging because it
+  // depends on q_prime which depends on `h`. Only if the controller is
+  // (nearly?) insensitive to `q` could we reuse its linearization.
+  std::optional<LinearFeedbackGains<T>>& actuation_feedback =
+      scratch_.actuation_feedback;
+  std::optional<LinearFeedbackGains<T>>& external_feedback =
+      scratch_.external_feedback;
+  LinearizeExternalSystem(h, &actuation_feedback, &external_feedback);
 
   // Set up the convex ICF model ℓ(v; q₀, v₀, h) for the full step.
-  if (previous_step_was_rejected) {
+  //
+  // If error control rejected the last step, we can reuse constraints and
+  // geometry queries from the previous solve.
+  //
+  // TODO(vincekurtz): consider having IntegratorBase tell us about the
+  // rejection instead of doing this "time at last solve" bookeeping.
+  if (t0 == time_at_last_solve_) {
     // The last time we updated the model, we used the initial state (q₀, v₀),
     // so all we need to update is the time step.
     builder().UpdateModel(h, &model_at_x0_);
+    // XXX BROKEN we need to set the feedback gains here, too.
   } else {
+    time_at_last_solve_ = t0;
     // Build the full model around (q₀, v₀, h).
-    builder().UpdateModel(plant_context, h, actuation_feedback_opt,
-                          external_feedback_opt, &model_at_x0_);
+    builder().UpdateModel(plant_context, h, actuation_feedback,
+                          external_feedback, &model_at_x0_);
   }
 
   // Solve for the full step x_{t+h}. We'll need this regardless of whether
@@ -187,8 +178,8 @@ bool CenicIntegrator<T>::DoStep(const T& h) {
     // Now we can take the second half-step. We'll use the solution of the full
     // step as our initial guess here. We can't reuse the ICF constraints, but
     // we will reuse the linearizations of any external systems, if they exist.
-    builder().UpdateModel(plant_context, 0.5 * h, actuation_feedback_opt,
-                          external_feedback_opt, &model_at_xh_);
+    builder().UpdateModel(plant_context, 0.5 * h, actuation_feedback,
+                          external_feedback, &model_at_xh_);
     v_guess = x_next_full_->get_substate(plant_subsystem_index_)
                   .get_generalized_velocity()
                   .CopyToVector();
@@ -328,21 +319,63 @@ void CenicIntegrator<T>::CalcActuationForces(const Context<T>& context,
 
 template <typename T>
 void CenicIntegrator<T>::LinearizeExternalSystem(
-    const T& h, LinearFeedbackGains<T>* actuation_feedback,
-    LinearFeedbackGains<T>* external_feedback) {
+    const T& h, std::optional<LinearFeedbackGains<T>>* actuation_feedback,
+    std::optional<LinearFeedbackGains<T>>* external_feedback) {
   using std::abs;
+  DRAKE_ASSERT(actuation_feedback != nullptr);
+  DRAKE_ASSERT(external_feedback != nullptr);
 
-  // Extract the feedback gains that we'll set
-  VectorX<T>& Ku = actuation_feedback->K;
-  VectorX<T>& bu = actuation_feedback->b;
-  VectorX<T>& Ke = external_feedback->K;
-  VectorX<T>& be = external_feedback->b;
-  DRAKE_ASSERT(Ku.size() == plant().num_velocities());
-  DRAKE_ASSERT(bu.size() == plant().num_velocities());
-  DRAKE_ASSERT(Ke.size() == plant().num_velocities());
-  DRAKE_ASSERT(be.size() == plant().num_velocities());
+  // Check which (or both) of the two feedback values we actually need.
+  const Context<T>& plant_context =
+      plant().GetMyContextFromRoot(this->get_context());
+  const bool has_actuation_forces = plant().num_actuators() > 0;
+  const bool has_external_forces =
+      plant().get_applied_generalized_force_input_port().HasValue(
+          plant_context) ||
+      plant().get_applied_spatial_force_input_port().HasValue(plant_context);
 
-  // Get references to pre-allocated variables
+  // Resize and/or reset our outputs as necessary. In steady state this is
+  // a no-op, but if the user calls FixInputPort thigns might shift a bit.
+  const int nq = plant_.num_positions();
+  const int nv = plant_.num_velocities();
+  if (has_actuation_forces) {
+    if (!actuation_feedback->has_value()) {
+      actuation_feedback->emplace();
+      actuation_feedback->value().resize(nv);
+    }
+  } else {
+    *actuation_feedback = std::nullopt;
+  }
+  if (has_external_forces) {
+    if (!external_feedback->has_value()) {
+      external_feedback->emplace();
+      external_feedback->value().resize(nv);
+    }
+  } else {
+    *external_feedback = std::nullopt;
+  }
+
+  // Maybe there's nothing to do.
+  if (!has_actuation_forces && !has_external_forces) {
+    return;
+  }
+
+  // Extract the feedback gains output vectors that we'll set.
+  VectorX<T> empty;
+  VectorX<T>& Ku = has_actuation_forces ? actuation_feedback->value().K : empty;
+  VectorX<T>& bu = has_actuation_forces ? actuation_feedback->value().b : empty;
+  VectorX<T>& Ke = has_external_forces ? external_feedback->value().K : empty;
+  VectorX<T>& be = has_external_forces ? external_feedback->value().b : empty;
+  if (has_actuation_forces) {
+    DRAKE_ASSERT(Ku.size() == plant().num_velocities());
+    DRAKE_ASSERT(bu.size() == plant().num_velocities());
+  }
+  if (has_external_forces) {
+    DRAKE_ASSERT(Ke.size() == plant().num_velocities());
+    DRAKE_ASSERT(be.size() == plant().num_velocities());
+  }
+
+  // Get references to pre-allocated variables.
   VectorX<T>& v0 = scratch_.v0;
   VectorX<T>& gu0 = scratch_.gu0;
   VectorX<T>& ge0 = scratch_.ge0;
@@ -352,39 +385,37 @@ void CenicIntegrator<T>::LinearizeExternalSystem(
   MatrixX<T>& N = scratch_.N;
 
   // Compute some quantities that depend on the current state, before messing
-  // with the state with finite differences
-  const Context<T>& plant_context =
-      plant().GetMyContextFromRoot(this->get_context());
+  // with the state with finite differences.
   N = plant().MakeVelocityToQDotMap(plant_context);
   v0 = plant_.GetVelocities(plant_context);
-  CalcActuationForces(plant_context, &gu0);
-  CalcExternalForces(plant_context, &ge0);
+  if (has_actuation_forces) {
+    CalcActuationForces(plant_context, &gu0);
+  }
+  if (has_external_forces) {
+    CalcExternalForces(plant_context, &ge0);
+  }
 
   // Initialize the perturbed state x = [q; v; z] and outputs
   //    gu(x) = B u(x),
-  //    ge(x) = τₑₓₜ(x)
+  //    ge(x) = τₑₓₜ(x).
   const VectorX<T> x =
       plant_context.get_continuous_state_vector().CopyToVector();
   x_prime = x;
-  gu_prime = gu0;
-  ge_prime = ge0;
 
   // We'll want to perturb q and v separately, so we'll go ahead and grab these
   // references.
-  const int nq = plant_.num_positions();
-  const int nv = plant_.num_velocities();
   auto q = x.head(nq);
   auto v = x.segment(nq, nv);
   auto q_prime = x_prime.head(nq);
   auto v_prime = x_prime.segment(nq, nv);
 
-  // Compute τ = D(v − v₀) + g₀ with forward differences differences
+  // Compute τ = D(v − v₀) + g₀ with forward differences differences.
   Context<T>& mutable_plant_context =
       plant().GetMyMutableContextFromRoot(this->get_mutable_context());
   const double eps = std::sqrt(std::numeric_limits<double>::epsilon());
 
   for (int i = 0; i < nv; ++i) {
-    // Choose a step size (following implicit_integrator.cc)
+    // Choose a step size (following implicit_integrator.cc).
     const T abs_vi = abs(v(i));
     T dvi(abs_vi);
     if (dvi <= 1) {
@@ -393,25 +424,29 @@ void CenicIntegrator<T>::LinearizeExternalSystem(
       dvi = eps * abs_vi;
     }
 
-    // Ensure that v' and v differ by an exactly representable number
+    // Ensure that v' and v differ by an exactly representable number.
     v_prime(i) = v(i) + dvi;
     dvi = v_prime(i) - v(i);
 
-    // Perturb q as well, using the fact that q' = q + h N dv
+    // Perturb q as well, using the fact that q' = q + h N dv.
     q_prime = q + h * N * (v_prime - v);
 
-    // Put x' in the context and mark the state as stale
+    // Put x' in the context and mark the state as stale.
     mutable_plant_context.SetContinuousState(x_prime);
 
-    // Compute the relevant matrix entries for actuation inputs:
-    //   Ku = -dgu/dv
-    CalcActuationForces(mutable_plant_context, &gu_prime);
-    Ku(i) = -(gu_prime(i) - gu0(i)) / dvi;
+    if (has_actuation_forces) {
+      // Compute the relevant matrix entries for actuation inputs:
+      //   Ku = -dgu/dv
+      CalcActuationForces(mutable_plant_context, &gu_prime);
+      Ku(i) = -(gu_prime(i) - gu0(i)) / dvi;
+    }
 
-    // Same thing, but for external systems:
-    //  Ke = -dge/dv
-    CalcExternalForces(mutable_plant_context, &ge_prime);
-    Ke(i) = -(ge_prime(i) - ge0(i)) / dvi;
+    if (has_external_forces) {
+      // Same thing, but for external systems:
+      //  Ke = -dge/dv
+      CalcExternalForces(mutable_plant_context, &ge_prime);
+      Ke(i) = -(ge_prime(i) - ge0(i)) / dvi;
+    }
 
     // Reset the state for the next iteration
     v_prime(i) = v(i);
@@ -422,11 +457,14 @@ void CenicIntegrator<T>::LinearizeExternalSystem(
 
   // Use the diagonal projection for both K and b ensures that any
   // non-convex portion of the dynamics is treated explicitly.
-  Ku = Ku.cwiseMax(0);
-  bu = gu0 + Ku.asDiagonal() * v0;
-
-  Ke = Ke.cwiseMax(0);
-  be = ge0 + Ke.asDiagonal() * v0;
+  if (has_actuation_forces) {
+    Ku = Ku.cwiseMax(0);
+    bu = gu0 + Ku.asDiagonal() * v0;
+  }
+  if (has_external_forces) {
+    Ke = Ke.cwiseMax(0);
+    be = ge0 + Ke.asDiagonal() * v0;
+  }
 }
 
 template <typename T>
@@ -450,8 +488,14 @@ void CenicIntegrator<T>::Scratch::Resize(const MultibodyPlant<T>& plant) {
   v.resize(nv);
   q.resize(nq);
   f_ext = std::make_unique<MultibodyForces<T>>(plant);
-  actuation_feedback.resize(nv);
-  external_feedback.resize(nv);
+  if (!actuation_feedback.has_value()) {
+    actuation_feedback.emplace();
+  }
+  actuation_feedback->resize(nv);
+  if (!external_feedback.has_value()) {
+    external_feedback.emplace();
+  }
+  external_feedback->resize(nv);
   v0.resize(nv);
   gu0.resize(nv);
   ge0.resize(nv);

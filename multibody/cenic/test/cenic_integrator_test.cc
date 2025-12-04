@@ -132,8 +132,8 @@ class CenicTester {
 
   static void LinearizeExternalSystem(
       CenicIntegrator<double>* integrator, const double h,
-      LinearFeedbackGains<double>* actuation_feedback,
-      LinearFeedbackGains<double>* external_feedback) {
+      std::optional<LinearFeedbackGains<double>>* actuation_feedback,
+      std::optional<LinearFeedbackGains<double>>* external_feedback) {
     integrator->LinearizeExternalSystem(h, actuation_feedback,
                                         external_feedback);
   }
@@ -318,14 +318,17 @@ GTEST_TEST(CenicTest, ActuatedPendulum) {
 
   // Linearize the non-plant system dynamics around the current state
   const int nv = plant.num_velocities();
-  LinearFeedbackGains<double> actuation_feedback;
-  LinearFeedbackGains<double> external_feedback;  // unused here
-  actuation_feedback.resize(nv);
-  external_feedback.resize(nv);
+  std::optional<LinearFeedbackGains<double>> actuation_feedback;
+  std::optional<LinearFeedbackGains<double>> external_feedback;  // unused here
+  actuation_feedback.emplace();
+  external_feedback.emplace();
+  actuation_feedback->resize(nv);
+  external_feedback->resize(nv);
   CenicTester::LinearizeExternalSystem(&integrator, h, &actuation_feedback,
                                        &external_feedback);
-  const VectorXd& K = actuation_feedback.K;
-  const VectorXd& b = actuation_feedback.b;
+  ASSERT_TRUE(actuation_feedback.has_value());
+  const VectorXd& K = actuation_feedback->K;
+  const VectorXd& b = actuation_feedback->b;
 
   // Reference linearization via autodiff
   const Context<double>& ctrl_context =

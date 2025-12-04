@@ -138,9 +138,11 @@ class CenicIntegrator final : public systems::IntegratorBase<T> {
     // External forces
     std::unique_ptr<MultibodyForces<T>> f_ext;
 
-    // Linearized external system gains
-    LinearFeedbackGains<T> actuation_feedback;  // τ = clamp(−Ku⋅v + bu)
-    LinearFeedbackGains<T> external_feedback;   // τ = −Ke⋅v + be
+    // Linearized external system gains:
+    //   τ = clamp(−Ku⋅v + bu)
+    std::optional<LinearFeedbackGains<T>> actuation_feedback;
+    //   τ = −Ke⋅v + be
+    std::optional<LinearFeedbackGains<T>> external_feedback;
 
     // External system linearization
     VectorX<T> v0;        // Unperturbed plant velocities.
@@ -199,9 +201,12 @@ class CenicIntegrator final : public systems::IntegratorBase<T> {
   // Note that contributions due to controls u(x) will be clamped to effort
   // limits, while contributions due to external generalized and spatial forces
   // τₑₓₜ(x) will not be.
-  void LinearizeExternalSystem(const T& h,
-                               LinearFeedbackGains<T>* actuation_feedback,
-                               LinearFeedbackGains<T>* external_feedback);
+  //
+  // If there is no input connected for one or the other type, the corresponding
+  // `foo_feedback` output will be set to nullopt.
+  void LinearizeExternalSystem(
+      const T& h, std::optional<LinearFeedbackGains<T>>* actuation_feedback,
+      std::optional<LinearFeedbackGains<T>>* external_feedback);
 
   // Overrides the typical state change norm (weighted infinity norm) to use
   // just the infinity norm of the position vector.
