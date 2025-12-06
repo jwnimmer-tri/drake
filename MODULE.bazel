@@ -85,6 +85,63 @@ llvm(
     llvm_version = "20.1.7",
 )
 
+# XXX python and pip
+
+uv = use_extension(
+    "@rules_python//python/uv:uv.bzl",
+    "uv",
+)
+uv.configure(version = "0.6.2")
+
+PYTHON_VERSIONS = [
+    # "3.10",
+    # "3.11",
+    "3.12",
+    # "3.13",
+    # "3.14",
+]
+
+# python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+# python.defaults(
+#     python_version = "3.12",
+# )
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+
+[
+    pip.parse(
+        hub_name = "drake_mypy",
+        python_version = python_version,
+        requirements_lock = "//setup:python/mypy/requirements.txt",
+    )
+    for python_version in PYTHON_VERSIONS
+]
+
+[
+    pip.override(
+        file = "mypy-1.19.0-{abi}-{abi}-{platform}.whl".format(
+            abi = abi,
+            platform = platform,
+        ),
+        patch_strip = 0,
+        patches = [
+            # XXX "//tools/workspace/mypy_internal:patches/timeout.patch",
+            "//tools/workspace/mypy_internal:patches/upstream/reject_double_colon.patch",  # noqa
+        ],
+    )
+    for abi in [
+        "cp3{minor}".format(minor = x[2:])
+        for x in PYTHON_VERSIONS
+    ]
+    for platform in [
+        "macosx_11_0_arm64",
+        "manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64",
+        "manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64",
+    ]
+]
+
+use_repo(pip, "drake_mypy")
+
 # Load dependencies which are "public", i.e., made available to downstream
 # projects.
 #
@@ -284,11 +341,6 @@ use_repo(
     # Python code used when building pydrake.
     #
     "clang_cindex_python3_internal",
-    "mypy_extensions_internal",
-    "mypy_internal",
-    "pathspec_internal",
-    "tomli_internal",
-    "typing_extensions_internal",
     #
     # Python libraries used at runtime.
     #

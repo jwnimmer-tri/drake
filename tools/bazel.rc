@@ -23,6 +23,9 @@ build --strict_system_includes
 # Use the host Python interpreter by default.
 build --extra_toolchains=@python//:all
 
+# XXX
+build --@rules_python//python/config_settings:python_version=3.12
+
 # For background, see https://bazel.build/docs/bazel-and-java.
 # The java_runtime_version defaults to local_jdk, which is some uncontrolled
 # version from Ubuntu or Homebrew that can lead to build failures. Instead,
