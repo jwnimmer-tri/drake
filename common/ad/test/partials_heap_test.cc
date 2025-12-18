@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/ad/auto_diff.h"
+#include "drake/common/ad/internal/static_unit_vector.h"
 #include "drake/common/test_utilities/limit_malloc.h"
 
 namespace drake {
@@ -11,8 +12,13 @@ namespace {
 using Eigen::VectorXd;
 using test::LimitMalloc;
 
-// An empty fixture for later expansion.
-class PartialsHeapTest : public ::testing::Test {};
+class PartialsHeapTest : public ::testing::Test {
+ public:
+  PartialsHeapTest() {
+    // Prime the global storage so that it doesn't get billed to the test case.
+    internal::GetStaticUnitVector(0);
+  }
+};
 
 // Neither the constructor nor MakeMutableXpr allocate when size() == 0.
 TEST_F(PartialsHeapTest, MakeMutableXprEmpty) {
@@ -32,10 +38,9 @@ TEST_F(PartialsHeapTest, MakeMutableXprGeneric) {
   full.MakeMutableXpr();
 }
 
-// Between the unit-vector constructor and MakeMutableXpr, at
-// most one allocation (for the returned storage) is allowed.
+// Neither the constructor nor MakeMutableXpr allocates when size() == 1.
 TEST_F(PartialsHeapTest, MakeMutableXprUnit) {
-  LimitMalloc guard({1});
+  LimitMalloc guard;
   Partials unit(10, 0);
   unit.MakeMutableXpr();
   unit.MakeMutableXpr();

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cstdlib>
+
 #include "drake/common/ad/internal/derivatives_xpr.h"
+#include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
 
@@ -19,14 +22,20 @@ class StorageVec {
   If the size is zero, the storage will be empty (null). */
   static StorageVec Allocate(int size);
 
-  /* Creates empty (null) storage. */
+  /* Constructs empty (null) storage. */
   StorageVec() = default;
+
+  /* Constructs unit vector storage. */
+  StorageVec(int size, int offset)
+      : size_(size), unit_(offset + 1), data_(nullptr) {}
 
   /* Steals the storage from `other`. */
   StorageVec(StorageVec&& other) noexcept {
     size_ = other.size_;
+    unit_ = other.unit_;
     data_ = other.data_;
     other.size_ = 0;
+    other.unit_ = 0;
     other.data_ = nullptr;
   }
 
@@ -35,8 +44,10 @@ class StorageVec {
     if (this != &other) {
       delete data_;
       size_ = other.size_;
+      unit_ = other.unit_;
       data_ = other.data_;
       other.size_ = 0;
+      other.unit_ = 0;
       other.data_ = nullptr;
     }
     return *this;
@@ -53,12 +64,20 @@ class StorageVec {
   /* Returns the size. */
   int size() const { return size_; }
 
+  // XXX deal with unit vectors
   /* Returns the double array storage (or null, when empty). */
   const double* data() const { return data_; }
-  double* mutable_data() { return data_; }
+
+  /* Returns the mutable double array storage.
+  @pre size() > 1 */
+  double* mutable_data() {
+    DRAKE_ASSERT(size _ > 1);
+    return data_;
+  }
 
  private:
-  int size_{0};
+  int32_t size_{0};
+  int32_t unit_{0};
   double* data_{nullptr};
 };
 
@@ -156,11 +175,35 @@ class Partials {
                                        storage_.size());
   }
 
+  /* Returns true iff this represents a (scaled) unit vector. */
+  bool is_unit() const { return unit_ > 0; }
+
+  /* Returns the index of the non-zero element of this (scaled) unit vector.
+  @pre is_unit() */
+  int get_unit_index() const {
+    DRAKE_ASSERT(unit_ > 0);
+    return unit_ - 1;
+  }
+
   // Our MutableXpr type is allowed to set us via a backreference.
   friend ad::DerivativesMutableXpr;
   ad::DerivativesMutableXpr SetFrom(
       const Eigen::Ref<const Eigen::VectorXd>& other);
 
+  void CheckInvariants() const;
+
+  // XXX update for unit vector
+  // Abstraction function:
+  // - When `size == 0`, the partials vector is empty (zero everywhere),
+  //   and may be combined with any other vector (i.e., it has no defined size).
+  // - When `size > 0`:
+  //   - The partials vector has a size of `size`.
+  //   - When `unit > 0`, the partials are zero everywhere except
+  //     for the `unit-1`th partial where it has the value of `coeff`.
+  //   - When `unit == 0` the partials value is `coeff * storage`
+  //     where the storage is a full-size dense vector on the heap.
+  //
+  //
   // Our effective value is `coeff_ * storage_`; we store them separately so
   // that re-scaling is fast (we can just scale the coeff).
   //
