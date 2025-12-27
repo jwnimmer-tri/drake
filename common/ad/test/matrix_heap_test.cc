@@ -33,21 +33,12 @@ GTEST_TEST(MatrixHeapTest, MatrixProduct) {
        b20;
   // clang-format on
 
-  // Pre-allocate storage for X = A * B.
-  MatrixX<AutoDiff> X;
-  X.resize(2, 1);
-
   // The expected allocations are:
-  // - a00*b00 map_base_evaluator copy of each operand
-  // - a01*b10 "
-  // - a02*b20 "
-  // - a10*b00 "
-  // - a11*b10 "
-  // - a12*b20 "
-  // - x00 assign_evaluator copy of the rhs
-  // - x10 assign_evaluator copy of the rhs
-  LimitMalloc guard({14});
-  X.noalias() = A * B;
+  // - X's matrix storage (2 x 1)
+  // - X(0, 0)'s partials
+  // - X(1, 0)'s partials
+  LimitMalloc guard({3});
+  MatrixX<AutoDiff> X = A * B;
 }
 
 }  // namespace

@@ -20,6 +20,7 @@ drake_cc_library(
     name = "auto_diff",
     srcs = [
         "internal/derivatives_xpr.cc",
+        "internal/eigen_specializations.cc",
         "internal/partials.cc",
         "internal/standard_operations.cc",
     ],

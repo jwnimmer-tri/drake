@@ -197,4 +197,54 @@ struct redux_impl<scalar_sum_op<DRAKE_ADS, DRAKE_ADS>, Evaluator,
 
 #undef DRAKE_ADS
 
+namespace drake {
+namespace ad {
+namespace internal {
+
+/* Optimized implementations of BLAS GEMM for autodiff types to take advantage
+of scalar type specializations. With our current mechanism for hooking this into
+Eigen, we only need to support the simplified form C ⇐ A@B rather than the more
+general C ⇐ αA@B+βC of typical GEMM; if we figure out how to hook into Eigen's
+expression templates, we could expand to the more general form. We group these
+functions using a struct so that the friendship declaration with XXXXXX can be
+straightforward.
+@tparam reverse When true, calculates B@A instead of A@B. */
+template <bool reverse>
+struct Gemm {
+  Gemm() = delete;
+  // Allow for passing numpy.ndarray without copies.
+  template <typename T>
+  using MatrixRef = Eigen::Ref<const MatrixX<T>, 0, StrideX>;
+  // Matrix product for AutoDiff, AutoDiff.
+  // When reverse == false, sets result to A * B.
+  // When reverse == true, sets result to B * A.
+  static void CalcAA(const MatrixRef<AutoDiff>& A, const MatrixRef<AutoDiff>& B,
+                     EigenPtr<MatrixX<AutoDiff>> result);
+};
+
+}  // namespace internal
+
+// Matrix<AutoDiff> * Matrix<AutoDiff> => Matrix<AutoDiff>
+template <typename MatrixL, typename MatrixR>
+typename std::enable_if_t<
+    std::is_base_of_v<Eigen::MatrixBase<MatrixL>, MatrixL> &&
+        std::is_base_of_v<Eigen::MatrixBase<MatrixR>, MatrixR> &&
+        std::is_same_v<typename MatrixL::Scalar, AutoDiff> &&
+        std::is_same_v<typename MatrixR::Scalar, AutoDiff>,
+    Eigen::Matrix<AutoDiff, MatrixL::RowsAtCompileTime,
+                  MatrixR::ColsAtCompileTime>>
+operator*(const MatrixL& lhs, const MatrixR& rhs) {
+  Eigen::Matrix<AutoDiff, MatrixL::RowsAtCompileTime,
+                MatrixR::ColsAtCompileTime>
+      result;
+  DRAKE_THROW_UNLESS(lhs.cols() == rhs.rows());
+  result.resize(lhs.rows(), rhs.cols());
+  constexpr bool reverse = false;
+  internal::Gemm<reverse>::CalcAA(lhs, rhs, &result);
+  return result;
+}
+
+}  // namespace ad
+}  // namespace drake
+
 #endif  // DRAKE_DOXYGEN_CXX
