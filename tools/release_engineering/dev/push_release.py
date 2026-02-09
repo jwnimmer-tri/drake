@@ -206,20 +206,6 @@ def _assert_tty() -> None:
         sys.exit(1)
 
 
-def _test_non_empty(path) -> bool:
-    """
-    Tests if the specified path exists and is a non-empty file.
-    """
-    if path is None:
-        return False
-
-    path = os.path.expanduser(path)
-    if not os.path.exists(path):
-        return False
-
-    return os.stat(path).st_size > 0
-
-
 def _check_version(version) -> bool:
     """
     Returns True iff the given version string matches PEP 440.
@@ -321,12 +307,9 @@ def main(args: List[str]) -> None:
             )
 
     # Get GitHub repository, release tag, and release object.
-    if _test_non_empty(options.token):
-        with open(os.path.expanduser(options.token), "r") as f:
-            token = f.read().strip()
-        gh = github3.login(token=token)
-    else:
-        gh = github3.GitHub()
+    with open(os.path.expanduser(options.token), "r") as f:
+        token = f.read().strip()
+    gh = github3.login(token=token)
     repo = gh.repository(_GITHUB_REPO_OWNER, _GITHUB_REPO_NAME)
     release_tag = _find_tag(repo, f"v{options.source_version}")
 
