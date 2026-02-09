@@ -188,24 +188,6 @@ class _State:
             self._upload_file_github(hashfile_name, hashfile_path)
 
 
-def _fatal(msg: str, result: int = 1) -> None:
-    width = shutil.get_terminal_size().columns
-    for line in msg.split("\n"):
-        print(textwrap.fill(line, width), file=sys.stderr)
-    sys.exit(result)
-
-
-def _assert_tty() -> None:
-    try:
-        subprocess.check_call(["tty", "-s"])
-    except subprocess.CalledProcessError:
-        _fatal(
-            "ERROR: tty was NOT detected. This script may need"
-            " various login credentials to be entered interactively."
-        )
-        sys.exit(1)
-
-
 def _push_source(state: _State) -> None:
     """
     Downloads the source .tar artifact and pushes it to GitHub.
@@ -259,9 +241,6 @@ def main(args: List[str]) -> None:
         help="Version tag (x.y.z) of the release to be pushed.",
     )
     options = parser.parse_args(args)
-
-    # Ensure execution environment is suitable.
-    _assert_tty()
 
     # Get GitHub repository, release tag, and release object.
     with open(os.path.expanduser(options.token), "r") as f:
