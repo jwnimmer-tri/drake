@@ -272,16 +272,6 @@ def main(args: List[str]) -> None:
 
     # Ensure execution environment is suitable.
     _assert_tty()
-    if options.push_s3:
-        if not _test_non_empty("~/.aws/credentials"):
-            _fatal(
-                "ERROR: AWS credentials were not found."
-                "\n\n"
-                "The --s3 option requires the ability to push files to S3,"
-                " which requires authentication credentials to be provided."
-                "\n\n"
-                "Fix this by running `aws configure`."
-            )
 
     # Get GitHub repository, release tag, and release object.
     with open(os.path.expanduser(options.token), "r") as f:

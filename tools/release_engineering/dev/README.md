@@ -65,6 +65,8 @@ Clone the drake repository:
 The next step is to push the official source code archive to GitHub and mirror
 the release artifacts to S3.
 
+TODO -- explain the need to `s3 configure` here first.
+
 Once your machine is set up, run the `push_release` script as described below:
 
     bazel run //tools/release_engineering/dev:push_release -- <version>
