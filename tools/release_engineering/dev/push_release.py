@@ -14,14 +14,12 @@ import subprocess
 import sys
 import tempfile
 import textwrap
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 import urllib.request
 
 import boto3
 import github3
 from github3.repos.release import Asset, Release
-from github3.repos.repo import Repository
-from github3.repos.tag import RepoTag
 
 _GITHUB_REPO_OWNER = "RobotLocomotion"
 _GITHUB_REPO_NAME = "drake"
