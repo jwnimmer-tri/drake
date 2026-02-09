@@ -206,22 +206,6 @@ def _assert_tty() -> None:
         sys.exit(1)
 
 
-def _check_version(version) -> bool:
-    """
-    Returns True iff the given version string matches PEP 440.
-    """
-    return (
-        re.match(
-            r"^([1-9][0-9]*!)?(0|[1-9][0-9]*)"
-            r"(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?"
-            r"(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?"
-            r"([+][a-z0-9]+([-_\.][a-z0-9]+)*)?$",
-            version,
-        )
-        is not None
-    )
-
-
 def _find_tag(repo: Repository, tag: str) -> Optional[RepoTag]:
     """
     Finds the tag <tag> in the repository <repo>.
@@ -285,13 +269,6 @@ def main(args: List[str]) -> None:
         help="Version tag (x.y.z) of the release to be pushed.",
     )
     options = parser.parse_args(args)
-
-    # Validate version arguments
-    if not _check_version(options.source_version):
-        _fatal(
-            f"ERROR: source_version {options.source_version!r}"
-            " is not a valid version number."
-        )
 
     # Ensure execution environment is suitable.
     _assert_tty()
