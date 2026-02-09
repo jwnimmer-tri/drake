@@ -206,16 +206,6 @@ def _assert_tty() -> None:
         sys.exit(1)
 
 
-def _find_tag(repo: Repository, tag: str) -> Optional[RepoTag]:
-    """
-    Finds the tag <tag> in the repository <repo>.
-    """
-    for t in repo.tags():
-        if t.name == tag:
-            return t
-    return None
-
-
 def _push_source(state: _State) -> None:
     """
     Downloads the source .tar artifact and pushes it to GitHub.
@@ -278,15 +268,13 @@ def main(args: List[str]) -> None:
         token = f.read().strip()
     gh = github3.login(token=token)
     repo = gh.repository(_GITHUB_REPO_OWNER, _GITHUB_REPO_NAME)
-    release_tag = _find_tag(repo, f"v{options.source_version}")
-
-    if release_tag is None:
-        _fatal(f"ERROR: GitHub tag v{options.source_version} does NOT exist.")
-
+    (release_tag,) = [
+        x
+        for x in repo.tags()
+        if x.name == f"v{options.source_version}"
+    ]
     release = repo.release_from_tag(release_tag)
-
-    if release is None:
-        _fatal(f"ERROR: GitHub release {release_tag.name!r} does NOT exist.")
+    assert release is not None
 
     # Set up shared state
     state = _State(options, release)
