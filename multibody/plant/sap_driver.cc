@@ -725,10 +725,9 @@ void SapDriver<T>::AddPdControllerConstraints(
   // Do nothing if not PD controllers were specified.
   if (plant().num_actuators() == 0) return;
 
-  // TODO(amcastro-tri): makes these EvalFoo() instead to avoid heap
-  // allocations.
-  const DesiredStateInput<T> desired_states =
-      manager_->AssembleDesiredStateInput(context);
+  const DesiredStateInput<T>& desired_states =
+      manager_->EvalDesiredStateInput(context);
+  // TODO(amcastro-tri): Make this EvalFoo() instead to avoid heap allocations.
   const VectorX<T> feed_forward_actuation =
       manager_->AssembleActuationInput(context);
 

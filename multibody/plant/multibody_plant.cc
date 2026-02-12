@@ -267,16 +267,6 @@ std::string GetScopedName(const MultibodyPlant<T>& plant,
   }
 }
 
-// Helper that returns `true` iff any joint actuator in the model is PD
-// controlled.
-template <typename T>
-bool AnyActuatorHasPdControl(const MultibodyPlant<T>& plant) {
-  for (JointActuatorIndex a : plant.GetJointActuatorIndices()) {
-    if (plant.get_joint_actuator(a).has_controller()) return true;
-  }
-  return false;
-}
-
 // Retrieves the DiscreteStepMemory pointer from state in the given `context`.
 // If there is no memory (e.g., has never been updated by a step), returns null.
 // @pre The context is from a plant with use_sampled_output_ports() == true.
@@ -1469,13 +1459,6 @@ void MultibodyPlant<T>::Finalize() {
     if (manager) {
       SetDiscreteUpdateManager(std::move(manager));
     }
-  }
-
-  if (!is_discrete() && AnyActuatorHasPdControl(*this)) {
-    throw std::logic_error(
-        "Continuous model with PD controlled joint actuators. This feature is "
-        "only supported for discrete models. Refer to MultibodyPlant's "
-        "documentation for further details.");
   }
 }
 
@@ -2865,8 +2848,17 @@ void MultibodyPlant<T>::CalcInstanceNetActuationOutput(
 }
 
 template <typename T>
-internal::DesiredStateInput<T> MultibodyPlant<T>::AssembleDesiredStateInput(
+const internal::DesiredStateInput<T>& MultibodyPlant<T>::EvalDesiredStateInput(
     const systems::Context<T>& context) const {
+  this->ValidateContext(context);
+  return this->get_cache_entry(cache_indices_.desired_state_input)
+      .template Eval<internal::DesiredStateInput<T>>(context);
+}
+
+template <typename T>
+void MultibodyPlant<T>::CalcDesiredStateInput(
+    const systems::Context<T>& context,
+    internal::DesiredStateInput<T>* result) const {
   this->ValidateContext(context);
 
   // Checks if desired state x for model_instance has NaNs. Only entries
@@ -2893,8 +2885,8 @@ internal::DesiredStateInput<T> MultibodyPlant<T>::AssembleDesiredStateInput(
   };
 
   // Assemble the vector from the model instance input ports.
-  // TODO(amcastro-tri): Heap allocation here. Get rid of it. Make it EvalFoo().
-  internal::DesiredStateInput<T> desired_states(num_model_instances());
+  // TODO(amcastro-tri): Heap allocation here. Get rid of it.
+  *result = internal::DesiredStateInput<T>(num_model_instances());
 
   for (ModelInstanceIndex model_instance_index(0);
        model_instance_index < num_model_instances(); ++model_instance_index) {
@@ -2914,12 +2906,9 @@ internal::DesiredStateInput<T> MultibodyPlant<T>::AssembleDesiredStateInput(
       }
       const auto qd = xd_instance.head(instance_num_u);
       const auto vd = xd_instance.tail(instance_num_u);
-      desired_states.SetModelInstanceDesiredStates(model_instance_index, qd,
-                                                   vd);
+      result->SetModelInstanceDesiredStates(model_instance_index, qd, vd);
     }
   }
-
-  return desired_states;
 }
 
 template <typename T>
@@ -3672,6 +3661,19 @@ void MultibodyPlant<T>::DeclareCacheEntries() {
       "JointLocking", internal::JointLockingCacheData<T>{},
       &MultibodyPlant::CalcJointLocking, {this->all_parameters_ticket()});
   cache_indices_.joint_locking = joint_locking_cache_entry.cache_index();
+
+  // Cache desired state input data.
+  {
+    std::set<DependencyTicket> prerequisites;
+    for (ModelInstanceIndex i(0); i < num_model_instances(); ++i) {
+      prerequisites.insert(get_desired_state_input_port(i).ticket());
+    }
+    const auto& desired_state_input_cache_entry = this->DeclareCacheEntry(
+        "DesiredStateInput", internal::DesiredStateInput<T>{},
+        &MultibodyPlant::CalcDesiredStateInput, std::move(prerequisites));
+    cache_indices_.desired_state_input =
+        desired_state_input_cache_entry.cache_index();
+  }
 }
 
 template <typename T>

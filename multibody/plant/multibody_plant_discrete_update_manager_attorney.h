@@ -83,9 +83,9 @@ class MultibodyPlantDiscreteUpdateManagerAttorney {
     return plant.AssembleActuationInput(context);
   }
 
-  static DesiredStateInput<T> AssembleDesiredStateInput(
+  static const DesiredStateInput<T>& EvalDesiredStateInput(
       const MultibodyPlant<T>& plant, const systems::Context<T>& context) {
-    return plant.AssembleDesiredStateInput(context);
+    return plant.EvalDesiredStateInput(context);
   }
 
   // TODO(xuchenhan-tri): Remove this when SceneGraph takes control of all

@@ -280,10 +280,10 @@ VectorX<T> DiscreteUpdateManager<T>::AssembleActuationInput(
 }
 
 template <typename T>
-DesiredStateInput<T> DiscreteUpdateManager<T>::AssembleDesiredStateInput(
+const DesiredStateInput<T>& DiscreteUpdateManager<T>::EvalDesiredStateInput(
     const systems::Context<T>& context) const {
-  return MultibodyPlantDiscreteUpdateManagerAttorney<
-      T>::AssembleDesiredStateInput(plant(), context);
+  return MultibodyPlantDiscreteUpdateManagerAttorney<T>::EvalDesiredStateInput(
+      plant(), context);
 }
 
 template <typename T>

@@ -5924,6 +5924,7 @@ class MultibodyPlant final : public internal::MultibodyTreeSystem<T> {
   struct CacheIndices {
     systems::CacheIndex geometry_contact_data;
     systems::CacheIndex joint_locking;
+    systems::CacheIndex desired_state_input;
 
     // This is only valid for a continuous-time, hydroelastic-contact plant.
     systems::CacheIndex hydroelastic_contact_forces_continuous;
@@ -6134,10 +6135,12 @@ class MultibodyPlant final : public internal::MultibodyTreeSystem<T> {
                                       const systems::Context<T>& context,
                                       systems::BasicVector<T>* output) const;
 
-  // This fuction evaluates the desired state input ports and returns them as a
+  // These fuctions evaluate the desired state input ports and returns them as a
   // DesiredStateInput.
-  internal::DesiredStateInput<T> AssembleDesiredStateInput(
+  const internal::DesiredStateInput<T>& EvalDesiredStateInput(
       const systems::Context<T>& context) const;
+  void CalcDesiredStateInput(const systems::Context<T>& context,
+                             internal::DesiredStateInput<T>* result) const;
 
   // Computes all non-contact applied forces including:
   //  - Force elements.

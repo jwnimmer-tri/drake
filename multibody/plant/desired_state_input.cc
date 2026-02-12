@@ -9,6 +9,9 @@ namespace multibody {
 namespace internal {
 
 template <typename T>
+DesiredStateInput<T>::DesiredStateInput() = default;
+
+template <typename T>
 DesiredStateInput<T>::DesiredStateInput(int num_model_instances) {
   DRAKE_DEMAND(num_model_instances > 0);
   positions_.resize(num_model_instances);
