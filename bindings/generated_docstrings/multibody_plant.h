@@ -91,7 +91,7 @@ Parameter ``builder``:
 Parameter ``time_step``:
     The discrete update period for the new MultibodyPlant to be added.
     Please refer to the documentation provided in
-    MultibodyPlant::MultibodyPlant(double) for further details on the
+    MultibodyPlant∷MultibodyPlant(double) for further details on the
     parameter ``time_step``.
 
 Parameter ``scene_graph``:
@@ -158,7 +158,7 @@ R"""(For assignment to a plant reference (ignoring the scene graph).)""";
         struct /* operator_tuple */ {
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc =
-R"""(For assignment to a std::tie of pointers.)""";
+R"""(For assignment to a std∷tie of pointers.)""";
         } operator_tuple;
         // Symbol: drake::multibody::AddMultibodyPlantSceneGraphResult::plant
         struct /* plant */ {
@@ -264,7 +264,7 @@ Returns:
 R"""(Given a pair of geometries and the generalized position/velocity of
 the plant, compute the signed distance between the pair of geometries
 and the time derivative of the signed distance. This function is
-similar to QueryObject::ComputeSignedDistancePairClosestPoints(), but
+similar to QueryObject∷ComputeSignedDistancePairClosestPoints(), but
 it also provides the time derivative of the signed distance.
 
 Parameter ``plant``:
@@ -305,7 +305,7 @@ between unsupported geometries will cause a runtime exception.)""";
 R"""(Contact forces are computed using the hydroelastic model, where
 possible. For most other unsupported colliding pairs, the point model
 from kPoint is used. See
-geometry::QueryObject::ComputeContactSurfacesWithFallback for more
+geometry∷QueryObject∷ComputeContactSurfacesWithFallback for more
 details.)""";
         } kHydroelasticWithFallback;
         // Symbol: drake::multibody::ContactModel::kHydroelasticsOnly
@@ -435,12 +435,12 @@ type ContactResults<T> and a single output port with
 lcmt_contact_results_for_viz.
 
 Although this class can be instantiated on all default scalars, its
-functionality will be limited for ``T`` = symbolic::Expression. If
-there are any symbolic::Variable instances in the expression,
+functionality will be limited for ``T`` = symbolic∷Expression. If
+there are any symbolic∷Variable instances in the expression,
 attempting to evaluate the output port will throw an exception. The
-support is sufficient that a systems::Diagram with a
+support is sufficient that a systems∷Diagram with a
 ContactResultsToLcmSystem can be scalar converted to
-symbolic::Expression without error, but not necessarily evaluated.
+symbolic∷Expression without error, but not necessarily evaluated.
 
 **Constructing instances**
 
@@ -466,7 +466,7 @@ collision geometry), this is perfectly acceptable. However, in cases
 where a body has multiple collision geometries, those default names
 may not be helpful when viewing the visualized results. Instead,
 ContactResultsToLcmSystem can use the names associated with the id in
-a geometry::SceneGraph instance. The only method for doing this is via
+a geometry∷SceneGraph instance. The only method for doing this is via
 the contact_result_vis_creation
 "ConnectContactResultsToDrakeVisualizer()" functions and requires the
 diagram to be instantiated as double valued. If a diagram with a
@@ -918,9 +918,9 @@ R"""(Returns the discrete state index of the deformable body identified by
 the given ``id``.
 
 Raises:
-    RuntimeError if MultibodyPlant::Finalize() has not been called
-    yet. or if no deformable body with the given ``id`` has been
-    registered in this model.)""";
+    RuntimeError if MultibodyPlant∷Finalize() has not been called yet.
+    or if no deformable body with the given ``id`` has been registered
+    in this model.)""";
         } GetDiscreteStateIndex;
         // Symbol: drake::multibody::DeformableModel::GetExternalForces
         struct /* GetExternalForces */ {
@@ -930,9 +930,9 @@ R"""(Returns the force density fields acting on the deformable body with
 the given ``id``.
 
 Raises:
-    RuntimeError if MultibodyPlant::Finalize() has not been called
-    yet. or if no deformable body with the given ``id`` has been
-    registered in this model.)""";
+    RuntimeError if MultibodyPlant∷Finalize() has not been called yet.
+    or if no deformable body with the given ``id`` has been registered
+    in this model.)""";
         } GetExternalForces;
         // Symbol: drake::multibody::DeformableModel::GetFemModel
         struct /* GetFemModel */ {
@@ -1135,7 +1135,7 @@ default model instance.)""";
           const char* doc =
 R"""((Internal use only) Sets the default state for the deformable model.
 This should only be called by MultibodyPlant as a part of
-MultibodyPlant::SetDefaultState().)""";
+MultibodyPlant∷SetDefaultState().)""";
         } SetDefaultState;
         // Symbol: drake::multibody::DeformableModel::SetParallelism
         struct /* SetParallelism */ {
@@ -1530,7 +1530,7 @@ Warning:
     parameters.
 
 Raises:
-    RuntimeError if BodyIndex::is_valid() is false for either body.
+    RuntimeError if BodyIndex∷is_valid() is false for either body.
 
 Raises:
     RuntimeError if bodies A and B are the same body.
@@ -1611,7 +1611,7 @@ B), expressed in B's frame.)""";
       struct /* ExternallyAppliedSpatialForceMultiplexer */ {
         // Source: drake/multibody/plant/externally_applied_spatial_force_multiplexer.h
         const char* doc =
-R"""(Concatenates multiple std::vector<>'s of
+R"""(Concatenates multiple std∷vector<>'s of
 ExternallyAppliedSpatialForce<T>.
 
 .. pydrake_system::
@@ -1671,7 +1671,7 @@ with ``contact_surface().centroid()``.)""";
 R"""(Constructs this structure using the given contact surface and spatial
 force.
 
-The geometry::ContactSurface defines contact between two geometries M
+The geometry∷ContactSurface defines contact between two geometries M
 and N (via contact_surface().id_M() and contact_surface().id_N(),
 respectively). HydroelasticContactInfo further associates geometries M
 and N with the bodies to which they are rigidly fixed, A and B,
@@ -1684,15 +1684,15 @@ expressed in the world frame.
 
 Parameter ``contact_surface``:
     Contact surface between two geometries M and N, see
-    geometry::ContactSurface::id_M() and
-    geometry::ContactSurface::id_N(). This must point to immutable
-    data (i.e., data that will never change), and must not be nullptr.
+    geometry∷ContactSurface∷id_M() and geometry∷ContactSurface∷id_N().
+    This must point to immutable data (i.e., data that will never
+    change), and must not be nullptr.
 
 Parameter ``F_Ac_W``:
     Spatial force applied on body A, at contact surface centroid C,
     and expressed in the world frame W. The position ``p_WC`` of C in
     the world frame W can be obtained with
-    ``ContactSurface::centroid()``.)""";
+    ``ContactSurface∷centroid()``.)""";
         } ctor;
         // Symbol: drake::multibody::HydroelasticContactInfo::contact_surface
         struct /* contact_surface */ {
@@ -1707,7 +1707,7 @@ the mesh and gradient vector fields are expressed in the world frame.)""";
         // Source: drake/multibody/plant/multibody_plant.h
         const char* doc =
 R"""(MultibodyPlant is a Drake system framework representation (see
-systems::System) for the model of a physical system consisting of a
+systems∷System) for the model of a physical system consisting of a
 collection of interconnected bodies. See multibody for an overview of
 concepts/notation.
 
@@ -1746,8 +1746,8 @@ be a zero-length vector. (Model instances ``world_model_instance()``
 and ``default_model_instance()`` always exist.)
 
 The ports shown in <span style="color:green">green</span> are for
-communication with Drake's geometry::SceneGraph "SceneGraph" system
-for dealing with geometry.
+communication with Drake's geometry∷SceneGraph "SceneGraph" system for
+dealing with geometry.
 
 MultibodyPlant provides a user-facing API for:
 
@@ -1766,7 +1766,7 @@ Working with system parameters for various multibody elements.
 - mbp_working_with_free_bodies "Free and floating base bodies":
 Work conveniently with free (floating) bodies.
 - mbp_kinematic_and_dynamic_computations "Kinematics and dynamics":
-Perform systems::Context "Context"-dependent kinematic and dynamic
+Perform systems∷Context "Context"-dependent kinematic and dynamic
 queries.
 - mbp_system_matrix_computations "System matrices":
 Explicitly form matrices that appear in the equations of motion.
@@ -1791,13 +1791,13 @@ generalized positions for model instance.
 Model instances are frequently defined through SDFormat files (using
 the ``model`` tag) and are automatically created when SDFormat files
 are parsed (by Parser). There are two special
-multibody::ModelInstanceIndex values. The world body is always
-multibody::ModelInstanceIndex 0. multibody::ModelInstanceIndex 1 is
+multibody∷ModelInstanceIndex values. The world body is always
+multibody∷ModelInstanceIndex 0. multibody∷ModelInstanceIndex 1 is
 reserved for all elements with no explicit model instance and is
 generally only relevant for elements created programmatically (and
 only when a model instance is not explicitly specified). Note that
 Parser creates model instances (resulting in a
-multibody::ModelInstanceIndex ≥ 2) as needed.
+multibody∷ModelInstanceIndex ≥ 2) as needed.
 
 See num_model_instances(), num_positions(), num_velocities(),
 num_actuated_dofs(), AddModelInstance() GetPositionsAndVelocities(),
@@ -1818,15 +1818,15 @@ num_velocities()).
 A MultibodyPlant can be constructed to be either continuous or
 discrete. The choice is indicated by the time_step passed to the
 constructor -- a non-zero time_step indicates a discrete plant, while
-a zero time_step indicates continuous. A systems::Simulator
-"Simulator" will step a discrete plant using the indicated time_step,
-but will allow a numerical integrator to choose how to advance time
-for a continuous MultibodyPlant.
+a zero time_step indicates continuous. A systems∷Simulator "Simulator"
+will step a discrete plant using the indicated time_step, but will
+allow a numerical integrator to choose how to advance time for a
+continuous MultibodyPlant.
 
 We'll discuss continuous plant dynamics in this section. Discrete
 dynamics is more complicated and gets its own section below.
 
-As a Drake systems::System "System", MultibodyPlant implements the
+As a Drake systems∷System "System", MultibodyPlant implements the
 governing equations for a multibody dynamical system in the form ``ẋ
 = f(t, x, u)`` with t being time and u external inputs such as
 actuation forces. The governing equations for the dynamics of a
@@ -1958,7 +1958,7 @@ to immediately reflect the changing forces. We call the former a
 For a continuous-time plant, there is no distinction -- the output
 port is always live -- it immediately reflects the instantaneous input
 value. It is a "direct feedthrough" output port (see
-SystemBase::GetDirectFeedthroughs()).
+SystemBase∷GetDirectFeedthroughs()).
 
 For a discrete-time plant, the user can choose whether the output
 should be sampled or live: Use the function SetUseSampledOutputPorts()
@@ -2021,11 +2021,11 @@ Note:
     A JointActuator's index into the vector data supplied to
     MultibodyPlant's actuation input port for all actuators
     (get_actuation_input_port()) is given by
-    JointActuator::input_start(), NOT by its JointActuatorIndex. That
+    JointActuator∷input_start(), NOT by its JointActuatorIndex. That
     is, the vector element data for a JointActuator at index
     JointActuatorIndex(i) in the full input port vector is found at
     index:
-    MultibodyPlant::get_joint_actuator(JointActuatorIndex(i)).input_start().
+    MultibodyPlant∷get_joint_actuator(JointActuatorIndex(i)).input_start().
     For the get_actuation_input_port(ModelInstanceIndex)const
     "get_actuation_input_port(ModelInstanceIndex)" specific to a model
     index, the vector data is ordered by monotonically increasing
@@ -2074,7 +2074,7 @@ Note:
     per-model instance vectors.
 
 Warning:
-    Effort limits (JointActuator::effort_limit()) are not enforced,
+    Effort limits (JointActuator∷effort_limit()) are not enforced,
     unless PD controllers are defined. See pd_controllers "Using PD
     controlled actuators".
 
@@ -2090,18 +2090,18 @@ model dynamics.
 
 Note:
     PD controllers are ignored when a joint is locked (see
-    Joint::Lock()).
+    Joint∷Lock()).
 
 Warning:
     Currently, this feature is only supported for discrete models
     (is_discrete() is true) using the SAP solver
     (get_discrete_contact_solver() returns
-    DiscreteContactSolver::kSap.)
+    DiscreteContactSolver∷kSap.)
 
 PD controlled joint actuators can be defined by setting PD gains for
-each joint actuator, see JointActuator::set_controller_gains(). Unless
+each joint actuator, see JointActuator∷set_controller_gains(). Unless
 these gains are specified, joint actuators will not be PD controlled
-and JointActuator::has_controller() will return ``False``.
+and JointActuator∷has_controller() will return ``False``.
 
 For models with PD controllers, the actuation torque per actuator is
 computed according to:
@@ -2122,11 +2122,11 @@ computed according to:
 
 where qd and vd are desired configuration and velocity (see
 get_desired_state_input_port()) for the actuated joint (see
-JointActuator::joint()), Kp and Kd are the proportional and derivative
-gains of the actuator (see JointActuator::get_controller_gains()),
+JointActuator∷joint()), Kp and Kd are the proportional and derivative
+gains of the actuator (see JointActuator∷get_controller_gains()),
 ``u_ff`` is the feed-forward actuation specified with
 get_actuation_input_port(), and ``e`` corresponds to effort limit (see
-JointActuator::effort_limit()).
+JointActuator∷effort_limit()).
 
 Notice that actuation through get_actuation_input_port() and PD
 control are not mutually exclusive, and they can be used together.
@@ -2162,7 +2162,7 @@ a given actuator.
 
 Note:
     PD controllers are ignored when a joint is locked (see
-    Joint::Lock()), and thus they have no effect on the actuation
+    Joint∷Lock()), and thus they have no effect on the actuation
     output nor reaction forces.
 
 **** Loading models from SDFormat files
@@ -2180,7 +2180,7 @@ URDF files. Consider the example below which loads an acrobot model:
     MultibodyPlant<T> acrobot;
     SceneGraph<T> scene_graph;
     Parser parser(&acrobot, &scene_graph);
-    const std::string url =
+    const std∷string url =
     "package://drake/multibody/benchmarks/acrobot/acrobot.sdf";
     parser.AddModelsFromUrl(url);
 
@@ -2277,7 +2277,7 @@ Assign to already-declared pointer variables:
 
     MultibodyPlant<double>* plant{};
     SceneGraph<double>* scene_graph{};
-    std::tie(plant, scene_graph) =
+    std∷tie(plant, scene_graph) =
     AddMultibodyPlantSceneGraph(&builder, 0.0 /+ time_step +/);
     plant->DoFoo(...);
     scene_graph->DoBar(...);
@@ -2297,7 +2297,7 @@ essentially two purposes; a) visualization and, b) contact modeling.
 Before any geometry registration takes place, a user **must** first
 make a call to RegisterAsSourceForSceneGraph() in order to register
 the MultibodyPlant as a client of a SceneGraph instance, point at
-which the plant will have assigned a valid geometry::SourceId. At
+which the plant will have assigned a valid geometry∷SourceId. At
 Finalize(), MultibodyPlant will declare input/output ports as
 appropriate to communicate with the SceneGraph instance on which
 registrations took place. All geometry registration **must** be
@@ -2316,19 +2316,19 @@ process will include:
 1. Call to RegisterAsSourceForSceneGraph().
 2. Calls to RegisterCollisionGeometry(), as many as needed.
 3. Call to Finalize(), user is done specifying the model.
-4. Connect geometry::SceneGraph::get_query_output_port() to
+4. Connect geometry∷SceneGraph∷get_query_output_port() to
 get_geometry_query_input_port().
 5. Connect get_geometry_pose_output_port() to
-geometry::SceneGraph::get_source_pose_port()
+geometry∷SceneGraph∷get_source_pose_port()
 
 Refer to the documentation provided in each of the methods above for
 further details.
 
 ** Accessing point contact parameters MultibodyPlant's point contact
 model looks for model parameters stored as
-geometry::ProximityProperties by geometry::SceneGraph. These
-properties can be obtained before or after context creation through
-geometry::SceneGraphInspector APIs as outlined below. MultibodyPlant
+geometry∷ProximityProperties by geometry∷SceneGraph. These properties
+can be obtained before or after context creation through
+geometry∷SceneGraphInspector APIs as outlined below. MultibodyPlant
 expects the following properties for point contact modeling:
 
 |Group name|Property Name|Required|Property Type|Property Description|
@@ -2341,7 +2341,7 @@ Compliant contact dissipation.|
 parameter.|
 
 ¹ Collision geometry is required to be registered with a
-geometry::ProximityProperties object that contains the ("material",
+geometry∷ProximityProperties object that contains the ("material",
 "coulomb_friction") property. If the property is missing,
 MultibodyPlant will throw an exception.
 
@@ -2351,7 +2351,7 @@ value as the default. Refer to the section point_contact_defaults
 
 ³ When using a linear Kelvin–Voigt model of dissipation (for instance
 when selecting the SAP solver), collision geometry is required to be
-registered with a geometry::ProximityProperties object that contains
+registered with a geometry∷ProximityProperties object that contains
 the ("material", "relaxation_time") property. If the property is
 missing, an exception will be thrown.
 
@@ -2368,14 +2368,14 @@ MultibodyPlant model will always use the Hunt & Crossley model and
 relaxation_time will be ignored.
 
 Accessing and modifying contact properties requires interfacing with
-geometry::SceneGraph's model inspector. Interfacing with a model
-inspector obtained from geometry::SceneGraph will provide the default
+geometry∷SceneGraph's model inspector. Interfacing with a model
+inspector obtained from geometry∷SceneGraph will provide the default
 registered values for a given parameter. These are the values that
-will initially appear in a systems::Context created by
+will initially appear in a systems∷Context created by
 CreateDefaultContext(). Subsequently, true system parameters can be
-accessed and changed through a systems::Context once available. For
+accessed and changed through a systems∷Context once available. For
 both of the above cases, proximity properties are accessed through
-geometry::SceneGraphInspector APIs.
+geometry∷SceneGraphInspector APIs.
 
 Before context creation an inspector can be retrieved directly from
 SceneGraph as:
@@ -2388,7 +2388,7 @@ SceneGraph as:
 .. code-block:: c++
 
     // For a SceneGraph<T> instance called scene_graph.
-    const geometry::SceneGraphInspector<T>& inspector =
+    const geometry∷SceneGraphInspector<T>& inspector =
     scene_graph.model_inspector();
 
 .. raw:: html
@@ -2407,7 +2407,7 @@ stored in the context:
 
     // For a MultibodyPlant<T> instance called mbp and a Context<T> called
     // context.
-    const geometry::SceneGraphInspector<T>& inspector =
+    const geometry∷SceneGraphInspector<T>& inspector =
     mbp.EvalSceneGraphInspector(context);
 
 .. raw:: html
@@ -2425,7 +2425,7 @@ as:
 .. code-block:: c++
 
     // For a body with GeometryId called geometry_id
-    const geometry::ProximityProperties* props =
+    const geometry∷ProximityProperties* props =
     inspector.GetProximityProperties(geometry_id);
     const CoulombFriction<T>& geometry_friction =
     props->GetProperty<CoulombFriction<T>>("material",
@@ -2438,7 +2438,7 @@ as:
 **** Working with MultibodyElement parameters Several
 MultibodyElements expose parameters, allowing the user flexible
 modification of some aspects of the plant's model, post
-systems::Context creation. For details, refer to the documentation for
+systems∷Context creation. For details, refer to the documentation for
 the MultibodyElement whose parameters you are trying to modify/access
 (e.g. RigidBody, FixedOffsetFrame, etc.)
 
@@ -2484,7 +2484,7 @@ take derivatives with respect to one of the bodies' masses:
     
     // Scalar convert the plant.
     unique_ptr<MultibodyPlant<AutoDiffXd>> plant_autodiff =
-    systems::System<double>::ToAutoDiffXd(plant);
+    systems∷System<double>∷ToAutoDiffXd(plant);
     unique_ptr<Context<AutoDiffXd>> context_autodiff =
     plant_autodiff->CreateDefaultContext();
     context_autodiff->SetTimeStateAndParametersFrom(context);
@@ -2582,7 +2582,7 @@ Parameter ``body_B``:
 
 Parameter ``p_BQ``:
     (optional) Position of point Q in body B's frame. If p_BQ is
-    std::nullopt, then p_BQ will be computed so that the constraint is
+    std∷nullopt, then p_BQ will be computed so that the constraint is
     satisfied for the default configuration at Finalize() time;
     subsequent changes to the default configuration will not change
     the computed p_BQ.
@@ -2599,7 +2599,7 @@ Raises:
 Raises:
     RuntimeError if ``this`` MultibodyPlant's underlying contact
     solver is not SAP. (i.e. get_discrete_contact_solver() !=
-    DiscreteContactSolver::kSap))""";
+    DiscreteContactSolver∷kSap))""";
         } AddBallConstraint;
         // Symbol: drake::multibody::MultibodyPlant::AddCouplerConstraint
         struct /* AddCouplerConstraint */ {
@@ -2632,7 +2632,7 @@ Raises:
 Raises:
     RuntimeError if ``this`` MultibodyPlant's underlying contact
     solver is not SAP. (i.e. get_discrete_contact_solver() !=
-    DiscreteContactSolver::kSap))""";
+    DiscreteContactSolver∷kSap))""";
         } AddCouplerConstraint;
         // Symbol: drake::multibody::MultibodyPlant::AddDistanceConstraint
         struct /* AddDistanceConstraint */ {
@@ -2714,7 +2714,7 @@ Raises:
 Raises:
     RuntimeError if ``this`` MultibodyPlant's underlying contact
     solver is not SAP. (i.e. get_discrete_contact_solver() !=
-    DiscreteContactSolver::kSap))""";
+    DiscreteContactSolver∷kSap))""";
         } AddDistanceConstraint;
         // Symbol: drake::multibody::MultibodyPlant::AddDummyModel
         struct /* AddDummyModel */ {
@@ -2797,7 +2797,7 @@ creating a joint between two bodies with fixed poses ``X_PF`` and
 Parameter ``name``:
     A string that uniquely identifies the new joint to be added to
     ``this`` model. A RuntimeError is thrown if a joint named ``name``
-    already is part of the model. See HasJointNamed(), Joint::name().
+    already is part of the model. See HasJointNamed(), Joint∷name().
 
 Parameter ``parent``:
     The parent body connected by the new joint.
@@ -2808,7 +2808,7 @@ Parameter ``X_PF``:
     curly braces ``{}`` imply that frame F **is** the same body frame
     P. If instead your intention is to make a frame F with pose
     ``X_PF`` equal to the identity pose, provide
-    ``RigidTransform<double>::Identity()`` as your input. When
+    ``RigidTransform<double>∷Identity()`` as your input. When
     non-nullopt, adds a FixedOffsetFrame named ``{name}_parent``.
 
 Parameter ``child``:
@@ -2820,14 +2820,13 @@ Parameter ``X_BM``:
     curly braces ``{}`` imply that frame M **is** the same body frame
     B. If instead your intention is to make a frame M with pose
     ``X_BM`` equal to the identity pose, provide
-    ``RigidTransform<double>::Identity()`` as your input. When
+    ``RigidTransform<double>∷Identity()`` as your input. When
     non-nullopt, adds a FixedOffsetFrame named ``{name}_child``.
 
 Parameter ``args``:
     Zero or more parameters provided to the constructor of the new
-    joint. It must be the case that ``JointType<T>( const
-    std::string&, const Frame<T>&, const Frame<T>&, args)`` is a valid
-    constructor.
+    joint. It must be the case that ``JointType<T>( const std∷string&,
+    const Frame<T>&, const Frame<T>&, args)`` is a valid constructor.
 
 Template parameter ``JointType``:
     The type of the Joint to add.
@@ -2862,7 +2861,7 @@ Example of usage:
           {},                     /* frame F IS the parent body frame P 
           body_2,                 /* child body, the pendulum 
           X_BM,                   /* pose of frame M in the body frame B 
-          Vector3d::UnitZ());     /* revolute axis in this case
+          Vector3d∷UnitZ());     /* revolute axis in this case
 
 .. raw:: html
 
@@ -2870,7 +2869,7 @@ Example of usage:
 
 Raises:
     RuntimeError if ``this`` MultibodyPlant already contains a joint
-    with the given ``name``. See HasJointNamed(), Joint::name().
+    with the given ``name``. See HasJointNamed(), Joint∷name().
 
 Raises:
     RuntimeError if parent and child are the same body or if they are
@@ -2972,7 +2971,7 @@ Parameter ``name``:
     A string that identifies the new body to be added to ``this``
     model. A RuntimeError is thrown if a body named ``name`` already
     is part of ``model_instance``. See HasBodyNamed(),
-    RigidBody::name().
+    RigidBody∷name().
 
 Parameter ``model_instance``:
     A model instance index which this body is part of.
@@ -3016,7 +3015,7 @@ Parameter ``name``:
     A string that identifies the new body to be added to ``this``
     model. A RuntimeError is thrown if a body named ``name`` already
     is part of the model in the default model instance. See
-    HasBodyNamed(), RigidBody::name().
+    HasBodyNamed(), RigidBody∷name().
 
 Parameter ``M_BBo_B``:
     The SpatialInertia of the new rigid body to be added to ``this``
@@ -3090,25 +3089,24 @@ Parameter ``a``:
 
 Parameter ``offset``:
     (optional) Scalar length offset in either [m] or [rad]. If
-    std::nullopt, it is set to 0.
+    std∷nullopt, it is set to 0.
 
 Parameter ``lower_limit``:
     (optional) Lower bound on l in either [m] or [rad]. If
-    std::nullopt, it is set to −∞.
+    std∷nullopt, it is set to −∞.
 
 Parameter ``upper_limit``:
-    Upper bound on l in either [m] or [rad]. If std::nullopt, it is
-    set to ∞.
+    Upper bound on l in either [m] or [rad]. If std∷nullopt, it is set
+    to ∞.
 
 Parameter ``stiffness``:
     (optional) Constraint stiffness in either [N/m] or [N⋅m/rad]. If
-    std::nullopt, its default value is set to ∞ to model a rigid
+    std∷nullopt, its default value is set to ∞ to model a rigid
     constraint.
 
 Parameter ``damping``:
     (optional) Constraint damping in either [N⋅s/m] or [N⋅m⋅rad/s]. If
-    std::nullopt, it is set to 0 to model a non-dissipative
-    constraint.
+    std∷nullopt, it is set to 0 to model a non-dissipative constraint.
 
 Warning:
     Because of a restriction in the SAP solver, **at most** two
@@ -3135,22 +3133,22 @@ Precondition:
     ``joints``.
 
 Precondition:
-    ``lower_limit < ∞`` (if not std::nullopt).
+    ``lower_limit < ∞`` (if not std∷nullopt).
 
 Precondition:
-    ``upper_limit > -∞`` (if not std::nullopt).
+    ``upper_limit > -∞`` (if not std∷nullopt).
 
 Precondition:
     At least one of ``lower_limit`` and ``upper_limit`` are finite.
 
 Precondition:
-    ``lower_limit ≤ upper_limit`` (if not std::nullopt).
+    ``lower_limit ≤ upper_limit`` (if not std∷nullopt).
 
 Precondition:
-    ``stiffness > 0`` (if not std::nullopt).
+    ``stiffness > 0`` (if not std∷nullopt).
 
 Precondition:
-    ``damping >= 0`` (if not std::nullopt).
+    ``damping >= 0`` (if not std∷nullopt).
 
 Raises:
     RuntimeError if the MultibodyPlant has already been finalized.
@@ -3158,7 +3156,7 @@ Raises:
 Raises:
     RuntimeError if ``this`` MultibodyPlant's underlying contact
     solver is not SAP. (i.e. get_discrete_contact_solver() !=
-    DiscreteContactSolver::kSap).)""";
+    DiscreteContactSolver∷kSap).)""";
         } AddTendonConstraint;
         // Symbol: drake::multibody::MultibodyPlant::AddWeldConstraint
         struct /* AddWeldConstraint */ {
@@ -3192,7 +3190,7 @@ Raises:
 Raises:
     RuntimeError if ``this`` MultibodyPlant's underlying contact
     solver is not SAP. (i.e. get_discrete_contact_solver() !=
-    DiscreteContactSolver::kSap))""";
+    DiscreteContactSolver∷kSap))""";
         } AddWeldConstraint;
         // Symbol: drake::multibody::MultibodyPlant::CalcBiasCenterOfMassTranslationalAcceleration
         struct /* CalcBiasCenterOfMassTranslationalAcceleration */ {
@@ -3207,10 +3205,10 @@ Parameter ``context``:
     Contains the state of the multibody system.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the accceleration bias
-    is with respect to 𝑠 = q̇ or 𝑠 = v. Currently, an exception is
-    thrown if with_respect_to is JacobianWrtVariable::kQDot.
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the accceleration bias is with respect to 𝑠 =
+    q̇ or 𝑠 = v. Currently, an exception is thrown if with_respect_to
+    is JacobianWrtVariable∷kQDot.
 
 Parameter ``frame_A``:
     The frame in which a𝑠Bias_AScm is measured.
@@ -3230,7 +3228,7 @@ Raises:
     RuntimeError if mₛ ≤ 0, where mₛ is the mass of system S.
 
 Raises:
-    RuntimeError if with_respect_to is JacobianWrtVariable::kQDot.
+    RuntimeError if with_respect_to is JacobianWrtVariable∷kQDot.
 
 See also:
     CalcJacobianCenterOfMassTranslationalVelocity() to compute
@@ -3262,10 +3260,10 @@ Parameter ``model_instances``:
     repeated in the vector (unusual), it is only counted once.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the accceleration bias
-    is with respect to 𝑠 = q̇ or 𝑠 = v. Currently, an exception is
-    thrown if with_respect_to is JacobianWrtVariable::kQDot.
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the accceleration bias is with respect to 𝑠 =
+    q̇ or 𝑠 = v. Currently, an exception is thrown if with_respect_to
+    is JacobianWrtVariable∷kQDot.
 
 Parameter ``frame_A``:
     The frame in which a𝑠Bias_AScm is measured.
@@ -3285,7 +3283,7 @@ Raises:
     RuntimeError if mₛ ≤ 0, where mₛ is the mass of system S.
 
 Raises:
-    RuntimeError if with_respect_to is JacobianWrtVariable::kQDot.
+    RuntimeError if with_respect_to is JacobianWrtVariable∷kQDot.
 
 See also:
     CalcJacobianCenterOfMassTranslationalVelocity() to compute
@@ -3315,11 +3313,10 @@ Parameter ``context``:
     Contains the state of the multibody system.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the spatial
-    accceleration bias is with respect to 𝑠 = q̇ or 𝑠 = v. Currently,
-    an exception is thrown if with_respect_to is
-    JacobianWrtVariable::kQDot.
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the spatial accceleration bias is with respect
+    to 𝑠 = q̇ or 𝑠 = v. Currently, an exception is thrown if
+    with_respect_to is JacobianWrtVariable∷kQDot.
 
 Parameter ``frame_B``:
     The frame on which point Bp is affixed/welded.
@@ -3343,7 +3340,7 @@ See also:
     spatial velocity Jacobian in frame A with respect to 𝑠.
 
 Raises:
-    RuntimeError if with_respect_to is JacobianWrtVariable::kQDot.
+    RuntimeError if with_respect_to is JacobianWrtVariable∷kQDot.
 
 Note:
     Use CalcBiasTranslationalAcceleration() to efficiently calculate
@@ -3407,11 +3404,10 @@ Parameter ``context``:
     Contains the state of the multibody system.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the translational
-    acceleration bias is with respect to 𝑠 = q̇ or 𝑠 = v. Currently,
-    an exception is thrown if with_respect_to is
-    JacobianWrtVariable::kQDot.
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the translational acceleration bias is with
+    respect to 𝑠 = q̇ or 𝑠 = v. Currently, an exception is thrown if
+    with_respect_to is JacobianWrtVariable∷kQDot.
 
 Parameter ``frame_B``:
     The frame on which points Bi are affixed/welded.
@@ -3442,7 +3438,7 @@ Precondition:
     p_BoBi_B must have 3 rows.
 
 Raises:
-    RuntimeError if with_respect_to is JacobianWrtVariable::kQDot.
+    RuntimeError if with_respect_to is JacobianWrtVariable∷kQDot.
 
 Note:
     See bias_acceleration_functions "Bias acceleration functions" for
@@ -3648,7 +3644,7 @@ Parameter ``forces``:
 
 Raises:
     RuntimeError if ``forces`` is null or not compatible with this
-    model, per MultibodyForces::CheckInvariants().)""";
+    model, per MultibodyForces∷CheckInvariants().)""";
         } CalcForceElementsContribution;
         // Symbol: drake::multibody::MultibodyPlant::CalcFullSystemJacobian
         struct /* CalcFullSystemJacobian */ {
@@ -3679,9 +3675,9 @@ applied to this model.
 MultibodyForces stores applied forces as both generalized forces τ and
 spatial forces F on each body, refer to documentation in
 MultibodyForces for details. Users of MultibodyForces will use
-MultibodyForces::mutable_generalized_forces() to mutate the stored
-generalized forces directly and will use
-RigidBody::AddInForceInWorld() to append spatial forces.
+MultibodyForces∷mutable_generalized_forces() to mutate the stored
+generalized forces directly and will use RigidBody∷AddInForceInWorld()
+to append spatial forces.
 
 For a given set of forces stored as MultibodyForces, this method will
 compute the total generalized forces on this model. More precisely, if
@@ -3854,11 +3850,10 @@ Parameter ``context``:
     The state of the multibody system.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the Jacobian
-    ``J𝑠_w_AB`` is partial derivatives with respect to 𝑠 = q̇
-    (time-derivatives of generalized positions) or with respect to 𝑠 =
-    v (generalized velocities).
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the Jacobian ``J𝑠_w_AB`` is partial derivatives
+    with respect to 𝑠 = q̇ (time-derivatives of generalized positions)
+    or with respect to 𝑠 = v (generalized velocities).
 
 Parameter ``frame_B``:
     The frame B in ``w_AB`` (B's angular velocity in A).
@@ -3897,11 +3892,11 @@ Parameter ``context``:
     contains the state of the model.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the Jacobian
-    ``J𝑠_v_AScm_E`` is partial derivatives with respect to 𝑠 = q̇
-    (time-derivatives of generalized positions) or with respect to 𝑠 =
-    v (generalized velocities).
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the Jacobian ``J𝑠_v_AScm_E`` is partial
+    derivatives with respect to 𝑠 = q̇ (time-derivatives of
+    generalized positions) or with respect to 𝑠 = v (generalized
+    velocities).
 
 Parameter ``frame_A``:
     The frame in which the translational velocity v_AScm and its
@@ -3942,11 +3937,11 @@ Parameter ``model_instances``:
     repeated in the vector (unusual), it is only counted once.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the Jacobian
-    ``J𝑠_v_AScm_E`` is partial derivatives with respect to 𝑠 = q̇
-    (time-derivatives of generalized positions) or with respect to 𝑠 =
-    v (generalized velocities).
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the Jacobian ``J𝑠_v_AScm_E`` is partial
+    derivatives with respect to 𝑠 = q̇ (time-derivatives of
+    generalized positions) or with respect to 𝑠 = v (generalized
+    velocities).
 
 Parameter ``frame_A``:
     The frame in which the translational velocity v_AScm and its
@@ -4089,11 +4084,11 @@ Parameter ``context``:
     The state of the multibody system.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the Jacobian
-    ``J𝑠_V_ABp`` is partial derivatives with respect to 𝑠 = q̇
-    (time-derivatives of generalized positions) or with respect to 𝑠 =
-    v (generalized velocities).
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the Jacobian ``J𝑠_V_ABp`` is partial
+    derivatives with respect to 𝑠 = q̇ (time-derivatives of
+    generalized positions) or with respect to 𝑠 = v (generalized
+    velocities).
 
 Parameter ``frame_B``:
     The frame on which point Bp is fixed/welded.
@@ -4180,11 +4175,11 @@ Parameter ``context``:
     The state of the multibody system.
 
 Parameter ``with_respect_to``:
-    Enum equal to JacobianWrtVariable::kQDot or
-    JacobianWrtVariable::kV, indicating whether the Jacobian
-    ``J𝑠_v_ABi`` is partial derivatives with respect to 𝑠 = q̇
-    (time-derivatives of generalized positions) or with respect to 𝑠 =
-    v (generalized velocities).
+    Enum equal to JacobianWrtVariable∷kQDot or JacobianWrtVariable∷kV,
+    indicating whether the Jacobian ``J𝑠_v_ABi`` is partial
+    derivatives with respect to 𝑠 = q̇ (time-derivatives of
+    generalized positions) or with respect to 𝑠 = v (generalized
+    velocities).
 
 Parameter ``frame_B``:
     The frame on which point Bi is affixed/welded.
@@ -4649,7 +4644,7 @@ Note:
         plant.GetModelInstanceByName("gripper");
       const ModelInstanceIndex robot_model_instance =
         plant.GetBodyByName("end_effector").model_instance();
-      const std::vector<ModelInstanceIndex> model_instances{
+      const std∷vector<ModelInstanceIndex> model_instances{
         gripper_model_instance, robot_model_instance};
       const Vector3<T> p_WoScm_W =
         plant.CalcCenterOfMassPositionInWorld(context, model_instances);
@@ -4706,7 +4701,7 @@ Note:
           const char* doc =
 R"""(For each of the provided ``bodies``, collects up all geometries that
 have been registered to that body. Intended to be used in conjunction
-with CollisionFilterDeclaration and CollisionFilterManager::Apply() to
+with CollisionFilterDeclaration and CollisionFilterManager∷Apply() to
 filter collisions between the geometries registered to the bodies.
 
 For example:
@@ -4720,8 +4715,8 @@ For example:
 
     // Don't report on collisions between geometries affixed to `body1`,
     // `body2`, or `body3`.
-    std::vector<const RigidBody<T>*> bodies{&body1, &body2, &body3};
-    geometry::GeometrySet set = plant.CollectRegisteredGeometries(bodies);
+    std∷vector<const RigidBody<T>*> bodies{&body1, &body2, &body3};
+    geometry∷GeometrySet set = plant.CollectRegisteredGeometries(bodies);
     scene_graph.collision_filter_manager().Apply(
         CollisionFilterDeclaration().ExcludeWithin(set));
 
@@ -4734,7 +4729,7 @@ Note:
 
 1. Bodies and geometries must be added to the MultibodyPlant.
 2. Create GeometrySet instances from bodies (via this method).
-3. Invoke SceneGraph::ExcludeCollisions*() to filter collisions.
+3. Invoke SceneGraph∷ExcludeCollisions*() to filter collisions.
 4. Allocate context.
 
 Changing the order will cause exceptions to be thrown.
@@ -4749,7 +4744,7 @@ Raises:
           const char* doc =
 R"""((Internal use only) Returns the System Jacobian Jv_V_WB(q) in block
 form. Each block is dense and corresponds to one Tree of the as-built
-internal::SpanningForest. The blocks follow the Tree ordering defined
+internal∷SpanningForest. The blocks follow the Tree ordering defined
 by the SpanningForest, so are in TreeIndex order. The block for Treeᵢ
 is a MatrixX of size 6nᵢ x mᵢ, where nᵢ is the number of mobilized
 bodies in Treeᵢ and mᵢ is the total number of mobilizer velocity
@@ -4936,7 +4931,7 @@ mbp_actuation "Actuation" for further details.
 Parameter ``u``:
     Actuation values for the entire model. The actuation value in
     ``u`` for a particular actuator must be found at offset
-    JointActuator::input_start().
+    JointActuator∷input_start().
 
 Returns:
     Actuation values for ``model_instance``, ordered by monotonically
@@ -4944,7 +4939,7 @@ Returns:
 
 Raises:
     RuntimeError if ``u`` is not of size
-    MultibodyPlant::num_actuated_dofs().)""";
+    MultibodyPlant∷num_actuated_dofs().)""";
         } GetActuationFromArray;
         // Symbol: drake::multibody::MultibodyPlant::GetActuatorNames
         struct /* GetActuatorNames */ {
@@ -5101,16 +5096,16 @@ See also:
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc =
 R"""(If the body with ``body_index`` belongs to the called plant, it
-returns the geometry::FrameId associated with it. Otherwise, it
-returns nullopt.)""";
+returns the geometry∷FrameId associated with it. Otherwise, it returns
+nullopt.)""";
         } GetBodyFrameIdIfExists;
         // Symbol: drake::multibody::MultibodyPlant::GetBodyFrameIdOrThrow
         struct /* GetBodyFrameIdOrThrow */ {
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc =
 R"""(If the body with ``body_index`` belongs to the called plant, it
-returns the geometry::FrameId associated with it. Otherwise this
-method throws an exception.
+returns the geometry∷FrameId associated with it. Otherwise this method
+throws an exception.
 
 Raises:
     RuntimeError if the called plant does not have the body indicated
@@ -5266,7 +5261,7 @@ Raises:
 R"""(Returns a vector of size ``num_actuated_dofs()`` containing the lower
 effort limits for every actuator. Any unbounded or unspecified limits
 will be -∞. The returned vector is indexed by JointActuatorIndex, see
-JointActuator::index().
+JointActuator∷index().
 
 See also:
     GetEffortUpperLimits()
@@ -5281,7 +5276,7 @@ Raises:
 R"""(Returns a vector of size ``num_actuated_dofs()`` containing the upper
 effort limits for every actuator. Any unbounded or unspecified limits
 will be +∞. The returned vector is indexed by JointActuatorIndex, see
-JointActuator::index().
+JointActuator∷index().
 
 See also:
     GetEffortLowerLimits()
@@ -5671,13 +5666,13 @@ Raises:
 R"""(Returns a vector of generalized positions for ``model_instance`` from
 a vector ``q_array`` of generalized positions for the entire model
 model. This method throws an exception if ``q`` is not of size
-MultibodyPlant::num_positions().)""";
+MultibodyPlant∷num_positions().)""";
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc_3args =
 R"""((Advanced) Populates output vector q_out and with the generalized
 positions for ``model_instance`` from a vector ``q`` of generalized
 positions for the entire model. This method throws an exception if
-``q`` is not of size MultibodyPlant::num_positions().)""";
+``q`` is not of size MultibodyPlant∷num_positions().)""";
         } GetPositionsFromArray;
         // Symbol: drake::multibody::MultibodyPlant::GetRigidBodyByName
         struct /* GetRigidBodyByName */ {
@@ -5839,13 +5834,13 @@ Raises:
 R"""(Returns a vector of generalized velocities for ``model_instance`` from
 a vector ``v`` of generalized velocities for the entire MultibodyPlant
 model. This method throws an exception if the input array is not of
-size MultibodyPlant::num_velocities().)""";
+size MultibodyPlant∷num_velocities().)""";
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc_3args =
 R"""((Advanced) Populates output vector v_out with the generalized
 velocities for ``model_instance`` from a vector ``v`` of generalized
 velocities for the entire model. This method throws an exception if
-``v`` is not of size MultibodyPlant::num_velocities().)""";
+``v`` is not of size MultibodyPlant∷num_velocities().)""";
         } GetVelocitiesFromArray;
         // Symbol: drake::multibody::MultibodyPlant::GetVelocityLowerLimits
         struct /* GetVelocityLowerLimits */ {
@@ -6088,10 +6083,10 @@ actuation values u into generalized forces ``tau_u = B * u``, where B
 is a matrix of size ``nv x nu`` with ``nu`` equal to
 num_actuated_dofs() and ``nv`` equal to num_velocities(). The vector u
 of actuation values is of size num_actuated_dofs(). For a given
-JointActuator, ``u[JointActuator::input_start()]`` stores the value
-for the external actuation corresponding to that actuator. ``tau_u``
-on the other hand is indexed by generalized velocity indices according
-to ``Joint::velocity_start()``.
+JointActuator, ``u[JointActuator∷input_start()]`` stores the value for
+the external actuation corresponding to that actuator. ``tau_u`` on
+the other hand is indexed by generalized velocity indices according to
+``Joint∷velocity_start()``.
 
 Warning:
     B is a permutation matrix. While making a permutation has ``O(n)``
@@ -6122,14 +6117,14 @@ size of the full vector of actuation values u. That is, a user might
 be interested in only a given subset of actuators in the model.
 
 This selection matrix is particularly useful when adding PID control
-on a portion of the state, see systems::controllers::PidController.
+on a portion of the state, see systems∷controllers∷PidController.
 
 A user specifies the preferred order in uₛ via
 ``user_to_actuator_index_map``. The actuation values in uₛ are a
 concatenation of the values for each actuator in the order they appear
 in ``user_to_actuator_index_map``. The actuation value in the full
 vector of actuation values ``u`` for a particular actuator can be
-found at offset JointActuator::input_start().)""";
+found at offset JointActuator∷input_start().)""";
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc_1args_user_to_joint_index_map =
 R"""(Alternative signature to build an actuation selector matrix ``Su``
@@ -6138,7 +6133,7 @@ the full model (see get_actuation_input_port()) and uₛ is a vector of
 actuation values for the actuators acting on the joints listed by
 ``user_to_joint_index_map``. It is assumed that all joints referenced
 by ``user_to_joint_index_map`` are actuated. See
-MakeActuatorSelectorMatrix(const std::vector<JointActuatorIndex>&) for
+MakeActuatorSelectorMatrix(const std∷vector<JointActuatorIndex>&) for
 details.
 
 Raises:
@@ -6173,7 +6168,7 @@ than the size of the full state x. That is, a user might be interested
 in only a given portion of the full state x.
 
 This selection matrix is particularly useful when adding PID control
-on a portion of the state, see systems::controllers::PidController.
+on a portion of the state, see systems∷controllers∷PidController.
 
 A user specifies the preferred order in xₛ via
 ``user_to_joint_index_map``. The selected state is built such that
@@ -6238,7 +6233,7 @@ See also:
     MapVelocityToQDot()
 
 See also:
-    Mobilizer::MapQDotToVelocity())""";
+    Mobilizer∷MapQDotToVelocity())""";
         } MapQDotToVelocity;
         // Symbol: drake::multibody::MultibodyPlant::MapVelocityToQDot
         struct /* MapVelocityToQDot */ {
@@ -6267,7 +6262,7 @@ See also:
     MapQDotToVelocity()
 
 See also:
-    Mobilizer::MapVelocityToQDot())""";
+    Mobilizer∷MapVelocityToQDot())""";
         } MapVelocityToQDot;
         // Symbol: drake::multibody::MultibodyPlant::MultibodyPlant<T>
         struct /* ctor */ {
@@ -6361,7 +6356,7 @@ Raises:
         struct /* RegisterCollisionGeometry */ {
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc_5args_body_X_BG_shape_name_properties =
-R"""(Registers geometry in a SceneGraph with a given geometry::Shape to be
+R"""(Registers geometry in a SceneGraph with a given geometry∷Shape to be
 used for the contact modeling of a given ``body``. More than one
 geometry can be registered with a body, in which case the body's
 contact geometry is the union of all geometries registered to that
@@ -6374,8 +6369,8 @@ Parameter ``X_BG``:
     The fixed pose of the geometry frame G in the body frame B.
 
 Parameter ``shape``:
-    The geometry::Shape used for collision and contact. E.g.:
-    geometry::Sphere, geometry::Cylinder, etc.
+    The geometry∷Shape used for collision and contact. E.g.:
+    geometry∷Sphere, geometry∷Cylinder, etc.
 
 Parameter ``properties``:
     The proximity properties associated with the collision geometry.
@@ -6390,7 +6385,7 @@ R"""(Overload which specifies a single property: coulomb_friction.)""";
         struct /* RegisterVisualGeometry */ {
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc_5args_body_X_BG_shape_name_properties =
-R"""(Registers geometry in a SceneGraph with a given geometry::Shape to be
+R"""(Registers geometry in a SceneGraph with a given geometry∷Shape to be
 used for visualization of a given ``body``. The perception properties
 are a copy of the given ``properties``. If the resulting perception
 properties do not include ("label", "id"), then it is added as
@@ -6405,12 +6400,12 @@ Parameter ``X_BG``:
     The fixed pose of the geometry frame G in the body frame B.
 
 Parameter ``shape``:
-    The geometry::Shape used for visualization. E.g.:
-    geometry::Sphere, geometry::Cylinder, etc.
+    The geometry∷Shape used for visualization. E.g.: geometry∷Sphere,
+    geometry∷Cylinder, etc.
 
 Parameter ``name``:
     The name for the geometry. It must satisfy the requirements
-    defined in drake::geometry::GeometryInstance.
+    defined in drake∷geometry∷GeometryInstance.
 
 Parameter ``properties``:
     The illustration properties for this geometry.
@@ -6597,7 +6592,7 @@ Parameter ``u_instance``:
 Parameter ``u``:
     Actuation values for the entire plant model. The actuation value
     in ``u`` for a particular actuator must be found at offset
-    JointActuator::input_start(). Only values corresponding to
+    JointActuator∷input_start(). Only values corresponding to
     ``model_instance`` are changed.
 
 Raises:
@@ -6620,7 +6615,7 @@ options are used for any model elements that belong to model instances
 for which no options have been set explicitly. The default is to use a
 quaternion floating joint.
 
-| BaseBodyJointType:: | Notes | | ------------------------ |
+| BaseBodyJointType∷ | Notes | | ------------------------ |
 -------------------------------------- | | kQuaternionFloatingJoint |
 6 dofs, unrestricted orientation | | kRpyFloatingJoint † | 6 dofs,
 uses 3 angles for orientation | | kWeldJoint | 0 dofs, welded to World
@@ -6736,7 +6731,7 @@ Raises:
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc =
 R"""(Sets ``state`` according to defaults set by the user for joints (e.g.
-RevoluteJoint::set_default_angle()) and free bodies
+RevoluteJoint∷set_default_angle()) and free bodies
 (SetDefaultFreeBodyPose()). If the user does not specify defaults, the
 state corresponds to zero generalized positions and velocities.
 
@@ -7139,8 +7134,8 @@ Raises:
 R"""(Sets the vector of generalized positions for ``model_instance`` in
 ``q`` using ``q_instance``, leaving all other elements in the array
 untouched. This method throws an exception if ``q`` is not of size
-MultibodyPlant::num_positions() or ``q_instance`` is not of size
-``MultibodyPlant::num_positions(model_instance)``.)""";
+MultibodyPlant∷num_positions() or ``q_instance`` is not of size
+``MultibodyPlant∷num_positions(model_instance)``.)""";
         } SetPositionsInArray;
         // Symbol: drake::multibody::MultibodyPlant::SetRandomState
         struct /* SetRandomState */ {
@@ -7219,8 +7214,8 @@ Precondition:
 R"""(Sets the vector of generalized velocities for ``model_instance`` in
 ``v`` using ``v_instance``, leaving all other elements in the array
 untouched. This method throws an exception if ``v`` is not of size
-MultibodyPlant::num_velocities(), ``v_instance`` is not of size
-``MultibodyPlant::num_positions(model_instance)``, or ``v_instance``
+MultibodyPlant∷num_velocities(), ``v_instance`` is not of size
+``MultibodyPlant∷num_positions(model_instance)``, or ``v_instance``
 contains non-finite values.)""";
         } SetVelocitiesInArray;
         // Symbol: drake::multibody::MultibodyPlant::WeldFrames
@@ -7266,9 +7261,9 @@ a SceneGraph, either pre- or post-finalize, see Finalize().)""";
           const char* doc_0args =
 R"""(Returns a constant reference to the input port for external actuation
 for all actuated dofs. This input port is a vector valued port and can
-be set with JointActuator::set_actuation_vector(). The actuation value
+be set with JointActuator∷set_actuation_vector(). The actuation value
 for a particular actuator can be found at offset
-JointActuator::input_start() in this vector. Refer to mbp_actuation
+JointActuator∷input_start() in this vector. Refer to mbp_actuation
 "Actuation" for further details.
 
 Precondition:
@@ -7326,7 +7321,7 @@ Raises:
           const char* doc =
 R"""(Returns a constant reference to the input port for applying spatial
 forces to bodies in the plant. The data type for the port is an
-std::vector of ExternallyAppliedSpatialForce; any number of spatial
+std∷vector of ExternallyAppliedSpatialForce; any number of spatial
 forces can be applied to any number of bodies in the plant.)""";
         } get_applied_spatial_force_input_port;
         // Symbol: drake::multibody::MultibodyPlant::get_ball_constraint_specs
@@ -7370,15 +7365,15 @@ obtain the pose ``X_WB`` of a body B in the world frame W with:
 .. code-block:: c++
 
     const auto& X_WB_all = plant.get_body_poses_output_port().
-          .Eval<std::vector<math::RigidTransform<double>>>(plant_context);
+          .Eval<std∷vector<math∷RigidTransform<double>>>(plant_context);
       const BodyIndex arm_body_index = plant.GetBodyByName("arm").index();
-      const math::RigidTransform<double>& X_WArm = X_WB_all[arm_body_index];
+      const math∷RigidTransform<double>& X_WArm = X_WB_all[arm_body_index];
 
 .. raw:: html
 
     </details>
 
-As shown in the example above, the resulting ``std::vector`` of body
+As shown in the example above, the resulting ``std∷vector`` of body
 poses is indexed by BodyIndex, and it has size num_bodies(). BodyIndex
 "zero" (0) always corresponds to the world body, with pose equal to
 the identity at all times.
@@ -7403,7 +7398,7 @@ frame. You can obtain the spatial acceleration ``A_WB`` of a body B
 
     const auto& A_WB_all =
       plant.get_body_spatial_accelerations_output_port().
-          .Eval<std::vector<SpatialAcceleration<double>>>(plant_context);
+          .Eval<std∷vector<SpatialAcceleration<double>>>(plant_context);
       const BodyIndex arm_body_index = plant.GetBodyByName("arm").index();
       const SpatialVelocity<double>& A_WArm = A_WB_all[arm_body_index];
 
@@ -7411,7 +7406,7 @@ frame. You can obtain the spatial acceleration ``A_WB`` of a body B
 
     </details>
 
-As shown in the example above, the resulting ``std::vector`` of body
+As shown in the example above, the resulting ``std∷vector`` of body
 spatial accelerations is indexed by BodyIndex, and it has size
 num_bodies(). BodyIndex "zero" (0) always corresponds to the world
 body, with zero spatial acceleration at all times.
@@ -7440,7 +7435,7 @@ world frame W with:
 .. code-block:: c++
 
     const auto& V_WB_all = plant.get_body_spatial_velocities_output_port().
-          .Eval<std::vector<SpatialVelocity<double>>>(plant_context);
+          .Eval<std∷vector<SpatialVelocity<double>>>(plant_context);
       const BodyIndex arm_body_index = plant.GetBodyByName("arm").index();
       const SpatialVelocity<double>& V_WArm = V_WB_all[arm_body_index];
 
@@ -7448,7 +7443,7 @@ world frame W with:
 
     </details>
 
-As shown in the example above, the resulting ``std::vector`` of body
+As shown in the example above, the resulting ``std∷vector`` of body
 spatial velocities is indexed by BodyIndex, and it has size
 num_bodies(). BodyIndex "zero" (0) always corresponds to the world
 body, with zero spatial velocity at all times.
@@ -7551,7 +7546,7 @@ Note:
     packed as xd = [qd, vd], with positions and velocities in order of
     increasing JointActuatorIndex. Only desired states corresponding
     to PD-controlled actuators on non-locked joints
-    (Joint::is_locked()) are used, the rest are ignored. That is PD
+    (Joint∷is_locked()) are used, the rest are ignored. That is PD
     control on just a subset of actuators is allowed.
 
 Note:
@@ -7702,7 +7697,7 @@ SceneGraph.)""";
           const char* doc =
 R"""(Returns a constant reference to the input port used to perform
 geometric queries on a SceneGraph. See
-SceneGraph::get_query_output_port(). Refer to section mbp_geometry
+SceneGraph∷get_query_output_port(). Refer to section mbp_geometry
 "Geometry" of this class's documentation for further details on
 collision geometry registration and connection with a SceneGraph.)""";
         } get_geometry_query_input_port;
@@ -7757,7 +7752,7 @@ Raises:
 R"""(Returns a constant reference to the output port that reports actuation
 values applied through joint actuators. This output port is a vector
 valued port. The actuation value for a particular actuator can be
-found at offset JointActuator::input_start() in this vector. Models
+found at offset JointActuator∷input_start() in this vector. Models
 that include PD controllers will include their contribution in this
 port, refer to mbp_actuation "Actuation" for further details.
 
@@ -7768,8 +7763,8 @@ yet taken a step, the output value will be all zeros.
 
 Note:
     PD controllers are not considered for actuators on locked joints,
-    see Joint::Lock(). Therefore they do not contribute to this port
-    if the joint is locked.
+    see Joint∷Lock(). Therefore they do not contribute to this port if
+    the joint is locked.
 
 Precondition:
     Finalize() was already called on ``this`` plant.
@@ -7796,8 +7791,8 @@ yet taken a step, the output value will be all zeros.
 
 Note:
     PD controllers are not considered for actuators on locked joints,
-    see Joint::Lock(). Therefore they do not contribute to this port
-    if the joint is locked.
+    see Joint∷Lock(). Therefore they do not contribute to this port if
+    the joint is locked.
 
 Precondition:
     Finalize() was already called on ``this`` plant.
@@ -7824,11 +7819,11 @@ forces in order to attain the same motions of the mechanical system.
 This output port allows to evaluate the reaction force ``F_CJc_Jc`` on
 the *child* body C, at ``Jc``, and expressed in Jc for all joints in
 the model. This port evaluates to a vector of type
-std::vector<SpatialForce<T>> and size num_joints() indexed by
-JointIndex, see Joint::index(). Each entry corresponds to the spatial
+std∷vector<SpatialForce<T>> and size num_joints() indexed by
+JointIndex, see Joint∷index(). Each entry corresponds to the spatial
 force ``F_CJc_Jc`` applied on the joint's child body C
-(Joint::child_body()), at the joint's child frame ``Jc``
-(Joint::frame_on_child()) and expressed in frame ``Jc``.
+(Joint∷child_body()), at the joint's child frame ``Jc``
+(Joint∷frame_on_child()) and expressed in frame ``Jc``.
 
 In a discrete-time plant, the use_sampled_output_ports setting affects
 the output of this port. See output_port_sampling "Output port
@@ -7837,8 +7832,8 @@ yet taken a step, the output value will be all zeros.
 
 Note:
     PD controllers are not considered for actuators on locked joints,
-    see Joint::Lock(). Therefore they do not contribute to this port
-    if the joint is locked.
+    see Joint∷Lock(). Therefore they do not contribute to this port if
+    the joint is locked.
 
 Raises:
     RuntimeError if called pre-finalize.)""";
@@ -7862,7 +7857,7 @@ SceneGraph. Returns ``nullopt`` if ``this`` plant did not register any
 geometry. This method can be called at any time during the lifetime of
 ``this`` plant to query if ``this`` plant has been registered with a
 SceneGraph, either pre- or post-finalize, see Finalize(). However, a
-geometry::SourceId is only assigned once at the first call of any of
+geometry∷SourceId is only assigned once at the first call of any of
 this plant's geometry registration methods, and it does not change
 after that. Post-finalize calls will always return the same value.)""";
         } get_source_id;
@@ -7926,9 +7921,9 @@ WeldConstraintSpec.)""";
         struct /* graph */ {
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc =
-R"""((Internal use only) Provides access to the internal::LinkJointGraph.
+R"""((Internal use only) Provides access to the internal∷LinkJointGraph.
 You can use graph().forest() to access the as-built
-internal::SpanningForest if you've already called Finalize().)""";
+internal∷SpanningForest if you've already called Finalize().)""";
         } graph;
         // Symbol: drake::multibody::MultibodyPlant::gravity_field
         struct /* gravity_field */ {
@@ -8216,7 +8211,7 @@ Raises:
           const char* doc =
 R"""(Sets the contact model to be used by ``this`` MultibodyPlant, see
 ContactModel for available options. The default contact model is
-ContactModel::kHydroelasticWithFallback.
+ContactModel∷kHydroelasticWithFallback.
 
 Raises:
     RuntimeError iff called post-finalize.)""";
@@ -8226,7 +8221,7 @@ Raises:
           // Source: drake/multibody/plant/multibody_plant.h
           const char* doc =
 R"""(Sets the representation of contact surfaces to be used by ``this``
-MultibodyPlant. See geometry::HydroelasticContactRepresentation for
+MultibodyPlant. See geometry∷HydroelasticContactRepresentation for
 available options. See GetDefaultContactSurfaceRepresentation() for
 explanation of default values.
 
@@ -8242,12 +8237,11 @@ R"""(Sets the discrete contact model approximation.
 Note:
     Calling this method also sets the contact solver type (see
     get_discrete_contact_solver()) according to: -
-    DiscreteContactApproximation::kTamsi sets the solver to
-    DiscreteContactSolver::kTamsi. -
-    DiscreteContactApproximation::kSap,
-    DiscreteContactApproximation::kSimilar and
-    DiscreteContactApproximation::kLagged set the solver to
-    DiscreteContactSolver::kSap.
+    DiscreteContactApproximation∷kTamsi sets the solver to
+    DiscreteContactSolver∷kTamsi. - DiscreteContactApproximation∷kSap,
+    DiscreteContactApproximation∷kSimilar and
+    DiscreteContactApproximation∷kLagged set the solver to
+    DiscreteContactSolver∷kSap.
 
 Raises:
     iff ``this`` plant is continuous (i.e. is_discrete() is
@@ -8283,13 +8277,13 @@ further details.
 
 Warning:
     This will be deprecated. Prefer using defaults specified in
-    geometry::DefaultProximityProperties.
+    geometry∷DefaultProximityProperties.
 
 Warning:
-    Values provided in geometry::DefaultProximityProperties have
+    Values provided in geometry∷DefaultProximityProperties have
     precedence. If values estimated based on penetration allowance are
-    desired, set defaults in geometry::DefaultProximityProperties to
-    std::nullopt.
+    desired, set defaults in geometry∷DefaultProximityProperties to
+    std∷nullopt.
 
 Raises:
     RuntimeError if penetration_allowance is not positive.)""";
@@ -8377,7 +8371,7 @@ construction and therefore this query can be performed either pre- or
 post-finalize, see Finalize().
 
 See also:
-    MultibodyPlant::MultibodyPlant(double))""";
+    MultibodyPlant∷MultibodyPlant(double))""";
         } time_step;
         // Symbol: drake::multibody::MultibodyPlant::world_body
         struct /* world_body */ {
@@ -8411,45 +8405,44 @@ Serialization" for background.)""";
         struct /* adjacent_bodies_collision_filters */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the
-MultibodyPlant::set_adjacent_bodies_collision_filters().)""";
+R"""(Configures the MultibodyPlant∷set_adjacent_bodies_collision_filters().)""";
         } adjacent_bodies_collision_filters;
         // Symbol: drake::multibody::MultibodyPlantConfig::contact_model
         struct /* contact_model */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::set_contact_model(). Refer to
-drake::multibody::ContactModel for details. Valid strings are: -
-"point" - "hydroelastic" - "hydroelastic_with_fallback")""";
+R"""(Configures the MultibodyPlant∷set_contact_model(). Refer to
+drake∷multibody∷ContactModel for details. Valid strings are: - "point"
+- "hydroelastic" - "hydroelastic_with_fallback")""";
         } contact_model;
         // Symbol: drake::multibody::MultibodyPlantConfig::contact_surface_representation
         struct /* contact_surface_representation */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::set_contact_surface_representation().
-Refer to drake::geometry::HydroelasticContactRepresentation for
-details. Valid strings are: - "triangle" - "polygon"
+R"""(Configures the MultibodyPlant∷set_contact_surface_representation().
+Refer to drake∷geometry∷HydroelasticContactRepresentation for details.
+Valid strings are: - "triangle" - "polygon"
 
 The default value used here is consistent with the default time_step
 chosen above; keep this consistent with
-MultibodyPlant::GetDefaultContactSurfaceRepresentation().)""";
+MultibodyPlant∷GetDefaultContactSurfaceRepresentation().)""";
         } contact_surface_representation;
         // Symbol: drake::multibody::MultibodyPlantConfig::discrete_contact_approximation
         struct /* discrete_contact_approximation */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::set_discrete_contact_approximation().
-Refer to drake::multibody::DiscreteContactApproximation for details.
+R"""(Configures the MultibodyPlant∷set_discrete_contact_approximation().
+Refer to drake∷multibody∷DiscreteContactApproximation for details.
 Valid strings are: - "tamsi" - "sap" - "similar" - "lagged"
 
-Refer to MultibodyPlant::set_discrete_contact_approximation() and the
+Refer to MultibodyPlant∷set_discrete_contact_approximation() and the
 references therein for further details.)""";
         } discrete_contact_approximation;
         // Symbol: drake::multibody::MultibodyPlantConfig::penetration_allowance
         struct /* penetration_allowance */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::set_penetration_allowance().)""";
+R"""(Configures the MultibodyPlant∷set_penetration_allowance().)""";
         } penetration_allowance;
         // Symbol: drake::multibody::MultibodyPlantConfig::sap_near_rigid_threshold
         struct /* sap_near_rigid_threshold */ {
@@ -8472,13 +8465,13 @@ converge. For instance, set values in the range (1e-3, 1e-2).)""";
         struct /* stiction_tolerance */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::set_stiction_tolerance().)""";
+R"""(Configures the MultibodyPlant∷set_stiction_tolerance().)""";
         } stiction_tolerance;
         // Symbol: drake::multibody::MultibodyPlantConfig::time_step
         struct /* time_step */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::MultibodyPlant() constructor time_step.
+R"""(Configures the MultibodyPlant∷MultibodyPlant() constructor time_step.
 
 There is no default value for this within MultibodyPlant itself, so
 here we choose a nominal value (a discrete system, with a 1ms periodic
@@ -8489,8 +8482,8 @@ cases.)""";
         struct /* use_sampled_output_ports */ {
           // Source: drake/multibody/plant/multibody_plant_config.h
           const char* doc =
-R"""(Configures the MultibodyPlant::SetUseSampledOutputPorts(). Ignored
-when the time_step is zero.)""";
+R"""(Configures the MultibodyPlant∷SetUseSampledOutputPorts(). Ignored when
+the time_step is zero.)""";
         } use_sampled_output_ports;
         auto Serialize__fields() const {
           return std::array{
@@ -8635,7 +8628,7 @@ R"""(Constructs a PhysicalModel owned by the given ``owning_plant``. The
 lifespan of the ``owning_plant`` must outlast ``this`` PhysicalModel.
 This PhysicalModel declares System resources from the ``owning_plant``
 in the call to ``DeclareSystemResources()`` through the call to
-``MultibodyPlant::Finalize()``.
+``MultibodyPlant∷Finalize()``.
 
 Precondition:
     owning_plant != nullptr.)""";
@@ -8683,8 +8676,8 @@ uses double as a scalar type must override this to return true.)""";
           // Source: drake/multibody/plant/physical_model.h
           const char* doc =
 R"""(Defaults to false. Derived classes that support making a clone that
-uses symbolic::Expression as a scalar type must override this to
-return true.)""";
+uses symbolic∷Expression as a scalar type must override this to return
+true.)""";
         } is_cloneable_to_symbolic;
         // Symbol: drake::multibody::PhysicalModel::mutable_plant
         struct /* mutable_plant */ {
@@ -8800,8 +8793,8 @@ indexed by ``bodyB_index()``.)""";
           // Source: drake/multibody/plant/point_pair_contact_info.h
           const char* doc =
 R"""(Returns the separation speed between body A and B along the normal
-direction (see PenetrationAsPointPair::nhat_BA_W) at the contact
-point. It is defined positive for bodies moving apart in the normal
+direction (see PenetrationAsPointPair∷nhat_BA_W) at the contact point.
+It is defined positive for bodies moving apart in the normal
 direction.)""";
         } separation_speed;
         // Symbol: drake::multibody::PointPairContactInfo::slip_speed
@@ -8829,10 +8822,10 @@ effects of one or more controlled propellers acting on a Body.
 
 - The command input is a BasicVector<T> with one element per propeller.
 - It is expected that the body_poses input should be connected to the
-MultibodyPlant::get_body_poses_output_port() "MultibodyPlant body_poses
+MultibodyPlant∷get_body_poses_output_port() "MultibodyPlant body_poses
 output port".
-- The output is of type std::vector<ExternallyAppliedSpatialForce<T>>; it is
-expected that this output will be connected to the MultibodyPlant::get_applied_spatial_force_input_port()
+- The output is of type std∷vector<ExternallyAppliedSpatialForce<T>>; it is
+expected that this output will be connected to the MultibodyPlant∷get_applied_spatial_force_input_port()
 "externally_applied_spatial_force input port" of the MultibodyPlant.
 - This system does not have any state.
 
@@ -8844,7 +8837,7 @@ tends to be important -- a quadrotor does not have a stabilizable
 linearization around a hovering fixed point in 3D without them).
 
 Note:
-    Set PropellerInfo::moment_ratio to zero if you want a simple
+    Set PropellerInfo∷moment_ratio to zero if you want a simple
     thruster which applies only a force (no moment) in the Propeller
     coordinates.)""";
         // Symbol: drake::multibody::Propeller::Propeller<T>
@@ -8886,7 +8879,7 @@ commands. It has size ``num_propellers()``.)""";
           const char* doc =
 R"""(Returns a reference to the spatial_forces output port. It is
 anticipated that this port will be connected to the
-MultibodyPlant::get_applied_spatial_force_input_port()
+MultibodyPlant∷get_applied_spatial_force_input_port()
 "applied_spatial_force" input port of a MultibodyPlant.)""";
         } get_spatial_forces_output_port;
         // Symbol: drake::multibody::Propeller::num_propellers
@@ -9658,7 +9651,7 @@ zero, since contact forces can only be repulsive.)""";
           const char* doc =
 R"""(Returns a constant reference to the most recent solution vector for
 normal separation velocities. This method returns an
-``Eigen::VectorBlock`` referencing a vector of size ``nc``.)""";
+``Eigen∷VectorBlock`` referencing a vector of size ``nc``.)""";
         } get_normal_velocities;
         // Symbol: drake::multibody::TamsiSolver::get_solver_parameters
         struct /* get_solver_parameters */ {
@@ -9672,7 +9665,7 @@ process. See Parameters for details.)""";
           // Source: drake/multibody/plant/tamsi_solver.h
           const char* doc =
 R"""(Returns a constant reference to the most recent vector of tangential
-forces. This method returns an ``Eigen::VectorBlock`` referencing a
+forces. This method returns an ``Eigen∷VectorBlock`` referencing a
 vector of size ``nc``.)""";
         } get_tangential_velocities;
         // Symbol: drake::multibody::TamsiSolver::set_solver_parameters
@@ -9724,7 +9717,7 @@ the residual upon completion of the solver, i.e. vt_residual.)""";
           const char* doc =
 R"""(Returns the residual in the tangential velocities, in m/s. Upon
 convergence of the solver this value should be smaller than
-Parameters::tolerance times Parameters::stiction_tolerance.)""";
+Parameters∷tolerance times Parameters∷stiction_tolerance.)""";
         } vt_residual;
       } TamsiSolverIterationStats;
       // Symbol: drake::multibody::TamsiSolverParameters
@@ -9794,7 +9787,7 @@ problems of interest.)""";
       struct /* TamsiSolverResult */ {
         // Source: drake/multibody/plant/tamsi_solver.h
         const char* doc =
-R"""(The result from TamsiSolver::SolveWithGuess() used to report the
+R"""(The result from TamsiSolver∷SolveWithGuess() used to report the
 success or failure of the solver.)""";
         // Symbol: drake::multibody::TamsiSolverResult::kAlphaSolverFailed
         struct /* kAlphaSolverFailed */ {
@@ -9866,12 +9859,12 @@ representing the translational velocity of the wind in world coordinates at
 the aerodynamic center relative to the world origin.  See
 get_aerodynamic_center_output_port() for more details.
 - It is expected that the body_poses input should be connected to the
-MultibodyPlant::get_body_poses_output_port() "MultibodyPlant body_poses
+MultibodyPlant∷get_body_poses_output_port() "MultibodyPlant body_poses
 output port" and that body_spatial_velocities input should be connected to
-the MultibodyPlant::get_body_spatial_velocities_output_port()
+the MultibodyPlant∷get_body_spatial_velocities_output_port()
 "MultibodyPlant body_spatial_velocities output port"
-- The output is of type std::vector<ExternallyAppliedSpatialForce<T>>; it is
-expected that this output will be connected to the MultibodyPlant::get_applied_spatial_force_input_port()
+- The output is of type std∷vector<ExternallyAppliedSpatialForce<T>>; it is
+expected that this output will be connected to the MultibodyPlant∷get_applied_spatial_force_input_port()
 "externally_applied_spatial_force input port" of the MultibodyPlant.)""";
         // Symbol: drake::multibody::Wing::AddToBuilder
         struct /* AddToBuilder */ {
@@ -9966,7 +9959,7 @@ default fluid density passed in the constructor.)""";
           const char* doc =
 R"""(Returns a reference to the spatial_forces output port. It is
 anticipated that this port will be connected to the
-MultibodyPlant::get_applied_spatial_force_input_port()
+MultibodyPlant∷get_applied_spatial_force_input_port()
 "applied_spatial_force" input port of a MultibodyPlant.)""";
         } get_spatial_force_output_port;
         // Symbol: drake::multibody::Wing::get_wind_velocity_input_port

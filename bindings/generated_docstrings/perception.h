@@ -801,7 +801,7 @@ Raises:
 R"""(Makes operator| compatible for ``BaseField`` + ``DescriptorType``.
 
 See also:
-    Fields::operator|= for preconditions.)""";
+    Fields∷operator|= for preconditions.)""";
         } operator_bor;
         // Symbol: drake::perception::pc_flags::to_string
         struct /* to_string */ {
