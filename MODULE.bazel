@@ -139,7 +139,6 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
         ),
         patch_strip = 0,
         patches = [
-            "//tools/workspace/mypy_internal:patches/upstream/reject_double_colon.patch",  # noqa
             "//tools/workspace/mypy_internal:patches/timeout.patch",
         ],
     )
