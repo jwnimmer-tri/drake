@@ -215,6 +215,7 @@ def vtk_internal_repository(
             ":patches/vtkscn_hidden.patch",
             ":patches/vtksys_hidden.patch",
             ":patches/vtksys_no_globals.patch",
+            ":patches/vtktoken_no_globals.patch",
         ],
         patch_cmds = [
             # XXX document me

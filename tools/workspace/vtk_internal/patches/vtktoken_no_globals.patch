@@ -1,0 +1,46 @@
+diff --git ThirdParty/token/vtktoken/token/Singletons.cxx ThirdParty/token/vtktoken/token/Singletons.cxx
+index 3f6b1c00ef..8796a6e8fd 100644
+--- ThirdParty/token/vtktoken/token/Singletons.cxx
++++ ThirdParty/token/vtktoken/token/Singletons.cxx
+@@ -3,6 +3,14 @@
+ #include <mutex>
+ 
+ token_BEGIN_NAMESPACE
++#if 1 // Re-implemented for Drake.
++TypeContainer& singletons()
++{
++  // This is purposefully never destroyed.
++  static TypeContainer* s_singletons = new TypeContainer;
++  return *s_singletons;
++}
++#else
+ namespace {
+ 
+ // rely on default initialization to 0 for static variables
+@@ -53,5 +61,6 @@ void finalizeSingletons()
+   delete s_singletons;
+   s_singletons = nullptr;
+ }
++#endif
+ 
+ token_CLOSE_NAMESPACE
+diff --git ThirdParty/token/vtktoken/token/Singletons.h ThirdParty/token/vtktoken/token/Singletons.h
+index 2d98ec4b9b..3210464a14 100644
+--- ThirdParty/token/vtktoken/token/Singletons.h
++++ ThirdParty/token/vtktoken/token/Singletons.h
+@@ -14,6 +14,7 @@ token_BEGIN_NAMESPACE
+ /// container.
+ TOKEN_EXPORT TypeContainer& singletons();
+ 
++#if 0  // Disabled for Drake.
+ /// Destroy the container holding all registered singleton objects.
+ ///
+ /// The destructors of any contained objects will be called.
+@@ -45,6 +46,7 @@ private:
+ static singletonsCleanup singletonsCleanupInstance;
+ 
+ } // namespace detail
++#endif
+ 
+ token_CLOSE_NAMESPACE
+ 
