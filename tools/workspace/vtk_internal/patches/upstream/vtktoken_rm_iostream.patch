@@ -1,0 +1,12 @@
+XXX
+
+--- ThirdParty/token/vtktoken/token/Token.h
++++ ThirdParty/token/vtktoken/token/Token.h
+@@ -7,7 +7,6 @@
+ #include "token/Compiler.h" // for token_SPACE_BEFORE_SUFFIX
+ 
+ #include <cstdint> // for `std::uint*_t`
+-#include <iostream> // for `std::ostream`
+ #include <memory> // for `std::shared_ptr<Manager>`
+ #include <string> // for `std::string`
+ 
