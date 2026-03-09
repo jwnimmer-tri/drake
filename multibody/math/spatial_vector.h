@@ -5,12 +5,16 @@
 #endif
 
 #include <limits>
+#include <string>
 #include <tuple>
+
+// Remove with deprecation 2026-07-01.
+#include <ostream>
 
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/eigen_types.h"
-#include "drake/common/fmt_ostream.h"
 #include "drake/math/rotation_matrix.h"
 
 /* Note: many of the operations in the various SpatialVector-derived classes
@@ -289,6 +293,12 @@ class SpatialVector {
   /// rotational and translational components are both zero.
   static SpatialQuantity Zero() { return SpatialQuantity{}.SetZero(); }
 
+  /// String converstion operator. Especially useful for debugging.
+  std::string to_string() const {
+    // TODO(jwnimmer-tri) This should not be inline.
+    return fmt::format("[{}]ᵀ", fmt_eigen(get_coeffs().transpose()));
+  }
+
  private:
   // Helper method to return a mutable reference to the derived spatial
   // quantity.
@@ -299,26 +309,15 @@ class SpatialVector {
   CoeffsEigenType V_;
 };
 
-/// Stream insertion operator to write SpatialVector objects into a
-/// `std::ostream`. Especially useful for debugging.
-/// @relates SpatialVector.
 template <template <typename> class SpatialQuantity, typename T>
-std::ostream& operator<<(std::ostream& o,
-                         const SpatialVector<SpatialQuantity, T>& V) {
-  o << "[" << fmt::to_string(V[0]);
-  for (int i = 1; i < V.size(); ++i) {
-    o << ", " << fmt::to_string(V[i]);
-  }
-  o << "]ᵀ";  // The "transpose" symbol.
-  return o;
+DRAKE_DEPRECATED(
+    "2026-07-01",
+    "Use fmt functions instead (e.g., fmt::format(), fmt::to_string(), "
+    "fmt::print()). Refer to GitHub issue #17742 for more information.")
+std::ostream&
+operator<<(std::ostream& os, const SpatialVector<SpatialQuantity, T>& V) {
+  return os << V.to_string();
 }
 
 }  // namespace multibody
 }  // namespace drake
-
-// TODO(jwnimmer-tri) Add a real formatter and deprecate the operator<<.
-namespace fmt {
-template <template <typename> class SpatialQuantity, typename T>
-struct formatter<drake::multibody::SpatialVector<SpatialQuantity, T>>
-    : drake::ostream_formatter {};
-}  // namespace fmt

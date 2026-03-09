@@ -4,10 +4,12 @@
 #include <string>
 #include <utility>
 
+// Remove with deprecation 2026-06-01.
+#include <ostream>
+
 #include "drake/common/drake_copyable.h"
 #include "drake/common/drake_deprecated.h"
 #include "drake/common/fmt.h"
-#include "drake/common/fmt_ostream.h"
 #include "drake/common/hash.h"
 #include "drake/common/symbolic/polynomial_basis_element.h"
 

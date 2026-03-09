@@ -10,6 +10,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
+#include "drake/common/fmt.h"
 #include "drake/math/convert_time_derivative.h"
 #include "drake/multibody/math/spatial_vector.h"
 #include "drake/multibody/math/spatial_velocity.h"
@@ -350,6 +351,9 @@ inline SpatialAcceleration<T> operator-(const SpatialAcceleration<T>& A1_E,
 
 }  // namespace multibody
 }  // namespace drake
+
+DRAKE_FORMATTER_AS(typename T, drake::multibody, SpatialAcceleration<T>, x,
+                   x.to_string())
 
 DRAKE_DECLARE_CLASS_TEMPLATE_INSTANTIATIONS_ON_DEFAULT_SCALARS(
     class ::drake::multibody::SpatialAcceleration);

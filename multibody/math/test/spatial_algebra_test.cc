@@ -276,16 +276,19 @@ TYPED_TEST(SpatialQuantityTest, IsApprox) {
   EXPECT_FALSE(V.IsApprox(other, precision));
 }
 
-// Test the stream insertion operator to write into a stream.
+// Remove on 2026-07-01.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TYPED_TEST(SpatialQuantityTest, ShiftOperatorIntoStream) {
   typedef typename TestFixture::SpatialQuantityType SpatialQuantity;
   const SpatialQuantity& V = this->V_;
 
   std::stringstream stream;
   stream << V;
-  std::string expected_string = "[0, 0, 3, 1, 2, 0]ᵀ";
+  std::string expected_string = "[0 0 3 1 2 0]ᵀ";
   EXPECT_EQ(expected_string, stream.str());
 }
+#pragma GCC diagnostic pop
 
 TYPED_TEST(SpatialQuantityTest, MultiplicationAssignmentOperator) {
   typedef typename TestFixture::SpatialQuantityType SpatialQuantity;
@@ -901,16 +904,20 @@ typedef ::testing::Types<SpatialVelocity<Expression>,      // BR
     SymbolicSpatialQuantityTypes;
 TYPED_TEST_SUITE(SymbolicSpatialQuantityTest, SymbolicSpatialQuantityTypes);
 
+// Remove on 2026-07-01.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TYPED_TEST(SymbolicSpatialQuantityTest, ShiftOperatorIntoStream) {
   std::stringstream V_stream;
   V_stream << this->V_;
-  std::string V_expected_string = "[wx, wy, wz, vx, vy, vz]ᵀ";
+  std::string V_expected_string = "[wx wy wz vx vy vz]ᵀ";
   EXPECT_EQ(V_expected_string, V_stream.str());
   std::stringstream Q_stream;
   Q_stream << this->Q_;
-  std::string Q_expected_string = "[Q(0), Q(1), Q(2), Q(3), Q(4), Q(5)]ᵀ";
+  std::string Q_expected_string = "[Q(0) Q(1) Q(2) Q(3) Q(4) Q(5)]ᵀ";
   EXPECT_EQ(Q_expected_string, Q_stream.str());
 }
+#pragma GCC diagnostic pop
 
 // Tests the dot product between spatial momentum and spatial velocity
 // quantities for a variety of scalar types.

@@ -3273,6 +3273,16 @@ R"""(Determines whether ``x > y`` using ``operator<``.)""";
       const char* doc =
 R"""(Determines whether ``x >= y`` using ``operator<``.)""";
     } operator_ge;
+    // Symbol: drake::ostream_formatter
+    struct /* ostream_formatter */ {
+      // Source: drake/common/fmt_ostream.h
+      const char* doc_deprecated =
+R"""((Deprecated.)
+
+Deprecated:
+    Refer to GitHub issue #17742 for more information. This will be
+    removed from Drake on or after 2026-07-01.)""";
+    } ostream_formatter;
     // Symbol: drake::pow
     struct /* pow */ {
       // Source: drake/common/polynomial.h

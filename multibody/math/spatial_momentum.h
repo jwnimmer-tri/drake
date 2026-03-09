@@ -10,6 +10,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
+#include "drake/common/fmt.h"
 #include "drake/multibody/math/spatial_vector.h"
 
 namespace drake {
@@ -195,6 +196,9 @@ inline SpatialMomentum<T> operator-(const SpatialMomentum<T>& L1_E,
 
 }  // namespace multibody
 }  // namespace drake
+
+DRAKE_FORMATTER_AS(typename T, drake::multibody, SpatialMomentum<T>, x,
+                   x.to_string())
 
 DRAKE_DECLARE_CLASS_TEMPLATE_INSTANTIATIONS_ON_DEFAULT_SCALARS(
     class ::drake::multibody::SpatialMomentum);

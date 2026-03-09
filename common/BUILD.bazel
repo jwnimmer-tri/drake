@@ -1278,6 +1278,8 @@ drake_cc_googletest(
         "test/text_logging_test.cc",
         "text_logging.cc",
         "text_logging.h",
+        # Remove with deprecation 2026-07-01.
+        "drake_deprecated.h",
     ],
     defines = [
         "TEXT_LOGGING_TEST_SPDLOG=0",
@@ -1298,6 +1300,8 @@ drake_cc_googletest(
         "test/text_logging_ostream_test.cc",
         "text_logging.cc",
         "text_logging.h",
+        # Remove with deprecation 2026-07-01.
+        "drake_deprecated.h",
     ],
     defines = [
         "TEXT_LOGGING_TEST_SPDLOG=0",

@@ -10,6 +10,7 @@
 #include "drake/common/drake_assert.h"
 #include "drake/common/drake_copyable.h"
 #include "drake/common/eigen_types.h"
+#include "drake/common/fmt.h"
 #include "drake/multibody/math/spatial_force.h"
 #include "drake/multibody/math/spatial_momentum.h"
 #include "drake/multibody/math/spatial_vector.h"
@@ -267,6 +268,9 @@ T SpatialVelocity<T>::dot(const SpatialMomentum<T>& momentum) const {
 
 }  // namespace multibody
 }  // namespace drake
+
+DRAKE_FORMATTER_AS(typename T, drake::multibody, SpatialVelocity<T>, x,
+                   x.to_string())
 
 DRAKE_DECLARE_CLASS_TEMPLATE_INSTANTIATIONS_ON_DEFAULT_SCALARS(
     class ::drake::multibody::SpatialVelocity);

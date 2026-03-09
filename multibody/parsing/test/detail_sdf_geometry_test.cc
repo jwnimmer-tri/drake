@@ -15,6 +15,7 @@
 
 #include "drake/common/find_resource.h"
 #include "drake/common/fmt_eigen.h"
+#include "drake/common/fmt_ostream.h"
 #include "drake/common/test_utilities/diagnostic_policy_test_base.h"
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/common/test_utilities/expect_throws_message.h"

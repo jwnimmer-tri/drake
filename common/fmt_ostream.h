@@ -5,6 +5,7 @@
 
 #include <fmt/ostream.h>
 
+#include "drake/common/drake_deprecated.h"
 #include "drake/common/fmt.h"
 
 namespace drake {
@@ -38,11 +39,13 @@ internal::streamed_ref<T> fmt_streamed(const T& ref) {
 
 // Compatibility shim for fmt::ostream_formatter.
 #if FMT_VERSION >= 90000
-using fmt::ostream_formatter;
+using ostream_formatter DRAKE_DEPRECATED(
+    "2026-07-01", "Refer to GitHub issue #17742 for more information.") =
+    fmt::ostream_formatter;
 #else   // FMT_VERSION
-/** When using fmt >= 9, this is an alias for fmt::ostream_formatter.
-When using fmt < 9, this uses a polyfill instead. */
-struct ostream_formatter : fmt::formatter<std::string_view> {
+struct DRAKE_DEPRECATED("2026-07-01",
+                        "Refer to GitHub issue #17742 for more information.")
+    ostream_formatter : fmt::formatter<std::string_view> {
   template <typename T, typename FormatContext>
   auto format(const T& value,
               // NOLINTNEXTLINE(runtime/references) To match fmt API.

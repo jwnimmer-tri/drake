@@ -1145,6 +1145,12 @@ R"""(For 3D (three-dimensional) analysis, the total size of the
 concatenated rotational vector (3 elements) and translational vector
 (3 elements) is six (6), which is known at compile time.)""";
         } size;
+        // Symbol: drake::multibody::SpatialVector::to_string
+        struct /* to_string */ {
+          // Source: drake/multibody/math/spatial_vector.h
+          const char* doc =
+R"""(String converstion operator. Especially useful for debugging.)""";
+        } to_string;
         // Symbol: drake::multibody::SpatialVector::translational
         struct /* translational */ {
           // Source: drake/multibody/math/spatial_vector.h
