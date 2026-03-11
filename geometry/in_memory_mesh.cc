@@ -5,9 +5,11 @@
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 
 #include "drake/common/drake_assert.h"
 
+// XXX
 // Drake currently supports a wide range of fmt versions (9..11), which vary
 // heavily in terms of how they format maps (i.e., range-of-pairs) and variant.
 // When formatting the supported_files, we can't use fmt's built-in std::map

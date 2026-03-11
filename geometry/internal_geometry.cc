@@ -77,7 +77,8 @@ const std::optional<Obb>& InternalGeometry::GetObb() const {
   // TODO(jwnimmer-tri) Once we drop support for Jammy (i.e., once we can use
   // GCC >= 12 as our minimum), then we should respell these atomics to use the
   // C++20 syntax and remove the warning suppressions here and below. (We need
-  // the warning suppression because newer Clang complains.)
+  // the warning suppression because newer Clang complains.) However, the path
+  // to doing that is not obvious because atomic<shared_ptr<>> is non-copyable.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::shared_ptr<std::optional<Obb>> check = std::atomic_load(&obb_);

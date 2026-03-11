@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <string>
 
+#include <fmt/std.h>
 #include <gtest/gtest.h>
 
 #include "drake/common/memory_file.h"
