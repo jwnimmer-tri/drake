@@ -86,6 +86,8 @@ AssertionResult CompareAutodiff(const AutoDiffVecXd& tx_expected,
   return AssertionSuccess();
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Verifies that FunctionEvaluator can be constructed correctly with
 // different callable objects (r/l-value, shared/unique_ptr).
 // TODO(eric.cousineau): Share these function-based test utilities with
@@ -118,7 +120,9 @@ void VerifyFunctionEvaluator(F&& f, const VectorXd& x) {
   evaluator->Eval(tx, &ty);
   EXPECT_TRUE(CompareAutodiff(ty, ty_expected));
 }
+#pragma GCC diagnostic pop
 
+// Remove with deprecation 2026-08-01.
 // Store generic callable (e.g. a lambda), and assign sizes to it manually.
 // TODO(eric.cousineau): Migrate this to function.h or evaluator_base.h.
 template <typename Callable>
@@ -144,6 +148,7 @@ class FunctionWrapper {
   Callable callable_;
 };
 
+// Remove with deprecation 2026-08-01.
 template <typename CallableF>
 auto MakeFunctionWrapped(CallableF&& c, int num_outputs, int num_vars) {
   using Callable = std::decay_t<CallableF>;
@@ -151,6 +156,7 @@ auto MakeFunctionWrapped(CallableF&& c, int num_outputs, int num_vars) {
   return Wrapped(std::forward<CallableF>(c), num_outputs, num_vars);
 }
 
+// Remove with deprecation 2026-08-01.
 GTEST_TEST(EvaluatorBaseTest, FunctionEvaluatorTest) {
   // Test that we can construct FunctionCosts with different signatures.
   Eigen::Vector3d x(-10, -20, -30);

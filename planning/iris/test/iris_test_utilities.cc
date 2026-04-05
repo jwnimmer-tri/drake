@@ -410,13 +410,24 @@ void ConvexConfigurationSpaceWithThreadsafeConstraint::CheckRegion(
 }
 
 namespace {
-struct IdentityConstraint {
-  static size_t numInputs() { return 2; }
-  static size_t numOutputs() { return 2; }
-  template <typename ScalarType>
-  void eval(const Eigen::Ref<const VectorX<ScalarType>>& x,
-            VectorX<ScalarType>* y) const {
-    (*y) = x;
+class IdentityConstraint final : public solvers::Constraint {
+ public:
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(IdentityConstraint);
+  IdentityConstraint(const VectorXd& lb, const VectorXd& ub)
+      : Constraint(2, 2, lb, ub) {}
+
+ private:
+  void DoEval(const Eigen::Ref<const Eigen::VectorXd>& x,
+              Eigen::VectorXd* y) const final {
+    *y = x;
+  }
+  void DoEval(const Eigen::Ref<const AutoDiffVecXd>& x,
+              AutoDiffVecXd* y) const final {
+    *y = x;
+  }
+  void DoEval(const Eigen::Ref<const VectorX<symbolic::Variable>>& x,
+              VectorX<symbolic::Expression>* y) const final {
+    *y = x;
   }
 };
 }  // namespace
@@ -427,11 +438,8 @@ ConvexConfigurationSpaceWithNotThreadsafeConstraint::
   VectorXd simple_constraint_lb = Vector2d(-2.0, -0.5);
   VectorXd simple_constraint_ub = Vector2d(0.0, 1.5);
   std::shared_ptr<solvers::Constraint> simple_constraint =
-      std::make_shared<solvers::EvaluatorConstraint<
-          solvers::FunctionEvaluator<IdentityConstraint>>>(
-          std::make_shared<solvers::FunctionEvaluator<IdentityConstraint>>(
-              IdentityConstraint{}),
-          simple_constraint_lb, simple_constraint_ub);
+      std::make_shared<IdentityConstraint>(simple_constraint_lb,
+                                           simple_constraint_ub);
   prog_.AddConstraint(simple_constraint, prog_.decision_variables());
 
   query_point_in_set_ = Vector2d(-1.0, -0.45);

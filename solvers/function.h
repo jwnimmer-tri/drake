@@ -6,6 +6,8 @@
 
 #include "drake/common/eigen_types.h"
 
+// Remove this entire file with deprecation 2026-08-01.
+
 namespace drake {
 namespace solvers {
 namespace internal {
@@ -15,9 +17,6 @@ using VecIn = Eigen::Ref<const VectorX<ScalarType>>;
 template <typename ScalarType>
 using VecOut = VectorX<ScalarType>;
 
-/** FunctionTraits
- * @brief Define interface to a function of the form y = f(x).
- */
 template <typename F>
 struct FunctionTraits {
   // TODO(bradking): add in/out relation, possibly distinguish

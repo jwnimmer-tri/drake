@@ -695,15 +695,8 @@ class ExpressionCost : public Cost {
   std::unique_ptr<EvaluatorBase> evaluator_;
 };
 
-/**
- * Converts an input of type @p F to a nonlinear cost.
- * @tparam FF The forwarded function type (e.g., `const F&`, `F&&`, ...).
- * The class `F` should have functions numInputs(), numOutputs(), and
- * eval(x, y).
- *
- * @ingroup solver_evaluators
- */
 template <typename FF>
+DRAKE_DEPRECATED("2026-08-01", "Use a Cost subclass instead.")
 std::shared_ptr<Cost> MakeFunctionCost(FF&& f) {
   return std::make_shared<EvaluatorCost<>>(
       MakeFunctionEvaluator(std::forward<FF>(f)));

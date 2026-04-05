@@ -959,30 +959,25 @@ class MathematicalProgram {
     return MakeFunctionCost(f);
   }
 
-  /**
-   * Adds a cost to the optimization program on a list of variables.
-   * @tparam F it should define functions numInputs, numOutputs and eval. Check
-   *
-   * @exclude_from_pydrake_mkdoc{Not bound in pydrake.}
-   */
   template <typename F>
     requires(internal::is_cost_functor_candidate<F>::value)
+  DRAKE_DEPRECATED("2026-08-01", "Use a Cost subclass instead.")
   Binding<Cost> AddCost(F&& f, const VariableRefList& vars) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return AddCost(f, ConcatenateVariableRefList(vars));
+#pragma GCC diagnostic pop
   }
 
-  /**
-   * Adds a cost to the optimization program on an Eigen::Vector containing
-   * decision variables.
-   * @tparam F Type that defines functions numInputs, numOutputs and eval.
-   *
-   * @exclude_from_pydrake_mkdoc{Not bound in pydrake.}
-   */
   template <typename F>
     requires(internal::is_cost_functor_candidate<F>::value)
+  DRAKE_DEPRECATED("2026-08-01", "Use a Cost subclass instead.")
   Binding<Cost> AddCost(F&& f,
                         const Eigen::Ref<const VectorXDecisionVariable>& vars) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto c = MakeFunctionCost(std::forward<F>(f));
+#pragma GCC diagnostic pop
     return AddCost(c, vars);
   }
 
