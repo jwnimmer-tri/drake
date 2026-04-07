@@ -38,7 +38,6 @@ using Eigen::Vector3d;
 using Eigen::VectorXd;
 using internal::CounterexampleConstraint;
 using internal::CounterexampleProgram;
-using internal::IrisConvexSetMaker;
 using math::RigidTransform;
 using multibody::Frame;
 using multibody::JacobianWrtVariable;
@@ -158,18 +157,64 @@ HPolyhedron Iris(const ConvexSets& obstacles, const Ref<const VectorXd>& sample,
   return P;
 }
 
+namespace {
+
+// Mapping from a Shape type subclass to its preferred ConvexSet type subclass.
+// Shapes types not listed will throw if passed to MakeIrisConvexSet.
+//
+// Note: For Box we choose HPolyhedron over VPolytope, but the IRIS paper
+// discusses a significant performance improvement using a "least-distance
+// programming" instance from CVXGEN that exploited the VPolytope
+// representation.  So we may wish to revisit this.
+//
+// clang-format off
+template <typename SomeShape>
+using ConvexSetTypeFor =
+    std::conditional_t<std::is_same_v<SomeShape, Box>, HPolyhedron,
+    std::conditional_t<std::is_same_v<SomeShape, Capsule>, MinkowskiSum,
+    std::conditional_t<std::is_same_v<SomeShape, Cylinder>, CartesianProduct,
+    std::conditional_t<std::is_same_v<SomeShape, Ellipsoid>, Hyperellipsoid,
+    std::conditional_t<std::is_same_v<SomeShape, HalfSpace>, HPolyhedron,
+    std::conditional_t<std::is_same_v<SomeShape, Sphere>, Hyperellipsoid,
+    std::conditional_t<std::is_same_v<SomeShape, Convex>, VPolytope,
+    std::conditional_t<std::is_same_v<SomeShape, Mesh>, VPolytope,
+    void>>>>>>>>;
+// clang-format on
+
+// Creates a ConvexSet for the given shape.
+std::unique_ptr<ConvexSet> MakeIrisConvexSet(
+    const QueryObject<double>& query, GeometryId geometry_id,
+    std::optional<FrameId> reference_frame) {
+  DRAKE_DEMAND(geometry_id.is_valid());
+  if (reference_frame.has_value()) {
+    DRAKE_DEMAND(reference_frame->is_valid());
+  }
+  const Shape& shape = query.inspector().GetShape(geometry_id);
+  return shape.Visit([&]<typename SomeShape>(const SomeShape& /* ignored */)
+                         -> std::unique_ptr<ConvexSet> {
+    using SomeConvexSet = ConvexSetTypeFor<SomeShape>;
+    if constexpr (std::is_void_v<SomeConvexSet>) {
+      throw std::logic_error(
+          fmt::format("IRIS does not suport {} shapes", shape.type_name()));
+    } else {
+      return std::make_unique<SomeConvexSet>(query, geometry_id,
+                                             reference_frame);
+    }
+  });
+}
+
+}  // namespace
+
 ConvexSets MakeIrisObstacles(const QueryObject<double>& query_object,
                              std::optional<FrameId> reference_frame) {
   const SceneGraphInspector<double>& inspector = query_object.inspector();
   const std::vector<GeometryId> geom_ids =
       inspector.GetAllGeometryIds(Role::kProximity);
-  ConvexSets sets(geom_ids.size());
-
-  IrisConvexSetMaker maker(query_object, reference_frame);
-  int count = 0;
-  for (GeometryId geom_id : geom_ids) {
-    maker.set_geometry_id(geom_id);
-    inspector.GetShape(geom_id).Reify(&maker, &sets[count++]);
+  ConvexSets sets;
+  sets.reserve(geom_ids.size());
+  for (const GeometryId& geometry_id : geom_ids) {
+    sets.emplace_back(
+        MakeIrisConvexSet(query_object, geometry_id, reference_frame));
   }
   return sets;
 }
@@ -388,19 +433,14 @@ HPolyhedron IrisNp(const MultibodyPlant<double>& plant,
   auto query_object =
       plant.get_geometry_query_input_port().Eval<QueryObject<double>>(context);
   const SceneGraphInspector<double>& inspector = query_object.inspector();
-  IrisConvexSetMaker maker(query_object, inspector.world_frame_id());
   std::unordered_map<GeometryId, copyable_unique_ptr<ConvexSet>> sets{};
   std::unordered_map<GeometryId, const multibody::Frame<double>*> frames{};
   const std::vector<GeometryId> geom_ids =
       inspector.GetAllGeometryIds(Role::kProximity);
-  copyable_unique_ptr<ConvexSet> temp_set;
   for (GeometryId geom_id : geom_ids) {
     // Make all sets in the local geometry frame.
     FrameId frame_id = inspector.GetFrameId(geom_id);
-    maker.set_reference_frame(frame_id);
-    maker.set_geometry_id(geom_id);
-    inspector.GetShape(geom_id).Reify(&maker, &temp_set);
-    sets.emplace(geom_id, std::move(temp_set));
+    sets.emplace(geom_id, MakeIrisConvexSet(query_object, geom_id, frame_id));
     frames.emplace(geom_id, &plant.GetBodyFromFrameId(frame_id)->body_frame());
   }
 
