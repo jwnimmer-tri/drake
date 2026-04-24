@@ -52,6 +52,21 @@ TEST_F(MatrixHeapTest, MatrixProduct) {
     size = X.size();
   }
   EXPECT_EQ(size, 2);
+
+  // Again with X already pre-allocated.
+  X.setZero();
+
+  // The expected allocations are:
+  // - a00*b00 map_base_evaluator copy of each operand
+  // - a01*b10 "
+  // - a02*b20 "
+  // - a10*b00 "
+  // - a11*b10 "
+  // - a12*b20 "
+  // - x00 assign_evaluator copy of the rhs
+  // - x10 assign_evaluator copy of the rhs
+  LimitMalloc guard({14});
+  X.noalias() = A * B;
 }
 
 }  // namespace
