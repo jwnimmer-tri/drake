@@ -1,5 +1,18 @@
 load("//tools/install:install.bzl", "install_files")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+load(":defs.bzl", "absl_cc_library")
+
+absl_cc_library(
+    name = "flat_hash_set",
+    deps = ["@module_abseil//absl/container:flat_hash_set"],
+    visibility = ["//:__subpackages__"],
+)
+
+absl_cc_library(
+    name = "inlined_vector",
+    deps = ["@module_abseil//absl/container:inlined_vector"],
+    visibility = ["//:__subpackages__"],
+)
 
 install_files(
     name = "install",
