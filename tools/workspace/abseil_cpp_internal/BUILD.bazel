@@ -5,11 +5,11 @@ install_files(
     name = "install",
     dest = "share/doc/abseil_cpp",
     files = [
-        "@abseil_cpp_internal//:AUTHORS",
-        "@abseil_cpp_internal//:LICENSE",
+        "@module_abseil//:AUTHORS",
+        "@module_abseil//:LICENSE",
     ],
     allowed_externals = [
-        "@abseil_cpp_internal//:LICENSE",
+        "@module_abseil//:LICENSE",
     ],
     visibility = ["//tools/workspace:__pkg__"],
 )

@@ -79,7 +79,7 @@ def _add_internal_repositories():
     """Adds repositories for non-public, repository rule externals."""
 
     mirrors = DEFAULT_MIRRORS
-    abseil_cpp_internal_repository(name = "abseil_cpp_internal", mirrors = mirrors)  # noqa
+    abseil_cpp_internal_repository(name = "abseil_cpp_internal")
     bazelisk_internal_repository(name = "bazelisk_internal", mirrors = mirrors)
     ccd_internal_repository(name = "ccd_internal", mirrors = mirrors)
     clang_cindex_python3_internal_repository(name = "clang_cindex_python3_internal", mirrors = mirrors)  # noqa
