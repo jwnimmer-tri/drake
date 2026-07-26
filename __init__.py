@@ -11,8 +11,8 @@
 try:
     # fmt: off
     import drake.lcmtypes
-    __path__.append(list(drake.lcmtypes.__path__)[0] + "/drake")
-    from drake.lcmtypes.drake import *  # noqa: F403 (import-star)
+    __path__.append(next(iter(drake.lcmtypes.__path__)) + "/drake")
+    from drake.lcmtypes.drake import *
     # fmt: on
 except ImportError:
     pass

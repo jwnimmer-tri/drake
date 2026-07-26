@@ -21,7 +21,7 @@ from pydrake.common import _MangledName
 def _get_submodules(name):
     prefix = name + "."
     result = []
-    for s_name in sys.modules.keys():
+    for s_name in sys.modules:
         if not s_name.startswith(prefix):
             continue
         sub = s_name[len(prefix) :]
@@ -47,8 +47,7 @@ def _get_pydrake_modules():
     while worklist:
         current = worklist.pop(0)
         result.append(current)
-        for sub in _get_submodules(current):
-            worklist.append(sub)
+        worklist.extend(_get_submodules(current))
     return sorted(result)
 
 
@@ -83,8 +82,7 @@ def _write_module(name, f_name):
             f.write(".. toctree::\n")
             f.write("    :maxdepth: 1\n")
             f.write("\n")
-            for sub in subs:
-                f.write(f"    {sub}\n")
+            f.writelines(f"    {sub}\n" for sub in subs)
             f.write("\n\n")
         f.write(f".. automodule:: {name}\n")
         f.write("    :members:\n")
@@ -152,7 +150,7 @@ def _build(*, out_dir, temp_dir, modules):
                     modules_to_document.add(y)
 
     # Generate tables of contents.
-    for name in sorted(list(modules_to_document)):
+    for name in sorted(modules_to_document):
         if name == "pydrake":
             rst_name = "index.rst"
         else:

@@ -374,7 +374,7 @@ class CallPythonClient:
         else:
             try:
                 self._execute_message_impl(msg)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)
                 sys.stderr.write("  Continuing (no --stop_on_error)\n")
                 self._had_error = True
@@ -426,7 +426,7 @@ class CallPythonClient:
             globals_and_locals = _merge_dicts(
                 self.scope_globals, self.scope_locals
             )
-            exec(inputs[0], globals_and_locals, self.scope_locals)
+            exec(inputs[0], globals_and_locals, self.scope_locals)  # noqa: S102
             out = None
         else:
             out = eval(
@@ -504,7 +504,7 @@ class CallPythonClient:
             # User pressed Ctrl+C.
             self._done = True
             print("Quitting")
-        except Exception:
+        except Exception:  # noqa: BLE001
             # We encountered an error, and must stop.
             self._done = True
             self._had_error = True
@@ -592,7 +592,7 @@ class CallPythonClient:
     def _get_file(self):
         # Gets file handle, opening if needed.
         if self._file is None:
-            self._file = open(self.filename, "rb")
+            self._file = open(self.filename, "rb")  # noqa: SIM115
         return self._file
 
     def _close_file(self):
@@ -660,4 +660,4 @@ def main(argv):
 if __name__ == "__main__":
     good = main(sys.argv[1:])
     if not good:
-        exit(1)
+        sys.exit(1)

@@ -18,7 +18,7 @@ from doc.defs import (
 
 # These versions match what's shipped in Ubuntu 24.04 Noble, which is what our
 # CI documentation build uses when running jupyter-nbconvert.
-_MATHJAX_URL = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML"  # noqa
+_MATHJAX_URL = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML"  # noqa: RUF100
 _REQUIREJS_URL = (
     "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
 )

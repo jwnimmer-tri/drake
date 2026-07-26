@@ -146,8 +146,8 @@ class RenderRequest:
 
     # A class constant listing all the expected fields and their types from a
     # request <form>. It's used for validation and should be kept consistent
-    # with Drake's documentation on `Render Endpoint <form> Data` section.
-    # See also: https://drake.mit.edu/doxygen_cxx/group__render__engine__gltf__client__server__api.html  # noqa
+    # with Drake's documentation on `Render Endpoint <form> Data` section. See
+    # https://drake.mit.edu/doxygen_cxx/group__render__engine__gltf__client__server__api.html
     EXPECTED_FORM_FIELDS: dict[str, FieldType] = {
         "scene": FieldType.File,
         "scene_sha256": FieldType.String,
@@ -287,7 +287,7 @@ class RenderRequest:
                 f"Form field {field_name} with value '{value}' is not a valid "
                 "number."
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise RenderError(
                 f"Internal server error processing field '{field_name}': {e}",
                 error_code=500,
@@ -322,7 +322,7 @@ class RenderRequest:
                 if CLEANUP:
                     try:
                         temp_path.unlink()
-                    except Exception:
+                    except OSError:
                         pass
                 raise RenderError(
                     f"Provided scene_sha256='{expected_sha256}' does not "
@@ -336,11 +336,11 @@ class RenderRequest:
             temp_path.rename(scene_path)
 
             if self.verbose:
-                print(f"Saving scene file: {str(scene_path)}")
+                print(f"Saving scene file: {scene_path!s}")
             return scene_path
         except RenderError as re:
             raise re from None  # Forward the exception.
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise RenderError(f"Internal server error: {e}", error_code=500)
 
 
@@ -427,7 +427,7 @@ def render_callback(render_request: RenderRequest) -> str:
 
     # Call the render backend, including capturing any errors.
     try:
-        proc = subprocess.run(proc_args, capture_output=True)
+        proc = subprocess.run(proc_args, capture_output=True, check=False)
         if proc.returncode != 0:
             message = f"backend exited with code {proc.returncode}."
             stdout = proc.stdout.decode("utf-8")
@@ -440,7 +440,7 @@ def render_callback(render_request: RenderRequest) -> str:
 
         # Inform the caller where the final rendering resides.
         return output_path
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise RenderError(f"Failed render invocation: {e}", error_code=500)
 
 
@@ -480,7 +480,7 @@ def root():
             f"{indent}<hr>\n"
             f"{indent}<p>\n"
             f"{indent}  This is a development server.  The server cache\n"
-            f"{indent}  lives here: <tt>{str(TMP_DIR)}</tt>\n"
+            f"{indent}  lives here: <tt>{TMP_DIR!s}</tt>\n"
             f"{indent}</p>\n"
         )
     else:
@@ -502,7 +502,7 @@ def render_endpoint():
             render_request = RenderRequest(request)
             output_image = Path(render_callback(render_request))
             if render_request.verbose:
-                print(f"Rendering image: {str(output_image)}")
+                print(f"Rendering image: {output_image!s}")
 
             # Now that the image is rendered, it is safe to delete the scene.
             if CLEANUP:
@@ -545,12 +545,12 @@ def render_endpoint():
                 with open(output_image, "rb") as f:
                     buffer = BytesIO(f.read())
                 if render_request.verbose:
-                    print(f"Deleting rendered image: {str(output_image)}")
+                    print(f"Deleting rendered image: {output_image!s}")
                 output_image.unlink(missing_ok=True)
                 return send_file(buffer, mimetype=mime_type)
         except RenderError as re:
             return re.flask_json_code_response()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             # Similar to RenderError.flask_json_code_response(), see docs.
             return (
                 {

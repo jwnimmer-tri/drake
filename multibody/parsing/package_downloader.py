@@ -25,8 +25,8 @@ from pathlib import Path
 import shutil
 import sys
 import tempfile
+from urllib import request
 import urllib.parse
-import urllib.request as request
 
 
 def _fail(message):
@@ -40,8 +40,8 @@ def _run(
     urls: list[str],
     sha256: str,
     output_dir: Path,
-    archive_type: str = None,
-    strip_prefix: str = None,
+    archive_type: str | None = None,
+    strip_prefix: str | None = None,
 ):
     """Runs the download and extract logic, assuming already-validated args.
 
@@ -197,7 +197,7 @@ def _main(argv):
         except SystemExit as e:
             error_file.write(str(e))
             returncode = 1
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             error_file.write(str(e))
             returncode = 1
     sys.exit(returncode)

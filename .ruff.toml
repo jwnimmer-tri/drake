@@ -6,6 +6,10 @@ target-version = "py312"
 
 [lint]
 
+ignore = [
+    "C408",  # https://docs.astral.sh/ruff/rules/unnecessary-collection-call/
+]
+
 # Enable import sorting.
 extend-select = ["I"]
 

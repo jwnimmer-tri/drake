@@ -46,10 +46,8 @@ def _cull_skipped_headers(*, temp_dir, modules):
     for dirpath, _, filenames in (temp_dir / Path("drake")).walk():
         subdir = dirpath.relative_to(temp_dir)
         is_wanted = any(
-            [
-                str(subdir).startswith(str(module_path))
-                for module_path in module_paths
-            ]
+            str(subdir).startswith(str(module_path))
+            for module_path in module_paths
         )
         if is_wanted:
             continue
@@ -86,7 +84,7 @@ def _generate_doxyfile(*, manifest, out_dir, temp_dir, dot):
             "--output",
             output_filename,
         ]
-        + ["-D%s=%s" % (key, value) for key, value in definitions.items()]
+        + [f"-D{key}={value}" for key, value in definitions.items()]
     )
     assert os.path.exists(output_filename)
     return output_filename
@@ -236,9 +234,7 @@ def _build(*, out_dir, temp_dir, modules, quick):
     # we're building all of the C++ documentation.
     check_for_errors = len(modules) == 0
     with open(f"{temp_dir}/doxygen.log", encoding="utf-8") as f:
-        lines = [
-            line.strip().replace(f"{temp_dir}/", "") for line in f.readlines()
-        ]
+        lines = [line.strip().replace(f"{temp_dir}/", "") for line in f]
     _postprocess_doxygen_log(lines, check_for_errors)
 
     extra_perl_statements = [
@@ -251,8 +247,8 @@ def _build(*, out_dir, temp_dir, modules, quick):
         # - The quotes must appear after a "_deprecatedNNNNNN" anchor.
         # - The quotes must appear before a "<br />" end-of-line.
         # Example lines:
-        # <dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000013">Deprecated:</a></b></dt><dd>"Use RotationMatrix::MakeFromOneVector()." <br />  # noqa
-        # <dd><a class="anchor" id="_deprecated000013"></a>"Use RotationMatrix::MakeFromOneVector()." <br />  # noqa
+        # <dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000013">Deprecated:</a></b></dt><dd>"Use RotationMatrix::MakeFromOneVector()." <br />  # noqa: RUF100
+        # <dd><a class="anchor" id="_deprecated000013"></a>"Use RotationMatrix::MakeFromOneVector()." <br />  # noqa: RUF100
         r'while (s#(?<=_deprecated\d{6}")([^"]*)"(.*?<br)#\1\2#) {};',
     ]
     perl_cleanup_html_output(
