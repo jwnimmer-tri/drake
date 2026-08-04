@@ -1,17 +1,17 @@
 load(
-    "@lcm_internal//lcm-bazel:lcm_cc_library_srcs.bzl",
+    "@module_lcm//lcm-bazel:lcm_cc_library_srcs.bzl",
     "lcm_cc_library_srcs",
 )
 load(
-    "@lcm_internal//lcm-bazel:lcm_java_library_srcs.bzl",
+    "@module_lcm//lcm-bazel:lcm_java_library_srcs.bzl",
     "lcm_java_library_srcs",
 )
 load(
-    "@lcm_internal//lcm-bazel:lcm_library.bzl",
+    "@module_lcm//lcm-bazel:lcm_library.bzl",
     "lcm_library",
 )
 load(
-    "@lcm_internal//lcm-bazel:lcm_py_library_srcs.bzl",
+    "@module_lcm//lcm-bazel:lcm_py_library_srcs.bzl",
     "lcm_py_library_srcs",
 )
 load("//tools/install:install.bzl", "install")
@@ -156,7 +156,7 @@ java_library(
     name = "lcmtypes_drake_java",
     srcs = [":messages_java_srcs"],
     visibility = ["//visibility:public"],
-    deps = ["@lcm_internal//lcm-java"],
+    deps = ["@module_lcm//lcm-java"],
 )
 
 install(

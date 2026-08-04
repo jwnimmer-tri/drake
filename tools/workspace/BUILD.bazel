@@ -36,7 +36,6 @@ filegroup(
         "@implib_so_internal//:drake_repository_metadata.json",
         "@ipopt_internal//:drake_repository_metadata.json",
         "@lapack_internal//:drake_repository_metadata.json",
-        "@lcm_internal//:drake_repository_metadata.json",
         "@libpng_internal//:drake_repository_metadata.json",
         "@libtiff_internal//:drake_repository_metadata.json",
         "@libzip_internal//:drake_repository_metadata.json",

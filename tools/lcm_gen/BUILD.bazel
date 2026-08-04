@@ -97,7 +97,7 @@ genrule(
         "test/romeo/november.hpp",
     ],
     cmd = " ".join([
-        "$(execpath @lcm_internal//lcmgen:lcm-gen)",
+        "$(execpath @module_lcm//lcmgen:lcm-gen)",
         "--cpp",
         "--cpp-std=c++11",
         "--use-quotes-for-includes",
@@ -107,7 +107,7 @@ genrule(
         "$(execpath :test/romeo/november.lcm)",
     ]),
     tools = [
-        "@lcm_internal//lcmgen:lcm-gen",
+        "@module_lcm//lcmgen:lcm-gen",
     ],
 )
 
@@ -123,7 +123,7 @@ cc_library(
     includes = ["test"],
     tags = ["nolint"],
     deps = [
-        "@lcm_internal//lcm:lcm-coretypes",
+        "@module_lcm//lcm:lcm-coretypes",
     ],
 )
 

@@ -6,21 +6,25 @@ load(
 )
 load("//tools/install:install.bzl", "install", "install_license")
 load("//tools/lint:lint.bzl", "add_lint_tests")
+load(":defs.bzl", "cc_custom_library")
 
 package(default_visibility = ["//visibility:private"])
 
-# LCM is LGPL-licensed and therefore we must build it as a shared library.
-# Because our `vendor_namespace.patch` uses different symbol names, we'll also
-# name it `libdrake_vendor_lcm.so` instead of `liblcm.so`, which means we can't
-# use the upstream shared_library rule. The following targets create our own
-# link of the library, with the Bazel label `":shared_library"` (the compile
-# commands are re-used from upstream; only the linking step is changed.)
-#
+# LCM is LGPL-licensed and therefore we must build it as a shared library. Code
+# in Drake should depend on LCM via the `:shared_library` target below.
+
+# To avoid runtime conflicts with other downsteam builds of LCM, we'll use the
+# cc_custom_library to set the C symbol name prefix to `drake_vendor_lcm_...`.
+cc_custom_library(
+    name = "drake-vendor-lcm-shared",
+    deps = ["@module_lcm//lcm:lcm-shared"],
+)
+
 # The "whole archive" annotates all of the object code as `alwayslink = True`,
 # so that we use the --whole-archive linker flag on libdrake_vendor_lcm.so.
 cc_whole_archive_library(
     name = "whole_archive",
-    deps = ["@lcm_internal//lcm:lcm-shared"],
+    deps = [":drake-vendor-lcm-shared"],
 )
 
 config_setting(
@@ -28,6 +32,8 @@ config_setting(
     constraint_values = ["@platforms//os:linux"],
 )
 
+# We'll name our library `libdrake_vendor_lcm.so` instead of `liblcm.so` to
+# align with our configured C symbol name prefix.
 cc_binary(
     name = "libdrake_vendor_lcm.so",
     linkopts = select({
@@ -40,7 +46,7 @@ cc_binary(
 
 cc_nolink_library(
     name = "hdrs",
-    deps = ["@lcm_internal//lcm:lcm-shared"],
+    deps = [":drake-vendor-lcm-shared"],
 )
 
 cc_library(
@@ -69,7 +75,7 @@ cc_library(
 install_license(
     name = "install_license",
     doc_dest = "share/doc/lcm_internal",
-    licenses = ["@lcm_internal//:license"],
+    licenses = ["@module_lcm//:license"],
 )
 
 install(
