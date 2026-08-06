@@ -12,6 +12,10 @@ def get_clang_format_path():
     # Find and return it (or raise an error).
     manifest = runfiles.Create()
     matches = list(manifest.root().glob("llvm+*/bin/clang-format"))
+    if not matches:
+        print("ERROR: clang-format has not been built yet; run:")
+        print("  bazel build //tools/lint/...")
+        sys.exit(1)
     assert len(matches) == 1, repr(matches)
     return matches[0]
 
