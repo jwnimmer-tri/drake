@@ -536,27 +536,36 @@ def main():
         format="%(levelname)s: %(message)s",
     )
 
+    # Establish the default flavor.
+    if _MY_DIR.name == "setup":
+        # We are in the source tree.
+        default_flavor = Flavor.BUILD
+    else:
+        # We're a binary package install.
+        default_flavor = Flavor.BINARY
+
     # Initialize argparse.
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument(
-        "--developer",
-        action="store_const",
-        dest="flavor",
-        default=Flavor.BUILD,
-        const=Flavor.DEVELOPER,
-        help="Install prerequisites needed only by Drake Developers.",
-    )
-    parser.add_argument(
-        "--user-environment-only",
-        action="store_true",
-        help=(
-            "Update per-user config snippets needed only by Drake Developers, "
-            "but don't install any system-wide packages."
-        ),
-    )
+    if default_flavor != Flavor.BINARY:
+        parser.add_argument(
+            "--developer",
+            action="store_const",
+            dest="flavor",
+            default=default_flavor,
+            const=Flavor.DEVELOPER,
+            help="Install prerequisites needed only by Drake Developers.",
+        )
+        parser.add_argument(
+            "--user-environment-only",
+            action="store_true",
+            help=(
+                "Update per-user config snippets needed only by Drake "
+                "Developers, but don't install any system-wide packages."
+            ),
+        )
     parser.add_argument(
         "--without-update",
         dest="allow_update",
