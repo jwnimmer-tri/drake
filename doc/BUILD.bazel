@@ -138,7 +138,7 @@ drake_py_binary(
     # of our documentation tools are built with the alternative python_binder.
     # (Applying it to only //doc/pydrake:build would put conflicting copies of
     # pydrake into this binary's runfiles via //doc/tutorials:build.)
-    use_alt_binder = True,
+    use_nanobind = True,
     deps = [
         ":defs",
         "@rules_python//python/runfiles",
