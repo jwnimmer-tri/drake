@@ -138,6 +138,14 @@ void InitLowLevelModules(py::module_ m) {
   // `pydrake.common.deprecation` (e.g. DeprecateAttribute, WrapDeprecated),
   // please ping @EricCousineau-TRI.
 
+  constexpr bool kCxxLoggingEnabled =
+#ifdef DRAKE_SPDLOG_ENABLED
+      true;
+#else
+      false;
+#endif
+  m.attr("_CXX_LOGGING_ENABLED") = kCxxLoggingEnabled;
+
   // Python users should not touch the C++ level; thus, we bind this privately.
   m.def("_set_log_level", &logging::set_log_level, py::arg("level"),
       doc.logging.set_log_level.doc);

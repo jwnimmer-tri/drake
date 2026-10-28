@@ -97,7 +97,8 @@ def configure_logging():
         https://docs.python.org/3/library/logging.html
     """
     format = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
-    _logging.basicConfig(level=_logging.INFO, format=format)
+    level = _logging.INFO if _CXX_LOGGING_ENABLED else _logging.CRITICAL + 1
+    _logging.basicConfig(level=level, format=format)
     _drake_logger.setLevel(_logging.NOTSET)
     _logging.addLevelName(5, "TRACE")
 

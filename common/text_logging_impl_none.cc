@@ -23,4 +23,8 @@ void logger::LogMessage(level_enum /* severity */,
                         std::string_view /* message */) {}
 
 }  // namespace logging
+
+const char* const logging::kSetLogPatternHelpMessage =
+    "does nothing (spdlog is not enabled in this build)";
+
 }  // namespace drake

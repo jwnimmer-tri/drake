@@ -173,7 +173,7 @@ class logger {
     this->log(level::err, std::string_view{message});
   }
 
-  /** Logs a string at `critival` severity. */
+  /** Logs a string at `critical` severity. */
   template <typename StringLike>
   void critical(const StringLike& message) {
     this->log(level::critical, std::string_view{message});
